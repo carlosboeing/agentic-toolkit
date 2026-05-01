@@ -8,30 +8,25 @@ A personal collection of [Claude Code](https://docs.claude.com/en/docs/claude-co
 
 ```
 .
-├── skills/        — Claude Code skills (drop-in SKILL.md files)
-│   └── learn/     — /learn — explain a commit, PR, file, symbol, behaviour, or topic as an SWE lesson
+├── skills/        — Claude Code skills (drop-in SKILL.md files). See skills/README.md for the catalog.
 ├── guides/        — How-to guides for setting up Claude Code workflows
-│   └── guide-project-structure-and-conventions.md
 └── reference/     — Reference docs (snapshots, inventories, lookups)
-    └── reference-claude-code-plugins.md
 ```
 
-## Quick start — using the skills
+Each top-level directory has its own `README.md` acting as a catalog with install / usage details for the things inside. Start there.
 
-Skills here are single-file `SKILL.md` files designed for the Claude Code skill harness. To install one user-wide (works in every project on your machine):
+## Quick start
+
+To install a skill from this repo:
 
 ```bash
-mkdir -p ~/.claude/skills/<skill-name>
-cp skills/<skill-name>/SKILL.md ~/.claude/skills/<skill-name>/SKILL.md
+SKILL=learn   # ← or whichever skill you want
+mkdir -p ~/.claude/skills/$SKILL
+curl -fsSL -o ~/.claude/skills/$SKILL/SKILL.md \
+  https://raw.githubusercontent.com/carlosboeing/claude-code-resources/main/skills/$SKILL/SKILL.md
 ```
 
-Restart Claude Code (or start a new session). Slash commands appear in the `/` menu.
-
-For project-level installs (commit the skill into a repo so teammates share it), drop the file at `<repo>/.claude/skills/<skill-name>/SKILL.md`. Project-level skills override user-level ones with the same name.
-
-### Currently shipping
-
-- **`/learn`** — Turns any commit, PR, file, folder, symbol, behaviour, or topic into a software-engineering lesson tailored to someone still learning. Six target shapes (diff / static / symbol / trace / topic / help), three audience levels (`expert` / `simple` / `eli5`), three depth dials (`quick` / `overview` / `deep-dive`), optional save-to-disk, anti-fabrication rules for citations and topic hits. See [`skills/learn/SKILL.md`](skills/learn/SKILL.md) for the full skill.
+See [`skills/README.md`](skills/README.md) for the full skill catalog and project-level install instructions.
 
 ## Conventions (in this repo)
 
