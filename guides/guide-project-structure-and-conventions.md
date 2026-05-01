@@ -205,7 +205,7 @@ Evergreen docs that describe how things ARE right now. Get UPDATED when state ch
 
 For a software project: `architecture.md` (HLD), `services.md` (running services + endpoints), `data-model.md`, `dependencies.md`, etc.
 
-For an infrastructure project (the example here): `architecture.md`, `hardware.md`, `storage.md`, `network.md`, `backups.md`, `containers.md`.
+For an infrastructure project: `architecture.md`, `hardware.md`, `storage.md`, `network.md`, `backups.md`, `containers.md`.
 
 For a product project: `architecture.md`, `roadmap-snapshot.md`, `team.md`, `customers.md`.
 
