@@ -1,6 +1,6 @@
 # claude-code-resources
 
-A personal collection of [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, guides, and references I've built up while using the tool day-to-day. Public-ish — designed to be shareable with friends and portable across projects, but opinionated to my workflow.
+A personal collection of [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, guides, and references I've built up while using the tool day-to-day. Public-ish — designed to be shareable with colleagues and portable across projects, but slightly opinionated to my workflow.
 
 > If you've stumbled across this and find something useful, take what works. Nothing here is a polished product; it's working notes.
 
