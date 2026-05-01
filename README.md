@@ -6,14 +6,39 @@ A personal collection of [Claude Code](https://docs.claude.com/en/docs/claude-co
 
 ## Contents
 
-```
-.
-├── skills/        — Claude Code skills (drop-in SKILL.md files). See skills/README.md for the catalog.
-├── guides/        — How-to guides for setting up Claude Code workflows
-└── reference/     — Reference docs (snapshots, inventories, lookups)
-```
+The repo splits into three clusters. The cluster headers below also organise [`CLAUDE.md`](CLAUDE.md).
 
-Each top-level directory has its own `README.md` acting as a catalog with install / usage details for the things inside. Start there.
+### Repo internals
+
+| Path | What | Install? |
+|---|---|---|
+| [`docs/`](docs/) | This repo's working memory — brainstorms, designs, plans, retros, ADRs, ROADMAP, CHANGELOG. | — |
+
+### Harness mirrors (drop-in to `~/.claude/<type>/`)
+
+| Path | What | Install path |
+|---|---|---|
+| [`skills/`](skills/) | Claude Code skills (drop-in `SKILL.md` files). See [`skills/README.md`](skills/README.md). | `~/.claude/skills/<name>/` |
+
+Future cluster members (slots, not yet populated): `plugins/`, `commands/`, `agents/`, `hooks/`, `mcp-servers/`, `output-styles/`. Created when the first item of each type arrives.
+
+### Other consumables (read or copy-paste)
+
+| Path | What |
+|---|---|
+| [`guides/`](guides/) | Evergreen how-tos for Claude Code workflows. |
+| [`reference/`](reference/) | Snapshots, inventories, lookups. |
+| [`templates/`](templates/) | Project bootstrap scaffolds. See [`templates/README.md`](templates/README.md). |
+
+Future cluster members: `prompts/` (when first prompt lands).
+
+Each top-level directory has its own `README.md` acting as a catalog with install / usage details for the items inside.
+
+## `docs/` — the project's working memory
+
+`docs/` records how this repo evolves: the lifecycle of each piece of work (brainstorm → design → plan → retro), the ongoing indexes that orient new readers (ROADMAP, CHANGELOG), and the persistent decisions that outlive any single phase (ADRs). Authored by whoever's working on the project — human, AI, or both — and structured so anyone can answer "what did we decide and why?" without archaeology.
+
+For the conventions that shape `docs/` (and that you can adopt in your own projects via [`templates/default-project/`](templates/default-project/)), see [`guides/guide-project-structure-and-conventions.md`](guides/guide-project-structure-and-conventions.md).
 
 ## Quick start
 
@@ -36,7 +61,7 @@ See [`skills/README.md`](skills/README.md) for the full skill catalog and projec
 
 ## Adding a new artifact type
 
-The repo scales by adding top-level directories — one per Claude Code artifact type — each mirroring the layout under `~/.claude/` so installs are obvious. Likely future additions: `plugins/`, `hooks/`, `commands/`, `agents/`, `mcp-servers/`, `output-styles/`, `status-line/`.
+The repo scales by adding top-level directories within the **Harness mirrors** cluster — one per Claude Code artifact type, each mirroring the layout under `~/.claude/` so installs are obvious. Likely future additions: `plugins/`, `hooks/`, `commands/`, `agents/`, `mcp-servers/`, `output-styles/`. The **Other consumables** cluster grows similarly — `prompts/` is the most likely next addition.
 
 When you add the *first* item of a new type, three rules:
 

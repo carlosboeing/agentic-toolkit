@@ -2,23 +2,53 @@
 
 This file is auto-loaded on every session. It's the CC-facing brief; `README.md` is the human-facing one.
 
+> **Note:** this `CLAUDE.md` is specific to a meta-resources catalog — it talks about `skills/`, `guides/`, `reference/` as content kinds. It is **distinct from** [`templates/default-project/CLAUDE.md`](templates/default-project/CLAUDE.md), which is the *generic* project brief used when bootstrapping a new project. The two share DNA but have different jobs; do not deduplicate them.
+
 ## What this repo is
 
 A personal collection of Claude Code resources I've built up — skills, guides, references — designed to be portable and shareable. Public-ish (currently a private GitHub repo, may go public later). Not a polished product; opinionated to one workflow.
 
 ## Layout
 
+Three clusters at the top level. See [README.md](README.md) for the visitor-facing version; this is the operator-facing summary.
+
 ```
 .
-├── skills/         — Claude Code skills (one dir per skill, each with SKILL.md + README.md)
-├── guides/         — How-to guides for setting up Claude Code workflows
-├── reference/      — Reference docs (snapshots / inventories / lookups)
-├── README.md       — visitor-facing landing page
-├── CLAUDE.md       — this file
-└── LICENSE         — MIT
+├── docs/                   — REPO INTERNAL: this repo's working memory (see below)
+│
+├── skills/                 — HARNESS MIRROR: drop-in to ~/.claude/skills/
+│   └── learn/
+│
+├── guides/                 — OTHER CONSUMABLE: evergreen how-tos
+├── reference/              — OTHER CONSUMABLE: snapshots, inventories, lookups
+├── templates/              — OTHER CONSUMABLE: project bootstrap scaffolds
+│
+├── README.md               — visitor-facing landing page
+├── CLAUDE.md               — this file (auto-loaded; operator-facing brief)
+└── LICENSE                 — MIT
 ```
 
-Each top-level directory has its own `README.md` acting as a catalog (one row per item, shared install pattern, conventions for adding new items). New artifact types — `plugins/`, `hooks/`, `commands/`, `agents/`, `mcp-servers/`, `output-styles/`, `status-line/` — get added the same way as needed.
+Future harness mirrors (created when first content lands; never empty placeholders): `plugins/`, `commands/`, `agents/`, `hooks/`, `mcp-servers/`, `output-styles/`. Future other consumables: `prompts/`.
+
+## `docs/` — the project's working memory
+
+`docs/` is durable, human-readable artifacts that record how this repo evolves: the lifecycle of each piece of work (brainstorm → design → plan → retro), the ongoing indexes that orient new readers (ROADMAP, CHANGELOG), and the persistent decisions that outlive any single phase (ADRs). Authored by whoever's working on the project — human, AI, or both — and structured so anyone can answer "what did we decide and why?" without archaeology. AI assistants reading it on session start is a benefit, not the purpose.
+
+```
+docs/
+├── ROADMAP.md              — what's in flight / next / shipped
+├── CHANGELOG.md            — what shipped, when
+├── notes/                  — scratch, chat dumps, external research
+├── 0-brainstorms/          — pre-design ideas (worth-elaborating; one-liners go in ROADMAP)
+├── 1-discovery/            — research, spikes, comparative analyses
+├── 2-design/               — specs + designs (conflated, by intent)
+├── 3-plans/                — phased implementation plans
+├── 4-reviews/              — retros, audits, reviews, analyses
+├── adrs/                   — single-decision records (NNNN-title.md)
+└── guides/                 — internal procedural how-tos
+```
+
+For the canonical conventions and project-level template, see [guides/guide-project-structure-and-conventions.md](guides/guide-project-structure-and-conventions.md). Note: this repo's `docs/` is a *subset* — `system/` and `architecture.md` are skipped because the per-type catalog READMEs already serve the always-current-state role.
 
 ## Conventions
 
