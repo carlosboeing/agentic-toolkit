@@ -34,6 +34,22 @@ See [`skills/README.md`](skills/README.md) for the full skill catalog and projec
 - **Skills** live one-per-directory under `skills/<name>/SKILL.md` to match the harness layout — drop-in compatible with `~/.claude/skills/`.
 - **Guides** are stable how-tos. **Reference** docs are snapshots / inventories / lookups (status at a point in time, not a process).
 
+## Adding a new artifact type
+
+The repo scales by adding top-level directories — one per Claude Code artifact type — each mirroring the layout under `~/.claude/` so installs are obvious. Likely future additions: `plugins/`, `hooks/`, `commands/`, `agents/`, `mcp-servers/`, `output-styles/`, `status-line/`.
+
+When you add the *first* item of a new type, three rules:
+
+1. **Create the directory only when you have the first real item.** No empty placeholders.
+2. **Write `<type>/README.md` at the same time as the first item.** It's the catalog: a one-line description of the type, a shared install snippet, a table of items, and any conventions specific to that type. Use [`skills/README.md`](skills/README.md) as the template.
+3. **One subdirectory per non-trivial item** (multi-file, has its own README, scripts, references). Single-file artifacts with no docs can live flat in the type directory, but realistically each item earns its own subdir + `README.md` once you want it shareable.
+
+Notes on the awkward cases:
+
+- **Plugins** are bundles — they contain their own skills, hooks, commands. Keep `plugins/<name>/` intact rather than flattening into the per-type dirs. The plugin's internal layout matches the marketplace install structure.
+- **MCP servers** can be polyglot. `mcp-servers/<name>/` holds source in whatever language; the README documents how to wire it into `claude_desktop_config.json` or project `.mcp.json`.
+- **Skills inside plugins** vs **standalone skills**: separate. A standalone skill at `skills/foo/` can be later bundled into `plugins/bar/skills/foo/` if it earns promotion. Don't symlink — install paths differ.
+
 ## Sharing individual files
 
 Most files in this repo are designed to stand alone:
