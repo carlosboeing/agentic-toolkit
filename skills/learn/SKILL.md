@@ -317,6 +317,15 @@ Use standard Markdown link syntax: `[term](url)`. Link the concept's name as it 
 
 If the same concept is mentioned again later in the lesson, don't relink — the reader has the link already.
 
+### Repo-relative paths are NOT links
+
+This subsection's rules are for *external* URLs only — Wikipedia, Fowler bliki, MDN, etc. **Repo-relative file references must always be written as bare `path:line` (or `path`)** — never wrap them in markdown link syntax.
+
+- Good: `` `docs/foo.md:42` `` or `docs/foo.md:42` (Claude Code's CLI auto-detects this pattern and makes it cmd+clickable).
+- Bad: `` [`docs/foo.md`](docs/foo.md):42 `` — the renderer treats this as a hyperlink to a relative URL it has no resolver for, so the link goes dead, *and* the trailing `:42` is pushed outside the link, defeating the path-detector. The reader can't navigate to it at all.
+
+Backticks around the bare path are fine and recommended for visual distinction. The rule is specifically about the `[text](url)` markdown syntax — apply it to every repo-relative path reference in every section of the lesson, including section 4 in topic mode where path:line refs are densest.
+
 ## Diagrams
 
 A diagram is worth including when the change is *fundamentally visual* and prose would have to work hard to describe what a picture shows in two lines. Use [Mermaid](https://mermaid.js.org/) — it's text, lives in the markdown, and renders in GitHub, Obsidian, VS Code preview, claude.ai, and most other modern markdown viewers.
@@ -439,6 +448,7 @@ Two dials are at play: **change size** drives length (one-liner vs. 500-line ref
 - Don't conflate "what the code does" with "why it's structured this way." The first is mechanics; the second is the lesson. The first is usually the smaller part of the answer.
 - Don't claim certainty you don't have. "I think this is intended to be a Strategy-pattern setup, but with only one implementation today I can't be sure" is more useful than a confident wrong reading.
 - **Don't fabricate citation URLs.** If you don't know the URL is correct, verify it with WebFetch or write a search hint instead (`search Wikipedia for "Liskov substitution principle"`). A wrong link is worse than no link — see the **Citations and links** section.
+- **Don't wrap repo-relative paths in markdown link syntax.** `` [`docs/foo.md`](docs/foo.md):42 `` is broken in two ways — the link target is a relative URL the renderer can't resolve, and the `:42` falls outside the link so cmd+click navigation fails. Always write the bare `path:line` form: `` `docs/foo.md:42` ``. The Citations and links rules in this skill are for *external* URLs only.
 - Don't pile up links at `expert` level. Senior readers don't need a Wikipedia link on "encapsulation"; it reads as condescending. Link only the genuinely specialised terms.
 - Don't drop into condescension at `simple` or `eli5`. Plain language ≠ baby talk. The reader is learning, not stupid.
 - **Don't manufacture diagrams.** Mirror of "don't manufacture lessons" — a Mermaid block on a typo fix or a config value change is noise. Diagrams earn their place by showing something prose can't show in two lines (see the **Diagrams** section).
