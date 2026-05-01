@@ -605,7 +605,7 @@ touch archive/.gitkeep configs/.gitkeep scripts/.gitkeep skills/.gitkeep
 ### Step 2: Create root files
 
 - `README.md` — one paragraph project overview, layout table, link to current state and ROADMAP.
-- `CLAUDE.md` — operator preferences, verification policy, repo structure, working conventions. Adapt the infrastructure project's `CLAUDE.md` as a starting template.
+- `CLAUDE.md` — operator preferences, verification policy, repo structure, working conventions.
 - `docs/ROADMAP.md` — the six sections, initially mostly empty except for what you know.
 - `docs/CHANGELOG.md` — empty stub or seeded with the bootstrap commit.
 - `.gitignore` — at minimum `.DS_Store`, `*.zip`, `dist/`, `.env`, `*.local`, `.claude/settings.local.json`.
@@ -640,38 +640,40 @@ Six months in, the structure pays off — you can answer "what did we decide and
 
 ## 9. Concrete examples
 
-This guide ships with a working infrastructure project that uses the structure. Browse these files for examples in context:
+The conventions earn their value in how artifacts cross-reference each other. The patterns below describe what each artifact looks like in practice — adapt them to your own project.
 
-### Example: a complete initiative
+### A complete initiative
 
-The "foundation" initiative (BIOS update, RAM tuning, network audit) shows the full lifecycle:
+The full lifecycle of a single piece of work — a hardware upgrade, a service migration, a feature rollout — looks like:
 
-- **Design:** [docs/2-design/2026-04-25-storage-architecture-design.md](../2-design/2026-04-25-storage-architecture-design.md) (related design — foundation didn't get its own design; it was scoped by the implementation plan directly).
-- **Plan:** `docs/3-plans/2026-04-25-foundation-plan.md` — phased steps with verification, status: shipped.
-- **Retro:** `docs/4-reviews/2026-04-28-foundation-retro.md` — what worked, what surprised (BIOS menu paths, drive letter shifts), follow-ups (sleep/WoL guide).
-- **ADRs that came out of it:** `D-23-ipv6-enabled-eero-firewall.md`, `D-24-preclear-hdd-only.md`, `D-25-precleared-disk-preserves-parity.md`.
-- **`system/` updates:** `system/hardware.md` (post-Phase-0 baseline), `system/network.md` (eero firewall posture).
-- **CHANGELOG entry:** dated 2026-04-28, references the retro and plan.
+- **Design** in `2-design/` lays out the architecture, options considered, and chosen approach. `status: draft` while in flight, `status: shipped` once done.
+- **Plan** in `3-plans/` references the design and breaks it into phased steps with verification criteria, effort estimates (S/M/L), risks, and the smallest viable first step.
+- **Retro** in `4-reviews/` (optional, written after) captures what worked, what surprised, and follow-ups that came out of the work.
+- **ADRs** in `6-adrs/` capture decisions made during the work — usually 1–4 per initiative, sometimes zero. Each ADR is single-decision; supersedes/superseded-by relationships are explicit.
+- **`system/` updates** land in the same commit that ships the work (architecture, services, hardware — whichever aspects changed).
+- **CHANGELOG entry** dated, referencing the design and (if applicable) retro.
 
-### Example: a parked brainstorm
+The whole bundle is browseable from `ROADMAP.md → Recently shipped`, which links into the design, which links forward to the retro, which links back into ADRs.
 
-`docs/0-brainstorms/2026-04-30-ai-tooling-future-brainstorm.md` shows a `status: parked` brainstorm with concrete deferral rationale, links to affected drafts, and triggers for when to revisit.
+### A parked brainstorm
 
-### Example: a Next-action with full proposal
+A `0-brainstorms/<topic>.md` doc with `status: parked`, concrete deferral rationale, links to affected drafts, and triggers for when to revisit. Captures pre-design exploration without forcing a commitment.
 
-`docs/0-brainstorms/2026-05-01-quarterly-ipv6-rescan-routine.md` is the detailed proposal for a recurring routine; ROADMAP "Next actions" holds the one-line pointer.
+### A Next-action with full proposal
 
-### Example: an ADR with cross-references
+ROADMAP "Next actions" holds a one-line pointer. The detailed proposal lives in `0-brainstorms/<topic>.md` with `status: open` — the full reasoning, options, and approach. Keeps ROADMAP scannable while preserving the thinking that informs each action.
 
-`docs/6-adrs/D-22-data-consolidation-phase-1-5.md` shows considered options, picked option, reasoning, and `Related` section with inter-ADR links.
+### An ADR with cross-references
 
-### Example: a `system/` doc with cross-references to ADRs and designs
+A `D-NN-<title>.md` file with: considered options, picked option, reasoning, and a `Related:` section linking to upstream ADRs and to designs that informed the decision. Single-decision per file — if a decision genuinely contains two, write two ADRs.
 
-`docs/system/storage.md` describes current storage state with links to the storage-architecture design (rationale) and to relevant ADRs (per-decision history). This is the pattern: `system/*` docs answer "what is the state?", linking out to "why is it that way?" and "what was the design?".
+### A `system/` doc with cross-references
 
-### Example: this guide itself
+`system/<aspect>.md` describes current state with links to the originating design (rationale) and relevant ADRs (per-decision history). Pattern: `system/*` answers "what is the state?", linking out to "why is it that way?" and "what was the design?".
 
-The doc you're reading now (`docs/5-guides/project-structure-and-conventions-guide.md`) is an example of a stable how-to in `5-guides/`. Evergreen, no `status` field, one `last_reviewed:` date.
+### This guide itself
+
+The doc you're reading is an example of a stable how-to in `5-guides/`. Evergreen, no `status` field, one `last_reviewed:` date that's bumped only when you've personally re-verified the content.
 
 ---
 
@@ -687,6 +689,6 @@ The doc you're reading now (`docs/5-guides/project-structure-and-conventions-gui
 
 ## 11. Credits
 
-This structure was developed by [@carlosboeing](https://github.com/carlosboeing) for a infrastructure project, evolved from the `reference-workflow` reference structure. The full design rationale and discussion that produced this convention lives at [`docs/2-design/2026-04-30-doc-structure-redesign-design.md`](../2-design/2026-04-30-doc-structure-redesign-design.md).
+This structure was developed by [@carlosboeing](https://github.com/carlosboeing) for a infrastructure project, evolved from the `reference-workflow` reference structure.
 
 Free to adopt, adapt, ignore. If it works for you, use it. If parts don't fit your project, drop them. The principle that matters is "single source of truth for any given question, with conventions cheap enough to actually follow."
