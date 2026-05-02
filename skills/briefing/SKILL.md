@@ -46,7 +46,7 @@ Walk the tokens once and bucket each one:
 - **Help keywords** (closed set): `help`, `--help`, `-h`, `?`, `usage`. If any appear, **short-circuit**: render the Synopsis above and stop.
 - **Anything else**: respond with `unknown arg <X> — try /briefing help` and stop.
 
-The parser is order-independent and case-insensitive. Two of the same bucket is an error of intent — pick the **rightmost** occurrence in the input and mention the override in the briefing's source-coverage footer (e.g., `Note: depth received both 'quick' and 'deep'; using 'deep'`). The source-coverage footer itself is defined under **Output template** (added in a later task); until that section lands, surface the override inline at the top of the response so the user sees it.
+The parser is order-independent and case-insensitive. Two of the same bucket is an error of intent — pick the **rightmost** occurrence in the input and mention the override in the briefing's source-coverage footer (e.g., `Note: depth received both 'quick' and 'deep'; using 'deep'`). The source-coverage footer itself is defined under **Output template** below.
 
 ## Source layering
 
@@ -169,7 +169,7 @@ Read the `## Project context` section from CLAUDE.md (already in your context). 
 
 Absent fields fall back to Layer 1 defaults at canonical paths. Declarations are additive, not mandatory. A field set to `none` means "deliberately empty" (do not probe further); an absent field means "try the default" (use the Layer 1 canonical path).
 
-Presence check: grep for `^## Project context` in the project's CLAUDE.md. If absent, skip the Layer 2 read entirely and record a footer note for output (the footer schema lives under **Output template** in a later section).
+Presence check: grep for `^## Project context` in the project's CLAUDE.md. If absent, skip the Layer 2 read entirely and record a footer note for output (the footer schema lives under **Output template** below).
 
 #### Integration recipes
 
@@ -230,7 +230,7 @@ The table's row order is the order the resulting bullets should be reported in, 
 
 ## Output template
 
-In adaptive mode (the default), two sections always run and four are conditional on signal presence; sections with nothing to say are omitted entirely, not padded. Explicit depth keywords reshape this contract — `standard` forces all six, `quick` collapses, `deep` extends — and are codified under **Depth** in a later section.
+In adaptive mode (the default), two sections always run and four are conditional on signal presence; sections with nothing to say are omitted entirely, not padded. Explicit depth keywords reshape this contract — `standard` forces all six, `quick` collapses, `deep` extends — and are codified under **Depth contract** below.
 
 ```markdown
 ## Briefing — <project name>
@@ -292,7 +292,7 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
 
-The **source-coverage footer** (the block under the `---` rule, named for what it does — declare which sources backed the briefing) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section, and links to the conventions guide [§5.8 — `## Project context` section in CLAUDE.md](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd). The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** in a later section. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
+The **source-coverage footer** (the block under the `---` rule, named for what it does — declare which sources backed the briefing) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section, and links to the conventions guide [§5.8 — `## Project context` section in CLAUDE.md](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd). The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
 
 ## Depth contract
 
@@ -309,9 +309,9 @@ The depth dial scales three things together — output length, source breadth, a
 
 | Source | Why it earns deep |
 |---|---|
-| Closed PRs in last 30 days (`gh pr list --state merged --limit 20`) | Trend in shipping cadence; what got merged the briefing's "recent activity" missed |
-| Closed issues in last 30 days | What got resolved — useful for "is this old issue still relevant?" |
-| Stale branches (`git for-each-ref --sort=-committerdate refs/heads/`, anything not touched 30+ days) | Cleanup signal — branch graveyard surfaces |
+| Closed PRs in last 30 days (`gh pr list --state merged --search "merged:>=$(date -u -v-30d +%Y-%m-%d)" --limit 50`) | Trend in shipping cadence; what got merged the briefing's "recent activity" missed |
+| Closed issues in last 30 days (`gh issue list --state closed --search "closed:>=$(date -u -v-30d +%Y-%m-%d)"`) | What got resolved — useful for "is this old issue still relevant?" |
+| Stale branches (`git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative) %(committerdate:short)' refs/heads/` — filter for `committerdate:short` older than 30 days) | Cleanup signal — branch graveyard surfaces |
 | Stale open PRs (open > 14 days) | Forgotten work; different from in-flight because not moving |
 | Recent ADRs (last 5 in `docs/adrs/`) | Architectural context affecting next moves |
 | Cross-source synthesis | Recurring themes across 3+ sources flagged as systemic |
@@ -319,7 +319,7 @@ The depth dial scales three things together — output length, source breadth, a
 | Trend analysis on CHANGELOG | Velocity / cadence / scope drift across last 5–10 entries |
 | Per-project memory files | Read individual files in `~/.claude/projects/<slug>/memory/` (MEMORY.md index already in context) |
 
-**Not read at any depth:** raw conversation transcripts on disk. Reading them would undermine the §6.5 working-memory discipline (artifacts become optional if briefings can recover from transcripts), transcripts are noisy (corrections, abandoned approaches, false starts), and the on-disk format is undocumented Anthropic internals. The principled equivalent is a Stop hook with an explicit snapshot schema — deferred (Approach C in the design doc).
+**Not read at any depth:** raw conversation transcripts on disk. Reading them would undermine [the conventions guide's §6.5 working-memory discipline](../../guides/guide-project-structure-and-conventions.md#65-ai-agent-update-triggers-working-memory-discipline) (artifacts become optional if briefings can recover from transcripts), transcripts are noisy (corrections, abandoned approaches, false starts), and the on-disk format is undocumented Anthropic internals. The principled equivalent is a Stop hook with an explicit snapshot schema — deferred (Approach C in the design doc).
 
 ## Save behaviour
 
@@ -344,7 +344,7 @@ FILE="$DEST/$TS.md"
 N=2; while [[ -e "$FILE" ]]; do FILE="$DEST/$TS-$N.md"; N=$((N+1)); done
 ```
 
-The file's content is YAML frontmatter followed by the verbatim rendered briefing.
+Once `$FILE` is computed, write the file using the Write tool (not `cat`/heredoc — the briefing body comes from your conversation render, not from a shell variable). The file's content is YAML frontmatter followed by the verbatim rendered briefing.
 
 **Frontmatter** — six fields, in this order:
 
