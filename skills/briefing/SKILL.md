@@ -208,28 +208,29 @@ Standing instructions for when a source fails. Never fabricate; always name the 
 
 What triggers the briefing's adaptive output to lead with active work.
 
-| Signal | Source | Strength |
+| Signal | Strength | Source / notes |
 |---|---|---|
-| Open PR authored by me | `gh pr list --author @me --state open` | Strong |
-| Branch ahead of base | `git rev-list --count <base>..HEAD` > 0 | Strong |
-| Unpushed commits on current branch | `git log @{upstream}..HEAD` non-empty | Strong |
-| Unpushed commits on *other* local branches | `git for-each-ref` + ahead counts | Strong |
-| Local-only branches (no upstream) | `git branch -vv` filter | Medium |
-| Stashes | `git stash list` non-empty | Strong (most-forgotten state in git) |
-| Worktrees | `git worktree list` count > 1 | Medium |
-| ROADMAP `## In flight` non-empty | grep + read | Strong (this repo's convention) |
-| Designs/plans with `status: draft` or `status: open` | `grep -l "^status: \(draft\|open\)" docs/{2-design,3-plans,0-brainstorms}/` | Strong |
-| Tracker items in "in progress" status | layer-2 query | Strong (if configured) |
-| Working tree dirty (uncommitted edits) | `git status --porcelain` non-empty | Strong (with content read) |
-| Recent commits in last 24h | `git log --since=1.day` | Weak (orientation only, not in-flight) |
+| Open PR authored by me | Strong | from Layer 1 `gh pr list --author @me --state open` |
+| Unpushed commits on current branch | Strong | from Layer 1 `git rev-list --count @{upstream}..HEAD`; covers "branch ahead of upstream" — Layer 1 does not separately compute ahead-of-base |
+| Unpushed commits on *other* local branches | Strong | from Layer 1 `git for-each-ref` + ahead counts |
+| Stashes | Strong | from Layer 1 `git stash list`; the most-forgotten state in git |
+| ROADMAP `## In flight` non-empty | Strong | from Layer 1 working-memory read (this repo's convention) |
+| Designs/plans with `status: draft` or `status: open` | Strong | from Layer 1 lifecycle for-loop (the portable form, not the brace-glob in earlier drafts of the spec) |
+| Tracker items in "in progress" status | Strong | from Layer 2 query; only if a tracker is declared |
+| Working tree dirty (uncommitted edits) | Strong | from Layer 1 `git status --porcelain`; read the content of changed files (subject to Layer 1's 200-line cap) |
+| Local-only branches (no upstream) | Medium | from Layer 1 `git branch -vv` filter |
+| Worktrees (count > 1) | Medium | from Layer 1 `git worktree list` |
+| Recent commits in last 24h | Weak | from Layer 1 `git log --since=1.day`; orientation only, never leads |
 
-**Detection rule:** if any *Strong* signal is present, the output leads with the **What's in flight** section. Otherwise, lead with **Recent activity** and **What's next**. Don't sum or score — check signals in priority order (top-to-bottom in the table) and stop at the first Strong hit.
+**Detection rule:** if any *Strong* signal is present, the output leads with the **What's in flight** section. Otherwise lead with **Recent activity** and **What's next**. Don't sum or score — any single Strong hit is enough to flip the lead. Medium signals never trigger the lead but are reported (under **What's in flight** when it runs, otherwise under **Recent activity**). Weak signals never lead and feed **Recent activity** only.
 
-(The output sections themselves are defined under **Output template** below; the depth keywords' effect on this rule is defined under **Depth** in a later section.)
+The table's row order is the order the resulting bullets should be reported in, not a priority ranking — Strong signals are equally sufficient to trigger the lead. Strong rows are listed first to make the "is the lead triggered?" check fast (read down until a Strong hit, or hit the first Medium row to know none was found).
+
+(The output sections themselves are defined under **Output template** below. Until **Depth** ships in a later task, the `quick`/`standard`/`deep` keywords are accepted by the parser but produce the adaptive output unchanged — surface the unhandled override in the source-coverage footer.)
 
 ## Output template
 
-Two sections always run; four are conditional on signal presence. Sections with nothing to say are omitted entirely, not padded. Quick mode collapses the template — see **Depth** below.
+In adaptive mode (the default), two sections always run and four are conditional on signal presence; sections with nothing to say are omitted entirely, not padded. Explicit depth keywords reshape this contract — `standard` forces all six, `quick` collapses, `deep` extends — and are codified under **Depth** in a later section.
 
 ```markdown
 ## Briefing — <project name>
@@ -248,7 +249,7 @@ Two sections always run; four are conditional on signal presence. Sections with 
 
 ### What's in flight                           ← only if any strong signal
 - Working tree: <paths and one-line summary>
-- Local-only: <unpushed commits / stashes / branches>
+- Local-only: <unpushed commits / stashes / no-upstream branches / worktrees if > 1>
 - ROADMAP "## In flight": <items + state>
 - Open PRs: <your PRs + review status>
 - Drafts: <designs/plans with status: draft|open>
@@ -283,7 +284,7 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **Snapshot:** Always present. One-line bullets only. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts from Layer 1; roadmap line from `docs/ROADMAP.md`; recent-activity line from the most recent of `git log -1`, last merged PR, or last `status: shipped` lifecycle item. Add Layer-2 bullets (tracker counts, board column health) only when those sources were declared and read.
 
-**What's in flight:** Only if any Strong signal. Group bullets by source category — working tree (paths from `git status --porcelain`), local-only (unpushed / stashes / no-upstream branches), ROADMAP `## In flight`, open PRs, drafts (`status: draft|open` in lifecycle dirs), tracker. Don't dump diffs — summarise per Layer 1's 200-line cap.
+**What's in flight:** Only if any Strong signal. Group bullets by source category — working tree (paths from `git status --porcelain`), local-only (unpushed / stashes / no-upstream branches / worktrees), ROADMAP `## In flight`, open PRs, drafts (`status: draft|open` in lifecycle dirs), tracker. Don't dump diffs — summarise per Layer 1's 200-line cap.
 
 **Recent activity:** Always present. Last 3–5 things, synthesised not dumped. Group by theme rather than listing commits chronologically. Cite SHA / PR# / file path so the human can drill in.
 
@@ -291,4 +292,4 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
 
-The footer block under the `---` rule names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section, and links to the conventions guide [§5.8 — `## Project context` section in CLAUDE.md](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd). The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** in a later section. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer once the section ships; until then, surface them inline at the top of the response (per **How to parse the args**).
+The **source-coverage footer** (the block under the `---` rule, named for what it does — declare which sources backed the briefing) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section, and links to the conventions guide [§5.8 — `## Project context` section in CLAUDE.md](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd). The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** in a later section. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
