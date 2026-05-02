@@ -2,7 +2,9 @@
 
 A single-file [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that produces a structured briefing of project state on demand — built for the moment you return to a project after a session, a day, a week, or a vacation, and want to know **where you are, what you were doing, and what to pick up** without re-reading every file.
 
-It auto-discovers what's in flight from git, GitHub, the canonical `docs/` working-memory layout, and any project-tracker source declared in your project's CLAUDE.md `## Project context` section. The output reshapes by what it finds — leads with active work if there is any, leads with what's next if everything is calm.
+It auto-discovers what's in flight from git, GitHub, your project's CLAUDE.md `## Project context` section (when present), and whatever working-memory layout it can detect. The output reshapes by what it finds — leads with active work if there is any, leads with what's next if everything is calm.
+
+The skill is **convention-aware but not convention-coupled**. It works generically in any repo, lights up with richer behaviour when a project follows the [canonical conventions in this repo](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md), and surfaces a read-only "convention-maturity" block in the footer when partial adoption is detected (suggesting what's missing, never editing).
 
 Designed for engineers using Claude Code who want substantive orientation, not the one-line summary the built-in `/recap` produces.
 
@@ -38,15 +40,15 @@ The depth default is genuinely adaptive — when no depth keyword is provided, t
 
 ## Layered source model
 
-The skill reads from three layers, each one optional except Layer 1.
+The skill reads from four layers — each with a clear failure mode. L1 is universal; L2a/L2b are conditional; L3 is the graceful-degradation layer that catches every gap.
 
-### Layer 1 — Universal baseline
+### Layer 1 — Universal mechanics
 
-Runs in every project, no configuration required. Reads git state (branch, ahead/behind, dirty status, recent commits), uncommitted edits (`git status` + `git diff`, capped at 200 lines per file), local-only state (unpushed commits on any branch, stashes, worktrees, no-upstream branches), GitHub state via `gh` (your open PRs, all open PRs, assigned issues, current-branch CI status), top-level docs (`README.md`, `CLAUDE.md`), canonical working-memory (`docs/ROADMAP.md`, `docs/CHANGELOG.md`), lifecycle dirs (`docs/{0-brainstorms,2-design,3-plans,4-reviews,adrs}/` filtered by `status:` frontmatter), and the per-project memory index at `~/.claude/projects/<slug>/memory/MEMORY.md`.
+Runs in every project, knows nothing about specific conventions. Reads git state (branch, ahead/behind, dirty status, recent commits), uncommitted edits (`git status` + `git diff`, capped at 200 lines per file), local-only state (unpushed commits on any branch, stashes, worktrees, no-upstream branches), GitHub state via `gh` (your open PRs, all open PRs, assigned issues, current-branch CI status), top-level docs (`README.md`, `CLAUDE.md` — well-known by name, not a convention), and the per-project memory index at `~/.claude/projects/<slug>/memory/MEMORY.md`.
 
 The skill never runs `git pull` — only `git fetch` (read-only). If `Auto-fetch: no` is declared in your CLAUDE.md, it skips the fetch entirely.
 
-### Layer 2 — Project-declared via CLAUDE.md
+### Layer 2a — Explicit declarations via CLAUDE.md
 
 Add a `## Project context` section to your project's CLAUDE.md to enrich the briefing with sources it can't auto-discover:
 
@@ -65,13 +67,21 @@ Add a `## Project context` section to your project's CLAUDE.md to enrich the bri
   - Telemetry comments on issues via scripts/item-telemetry.sh
 ```
 
-Recognised trackers: `GitHub Issues`, `GitHub Project N`, `Linear …`, `Jira …`, `Notion <ID or URL>`, file paths, URLs, `none`. Each kind has its own integration recipe (the skill knows which CLI or MCP tool to invoke). Absent fields fall back to Layer 1 defaults; declarations are additive, not mandatory.
+Recognised trackers: `GitHub Issues`, `GitHub Project N`, `Linear …`, `Jira …`, `Notion <ID or URL>`, file paths, URLs, `none`. Each kind has its own integration recipe (the skill knows which CLI or MCP tool to invoke). Declarations are authoritative — they override anything L2b would have sniffed.
 
-For the canonical schema and the conventions repo's full take on this section, see [`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd).
+For the canonical schema, see [`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd).
+
+### Layer 2b — Convention sniffing
+
+For any field L2a didn't declare, the skill probes for canonical-conventions signatures (the structure documented in [the canonical guide](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md)). If they match — `docs/ROADMAP.md`, lifecycle dirs at `docs/[0-9]-*`, status frontmatter, ROADMAP sections like `## In flight` — the skill applies the canonical interpretation. If they don't match, it falls back to generic file discovery and names the gap.
+
+This is the "lights up with conventions" tier. A project that follows the canonical layout gets richer briefings (in-flight detection wired to your ROADMAP sections, status frontmatter recognised, ADRs surfaced) for free. A project that uses different conventions just gets L1 + L2a output, which still works — no broken behaviour.
+
+When L2b detects **partial adoption** (some signatures match, others don't), the briefing's footer renders a read-only **convention-maturity block** listing what's present (✓), what's missing (✗), and a link to the canonical guide. Suggestions, not edits — the user decides whether to adopt.
 
 ### Layer 3 — Graceful degradation
 
-Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project context`, declared tracker unreachable, detached HEAD, secret-pattern files, …). Every gap surfaces in the briefing's source-coverage footer with the reason — never papered over, never silently fabricated.
+Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project context`, declared tracker unreachable, detached HEAD, secret-pattern files, working memory not found at any L2b path, …). Every gap surfaces in the briefing's source-coverage footer with the reason — never papered over, never silently fabricated.
 
 ## Install
 
@@ -120,7 +130,8 @@ The save log is the only write the skill ever makes; everything else is read-onl
 
 A few load-bearing rules — read these if you want to understand why the skill behaves as it does, or if you want to extend it:
 
-- **Three layers, never more.** Universal baseline, project-declared, graceful degradation. Each new source kind earns its place in one of the three; no fourth tier.
+- **Four layers, never more.** L1 universal mechanics, L2a explicit declarations, L2b convention sniffing, L3 graceful degradation. Each new source kind earns its place in one of the four. The split between L2a (explicit) and L2b (sniffed) keeps convention-specific knowledge out of the universal baseline.
+- **Convention-aware, not convention-coupled.** The skill is shareable to projects using any conventions. Adopting the canonical conventions in this repo lights it up with richer behaviour; not adopting them produces simpler but still-useful output. Never imposes; always suggests.
 - **Adaptive over fixed.** The default has no depth keyword precisely because the right shape changes with project state. `quick`/`standard`/`deep` are escape hatches when you know what you want.
 - **Read-only on the project.** The skill never modifies project files; the only exception is the briefing log it writes to `briefing-log/` when you invoke it with `save`.
 - **`git fetch`, never `git pull`.** Fetching updates refs without modifying the working tree, so the briefing can compute accurate ahead/behind without risking a merge mid-task. `Auto-fetch: no` skips even the fetch.

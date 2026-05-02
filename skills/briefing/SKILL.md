@@ -2,22 +2,32 @@
 name: briefing
 description: |
   Adaptive project orientation. Auto-discovers project state from git, GitHub,
-  the canonical docs/ working-memory layout, and any project-tracker source
-  declared in CLAUDE.md (## Project context section). Reshapes output based on
-  what's in flight — leads with active work if there is any, leads with what's
-  next if not. Use whenever you start a session and need to catch up:
-  "where am I, what was I doing, what's next?", "what changed while I was
-  away?", "where did I stop?", or just /briefing.
+  CLAUDE.md's ## Project context section (when present), and any working-memory
+  layout it can sniff. Reshapes output based on what's in flight — leads with
+  active work if there is any, leads with what's next if not. Use whenever you
+  start a session and need to catch up: "where am I, what was I doing, what's
+  next?", "what changed while I was away?", "where did I stop?", or just
+  /briefing.
 argument-hint: "[depth] [save] [help]"
 ---
 
 # `/briefing` — Adaptive project orientation
 
-This skill produces a structured briefing of project state on demand. It auto-discovers what's in flight from git, GitHub, the canonical `docs/` working-memory layout, and any project-tracker source declared in this project's CLAUDE.md `## Project context` section. The output reshapes based on what it finds — leads with active work if there is any, leads with what's next if everything is calm.
+This skill produces a structured briefing of project state on demand. It auto-discovers what's in flight from git, GitHub, the project's CLAUDE.md `## Project context` section (when present), and whatever working-memory layout it can detect. The output reshapes based on what it finds — leads with active work if there is any, leads with what's next if everything is calm.
 
 The audience is you, returning to a project after a session, a day, a week, or a vacation. You want to know where you are, what you were doing, and what to pick up — without re-reading every file. The skill is read-only on the project (it never modifies project files); the only exception is the briefing log it writes when you invoke it with `save`.
 
-For the convention this skill consumes, see your project's CLAUDE.md `## Project context` section, or [the canonical reference in this repo's conventions guide](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd).
+The skill is **convention-aware but not convention-coupled**. It works generically in any repo, but lights up with richer behaviour when the project follows the canonical conventions referenced below. When partial adoption is detected, the briefing's footer suggests what's missing — read-only suggestions, never edits.
+
+## Canonical conventions reference
+
+A single absolute URL, defined once and reused throughout the skill. If this is renamed or moved upstream, this is the single line to update.
+
+```
+<CANONICAL_CONVENTIONS_URL> = https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md
+```
+
+When the skill needs to point users at the conventions guide (e.g. in the convention-maturity footer block, or when explaining what `## Project context` is), it renders this URL — optionally with a section anchor like `#58--project-context-section-in-claudemd` for §5.8 or `#65-ai-agent-update-triggers-working-memory-discipline` for §6.5.
 
 ## Synopsis
 
@@ -50,11 +60,20 @@ The parser is order-independent and case-insensitive. Two of the same bucket is 
 
 ## Source layering
 
-The briefing reads from three layers: a universal baseline that runs in any project, a project-declared layer parsed from CLAUDE.md's `## Project context` section, and a graceful-degradation layer of standing instructions for when sources fail. The layers exist so the skill works in any repo without setup, gets richer where projects have declared what they use, and never fabricates when something is missing — every gap is named, never papered over. On each invocation, run Layer 1 unconditionally, run Layer 2 only if `## Project context` is present in the project's CLAUDE.md, and apply Layer 3's standing instructions to any source that fails along the way.
+The briefing reads from four layers, each with a clear failure mode:
 
-### Layer 1 — Universal baseline
+| Layer | What it does | Fails when… |
+|---|---|---|
+| **L1 — Universal mechanics** | Probes git, GitHub, top-level files, per-project memory. Knows nothing about specific conventions. | The project isn't a git repo (skip git/gh; fall back to file discovery only). |
+| **L2a — Explicit declarations** | Reads `## Project context` from CLAUDE.md. Declared fields are authoritative. | The section is absent (skip L2a entirely; rely on L2b). |
+| **L2b — Convention sniffing** | Probes for canonical-conventions signatures (`docs/0-brainstorms/`, `docs/ROADMAP.md`, status frontmatter, ROADMAP section names). Fills in any field L2a didn't declare. | The project doesn't follow the canonical conventions (skip the lit-up behaviour; degrade to L1-only output). |
+| **L3 — Graceful degradation** | Standing instructions for every failure mode. Names every gap in the footer; never fabricates. | (L3 is itself the failure-handling layer; it doesn't fail.) |
 
-These sources run unconditionally, with no project configuration required. Probe each one in order; if a step fails, apply the matching Layer 3 instruction and continue.
+Run L1 unconditionally. Read L2a if `## Project context` is present in CLAUDE.md. Run L2b for any field L2a didn't declare. Apply L3's standing instructions to any source that fails along the way.
+
+### Layer 1 — Universal mechanics
+
+These sources run unconditionally, with no project configuration required and no convention assumed. Probe each one in order; if a step fails, apply the matching Layer 3 instruction and continue.
 
 **Git state (branch, ahead/behind, dirty status, recent history):**
 
@@ -72,7 +91,7 @@ git log --oneline -10                                   # last 10 commits
 > updates refs without modifying the working tree, so the briefing can
 > compute accurate ahead/behind without risking a merge mid-task.
 > Before running the command below, read the `Auto-fetch` value from
-> Layer 2's `## Project context`; if it is `no`, omit the fetch entirely.
+> Layer 2a's `## Project context`; if it is `no`, omit the fetch entirely.
 > If the fetch fails with an authentication error (distinct from "no
 > remote"), continue with stale refs and surface the auth failure in the
 > footer — see Layer 3.
@@ -114,38 +133,13 @@ gh run list --branch "$(git rev-parse --abbrev-ref HEAD)" --limit 5   # CI statu
 
 If `gh` is missing or unauthenticated, skip these and note the gap in the footer (Layer 3).
 
-**Top-level docs (already in your context, but re-check for staleness signals):**
+**Top-level docs (well-known by name, not a convention):**
 
 ```bash
 ls -l README.md CLAUDE.md 2>/dev/null   # mtimes for staleness check
 ```
 
-These files are typically already loaded in the conversation context; the recheck is for noticing recent edits, not for re-reading content unless mtimes suggest staleness.
-
-**Canonical working-memory:**
-
-```bash
-ls -l docs/ROADMAP.md docs/CHANGELOG.md 2>/dev/null   # presence + mtimes
-```
-
-Read each if present at the canonical path. If absent, do not search elsewhere — note the absence in the footer.
-
-**Lifecycle dirs (status frontmatter + recency):**
-
-```bash
-for d in docs/[0-9]-* docs/adrs; do
-  [ -d "$d" ] || continue
-  find "$d" -maxdepth 1 -name '*.md' -print0 2>/dev/null \
-    | xargs -0 grep -l '^status:' 2>/dev/null
-  ls -t "$d" 2>/dev/null | head -5
-done
-```
-
-The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`, `1-discovery`, `2-design`, `3-plans`, `4-reviews`) and any project-specific extensions (e.g. `5-guides`, `6-adrs` in some sister repos). `docs/adrs` is also probed because the canonical convention places ADRs there without a number prefix; in deviations that put ADRs at `docs/6-adrs/` the glob picks them up.
-
-Use the `status:` frontmatter to filter (open/draft/approved/shipped/parked/superseded); use `ls -t` for recency. The lifecycle convention is documented in [`guides/guide-project-structure-and-conventions.md`](../../guides/guide-project-structure-and-conventions.md).
-
-**zsh portability note:** if you write a follow-up command that extracts the `status:` value into a shell variable, **do not name the variable `status`** — it's read-only in zsh (it holds the last command's exit code). Use `st`, `state`, or similar instead. The canonical block above is safe because it uses `grep -l '^status:'` (file listing only); the trap is in ad-hoc rewrites that read the value.
+These files are typically already loaded in the conversation context; the recheck is for noticing recent edits, not for re-reading content unless mtimes suggest staleness. They are universal open-source-convention files, not project-specific — that's why they live in L1.
 
 **Per-project memory:**
 
@@ -156,9 +150,9 @@ slug="$(pwd | sed 's|/|-|g')"               # /a/b/c → -a-b-c
 ls -l "$HOME/.claude/projects/$slug/memory/MEMORY.md" 2>/dev/null
 ```
 
-If the index file exists (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one.
+If the index file exists (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one. This is a Claude Code mechanic, not a project convention, so it lives in L1.
 
-### Layer 2 — Project-declared via CLAUDE.md
+### Layer 2a — Explicit declarations via CLAUDE.md
 
 Read the `## Project context` section from CLAUDE.md (already in your context). Each line is `- **Field**: value`. Recognised fields:
 
@@ -167,17 +161,17 @@ Read the `## Project context` section from CLAUDE.md (already in your context). 
 - **Roadmap** — file path or external URL of the forward view.
 - **Changelog** — file path or external URL of recent shipped work.
 - **Architecture** — file path or directory of architecture docs.
-- **Working memory** — directory holding the lifecycle artifacts (default: `docs/` following the numbered-lifecycle convention).
+- **Working memory** — directory holding the lifecycle artifacts (e.g. `docs/`).
 - **Auto-fetch** — `yes` (default) or `no`; controls whether the briefing may run `git fetch` to refresh refs.
 - **Other** — free-form bullet list for project-specific context.
 
-Absent fields fall back to Layer 1 defaults at canonical paths. Declarations are additive, not mandatory. A field set to `none` means "deliberately empty" (do not probe further); an absent field means "try the default" (use the Layer 1 canonical path).
+Declared fields are **authoritative** — they override any L2b sniffing. A field set to `none` means "deliberately empty" (do not probe further); an absent field means "L2b can probe a default" (see L2b table below).
 
-Presence check: grep for `^## Project context` in the project's CLAUDE.md. If absent, skip the Layer 2 read entirely and record a footer note for output (the footer schema lives under **Output template** below).
+Presence check: grep for `^## Project context` in the project's CLAUDE.md. If absent, skip the L2a read entirely and proceed to L2b.
 
-#### Integration recipes
+#### Tracker integration recipes
 
-For each declared source, use the matching query path. Name the gap explicitly when a CLI or MCP integration is missing — do not silently skip.
+For each declared tracker, use the matching query path. Name the gap explicitly when a CLI or MCP integration is missing — do not silently skip.
 
 | Declared as | Query path |
 |---|---|
@@ -190,6 +184,64 @@ For each declared source, use the matching query path. Name the gap explicitly w
 | `<URL>` | `WebFetch` (best-effort; flag if auth-walled) |
 | `none` | Skip; note in footer |
 
+### Layer 2b — Convention sniffing
+
+For each "what's the project's structure?" question that L2a did not declare, probe for canonical-conventions signatures. The canonical conventions are documented at `<CANONICAL_CONVENTIONS_URL>`; this skill is *aware* of them but not *coupled* to them — when none of the signatures match, the skill degrades gracefully to L1-only output.
+
+| Question | If L2a declared it | Else, L2b probe order | Fallback (no match) |
+|---|---|---|---|
+| Where's the roadmap? | Use `Roadmap` field | `docs/ROADMAP.md` (canonical) → `ROADMAP.md` (root) | Note in footer; skip roadmap section |
+| Where's the changelog? | Use `Changelog` field | `docs/CHANGELOG.md` (canonical) → `CHANGELOG.md` (root) | Note in footer; skip changelog references |
+| Where are lifecycle artifacts? | Use `Working memory` field | If `docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all exist → canonical layout (lifecycle dirs are `docs/[0-9]-*` plus `docs/adrs/`). Else if any `docs/*/*.md` has `status:` frontmatter → use those dirs as discovered working memory. | Note in footer; skip lifecycle drafts in output |
+| What `status:` values mean "in flight"? | (not declared) | If canonical layout detected: `draft`, `open`, `approved`. | Any `status:` not in `{shipped, superseded, abandoned, closed, done}` |
+| Which ROADMAP section means "in flight"? | (not declared) | If canonical detected: `## In flight` (per §6.3 of the canonical guide). | Case-insensitive match for headings containing `in flight`, `in progress`, `now`, `doing`, `wip` |
+| Where are ADRs? | (not declared) | `docs/adrs/NNNN-*.md` (canonical) → `docs/6-adrs/`, `docs/architecture/decisions/`, `decisions/`, `adr/` | Not surfaced |
+
+When probing the lifecycle for-loop, prefer the canonical glob if detected; otherwise list what was actually found:
+
+```bash
+# Canonical-conventions glob (used when L2b detects the canonical layout)
+for d in docs/[0-9]-* docs/adrs; do
+  [ -d "$d" ] || continue
+  find "$d" -maxdepth 1 -name '*.md' -print0 2>/dev/null \
+    | xargs -0 grep -l '^status:' 2>/dev/null
+  ls -t "$d" 2>/dev/null | head -5
+done
+```
+
+The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`, `1-discovery`, `2-design`, `3-plans`, `4-reviews`) and any project-specific extensions (e.g. `5-guides`, `6-adrs` in some sister repos). `docs/adrs` is also probed because the canonical convention places ADRs there without a number prefix.
+
+**zsh portability note:** if you write a follow-up command that extracts the `status:` value into a shell variable, **do not name the variable `status`** — it's read-only in zsh (it holds the last command's exit code). Use `st`, `state`, or similar instead. The canonical block above is safe because it uses `grep -l '^status:'` (file listing only); the trap is in ad-hoc rewrites that read the value.
+
+### Convention-maturity check
+
+After L2 completes, tally which canonical-conventions signatures are present vs missing. The check feeds the optional footer block (see **Output template** below).
+
+| # | Signature | How to check |
+|---|---|---|
+| 1 | `## Project context` section in CLAUDE.md | grep `^## Project context` on `CLAUDE.md` |
+| 2 | `docs/ROADMAP.md` exists | filesystem probe |
+| 3 | `docs/CHANGELOG.md` exists | filesystem probe |
+| 4 | Lifecycle dirs present (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` at minimum) | filesystem probe; require all three |
+| 5 | Status frontmatter used in lifecycle artifacts | `grep -l '^status:' docs/*/*.md` returns ≥ 1 |
+| 6 | ROADMAP uses canonical sections (`## In flight`, `## Next actions`, `## Recently shipped` at minimum) | grep on roadmap; require all three |
+| 7 | ADRs at `docs/adrs/NNNN-*.md` | filesystem probe with name pattern |
+
+**Render the maturity block in the footer ONLY when partial adoption is detected** — i.e. at least one signature ✓ AND at least one signature ✗. If everything matches: the project is fully canonical, no maturity block. If nothing matches: the project doesn't follow these conventions at all, no maturity block (suggesting them would be presumptuous).
+
+The block format:
+
+```
+Project orientation maturity (briefing quality could improve):
+- [<✓|✗>] <signature 1 name> — <one-line note: what it gives you / where to fix>
+- [<✓|✗>] <signature 2 name> — …
+…
+
+Adopt or learn more: <CANONICAL_CONVENTIONS_URL>
+```
+
+Read-only. Suggestions, not edits.
+
 ### Layer 3 — Graceful degradation
 
 Standing instructions for when a source fails. Never fabricate; always name the gap.
@@ -201,34 +253,36 @@ Standing instructions for when a source fails. Never fabricate; always name the 
 | `gh` missing or unauthed | Skip GitHub queries; note the gap in the footer |
 | `git fetch` slow / network down | Use stale refs; footer: *"ahead/behind from last fetch <date>"* |
 | `git fetch` fails with auth error on a configured remote | Use stale refs; footer: *"fetch failed (auth) — refs may be stale; check credentials"* — distinct signal from "no remote" |
-| No `## Project context` in CLAUDE.md | Run Layer 1 only; footer link to the conventions guide |
-| Declared source unreachable (auth-walled, missing CLI/MCP) | Name the gap explicitly; continue with the remaining sources |
+| L2a absent + L2b detected nothing | Run L1 only; if no maturity-block trigger, render the footer with a one-line *"No `## Project context` section detected and no canonical-conventions signatures found — orientation relies on git+filesystem discovery only. See `<CANONICAL_CONVENTIONS_URL>` to opt in."* |
+| L2a absent + L2b partial | Render the convention-maturity block in the footer (see check above) |
+| Declared L2a source unreachable (auth-walled, missing CLI/MCP) | Name the gap explicitly; continue with the remaining sources |
+| Working memory not found at any L2b path | Footer note: *"no working-memory artifacts detected; orientation relies on git history."* |
 | Diff over per-file cap (200 lines) | Summarise rather than dump |
 | Detached HEAD | Say so; find the nearest branch ref and report against it |
-| Empty repo / no `docs/` | Produce a minimal briefing; suggest `/init-project` (once shipped) |
+| Empty repo / no `docs/` | Produce a minimal briefing; do not invent suggestions |
 | Untracked file matches secret pattern (`.env*`, `*.pem`, `*.key`, `id_rsa*`, `credentials*`) | Skip silently — never read |
 
 ## In-flight detection
 
-What triggers the briefing's adaptive output to lead with active work.
+What triggers the briefing's adaptive output to lead with active work. Universal signals at the top, conventions-resolved signals below.
 
 | Signal | Strength | Source / notes |
 |---|---|---|
-| Open PR authored by me | Strong | from Layer 1 `gh pr list --author @me --state open` |
-| Unpushed commits on current branch | Strong | from Layer 1 `git rev-list --count @{upstream}..HEAD`; covers "branch ahead of upstream" — Layer 1 does not separately compute ahead-of-base |
-| Unpushed commits on *other* local branches | Strong | from Layer 1 `git for-each-ref` + ahead counts |
-| Stashes | Strong | from Layer 1 `git stash list`; the most-forgotten state in git |
-| ROADMAP `## In flight` non-empty | Strong | from Layer 1 working-memory read (this repo's convention) |
-| Designs/plans with `status: draft` or `status: open` | Strong | from Layer 1 lifecycle for-loop (the portable form, not the brace-glob in earlier drafts of the spec) |
-| Tracker items in "in progress" status | Strong | from Layer 2 query; only if a tracker is declared |
-| Working tree dirty (uncommitted edits) | Strong | from Layer 1 `git status --porcelain`; read the content of changed files (subject to Layer 1's 200-line cap) |
-| Local-only branches (no upstream) | Medium | from Layer 1 `git branch -vv` filter |
-| Worktrees (count > 1) | Medium | from Layer 1 `git worktree list` |
-| Recent commits in last 24h | Weak | from Layer 1 `git log --since=1.day`; orientation only, never leads |
+| Open PR authored by me | Strong | from L1 `gh pr list --author @me --state open` |
+| Unpushed commits on current branch | Strong | from L1 `git rev-list --count @{upstream}..HEAD`; covers "branch ahead of upstream" |
+| Unpushed commits on *other* local branches | Strong | from L1 `git for-each-ref` + ahead counts |
+| Stashes | Strong | from L1 `git stash list`; the most-forgotten state in git |
+| Working tree dirty (uncommitted edits) | Strong | from L1 `git status --porcelain`; read content of changed files (200-line cap) |
+| Tracker items in "in progress" status | Strong | from L2a tracker integration; only if a tracker is declared |
+| ROADMAP "in-flight section" non-empty | Strong | from L2b-resolved roadmap path + L2b-resolved in-flight section regex |
+| Lifecycle artifacts with in-flight status | Strong | from L2b-resolved working-memory dirs + L2b-resolved in-flight status set |
+| Local-only branches (no upstream) | Medium | from L1 `git branch -vv` filter |
+| Worktrees (count > 1) | Medium | from L1 `git worktree list` |
+| Recent commits in last 24h | Weak | from L1 `git log --since=1.day`; orientation only, never leads |
 
 **Detection rule:** if any *Strong* signal is present, the output leads with the **What's in flight** section. Otherwise lead with **Recent activity** and **What's next**. Don't sum or score — any single Strong hit is enough to flip the lead. Medium signals never trigger the lead but are reported (under **What's in flight** when it runs, otherwise under **Recent activity**). Weak signals never lead and feed **Recent activity** only.
 
-The table's row order is the order the resulting bullets should be reported in, not a priority ranking — Strong signals are equally sufficient to trigger the lead. Strong rows are listed first to make the "is the lead triggered?" check fast (read down until a Strong hit, or hit the first Medium row to know none was found).
+The table's row order is the order the resulting bullets should be reported in, not a priority ranking — Strong signals are equally sufficient to trigger the lead.
 
 (The output sections themselves are defined under **Output template** below.)
 
@@ -247,24 +301,24 @@ In adaptive mode (the default), two sections always run and four are conditional
 
 ### Snapshot                                   ← always
 - Branch: <current> (<N> ahead, <M> behind <upstream>)
-- Roadmap: X/Y items · next: <item>
+- Roadmap: X/Y items · next: <item>     ← only if a roadmap was found (L2a or L2b)
 - Recent activity: <last commit / last PR / last shipped lifecycle item>
-- [Layer-2 bullets if declared: tracker counts, board column health, etc.]
+- [Layer-2a bullets if declared: tracker counts, board column health, etc.]
 
 ### What's in flight                           ← only if any strong signal
 - Working tree: <paths and one-line summary>
 - Local-only: <unpushed commits / stashes / no-upstream branches / worktrees if > 1>
-- ROADMAP "## In flight": <items + state>
+- <roadmap section title>: <items + state>     ← rendered with L2b-resolved heading
 - Open PRs: <your PRs + review status>
-- Drafts: <designs/plans with status: draft|open>
-- Tracker (if layer 2): <items in progress>
+- Drafts: <lifecycle artifacts with in-flight status>     ← rendered with L2b-resolved status set
+- Tracker (if L2a): <items in progress>
 
 ### Recent activity                            ← always (last 3-5 things)
 Synthesised, not dumped. Group by theme. Reference SHA / PR# / file path.
 
 ### What's next                                ← always
 Recommended next action with reasoning.
-Reference roadmap priority, dependency chain, newly unblocked items.
+Reference roadmap priority (if found), dependency chain, newly unblocked items.
 
 ### Decisions / attention                      ← only if there's something
 - Design calls AI shouldn't make alone
@@ -274,7 +328,7 @@ Reference roadmap priority, dependency chain, newly unblocked items.
 
 ---
 Sources: read <list>; skipped <list> (reason).
-[Optional: No `## Project context` section — see <link> to enrich.]
+[Optional: convention-maturity block, only when partial adoption — see L2b]
 [Optional: Saved to <path>]
 ```
 
@@ -286,17 +340,17 @@ Sources: read <list>; skipped <list> (reason).
 
 If everything else got cut, the TL;DR alone should still be useful.
 
-**Snapshot:** Always present. One-line bullets only. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts from Layer 1; roadmap line from `docs/ROADMAP.md`; recent-activity line from the most recent of `git log -1`, last merged PR, or last `status: shipped` lifecycle item. Add Layer-2 bullets (tracker counts, board column health) only when those sources were declared and read.
+**Snapshot:** Always present. One-line bullets only. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts from L1; roadmap line from the L2-resolved roadmap path (if found); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add L2a bullets (tracker counts, board column health) only when those sources were declared and read.
 
-**What's in flight:** Only if any Strong signal. Group bullets by source category — working tree (paths from `git status --porcelain`), local-only (unpushed / stashes / no-upstream branches / worktrees), ROADMAP `## In flight`, open PRs, drafts (`status: draft|open` in lifecycle dirs), tracker. Don't dump diffs — summarise per Layer 1's 200-line cap.
+**What's in flight:** Only if any Strong signal. Group bullets by source category. Render the roadmap-section bullet using the L2b-resolved heading (e.g. `ROADMAP "## In flight":` for canonical projects; `ROADMAP "## Now":` for a project using Now/Next/Later; omit entirely if no roadmap was found). Render the drafts bullet using the L2b-resolved status set (e.g. `Drafts (status: draft|open|approved):` for canonical; `Drafts (status: wip):` for a project using a different vocabulary; omit if no working memory was found). Don't dump diffs — summarise per L1's 200-line cap.
 
 **Recent activity:** Always present. Last 3–5 things, synthesised not dumped. Group by theme rather than listing commits chronologically. Cite SHA / PR# / file path so the human can drill in.
 
-**What's next:** Always present. Recommended next action with reasoning. Reference roadmap priority, dependency chain, newly-unblocked items. One paragraph or 2–3 bullets, not a wall of text.
+**What's next:** Always present. Recommended next action with reasoning. Reference roadmap priority (if found), dependency chain, newly-unblocked items. One paragraph or 2–3 bullets, not a wall of text.
 
 **Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
 
-The **source-coverage footer** (the block under the `---` rule, named for what it does — declare which sources backed the briefing) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section. **Do not hardcode the relative link `../../guides/...`** — at runtime SKILL.md installs to `~/.claude/skills/briefing/` and the relative path does not resolve. Instead, render the line with a project-discoverable link if available (look for `docs/*guides*/project-structure-and-conventions-guide.md` or `guides/guide-project-structure-and-conventions.md` in the current project; if found, link to its §5.8) and otherwise render in prose only, e.g. *"No `## Project context` section — see your conventions guide §5.8 to enrich (canonical reference lives in `claude-code-resources`)"*. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
+The **source-coverage footer** (the block under the `---` rule) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The optional **convention-maturity block** appears below the footer line when partial-adoption is detected (per the convention-maturity check above) — render the block with the 7 ✓/✗ rows and the canonical-conventions URL. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
 
 ## Depth contract
 
@@ -304,8 +358,8 @@ The depth dial scales three things together — output length, source breadth, a
 
 | Depth | Length | Sources read | Wall-clock | Use when |
 |---|---|---|---|---|
-| `quick` | < 300w | Layer 1 essential only (git status/log/diff, ROADMAP head, last PR, last commit) — ~5–7 reads | < 5s | "Remind me where I am, fast" |
-| (adaptive) | content-driven | Layer 1 full + Layer 2 if declared | 5–15s | Default |
+| `quick` | < 300w | L1 essential only (git status/log/diff, last PR, last commit) plus L2-resolved roadmap head if available — ~5–7 reads | < 5s | "Remind me where I am, fast" |
+| (adaptive) | content-driven | L1 full + L2a if declared + L2b sniffing | 5–15s | Default |
 | `standard` | 600–1000w | All adaptive sources, no skipping | 10–20s | Forces full coverage |
 | `deep` | 1200–2000w | Standard + historical sources + cross-source synthesis + per-project memory files | 20–60s | "Real planning session, audit the lot" |
 
@@ -317,13 +371,13 @@ The depth dial scales three things together — output length, source breadth, a
 | Closed issues in last 30 days (`gh issue list --state closed --search "closed:>=$(date -u -v-30d +%Y-%m-%d)"`) | What got resolved — useful for "is this old issue still relevant?" |
 | Stale branches (`git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative) %(committerdate:short)' refs/heads/` — filter for `committerdate:short` older than 30 days) | Cleanup signal — branch graveyard surfaces |
 | Stale open PRs (open > 14 days) | Forgotten work; different from in-flight because not moving |
-| Recent ADRs (last 5 in `docs/adrs/`) | Architectural context affecting next moves |
+| Recent ADRs (last 5 from L2b-resolved ADR location) | Architectural context affecting next moves |
 | Cross-source synthesis | Recurring themes across 3+ sources flagged as systemic |
-| Layer-2 closed items | If layer 2 configured, fetch closed items from last 7 days, not just open |
-| Trend analysis on CHANGELOG | Velocity / cadence / scope drift across last 5–10 entries |
+| L2a closed items | If an L2a tracker is configured, fetch closed items from last 7 days, not just open |
+| Trend analysis on changelog | Velocity / cadence / scope drift across last 5–10 entries (when a changelog was found) |
 | Per-project memory files | Read individual files in `~/.claude/projects/<slug>/memory/` (MEMORY.md index already in context) |
 
-**Not read at any depth:** raw conversation transcripts on disk. Reading them would undermine [the conventions guide's §6.5 working-memory discipline](../../guides/guide-project-structure-and-conventions.md#65-ai-agent-update-triggers-working-memory-discipline) (artifacts become optional if briefings can recover from transcripts), transcripts are noisy (corrections, abandoned approaches, false starts), and the on-disk format is undocumented Anthropic internals. The principled equivalent is a Stop hook with an explicit snapshot schema — deferred (Approach C in the design doc).
+**Not read at any depth:** raw conversation transcripts on disk. Reading them would undermine the working-memory discipline the canonical conventions describe (artifacts become optional if briefings can recover from transcripts), transcripts are noisy (corrections, abandoned approaches, false starts), and the on-disk format is undocumented Anthropic internals. The principled equivalent is a Stop hook with an explicit snapshot schema — deferred (Approach C in the design doc).
 
 ## Save behaviour
 
@@ -363,7 +417,7 @@ in-flight: <yes|no>
 ---
 ```
 
-**Body:** the verbatim rendered briefing (the same text the user just saw), including the source-coverage footer.
+**Body:** the verbatim rendered briefing (the same text the user just saw), including the source-coverage footer and (if applicable) the convention-maturity block.
 
 **Final line printed to the user** after the file is written:
 
@@ -382,8 +436,9 @@ The save log is the only write this skill ever makes; everything else is read-on
 - **Concise over comprehensive.** Bullets when structure helps scanning. No "It's worth noting that…"
 - **Honest about gaps.** Source unreachable / empty → name it, don't fabricate.
 - **Read-only on everything except `briefing-log/`.** The save log is the only write the skill ever makes; it lands in a dedicated directory, never in project files.
+- **Suggest, don't impose.** When canonical-conventions adoption is partial, the maturity block surfaces the gaps and links the canonical guide. Never auto-applies a convention; never edits CLAUDE.md or any other project file.
 - **Prefer "you" framing.** This is a personal orientation tool ("you stopped mid-X"). For orientation, "you" is sharper than "we" or "the code" — the user invoked the skill *to be reminded what they were doing*.
-- **No time estimates.** Don't say "this should take 2 hours." Estimate scope (small / medium / large by analogy to similar past items in CHANGELOG) at most.
+- **No time estimates.** Don't say "this should take 2 hours." Estimate scope (small / medium / large by analogy to similar past items in the changelog) at most.
 
 ## Anti-fabrication
 
@@ -393,14 +448,16 @@ The save log is the only write this skill ever makes; everything else is read-on
 - **Don't pretend a tracker integration worked when it didn't.** If the CLI is missing or the MCP failed, name the gap; do not invent items.
 - **Don't overstate freshness.** If `git fetch` failed and refs are 2 days old, say so. The cost of stale data presented as fresh is higher than the cost of stale data labelled stale.
 - **Don't synthesise patterns from thin data.** "Trend" requires 3+ data points. Below that, report individual facts; don't editorialise into a pattern.
+- **Don't presume conventions.** If L2b detects no canonical-conventions signatures, do NOT render the maturity block (it would be presumptuous to suggest "our" conventions to a project that hasn't adopted any of them).
 
 ## What NOT to do
 
 - Don't read raw conversation transcripts — see **Depth contract**, "Not read at any depth".
-- Don't `git pull` — only `git fetch`. The fetch is read-only and never modifies the working tree (see Layer 1's git-refs-refresh callout).
+- Don't `git pull` — only `git fetch`. The fetch is read-only and never modifies the working tree (see L1's git-refs-refresh callout).
 - Don't dump per-file diffs over 200 lines — summarise as `path:line-range (~N lines, looks like <one-line summary>)`.
 - Don't fabricate PR numbers, file paths, commit SHAs, or URLs. If uncertain, omit or hedge.
 - Don't compute metrics — cite them from existing tooling (line counts, ahead/behind, dates).
 - Don't pad sections with nothing to say. In adaptive mode, omit empty sections entirely.
-- Don't estimate time-to-completion. Estimate scope by analogy to similar CHANGELOG items at most.
+- Don't estimate time-to-completion. Estimate scope by analogy to similar changelog items at most.
 - Don't write outside `briefing-log/`. Every other path this skill touches is read-only.
+- Don't render the convention-maturity block when nothing canonical was detected. Suggesting our conventions to a project that's chosen others is presumptuous; the block is for projects that have *partially* adopted, where naming the gap is helpful.
