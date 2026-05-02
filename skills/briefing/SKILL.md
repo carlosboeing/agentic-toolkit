@@ -8,7 +8,7 @@ description: |
   next if not. Use whenever you start a session and need to catch up:
   "where am I, what was I doing, what's next?", "what changed while I was
   away?", "where did I stop?", or just /briefing.
-argument-hint: "[quick|standard|deep] [save] [help]"
+argument-hint: "[depth] [save] [help]"
 ---
 
 # `/briefing` — Adaptive project orientation
