@@ -8,6 +8,40 @@ This file is auto-loaded on every session. It is the operator-facing brief; `REA
 
 <one paragraph: what the project is, who/what it's for, current stage. Replace this placeholder.>
 
+## Project context
+
+<!--
+This section declares where project-tracking information lives so AI tools
+(notably the /briefing skill from claude-code-resources) can read it without
+guessing. Each line is `- **Field**: value`. Recognised fields:
+
+  - **Tracker**       — where work items live (GitHub Issues, Linear, Jira,
+                        Notion, GitHub Project N, file path, or `none`)
+  - **Board**         — URL of the active board / project view
+  - **Roadmap**       — file path or external URL of the forward view
+  - **Changelog**     — file path or external URL of recent shipped work
+  - **Architecture**  — file path or directory of architecture docs
+  - **Working memory** — directory holding the lifecycle artifacts
+                         (default: docs/ following the numbered-lifecycle convention)
+  - **Auto-fetch**    — `yes` (default) or `no` for whether briefings may
+                        run `git fetch` to refresh refs
+  - **Other**         — free-form bullet list for project-specific context
+
+Absent fields fall back to layer-1 defaults at canonical paths. If you don't
+use one of these (e.g., no formal tracker), set the value to `none` so the
+briefing knows the absence is intentional.
+-->
+
+- **Tracker**: <your tracker, e.g. GitHub Issues / Linear team FOO / Jira project BAR / none>
+- **Board**: <URL or `none`>
+- **Roadmap**: docs/ROADMAP.md
+- **Changelog**: docs/CHANGELOG.md
+- **Architecture**: docs/architecture.md
+- **Working memory**: docs/ (numbered lifecycle convention)
+- **Auto-fetch**: yes
+- **Other**:
+  - (free-form bullets for project-specific notes)
+
 ## `docs/` — the project's working memory
 
 `docs/` records how this project evolves: the lifecycle of each piece of work (brainstorm → design → plan → retro), the ongoing indexes that orient new readers (ROADMAP, CHANGELOG), and the persistent decisions that outlive any single phase (ADRs). Authored by whoever's working on the project — human, AI, or both — and structured so anyone can answer "what did we decide and why?" without archaeology. AI assistants reading it on session start is a benefit, not the purpose.
