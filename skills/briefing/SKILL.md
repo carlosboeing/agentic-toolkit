@@ -226,7 +226,7 @@ What triggers the briefing's adaptive output to lead with active work.
 
 The table's row order is the order the resulting bullets should be reported in, not a priority ranking — Strong signals are equally sufficient to trigger the lead. Strong rows are listed first to make the "is the lead triggered?" check fast (read down until a Strong hit, or hit the first Medium row to know none was found).
 
-(The output sections themselves are defined under **Output template** below. Until **Depth** ships in a later task, the `quick`/`standard`/`deep` keywords are accepted by the parser but produce the adaptive output unchanged — surface the unhandled override in the source-coverage footer.)
+(The output sections themselves are defined under **Output template** below.)
 
 ## Output template
 
@@ -293,3 +293,110 @@ If everything else got cut, the TL;DR alone should still be useful.
 **Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
 
 The **source-coverage footer** (the block under the `---` rule, named for what it does — declare which sources backed the briefing) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section, and links to the conventions guide [§5.8 — `## Project context` section in CLAUDE.md](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd). The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** in a later section. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
+
+## Depth contract
+
+The depth dial scales three things together — output length, source breadth, and wall-clock — because deep output requires deep input which takes time.
+
+| Depth | Length | Sources read | Wall-clock | Use when |
+|---|---|---|---|---|
+| `quick` | < 300w | Layer 1 essential only (git status/log/diff, ROADMAP head, last PR, last commit) — ~5–7 reads | < 5s | "Remind me where I am, fast" |
+| (adaptive) | content-driven | Layer 1 full + Layer 2 if declared | 5–15s | Default |
+| `standard` | 600–1000w | All adaptive sources, no skipping | 10–20s | Forces full coverage |
+| `deep` | 1200–2000w | Standard + historical sources + cross-source synthesis + per-project memory files | 20–60s | "Real planning session, audit the lot" |
+
+**Deep-mode-only sources** (extending the time window beyond "now"):
+
+| Source | Why it earns deep |
+|---|---|
+| Closed PRs in last 30 days (`gh pr list --state merged --limit 20`) | Trend in shipping cadence; what got merged the briefing's "recent activity" missed |
+| Closed issues in last 30 days | What got resolved — useful for "is this old issue still relevant?" |
+| Stale branches (`git for-each-ref --sort=-committerdate refs/heads/`, anything not touched 30+ days) | Cleanup signal — branch graveyard surfaces |
+| Stale open PRs (open > 14 days) | Forgotten work; different from in-flight because not moving |
+| Recent ADRs (last 5 in `docs/adrs/`) | Architectural context affecting next moves |
+| Cross-source synthesis | Recurring themes across 3+ sources flagged as systemic |
+| Layer-2 closed items | If layer 2 configured, fetch closed items from last 7 days, not just open |
+| Trend analysis on CHANGELOG | Velocity / cadence / scope drift across last 5–10 entries |
+| Per-project memory files | Read individual files in `~/.claude/projects/<slug>/memory/` (MEMORY.md index already in context) |
+
+**Not read at any depth:** raw conversation transcripts on disk. Reading them would undermine the §6.5 working-memory discipline (artifacts become optional if briefings can recover from transcripts), transcripts are noisy (corrections, abandoned approaches, false starts), and the on-disk format is undocumented Anthropic internals. The principled equivalent is a Stop hook with an explicit snapshot schema — deferred (Approach C in the design doc).
+
+## Save behaviour
+
+Triggered by passing `save` (or synonyms `--save`, `export`) — see **How to parse the args**.
+
+Determine the destination directory and a non-colliding filename, then create the directory if needed:
+
+```bash
+# Determine destination — repo-local if in a git repo, otherwise home
+if git rev-parse --show-toplevel >/dev/null 2>&1; then
+  DEST="$(git rev-parse --show-toplevel)/.claude/briefing-log"
+else
+  DEST="$HOME/.claude/briefing-log"
+fi
+mkdir -p "$DEST"
+
+# Filename — ISO8601 to the minute, UTC
+TS=$(date -u +%Y-%m-%dT%H%M)
+FILE="$DEST/$TS.md"
+
+# On collision, append -2, -3, ...
+N=2; while [[ -e "$FILE" ]]; do FILE="$DEST/$TS-$N.md"; N=$((N+1)); done
+```
+
+The file's content is YAML frontmatter followed by the verbatim rendered briefing.
+
+**Frontmatter** — six fields, in this order:
+
+```yaml
+---
+type: briefing-log
+date: YYYY-MM-DDTHH:MM
+project: <git-repo-name or cwd basename>
+branch: <current>
+depth: <quick|standard|deep|adaptive>
+in-flight: <yes|no>
+---
+```
+
+**Body:** the verbatim rendered briefing (the same text the user just saw), including the source-coverage footer.
+
+**Final line printed to the user** after the file is written:
+
+```
+Saved to <abs path>. briefing-log/ is unignored by default — commit or .gitignore your call.
+```
+
+The save log is the only write this skill ever makes; everything else is read-only.
+
+## Tone
+
+- **Lead with the most important thing.** TL;DR carries the key message; if everything else got cut, TL;DR alone should be useful.
+- **Be specific.** File paths, SHAs, branch names, PR numbers, ROADMAP item names. Vague briefings are worse than no briefing.
+- **Cite metrics, never compute them.** Read line counts, ahead/behind, dates from existing tooling. Don't aggregate token costs or estimate durations.
+- **No emojis, no hype.** "Last shipped X" not "Successfully shipped X! 🎉".
+- **Concise over comprehensive.** Bullets when structure helps scanning. No "It's worth noting that…"
+- **Honest about gaps.** Source unreachable / empty → name it, don't fabricate.
+- **Read-only on everything except `briefing-log/`.** The save log is the only write the skill ever makes; it lands in a dedicated directory, never in project files.
+- **Prefer "you" framing.** This is a personal orientation tool ("you stopped mid-X"). For orientation, "you" is sharper than "we" or "the code" — the user invoked the skill *to be reminded what they were doing*.
+- **No time estimates.** Don't say "this should take 2 hours." Estimate scope (small / medium / large by analogy to similar past items in CHANGELOG) at most.
+
+## Anti-fabrication
+
+- **Don't generate from memory.** Every data point comes from a source read this invocation.
+- **Don't compute metrics.** Read aggregates from existing artifacts; cite raw counts you can verify.
+- **Don't fabricate URLs, PR numbers, file paths, commit SHAs.** If uncertain, omit or hedge ("there may be additional…").
+- **Don't pretend a tracker integration worked when it didn't.** If the CLI is missing or the MCP failed, name the gap; do not invent items.
+- **Don't overstate freshness.** If `git fetch` failed and refs are 2 days old, say so. The cost of stale data presented as fresh is higher than the cost of stale data labelled stale.
+- **Don't synthesise patterns from thin data.** "Trend" requires 3+ data points. Below that, report individual facts; don't editorialise into a pattern.
+
+## What NOT to do
+
+- Don't read raw conversation transcripts — see **Depth contract**, "Not read at any depth".
+- Don't `git pull` — only `git fetch`. The fetch is read-only and never modifies the working tree (see Layer 1's git-refs-refresh callout).
+- Don't dump per-file diffs over 200 lines — summarise as `path:line-range (~N lines, looks like <one-line summary>)`.
+- Don't fabricate PR numbers, file paths, commit SHAs, or URLs. If uncertain, omit or hedge.
+- Don't compute metrics — cite them from existing tooling (line counts, ahead/behind, dates).
+- Don't pad sections with nothing to say. In adaptive mode, omit empty sections entirely.
+- Don't estimate time-to-completion. Estimate scope by analogy to similar CHANGELOG items at most.
+- Don't write outside `briefing-log/`. Every other path this skill touches is read-only.
