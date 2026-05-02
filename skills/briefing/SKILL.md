@@ -133,7 +133,7 @@ Read each if present at the canonical path. If absent, do not search elsewhere �
 **Lifecycle dirs (status frontmatter + recency):**
 
 ```bash
-for d in docs/0-brainstorms docs/2-design docs/3-plans docs/4-reviews docs/adrs; do
+for d in docs/[0-9]-* docs/adrs; do
   [ -d "$d" ] || continue
   find "$d" -maxdepth 1 -name '*.md' -print0 2>/dev/null \
     | xargs -0 grep -l '^status:' 2>/dev/null
@@ -141,7 +141,11 @@ for d in docs/0-brainstorms docs/2-design docs/3-plans docs/4-reviews docs/adrs;
 done
 ```
 
+The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`, `1-discovery`, `2-design`, `3-plans`, `4-reviews`) and any project-specific extensions (e.g. `5-guides`, `6-adrs` in some sister repos). `docs/adrs` is also probed because the canonical convention places ADRs there without a number prefix; in deviations that put ADRs at `docs/6-adrs/` the glob picks them up.
+
 Use the `status:` frontmatter to filter (open/draft/approved/shipped/parked/superseded); use `ls -t` for recency. The lifecycle convention is documented in [`guides/guide-project-structure-and-conventions.md`](../../guides/guide-project-structure-and-conventions.md).
+
+**zsh portability note:** if you write a follow-up command that extracts the `status:` value into a shell variable, **do not name the variable `status`** — it's read-only in zsh (it holds the last command's exit code). Use `st`, `state`, or similar instead. The canonical block above is safe because it uses `grep -l '^status:'` (file listing only); the trap is in ad-hoc rewrites that read the value.
 
 **Per-project memory:**
 
@@ -292,7 +296,7 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
 
-The **source-coverage footer** (the block under the `---` rule, named for what it does — declare which sources backed the briefing) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section, and links to the conventions guide [§5.8 — `## Project context` section in CLAUDE.md](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd). The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
+The **source-coverage footer** (the block under the `---` rule, named for what it does — declare which sources backed the briefing) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section. **Do not hardcode the relative link `../../guides/...`** — at runtime SKILL.md installs to `~/.claude/skills/briefing/` and the relative path does not resolve. Instead, render the line with a project-discoverable link if available (look for `docs/*guides*/project-structure-and-conventions-guide.md` or `guides/guide-project-structure-and-conventions.md` in the current project; if found, link to its §5.8) and otherwise render in prose only, e.g. *"No `## Project context` section — see your conventions guide §5.8 to enrich (canonical reference lives in `claude-code-resources`)"*. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
 
 ## Depth contract
 
