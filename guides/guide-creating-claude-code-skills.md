@@ -2,7 +2,7 @@
 title: "Creating Claude Code Skills — A Practitioner's Guide"
 type: guide
 scope: [skills, claude-code]
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-02
 related:
   - skills/learn/SKILL.md
 ---
@@ -120,7 +120,7 @@ Migrate the $0 component from $1 to $2.
 
 `/migrate-component SearchBar React Vue` → `Migrate the SearchBar component from React to Vue.`
 
-**Pattern C — closed keyword sets (the `/learn` pattern)**: when you want order-independent flags (level, depth, mode toggles), don't use positional arguments — instead, parse `$ARGUMENTS` inside the skill body using *closed keyword sets*. The skill body says "look at the args, bucket each token into one of these closed sets, default the rest." This is what makes `/learn pr 42 simple deep-dive save` and `/learn save deep-dive simple pr 42` equivalent.
+**Pattern C — closed keyword sets (this repo's house pattern, used by `/learn` and `/briefing`)**: when you want order-independent flags (level, depth, mode toggles), don't use positional arguments — instead, parse `$ARGUMENTS` inside the skill body using *closed keyword sets*. The skill body says "look at the args, bucket each token into one of these closed sets, default the rest." This is what makes `/learn pr 42 simple deep-dive save` and `/learn save deep-dive simple pr 42` equivalent.
 
 ```markdown
 1. **Parse the args.** Walk the tokens once and bucket each one:
@@ -130,6 +130,8 @@ Migrate the $0 component from $1 to $2.
    - Help keywords (closed set): `help`, `?`, `usage`. Short-circuit if any appear.
    - Everything else is the target spec.
 ```
+
+This repo's two non-trivial skills (`/learn` and `/briefing`) both use this pattern with overlapping vocabulary: `quick` / `standard` / `deep` for depth dials, `save` / `--save` / `export` for save toggles, `help` / `?` / `usage` / `--help` / `-h` for help short-circuits. Reuse this vocabulary in new skills where it fits — consistency across skills compounds the muscle-memory benefit without per-skill design cost.
 
 Closed sets give you discoverability (`argument-hint` lists the keywords), order-independence (great UX), and synonyms ("eli5" or "grandma" both work). The cost is a few sentences in the skill body explaining the parser — worth it for skills with more than two dials.
 
