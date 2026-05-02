@@ -131,7 +131,7 @@ Migrate the $0 component from $1 to $2.
    - Everything else is the target spec.
 ```
 
-This repo's two non-trivial skills (`/learn` and `/briefing`) both use this pattern with overlapping vocabulary: `quick` / `standard` / `deep` for depth dials, `save` / `--save` / `export` for save toggles, `help` / `?` / `usage` / `--help` / `-h` for help short-circuits. Reuse this vocabulary in new skills where it fits — consistency across skills compounds the muscle-memory benefit without per-skill design cost.
+This repo's two skills (`/learn` and `/briefing`) both use this pattern with partially overlapping vocabulary: `quick` (synonym `peek`) for the lowest depth tier in both; `save` / `--save` / `export` for save toggles in both; `help` / `?` / `usage` / `--help` / `-h` for help short-circuits in both. The middle and high depth tiers diverge by design — `/learn` uses `overview` / `deep-dive` (codebase coverage axis), `/briefing` uses `standard` / `deep` (length × source-breadth × wall-clock axis) — because each skill's "more depth" means a conceptually different thing. For new skills, prefer `quick` / `standard` / `deep` unless you have a `/learn`-shaped reason not to.
 
 Closed sets give you discoverability (`argument-hint` lists the keywords), order-independence (great UX), and synonyms ("eli5" or "grandma" both work). The cost is a few sentences in the skill body explaining the parser — worth it for skills with more than two dials.
 
