@@ -48,6 +48,16 @@ Conventional Commits format: `<type>(<scope>): <description>`. Types: `feat`, `f
 - **Don't suppress errors.** Surface failure modes plainly; don't fabricate success.
 - **No emojis in files** unless the user explicitly asks.
 
+## Working-memory discipline (required for AI sessions)
+
+`docs/` is maintained primarily by AI agents. The [conventions guide §6.5](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md) enumerates the event triggers that require writes during a session — read it. Summary of the rules that bite most often:
+
+- **When an initiative starts in conversation, write it down immediately.** Substantive new work creates `docs/0-brainstorms/<topic>.md` (`status: open`) AND a one-line pointer in ROADMAP `## Future considerations` or `## Next actions`. Don't wait for a commit prompt.
+- **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter (`status: shipped`), AND the relevant evergreen state docs (`docs/architecture.md`, or `docs/system/*` if used).
+- **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
+- **Substantive audits or retros emerging from a conversation get saved** to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
+- **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did. If not, propose the missing writes inline.
+
 ## Where to look first
 
 - For visitor-facing intent and quick-start: [`README.md`](README.md).

@@ -528,7 +528,7 @@ This keeps the always-current docs honest and the ROADMAP synchronised.
 
 ### 6.3 ROADMAP discipline
 
-`docs/ROADMAP.md` is the single source of truth for "what's next." Six sections:
+`docs/ROADMAP.md` is the single source of truth for "what's next." Seven sections:
 
 | Section | Meaning |
 |---|---|
@@ -537,7 +537,8 @@ This keeps the always-current docs honest and the ROADMAP synchronised.
 | **Drafts (pending review)** | Designs/plans with `status: draft` needing review before they unlock execution |
 | **Future considerations** | On the radar but not designed yet — not actionable until designed |
 | **Open questions** | True unknowns — things to find out or decide *before* they could become actions |
-| **Recently shipped** | Backward view; mirrors CHANGELOG |
+| **Parked** | Items considered and deferred — kept visible so they're not forgotten (PEP-vocabulary prefix) |
+| **Recently shipped** | Backward view; mirrors CHANGELOG with shorter entries |
 
 **Lifecycle of an item in ROADMAP:**
 
@@ -545,7 +546,8 @@ This keeps the always-current docs honest and the ROADMAP synchronised.
 2. Designed → **Drafts** (a design + plan exist with `status: draft`).
 3. Draft reviewed and approved → **Next actions** (or **In flight** if starting immediately).
 4. Started → **In flight**.
-5. Shipped → **Recently shipped** + CHANGELOG entry + `system/*` updates + frontmatter `status: shipped`.
+5. Shipped → **Recently shipped** + CHANGELOG entry + evergreen-state updates + frontmatter `status: shipped`.
+6. Parked at any stage → **Parked** with `Deferred:` / `Declined:` / `Superseded:` prefix.
 
 **Triage question for any new item:**
 
@@ -553,17 +555,61 @@ This keeps the always-current docs honest and the ROADMAP synchronised.
 - Do we have a design but not approval yet? → **Drafts**
 - Do we have an idea but no design? → **Future considerations**
 - Do we need to figure something out first? → **Open questions**
+- Did we consider it and decide not now? → **Parked**
 
 **Substantial Next-actions get a brainstorm note.** When a Next action is more than a one-liner — e.g., setting up a recurring routine, planning a maintenance procedure, scoping out a comparative purchase — capture the *details* in `docs/0-brainstorms/YYYY-MM-DD-<topic>.md` with `status: open`. ROADMAP holds the one-line pointer and link; the brainstorm holds the full proposal.
+
+**Parked-item vocabulary (borrowed from [PEP 1](https://peps.python.org/pep-0001/)).** Each entry in `## Parked` carries a one-word prefix that says *why* the door is closed:
+
+| Prefix | Meaning | When to use |
+|---|---|---|
+| **Deferred:** | Stalled or paused; may revisit | Life happened; waiting on a trigger ("when X lands"); nothing wrong with the idea |
+| **Declined:** | Decided against after consideration | We thought about it and chose not to pursue; brief reasoning attached |
+| **Superseded:** | Replaced by another approach | A different design covers the same need; link to the replacement |
+
+This is the three-way semantic split PEP, KEP, and most mature proposal-tracking systems converge on (see industry research in `docs/4-reviews/2026-05-02-roadmap-conventions-audit.md` if it exists). Each parked entry should link to the underlying brainstorm or design file with frontmatter `status: parked` (for `Deferred`), `status: abandoned` (for `Declined`), or `status: superseded` (for `Superseded`).
+
+**Truncation rule for Recently shipped.** Keep the last 10 entries OR the last 90 days, whichever is shorter. Older shipped items live only in `CHANGELOG.md` (the long-term record). The ROADMAP's purpose is forward-leaning navigation, not historical archive.
 
 ### 6.4 Brainstorm graduation
 
 - A brainstorm becomes a research artifact (in `1-discovery/`) when it produces a referenceable thesis with a recommendation.
 - A brainstorm becomes a design (in `2-design/`) when it crystallises into a concrete proposal for a piece of work.
-- A brainstorm becomes a parked decision (status `parked` in `0-brainstorms/`) when it's deferred — with notes on what would unpark it.
-- A brainstorm becomes abandoned (status `abandoned`) when explicitly not pursuing — kept as historical record so the question doesn't get re-asked.
+- A brainstorm becomes a parked decision (status `parked` in `0-brainstorms/`) when it's deferred — with notes on what would unpark it. Surface in ROADMAP's `## Parked` section with the `Deferred:` prefix.
+- A brainstorm becomes abandoned (status `abandoned`) when explicitly not pursuing — kept as historical record so the question doesn't get re-asked. Surface in ROADMAP's `## Parked` section with the `Declined:` prefix.
 
 Link via `superseded_by:` frontmatter when a brainstorm graduates.
+
+### 6.5 AI-agent update triggers (working-memory discipline)
+
+This convention assumes AI coding agents (Claude Code, Codex, etc.) are primary maintainers of `docs/` going forward. AI agents work in conversations and treat conversation as ephemeral by default — without explicit triggers, working-memory artifacts (ROADMAP, CHANGELOG, brainstorms, ADRs) lag behind reality.
+
+**Event-triggered writes.** When any of the following happens during a session, the agent SHOULD make the listed change *in the same session*, not "later":
+
+| Event | Required write |
+|---|---|
+| Agreed to start a substantial new initiative not yet in `docs/` | Create `docs/0-brainstorms/YYYY-MM-DD-<topic>.md` with `status: open`. Add one-line pointer to ROADMAP `## Future considerations` (or `## Next actions` if ready to start). |
+| Brainstorm crystallises into a design during conversation | Create `docs/2-design/YYYY-MM-DD-<topic>-design.md` with `status: draft`. Move ROADMAP pointer from Future considerations / Next actions → `## Drafts (pending review)`. Set brainstorm `status: superseded`, `superseded_by: <design-path>`. |
+| Design approved | Flip frontmatter `status: approved`. Move ROADMAP pointer from Drafts → `## Next actions` (or `## In flight` if starting immediately). |
+| Implementation begins | Move ROADMAP pointer to `## In flight`. |
+| Implementation ships | Per §6.2 change discipline: flip design + plan to `status: shipped`; update evergreen state docs; add CHANGELOG entry; move ROADMAP pointer to `## Recently shipped`. All in the same commit (or commit series). |
+| Work parked / deferred | Flip artifact frontmatter to `status: parked` (or `abandoned` / `superseded`). Move ROADMAP pointer to `## Parked` with the appropriate prefix. |
+| New unresolved decision identified | Add to ROADMAP `## Open questions` with the question stated as a question. |
+| Open question resolved | Remove from `## Open questions`. The resolved decision lands in an ADR (`docs/adrs/<NNNN>-<title>.md`) or in a design's "Decisions" section. |
+| Substantive audit, retro, or analysis emerges from a conversation | Save to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md`. Don't let the work evaporate at session end. |
+
+**Session-end check.** Before ending a session in which we made non-trivial decisions, discovered convention gaps, agreed on changes, or did substantive evaluative work, the agent should explicitly verify:
+
+1. Has every status change in this session been written to the relevant artifact's frontmatter?
+2. Does ROADMAP accurately reflect what's now In flight / Drafts / Next actions / Parked?
+3. Did anything emerge that should be in `0-brainstorms/`, `4-reviews/`, or as an ADR but isn't?
+4. Is CHANGELOG up to date with shipped work?
+
+If the answer to any is "no," the agent should propose the missing writes inline before ending the session — not silently move on.
+
+**Recurring audit (recommended).** Schedule a recurring agent (via `/schedule` or equivalent) to run this same check periodically — weekly for active projects, monthly for slower-moving ones. The agent reads ROADMAP, scans `docs/` for status drift between ROADMAP entries and lifecycle artifacts, and reports gaps. This is the [GTD weekly review](https://gettingthingsdone.com/) made into infrastructure.
+
+**Why this needs to be explicit.** Conventions written for human authors assume an instinct to "save your work." AI agents have no such instinct — they treat the conversation as the work product unless told otherwise. The triggers above make the implicit instinct explicit and machine-actionable. Skipping them is the most common cause of working-memory rot in AI-maintained projects.
 
 ---
 

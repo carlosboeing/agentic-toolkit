@@ -72,6 +72,16 @@ Don't use `#N` in the subject or body unless intentionally referencing a GitHub 
 - **The README claims MIT and the LICENSE file confirms it.** Anything contributed back is under MIT.
 - **No emojis in files** unless the user explicitly asks.
 
+## Working-memory discipline (required for AI sessions)
+
+This repo's `docs/` is maintained primarily by AI agents. Conventions guide §6.5 enumerates the event triggers that require writes during a session — read it. Summary of the rules that bite most often:
+
+- **When an initiative starts in conversation, write it down immediately.** Substantive new work creates `docs/0-brainstorms/<topic>.md` (`status: open`) AND a one-line pointer in ROADMAP `## Future considerations` or `## Next actions`. Don't wait for a commit prompt.
+- **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter (`status: shipped`), AND the relevant evergreen state docs (per §6.2 change discipline).
+- **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
+- **Substantive audits or retros emerging from a conversation get saved** to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
+- **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did. If not, propose the missing writes inline.
+
 ## Where to look first
 
 - For visitor-facing intent and quick-start: `README.md`.
