@@ -203,3 +203,92 @@ Standing instructions for when a source fails. Never fabricate; always name the 
 | Detached HEAD | Say so; find the nearest branch ref and report against it |
 | Empty repo / no `docs/` | Produce a minimal briefing; suggest `/init-project` (once shipped) |
 | Untracked file matches secret pattern (`.env*`, `*.pem`, `*.key`, `id_rsa*`, `credentials*`) | Skip silently — never read |
+
+## In-flight detection
+
+What triggers the briefing's adaptive output to lead with active work.
+
+| Signal | Source | Strength |
+|---|---|---|
+| Open PR authored by me | `gh pr list --author @me --state open` | Strong |
+| Branch ahead of base | `git rev-list --count <base>..HEAD` > 0 | Strong |
+| Unpushed commits on current branch | `git log @{upstream}..HEAD` non-empty | Strong |
+| Unpushed commits on *other* local branches | `git for-each-ref` + ahead counts | Strong |
+| Local-only branches (no upstream) | `git branch -vv` filter | Medium |
+| Stashes | `git stash list` non-empty | Strong (most-forgotten state in git) |
+| Worktrees | `git worktree list` count > 1 | Medium |
+| ROADMAP `## In flight` non-empty | grep + read | Strong (this repo's convention) |
+| Designs/plans with `status: draft` or `status: open` | `grep -l "^status: \(draft\|open\)" docs/{2-design,3-plans,0-brainstorms}/` | Strong |
+| Tracker items in "in progress" status | layer-2 query | Strong (if configured) |
+| Working tree dirty (uncommitted edits) | `git status --porcelain` non-empty | Strong (with content read) |
+| Recent commits in last 24h | `git log --since=1.day` | Weak (orientation only, not in-flight) |
+
+**Detection rule:** if any *Strong* signal is present, the output leads with the **What's in flight** section. Otherwise, lead with **Recent activity** and **What's next**. Don't sum or score — check signals in priority order (top-to-bottom in the table) and stop at the first Strong hit.
+
+(The output sections themselves are defined under **Output template** below; the depth keywords' effect on this rule is defined under **Depth** in a later section.)
+
+## Output template
+
+Two sections always run; four are conditional on signal presence. Sections with nothing to say are omitted entirely, not padded. Quick mode collapses the template — see **Depth** below.
+
+```markdown
+## Briefing — <project name>
+<date> · <branch> · <ahead/behind summary>
+
+### TL;DR                                      ← always
+1–2 sentences. Leads with whatever matters most right now:
+- in-flight present  → "You stopped mid-X. Y is the next move."
+- clean state        → "Last shipped Z. Next priority is W."
+
+### Snapshot                                   ← always
+- Branch: <current> (<N> ahead, <M> behind <upstream>)
+- Roadmap: X/Y items · next: <item>
+- Recent activity: <last commit / last PR / last shipped lifecycle item>
+- [Layer-2 bullets if declared: tracker counts, board column health, etc.]
+
+### What's in flight                           ← only if any strong signal
+- Working tree: <paths and one-line summary>
+- Local-only: <unpushed commits / stashes / branches>
+- ROADMAP "## In flight": <items + state>
+- Open PRs: <your PRs + review status>
+- Drafts: <designs/plans with status: draft|open>
+- Tracker (if layer 2): <items in progress>
+
+### Recent activity                            ← always (last 3-5 things)
+Synthesised, not dumped. Group by theme. Reference SHA / PR# / file path.
+
+### What's next                                ← always
+Recommended next action with reasoning.
+Reference roadmap priority, dependency chain, newly unblocked items.
+
+### Decisions / attention                      ← only if there's something
+- Design calls AI shouldn't make alone
+- Recurring issues suggesting a convention change
+- Risky operations needed (force push? release cut?)
+- Stale work to triage (old PRs / ancient stashes / forgotten branches)
+
+---
+Sources: read <list>; skipped <list> (reason).
+[Optional: No `## Project context` section — see <link> to enrich.]
+[Optional: Saved to <path>]
+```
+
+### Section-by-section rules
+
+**TL;DR:** 1–2 sentences. Always present. Lead with the most important thing:
+- if in-flight present → "You stopped mid-X. Y is the next move."
+- if clean state      → "Last shipped Z. Next priority is W."
+
+If everything else got cut, the TL;DR alone should still be useful.
+
+**Snapshot:** Always present. One-line bullets only. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts from Layer 1; roadmap line from `docs/ROADMAP.md`; recent-activity line from the most recent of `git log -1`, last merged PR, or last `status: shipped` lifecycle item. Add Layer-2 bullets (tracker counts, board column health) only when those sources were declared and read.
+
+**What's in flight:** Only if any Strong signal. Group bullets by source category — working tree (paths from `git status --porcelain`), local-only (unpushed / stashes / no-upstream branches), ROADMAP `## In flight`, open PRs, drafts (`status: draft|open` in lifecycle dirs), tracker. Don't dump diffs — summarise per Layer 1's 200-line cap.
+
+**Recent activity:** Always present. Last 3–5 things, synthesised not dumped. Group by theme rather than listing commits chronologically. Cite SHA / PR# / file path so the human can drill in.
+
+**What's next:** Always present. Recommended next action with reasoning. Reference roadmap priority, dependency chain, newly-unblocked items. One paragraph or 2–3 bullets, not a wall of text.
+
+**Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
+
+The footer block under the `---` rule names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The `[Optional: No ## Project context section ...]` line appears only when the project's CLAUDE.md lacks that section, and links to the conventions guide [§5.8 — `## Project context` section in CLAUDE.md](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd). The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** in a later section. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer once the section ships; until then, surface them inline at the top of the response (per **How to parse the args**).
