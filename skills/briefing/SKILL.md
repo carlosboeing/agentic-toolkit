@@ -60,7 +60,8 @@ These sources run unconditionally, with no project configuration required. Probe
 
 ```bash
 git rev-parse --abbrev-ref HEAD                         # current branch
-git rev-list --left-right --count @{upstream}...HEAD    # ahead/behind (if upstream)
+git rev-list --count @{upstream}..HEAD 2>/dev/null      # commits ahead of upstream (if any)
+git rev-list --count HEAD..@{upstream} 2>/dev/null      # commits behind upstream (if any)
 git status --short                                      # dirty status one-liner
 git log --oneline -10                                   # last 10 commits
 ```
@@ -70,8 +71,11 @@ git log --oneline -10                                   # last 10 commits
 > **Never `git pull`.** Only `git fetch`. The fetch is read-only — it
 > updates refs without modifying the working tree, so the briefing can
 > compute accurate ahead/behind without risking a merge mid-task.
-> If `Auto-fetch: no` is declared in `## Project context`, skip even
-> the fetch.
+> Before running the command below, read the `Auto-fetch` value from
+> Layer 2's `## Project context`; if it is `no`, omit the fetch entirely.
+> If the fetch fails with an authentication error (distinct from "no
+> remote"), continue with stale refs and surface the auth failure in the
+> footer — see Layer 3.
 
 ```bash
 git fetch --quiet 2>/dev/null || true   # safe no-op if no remote
@@ -130,8 +134,10 @@ Read each if present at the canonical path. If absent, do not search elsewhere �
 
 ```bash
 for d in docs/0-brainstorms docs/2-design docs/3-plans docs/4-reviews docs/adrs; do
-  [ -d "$d" ] && grep -l '^status:' "$d"/*.md 2>/dev/null
-  [ -d "$d" ] && ls -t "$d" 2>/dev/null | head -5
+  [ -d "$d" ] || continue
+  find "$d" -maxdepth 1 -name '*.md' -print0 2>/dev/null \
+    | xargs -0 grep -l '^status:' 2>/dev/null
+  ls -t "$d" 2>/dev/null | head -5
 done
 ```
 
@@ -139,12 +145,14 @@ Use the `status:` frontmatter to filter (open/draft/approved/shipped/parked/supe
 
 **Per-project memory:**
 
+Claude Code stores per-project state under a slug derived from the project's full path: leading `/` becomes `-`, and every other `/` also becomes `-`. So `/Users/me/Projects/foo` lives at `~/.claude/projects/-Users-me-Projects-foo/`.
+
 ```bash
-slug="$(basename "$(pwd)")"
+slug="$(pwd | sed 's|/|-|g')"               # /a/b/c → -a-b-c
 ls -l "$HOME/.claude/projects/$slug/memory/MEMORY.md" 2>/dev/null
 ```
 
-If the index file exists, read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one.
+If the index file exists (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one.
 
 ### Layer 2 — Project-declared via CLAUDE.md
 
@@ -188,6 +196,7 @@ Standing instructions for when a source fails. Never fabricate; always name the 
 | Git repo, no remote | Skip `git fetch` and `gh` queries; report local state only |
 | `gh` missing or unauthed | Skip GitHub queries; note the gap in the footer |
 | `git fetch` slow / network down | Use stale refs; footer: *"ahead/behind from last fetch <date>"* |
+| `git fetch` fails with auth error on a configured remote | Use stale refs; footer: *"fetch failed (auth) — refs may be stale; check credentials"* — distinct signal from "no remote" |
 | No `## Project context` in CLAUDE.md | Run Layer 1 only; footer link to the conventions guide |
 | Declared source unreachable (auth-walled, missing CLI/MCP) | Name the gap explicitly; continue with the remaining sources |
 | Diff over per-file cap (200 lines) | Summarise rather than dump |
