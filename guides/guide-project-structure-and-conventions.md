@@ -493,6 +493,27 @@ Why Mermaid:
 
 Fall back to other tools (draw.io, Excalidraw) only when Mermaid genuinely can't represent what you need. Commit both source and rendered output if you do.
 
+### 5.8 `## Project context` section in CLAUDE.md
+
+CLAUDE.md should declare where project-tracking information lives, so AI tools can read it without guessing. The canonical consumer is the [`/briefing`](../skills/briefing/) skill — it auto-discovers state across git, GitHub, the canonical `docs/` working-memory layout, and any tracker source declared here.
+
+Each line is `- **Field**: value`. Recognised fields:
+
+| Field | Purpose |
+|---|---|
+| `Tracker` | Where work items live (`GitHub Issues`, `Linear team FOO`, `Jira project BAR`, `Notion`, `GitHub Project N`, file path, or `none`) |
+| `Board` | URL of the active board / project view |
+| `Roadmap` | File path or external URL of the forward view |
+| `Changelog` | File path or external URL of recent shipped work |
+| `Architecture` | File path or directory of architecture docs |
+| `Working memory` | Directory holding lifecycle artifacts (default: `docs/` following this guide's numbered-lifecycle convention) |
+| `Auto-fetch` | `yes` (default) or `no` — whether briefings may run `git fetch` to refresh refs |
+| `Other` | Free-form bullet list for project-specific context (custom scripts, story-tracking quirks, telemetry sources) |
+
+**Absent fields fall back to layer-1 defaults at canonical paths.** A field set to `none` means "deliberately empty" (the briefing won't probe further); an absent field means "try the default" (the briefing will look at the canonical path).
+
+The canonical scaffold lives in [`templates/default-project/CLAUDE.md`](../templates/default-project/CLAUDE.md). Bootstrapped projects inherit the section for free; existing projects pick it up via §10.6.
+
 ---
 
 ## 6. Workflow
@@ -893,6 +914,7 @@ Audit `docs/1-discovery/` for files that aren't actually research artifacts (no 
 
 - Add/refresh the `docs/ = working memory` framing.
 - Update the layout block to match the new structure.
+- Add a `## Project context` section per §5.8. Copy the field list from [`templates/default-project/CLAUDE.md`](../templates/default-project/CLAUDE.md) and fill in the values. If a field doesn't apply (no formal tracker, no separate architecture doc, etc.), set the value to `none` so the `/briefing` skill knows the absence is intentional.
 - Run a fresh CC session and confirm context loading is coherent.
 
 ### 10.7 Verification
