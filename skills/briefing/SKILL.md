@@ -33,7 +33,7 @@ For the convention this skill consumes, see your project's CLAUDE.md `## Project
           (synonyms: ?, usage, --help, -h)
 ```
 
-Order of args does not matter. `/briefing deep save` and `/briefing save deep` are equivalent. If `help` (or `?`, `usage`) appears anywhere in the args, the skill renders this Synopsis as the response and stops — no briefing, no save.
+Order of args does not matter. `/briefing deep save` and `/briefing save deep` are equivalent. If any help keyword (the full set is listed under **How to parse the args** below — `help`, `--help`, `-h`, `?`, `usage`) appears anywhere in the args, the skill renders this Synopsis as the response and stops — no briefing, no save.
 
 The depth default is **adaptive**: when no depth keyword is provided, the briefing's length is content-driven — sections appear or disappear based on what the project state actually contains. `quick`, `standard`, and `deep` are explicit overrides for fixed-length tiers; "no dial" is its own behaviour, not a synonym for `standard`.
 
@@ -46,4 +46,4 @@ Walk the tokens once and bucket each one:
 - **Help keywords** (closed set): `help`, `--help`, `-h`, `?`, `usage`. If any appear, **short-circuit**: render the Synopsis above and stop.
 - **Anything else**: respond with `unknown arg <X> — try /briefing help` and stop.
 
-The parser is order-independent and case-insensitive. Two of the same bucket is an error of intent — pick the latter and mention the override in the briefing's source-coverage footer (e.g., `Note: depth received both 'quick' and 'deep'; using 'deep'`).
+The parser is order-independent and case-insensitive. Two of the same bucket is an error of intent — pick the **rightmost** occurrence in the input and mention the override in the briefing's source-coverage footer (e.g., `Note: depth received both 'quick' and 'deep'; using 'deep'`). The source-coverage footer itself is defined under **Output template** (added in a later task); until that section lands, surface the override inline at the top of the response so the user sees it.
