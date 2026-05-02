@@ -40,9 +40,11 @@ Three knobs you can mix and match. Order doesn't matter; put them anywhere in th
 
 | Dial | Keywords | Default | Effect |
 |---|---|---|---|
-| **Level** | `expert` (or `deep`/`technical`/`staff`), `simple` (or `beginner`/`plain`), `eli5` (or `grandma`/`grandmother`) | `standard` | Jargon density. `eli5` leads with non-code analogies before naming any concept. |
-| **Depth** | `quick` (or `peek`), `overview`, `deep-dive` (or `deepdive`/`audit`) | `overview` | Codebase coverage in topic and folder modes. `deep-dive` is hard-capped at 20 files. |
+| **Level** | `expert` (or `technical`/`staff`), `intermediate`, `beginner` (or `simple`/`plain`), `eli5` (or `grandma`/`grandmother`) | `intermediate` | Jargon density. `eli5` leads with non-code analogies before naming any concept. |
+| **Depth** | `quick` (or `peek`), `standard` (or `overview`), `deep` (or `deep-dive`/`deepdive`/`audit`) | `standard` | Codebase coverage in topic and folder modes. `deep` is hard-capped at 20 files. |
 | **Save** | `save` (or `--save`/`export`) | off | Write the lesson to `<repo>/.claude/learn-log/` (or `~/.claude/learn-log/` outside a git repo). |
+
+The level dial is canonically `expert` / `intermediate` (default) / `beginner` / `eli5`; the depth dial is canonically `quick` / `standard` (default) / `deep`. These match the house vocabulary shared with `/briefing`. All previously-typed forms remain valid as backwards-compatible synonyms — `simple` still parses as `beginner`, `overview` as `standard`, and `deep-dive` / `deepdive` / `audit` as `deep`. One change to be aware of: `deep` is no longer a level synonym for `expert` (it's now the canonical depth keyword); use `expert` / `technical` / `staff` for the top tier instead. See `SKILL.md` for the full synonym list.
 
 ## Built-in topic vocabulary
 
@@ -63,7 +65,7 @@ cp skills/learn/SKILL.md ~/.claude/skills/learn/SKILL.md
 
 (If you're not in a clone of this repo, download `SKILL.md` directly from GitHub: `curl -o ~/.claude/skills/learn/SKILL.md https://raw.githubusercontent.com/carlosboeing/claude-code-resources/main/skills/learn/SKILL.md`.)
 
-Restart Claude Code (or start a new session). Type `/` and you should see `learn` in the slash-command menu, with the inline argument hint `[target] [expert|simple|eli5] [quick|overview|deep-dive] [save] [help]`.
+Restart Claude Code (or start a new session). Type `/` and you should see `learn` in the slash-command menu, with the inline argument hint `[target] [expert|intermediate|beginner|eli5] [quick|standard|deep] [save] [help]`.
 
 To verify it's loaded, type `/learn help` — you should get the synopsis with no execution.
 
@@ -101,7 +103,7 @@ rm -rf ~/.claude/skills/learn   # or the project-level path
 /learn "where does the API rate limit get applied"
 
 # ─── Topic mode — concept + grounded in your code ───────────
-/learn topic auth                    # default depth (overview)
+/learn topic auth                    # default depth (standard)
 /learn topic dependency-injection eli5
 /learn topic caching deep-dive save  # exhaustive audit, saved
 /learn topic obscure-pattern         # off-list — skill admits and improvises
@@ -131,7 +133,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Don't manufacture diagrams.** Same rule, applied to Mermaid.
 - **Don't manufacture topic hits.** If `/learn topic caching` finds no caching layer in your codebase, that's a finding, not a failure.
 - **Concrete to abstract, every time.** Pattern: here's the line, here's the principle, here's why the principle matters in practice. Never a principle without the line that embodies it.
-- **Bounded by design.** Hard 20-file cap on `deep-dive`; the skill stops and says so. Reaching the cap is itself a finding.
+- **Bounded by design.** Hard 20-file cap on `deep`; the skill stops and says so. Reaching the cap is itself a finding.
 - **Single file.** All ~500 lines of skill behaviour, including the topic vocabulary, live in one `SKILL.md`. Easy to share, easy to extend (add a row to the vocabulary table; no new files).
 
 ## Requirements

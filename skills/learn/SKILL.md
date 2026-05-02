@@ -1,7 +1,7 @@
 ---
 name: learn
-description: Explain a target as a software-engineering lesson, in plain English, for someone who is still learning. The target can be a git ref (last commit by default), a path or symbol in the codebase, a natural-language question about behaviour, or a topic name like "auth" or "dependency-injection" — the skill auto-detects which. Use whenever the user types /learn, /learn pr <N>, /learn HEAD~N, /learn <sha>, /learn <path>, /learn <symbol>, /learn "<question>", /learn topic <name>, or asks "explain what just changed", "walk me through this folder", "how does login work", "teach me about caching in this codebase". Two dials: a level keyword (`expert`, `simple`, `eli5`, with synonyms `deep`/`technical`/`staff`/`beginner`/`plain`/`grandma`/`grandmother`) controls jargon density; a depth keyword (`quick`, `overview`, `deep-dive`) controls codebase coverage in topic and static modes. Append `save` to write the lesson to `.claude/learn-log/` for later review, or `help` (`?`, `usage`) to display the synopsis instead of running. Every named concept (SOLID, design patterns, cohesion/coupling, error handling, etc.) is linked inline to a canonical reference (Wikipedia, Martin Fowler's bliki, MDN, official language docs) on first mention. Refactors, async changes, and control-flow rewrites get a Mermaid diagram when one earns its keep. Designed for engineers building intuition who want to bridge the gap between code that works and understanding why it is structured the way it is.
-argument-hint: [target] [expert|simple|eli5] [quick|overview|deep-dive] [save] [help]
+description: Explain a target as a software-engineering lesson, in plain English, for someone who is still learning. The target can be a git ref (last commit by default), a path or symbol in the codebase, a natural-language question about behaviour, or a topic name like "auth" or "dependency-injection" — the skill auto-detects which. Use whenever the user types /learn, /learn pr <N>, /learn HEAD~N, /learn <sha>, /learn <path>, /learn <symbol>, /learn "<question>", /learn topic <name>, or asks "explain what just changed", "walk me through this folder", "how does login work", "teach me about caching in this codebase". Two dials: a level keyword (`expert`, `intermediate`, `beginner`, `eli5`, with legacy synonyms `technical`/`staff`/`simple`/`plain`/`grandma`/`grandmother`) controls jargon density; a depth keyword (`quick`, `standard`, `deep`, with legacy synonyms `peek`/`overview`/`deep-dive`/`deepdive`/`audit`) controls codebase coverage in topic and static modes. Append `save` to write the lesson to `.claude/learn-log/` for later review, or `help` (`?`, `usage`) to display the synopsis instead of running. Every named concept (SOLID, design patterns, cohesion/coupling, error handling, etc.) is linked inline to a canonical reference (Wikipedia, Martin Fowler's bliki, MDN, official language docs) on first mention. Refactors, async changes, and control-flow rewrites get a Mermaid diagram when one earns its keep. Designed for engineers building intuition who want to bridge the gap between code that works and understanding why it is structured the way it is.
+argument-hint: [target] [expert|intermediate|beginner|eli5] [quick|standard|deep] [save] [help]
 ---
 
 # `/learn` — Educational explainer for the last commit or PR
@@ -17,13 +17,14 @@ The audience is someone learning software engineering. They are not a beginner p
 
   target   <ref> | pr [<N>] | <path> | <symbol>             default: HEAD
            | "<question>" | topic <name>
-  level    expert | simple | eli5                          default: standard
-           (synonyms — expert: deep, technical, staff
-                       simple: beginner, plain
-                       eli5:   grandma, grandmother)
-  depth    quick | overview | deep-dive                    default: overview
-           (synonyms — quick: peek
-                       deep-dive: deepdive, audit)
+  level    expert | intermediate | beginner | eli5        default: intermediate
+           (synonyms — expert:    technical, staff
+                       beginner:  simple, plain
+                       eli5:      grandma, grandmother)
+  depth    quick | standard | deep                          default: standard
+           (synonyms — quick:    peek
+                       standard: overview
+                       deep:     deep-dive, deepdive, audit)
            Only meaningful in topic and static (folder) modes.
   save     write the lesson to .claude/learn-log/          default: off
            (synonyms: --save, export)
@@ -75,9 +76,9 @@ It also runs without a slash when the user clearly asks for a teaching pass on r
 
 The reader can dial how technical the lesson is by adding a level keyword to the invocation. The keyword can appear anywhere in the args — order does not matter — and the skill treats any token from the closed set below as the level, with everything else as the target spec.
 
-- **expert** (synonyms: `deep`, `technical`, `staff`) — peer-to-peer. Assume the reader knows SOLID, the common GoF patterns, and standard vocabulary. Don't define everyday terms; lean on precise jargon. Skip analogies unless the diff contains a genuinely unusual idea.
-- **standard** (default — no keyword needed) — for someone who can read code but is still building their library of named patterns. Define each named concept the first time it appears. Connect every abstraction to a concrete consequence the reader will eventually feel (testability, blast radius, swap-ability). This is the audience the skill was originally written for.
-- **simple** (synonyms: `beginner`, `plain`) — minimise jargon. When you must use a term, explain it in everyday language *before* naming it. Prefer "the function asks for what it needs as arguments instead of grabbing it from somewhere global, which is called **dependency injection**" over "the constructor injects its dependencies." One concept per sentence.
+- **expert** (synonyms: `technical`, `staff`) — peer-to-peer. Assume the reader knows SOLID, the common GoF patterns, and standard vocabulary. Don't define everyday terms; lean on precise jargon. Skip analogies unless the diff contains a genuinely unusual idea.
+- **intermediate** (default — no keyword needed) — for someone who can read code but is still building their library of named patterns. Define each named concept the first time it appears. Connect every abstraction to a concrete consequence the reader will eventually feel (testability, blast radius, swap-ability). This is the audience the skill was originally written for.
+- **beginner** (synonyms: `simple`, `plain`) — minimise jargon. When you must use a term, explain it in everyday language *before* naming it. Prefer "the function asks for what it needs as arguments instead of grabbing it from somewhere global, which is called **dependency injection**" over "the constructor injects its dependencies." One concept per sentence.
 - **eli5** (synonyms: `grandma`, `grandmother`) — analogy-first. Lead every named concept with a non-code metaphor — kitchens, libraries, post offices, plumbing, restaurant orders. Code references are still allowed; the reader is not literally five. But every principle must be motivated by a real-world picture before any jargon enters the sentence. Use this level when the reader is very new, or when the change is conceptually far from their comfort zone.
 
 Examples:
@@ -93,15 +94,15 @@ The level affects **writing only** — it does not change which concepts get sur
 
 ## Depth
 
-For target shapes where section 4 is *"where this lives in your codebase"* (topic mode, and static mode for folders), the depth keyword controls how far the skill walks through the codebase. Order-independent in the args; default `overview` if no keyword is present.
+For target shapes where section 4 is *"where this lives in your codebase"* (topic mode, and static mode for folders), the depth keyword controls how far the skill walks through the codebase. Order-independent in the args; default `standard` if no keyword is present.
 
 | Keyword | Coverage | Use when |
 |---|---|---|
 | `quick` (synonym: `peek`) | 2–3 representative `path:line` hits, locations + a one-liner each | "Just point me at the relevant files" |
-| `overview` *(default)* | 4–6 places walked through with explanation; flag what's NOT covered | The standard learning lesson |
-| `deep-dive` (synonyms: `deepdive`, `audit`) | Comprehensive coverage, capped at **20 files**; flag missing sub-concepts | "Audit this topic across the codebase" |
+| `standard` (synonym: `overview`) *(default)* | 4–6 places walked through with explanation; flag what's NOT covered | The default learning lesson |
+| `deep` (synonyms: `deep-dive`, `deepdive`, `audit`) | Comprehensive coverage, capped at **20 files**; flag missing sub-concepts | "Audit this topic across the codebase" |
 
-The 20-file cap on `deep-dive` is hard. Past that it's a search engine, not a lesson — say so and stop adding. Reaching the cap is itself a finding: the topic is *bigger than this codebase* in some meaningful sense, and naming that is more useful than truncating silently.
+The 20-file cap on `deep` is hard. Past that it's a search engine, not a lesson — say so and stop adding. Reaching the cap is itself a finding: the topic is *bigger than this codebase* in some meaningful sense, and naming that is more useful than truncating silently.
 
 Depth has no effect on diff/symbol/trace/help modes — section 4 in those is the critical-review pass, which sizes itself naturally to the input.
 
@@ -110,8 +111,8 @@ Depth has no effect on diff/symbol/trace/help modes — section 4 in those is th
 The gathering recipe depends on which target shape was selected (see **Target shapes** above). The first three steps are common to every mode; from step 4 onward, branch by mode.
 
 1. **Parse the args.** Walk the tokens once and bucket each one:
-   - **Level keywords** (closed set): `expert`, `deep`, `technical`, `staff`, `simple`, `beginner`, `plain`, `eli5`, `grandma`, `grandmother`. Default `standard` if none.
-   - **Depth keywords** (closed set): `quick`, `peek`, `overview`, `deep-dive`, `deepdive`, `audit`. Default `overview` if none.
+   - **Level keywords** (closed set): `expert`, `technical`, `staff`, `intermediate`, `beginner`, `simple`, `plain`, `eli5`, `grandma`, `grandmother`. Default `intermediate` if none.
+   - **Depth keywords** (closed set): `quick`, `peek`, `standard`, `overview`, `deep`, `deep-dive`, `deepdive`, `audit`. Default `standard` if none.
    - **Save keywords** (closed set): `save`, `--save`, `export`. Default off if none.
    - **Help keywords** (closed set): `help`, `--help`, `-h`, `?`, `usage`. If any appear, **short-circuit**: render the Synopsis block above as the response and stop.
    - **Topic marker**: the literal token `topic` followed by its argument (the next non-keyword token) → topic mode, with the next token as the topic name.
@@ -152,7 +153,7 @@ The gathering recipe depends on which target shape was selected (see **Target sh
 
 4. Look up the topic in the **Built-in topic vocabulary** table below. If found, use its search terms and named subconcepts. If not, **state the assumption in the first line** ("`<topic>` isn't in my canonical list — I'm improvising with these search terms: […]"), then derive plausible search terms from the topic name and continue.
 5. Run ripgrep on the codebase using the search terms (case-insensitive, word-boundary): `rg -iw '(term1|term2|...)' -l` to find candidate files, then `rg -iw '(term1|...)' --json | head -100` to get specific `path:line` hits.
-6. Apply the depth keyword to bound how many files to read in detail (`quick` → top 2–3, `overview` → top 4–6, `deep-dive` → up to 20). Sort by relevance: prefer files where multiple search terms hit, files with the topic name in the path, and entry points (`index.*`, `main.*`, `app.*`).
+6. Apply the depth keyword to bound how many files to read in detail (`quick` → top 2–3, `standard` → top 4–6, `deep` → up to 20). Sort by relevance: prefer files where multiple search terms hit, files with the topic name in the path, and entry points (`index.*`, `main.*`, `app.*`).
 7. Read the selected files. Group hits by sub-concept where possible. **Be honest about gaps** — if the topic vocabulary names a sub-concept (e.g. for `auth`: MFA) and the codebase has no hits, say so. The map of *what isn't there* is often as instructive as what is.
 
 ### Help mode
@@ -287,7 +288,7 @@ Use sources roughly in this order of reliability:
 3. **MDN Web Docs** — `https://developer.mozilla.org/en-US/docs/...` for web platform topics: JavaScript language semantics, HTTP, CSS, browser APIs, web performance.
 4. **The language's official docs** — `docs.python.org`, `pkg.go.dev`, `doc.rust-lang.org`, `kotlinlang.org/docs`, `learn.microsoft.com/dotnet`, etc. — for language-specific concepts (async/await semantics, generics, error idioms, lifetimes).
 5. **Original blog posts**, when a concept was coined there and has no Wikipedia page. Examples: "parse, don't validate" (Alexis King), "boring technology" (Dan McKinley), "fallacies of distributed computing" (originally L. Peter Deutsch). Link to the original article, not to a re-explanation.
-6. **Refactoring.guru** — `https://refactoring.guru/...` is a useful secondary source for design patterns when Wikipedia's page is too thin or too academic. Good at `simple` and `eli5` levels.
+6. **Refactoring.guru** — `https://refactoring.guru/...` is a useful secondary source for design patterns when Wikipedia's page is too thin or too academic. Good at `beginner` and `eli5` levels.
 
 ### Anti-fabrication rule (this is the critical one)
 
@@ -305,8 +306,8 @@ Wikipedia URLs for foundational SWE concepts are usually predictable enough to w
 The number of links scales with the level:
 
 - **expert** — link a concept *only on first mention*, and only for terms that aren't part of a senior engineer's everyday vocabulary. Don't link "encapsulation" to a peer; do link more specialised terms (e.g. "outbox pattern", "saga", "structured concurrency", "happens-before").
-- **standard** (default) — link every named concept on first mention. Section 3 ("The concepts at play") is a particularly good place since each bullet introduces a concept formally; the section-3 bullet is the natural anchor for the link.
-- **simple** / **eli5** — link every named concept on first mention, *and* prefer links that lead to accessible explanations (Wikipedia intros, refactoring.guru, Fowler bliki entries) over deep specifications. Avoid linking to RFCs, formal grammars, or paper PDFs at these levels — the link should help, not intimidate.
+- **intermediate** (default) — link every named concept on first mention. Section 3 ("The concepts at play") is a particularly good place since each bullet introduces a concept formally; the section-3 bullet is the natural anchor for the link.
+- **beginner** / **eli5** — link every named concept on first mention, *and* prefer links that lead to accessible explanations (Wikipedia intros, refactoring.guru, Fowler bliki entries) over deep specifications. Avoid linking to RFCs, formal grammars, or paper PDFs at these levels — the link should help, not intimidate.
 
 ### Format
 
@@ -389,7 +390,7 @@ Create the directory if it doesn't exist (`mkdir -p`). Don't add it to `.gitigno
 ### Filename
 
 - Commits: `YYYY-MM-DD-<short-sha>-<level>.md` — for example `2026-05-01-cfc4afb-eli5.md`.
-- PRs: `YYYY-MM-DD-pr<N>-<level>.md` — for example `2026-05-01-pr42-standard.md`.
+- PRs: `YYYY-MM-DD-pr<N>-<level>.md` — for example `2026-05-01-pr42-intermediate.md`.
 - Ranges or special targets: `YYYY-MM-DD-<safe-target>-<level>.md` — sanitise non-filename characters (`/`, `~`, `..`) to `-`.
 
 If a file with that name already exists, **don't overwrite silently**. Append a numeric suffix (`-2`, `-3`, …) and tell the reader the path you used.
@@ -402,7 +403,7 @@ Every saved file gets YAML frontmatter so it's searchable and tool-readable:
 ---
 type: learn-log
 target: <ref or PR number>
-level: <standard | expert | simple | eli5>
+level: <expert | intermediate | beginner | eli5>
 date: YYYY-MM-DD
 target-title: <commit subject or PR title>
 ---
@@ -430,7 +431,7 @@ If the save failed (permission denied, disk full, weird path), say so plainly, s
 
 Two dials are at play: **change size** drives length (one-liner vs. 500-line refactor), and **level keyword** drives jargon density and analogy use. They're independent — a one-line bug fix at `eli5` is still a short answer, just framed with a metaphor.
 
-- **Match jargon density to the level.** At `expert`, lean on precise terms; at `standard`, define each on first use; at `simple`, prefer everyday phrasing and only name the term after the plain-English version; at `eli5`, lead with a non-code analogy before any term enters the sentence. (See the **Audience level** section above for the full contract.)
+- **Match jargon density to the level.** At `expert`, lean on precise terms; at `intermediate`, define each on first use; at `beginner`, prefer everyday phrasing and only name the term after the plain-English version; at `eli5`, lead with a non-code analogy before any term enters the sentence. (See the **Audience level** section above for the full contract.)
 - **Connect concrete to abstract, every time.** Pattern: "Here's the line. Here's the principle. Here's why the principle matters in practice." Never name a principle without pointing at the line that embodies it. This rule holds at every level — the principle still gets named even at `eli5`, just *after* the metaphor.
 - **Don't manufacture lessons.** If a commit is a typo fix, say so: "This is a maintenance commit — a corrected string in `README.md:42`. There's nothing big at play; not every change has a lesson, and recognising that is itself a lesson." Resist the urge to drag SOLID into every diff.
 - **Be honest about tradeoffs.** Most "principles" are heuristics, not laws. If the code violates DRY, YAGNI, or "no globals" for a good reason, say *why* it's the right call here. Teaching the exception teaches the rule.
@@ -450,13 +451,13 @@ Two dials are at play: **change size** drives length (one-liner vs. 500-line ref
 - **Don't fabricate citation URLs.** If you don't know the URL is correct, verify it with WebFetch or write a search hint instead (`search Wikipedia for "Liskov substitution principle"`). A wrong link is worse than no link — see the **Citations and links** section.
 - **Don't wrap repo-relative paths in markdown link syntax.** `` [`docs/foo.md`](docs/foo.md):42 `` is broken in two ways — the link target is a relative URL the renderer can't resolve, and the `:42` falls outside the link so cmd+click navigation fails. Always write the bare `path:line` form: `` `docs/foo.md:42` ``. The Citations and links rules in this skill are for *external* URLs only.
 - Don't pile up links at `expert` level. Senior readers don't need a Wikipedia link on "encapsulation"; it reads as condescending. Link only the genuinely specialised terms.
-- Don't drop into condescension at `simple` or `eli5`. Plain language ≠ baby talk. The reader is learning, not stupid.
+- Don't drop into condescension at `beginner` or `eli5`. Plain language ≠ baby talk. The reader is learning, not stupid.
 - **Don't manufacture diagrams.** Mirror of "don't manufacture lessons" — a Mermaid block on a typo fix or a config value change is noise. Diagrams earn their place by showing something prose can't show in two lines (see the **Diagrams** section).
 - **Don't overwrite an existing learn-log file silently.** If `save` is set and the target filename already exists, append a numeric suffix and tell the reader the new path.
 - **Don't run the lesson when `help` was requested.** If `help` / `?` / `usage` appears in the args, render the Synopsis and stop — even if other args are present. Help is an explicit request to *not* execute.
 - **Don't fabricate codebase hits in topic mode.** If the topic vocabulary's search terms find nothing in this codebase, *say so* — that's a finding, not a failure. "You asked about caching; this codebase has no caching layer" is more useful than inventing examples.
 - **Don't pretend a topic is canonical when it's not.** If the requested topic isn't in the **Built-in topic vocabulary** table, the first line of the lesson must say it's improvising and list the search terms it derived, so the user can correct them if they're off.
-- **Don't blow past the 20-file `deep-dive` cap.** When the cap is hit, stop reading and say so — "I've covered 20 files; auth touches more than that in this codebase, which is itself a finding." Truncating silently is worse than naming the limit.
+- **Don't blow past the 20-file `deep` cap.** When the cap is hit, stop reading and say so — "I've covered 20 files; auth touches more than that in this codebase, which is itself a finding." Truncating silently is worse than naming the limit.
 - **Don't run the wrong mode silently.** If the dispatcher inferred a mode from an ambiguous token (e.g. `/learn auth` → topic mode because the path doesn't exist), state the inference in the first line so the user can correct with the explicit `topic` keyword.
 
 ## Worked example (illustrative, not a template)
@@ -482,7 +483,7 @@ class OrderProcessor:
         self._repo.save(order)
 ```
 
-A good `/learn` response at the **standard** (default) level would:
+A good `/learn` response at the **intermediate** (default) level would:
 
 - **Section 1**: note that `process_order` was extracted into an `OrderProcessor` class with two injected dependencies.
 - **Section 2**: identify two deliberate decisions — (a) wrapping the function in a class so dependencies can be passed in, (b) typing those dependencies as `Mailer` and `OrderRepository` interfaces rather than concrete `sendgrid` and `db`. Show the contrast (the old version reached out to module-level globals) and explain the consequence (the new version is testable without mocking imports, and the mailer can be swapped without touching `OrderProcessor`).
@@ -497,8 +498,8 @@ That's the shape. Not a template to fill in mechanically — a model for what "g
 Here is one sentence about the same decision at each level, so you can hear the difference:
 
 - **expert**: "Constructor-injected `Mailer`/`OrderRepository` invert the dependency, making the call site the composition root."
-- **standard**: "Instead of grabbing `sendgrid` and `db` from the module scope, `OrderProcessor` asks for them as constructor arguments — this is **[dependency injection](https://en.wikipedia.org/wiki/Dependency_injection)**, and it's what makes the class testable without monkey-patching imports."
-- **simple**: "The new version makes the function ask for the things it needs (an emailer, a database) instead of grabbing them from somewhere global. That's called **[dependency injection](https://en.wikipedia.org/wiki/Dependency_injection)** — and it's mostly useful because it makes the code easy to test with fake versions of those things."
+- **intermediate**: "Instead of grabbing `sendgrid` and `db` from the module scope, `OrderProcessor` asks for them as constructor arguments — this is **[dependency injection](https://en.wikipedia.org/wiki/Dependency_injection)**, and it's what makes the class testable without monkey-patching imports."
+- **beginner**: "The new version makes the function ask for the things it needs (an emailer, a database) instead of grabbing them from somewhere global. That's called **[dependency injection](https://en.wikipedia.org/wiki/Dependency_injection)** — and it's mostly useful because it makes the code easy to test with fake versions of those things."
 - **eli5**: "Imagine a chef who used to walk over to a specific oven and a specific fridge in the kitchen. The new chef says 'hand me an oven and a fridge when you ask me to cook' — they don't care which ones, as long as they work like an oven and a fridge. That makes it easy to test the chef in a pretend kitchen with fake appliances. In code-talk this is called **[dependency injection](https://en.wikipedia.org/wiki/Dependency_injection)**."
 
 Same line, same principle, four different doors into it. The link only appears once across the four — link on first mention.
