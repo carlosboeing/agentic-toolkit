@@ -215,7 +215,7 @@ The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`,
 
 ### Convention-maturity check
 
-After L2 completes, tally which canonical-conventions signatures are present vs missing. The check feeds the optional footer block (see **Output template** below).
+**This check is REQUIRED on every invocation.** Run it after L2 completes and before rendering the output footer. Tally which canonical-conventions signatures are present vs missing. If partial-adoption is detected (at least one signature present AND at least one missing), the maturity block in the footer is **mandatory output** — not optional, not skippable.
 
 | # | Signature | How to check |
 |---|---|---|
@@ -227,7 +227,13 @@ After L2 completes, tally which canonical-conventions signatures are present vs 
 | 6 | ROADMAP uses canonical sections (`## In flight`, `## Next actions`, `## Recently shipped` at minimum) | grep on roadmap; require all three |
 | 7 | ADRs at `docs/adrs/NNNN-*.md` | filesystem probe with name pattern |
 
-**Render the maturity block in the footer ONLY when partial adoption is detected** — i.e. at least one signature ✓ AND at least one signature ✗. If everything matches: the project is fully canonical, no maturity block. If nothing matches: the project doesn't follow these conventions at all, no maturity block (suggesting them would be presumptuous).
+**Rendering rule (three cases, exhaustive):**
+
+- **Partial adoption** (≥1 ✓ AND ≥1 ✗) → **MUST render the maturity block in the footer.** Not optional. Not "if convenient." Required output.
+- **Fully canonical** (all 7 ✓) → no maturity block; the project has fully adopted, nothing to suggest.
+- **Zero canonical** (all 7 ✗) → no maturity block; the project hasn't adopted these conventions at all, suggesting them would be presumptuous.
+
+If you find yourself producing a footer without running the 7-signature tally, you have skipped a required step — go back and run it.
 
 The block format:
 
@@ -328,7 +334,7 @@ Reference roadmap priority (if found), dependency chain, newly unblocked items.
 
 ---
 Sources: read <list>; skipped <list> (reason).
-[Optional: convention-maturity block, only when partial adoption — see L2b]
+[Convention-maturity block — REQUIRED when partial adoption is detected; see Convention-maturity check section]
 [Optional: Saved to <path>]
 ```
 
@@ -350,7 +356,7 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
 
-The **source-coverage footer** (the block under the `---` rule) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The optional **convention-maturity block** appears below the footer line when partial-adoption is detected (per the convention-maturity check above) — render the block with the 7 ✓/✗ rows and the canonical-conventions URL. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
+The **source-coverage footer** (the block under the `---` rule) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The **convention-maturity block** is mandatory output when partial-adoption is detected (per the **Convention-maturity check** section above) — render the block with all 7 ✓/✗ rows and the canonical-conventions URL. Skipping this block on a partial-adoption project is a spec violation. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
 
 ## Depth contract
 
@@ -461,3 +467,4 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't estimate time-to-completion. Estimate scope by analogy to similar changelog items at most.
 - Don't write outside `briefing-log/`. Every other path this skill touches is read-only.
 - Don't render the convention-maturity block when nothing canonical was detected. Suggesting our conventions to a project that's chosen others is presumptuous; the block is for projects that have *partially* adopted, where naming the gap is helpful.
+- Don't *skip* the convention-maturity block when partial-adoption IS detected. The block is required output in that case, not optional. Forgetting to run the 7-signature check before rendering the footer is a spec violation.

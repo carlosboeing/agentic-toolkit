@@ -138,7 +138,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Anti-fabrication.** Every data point comes from a source read this invocation. No invented PR numbers, file paths, SHAs, or URLs. Stale data labelled stale beats stale data presented as fresh.
 - **Honest about gaps.** Source unreachable, declared tracker missing, no `## Project context` section, network down — every gap names itself in the source-coverage footer.
 - **No transcripts.** The skill never reads raw conversation transcripts on disk, even at `deep`. That would undermine the working-memory discipline (`docs/` artifacts become optional if briefings can recover from transcripts), and the on-disk format is undocumented Anthropic internals.
-- **Single file.** All ~400 lines live in one `SKILL.md`. Easy to share, easy to extend, easy to grep.
+- **Single file.** All ~530 lines live in one `SKILL.md`. Easy to share, easy to extend, easy to grep.
 
 ## Limitations
 
@@ -170,8 +170,9 @@ That's it. No package install, no plugin marketplace, no auth setup beyond the o
 ## See also
 
 - **[`SKILL.md`](SKILL.md)** — the skill itself, drop-in to `~/.claude/skills/briefing/`.
-- **[`docs/2-design/2026-05-02-briefing-skill-design.md`](../../docs/2-design/2026-05-02-briefing-skill-design.md)** — the design doc that drove this implementation, including the layered source model rationale and the deferred Approach C (Stop-hook snapshot schema).
-- **[`guide-project-structure-and-conventions.md` §5.8](../../guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd)** — the canonical `## Project context` schema this skill consumes.
+- **[`docs/2-design/2026-05-03-briefing-skill-shareability-design.md`](../../docs/2-design/2026-05-03-briefing-skill-shareability-design.md)** — current design (4-layer architecture, convention-maturity check). Supersedes the original 2026-05-02 design.
+- **[`docs/2-design/2026-05-02-briefing-skill-design.md`](../../docs/2-design/2026-05-02-briefing-skill-design.md)** — original design (3-layer model). Historical reference; the layered-source-model rationale and the deferred Approach C (Stop-hook snapshot schema) live here.
+- **[`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd)** — the canonical `## Project context` schema this skill consumes.
 - **[`templates/default-project/CLAUDE.md`](../../templates/default-project/CLAUDE.md)** — generic CLAUDE.md scaffold that ships with the section pre-populated.
 - **[`/learn`](../learn/)** — sibling skill in this repo. Same single-file shape, same closed-keyword parser pattern, same canonical depth vocabulary (`quick`/`standard`/`deep`) — different default behaviour and different problem domain (lessons, not orientation).
 

@@ -27,9 +27,11 @@ guessing. Each line is `- **Field**: value`. Recognised fields:
                         run `git fetch` to refresh refs
   - **Other**         — free-form bullet list for project-specific context
 
-Absent fields fall back to layer-1 defaults at canonical paths. If you don't
-use one of these (e.g., no formal tracker), set the value to `none` so the
-briefing knows the absence is intentional.
+Declared fields are authoritative. Absent fields fall back to convention
+sniffing — the briefing skill probes for canonical-conventions signatures
+(docs/ROADMAP.md, lifecycle dirs at docs/[0-9]-*, status frontmatter, etc.).
+If you don't use one of these (e.g., no formal tracker), set the value to
+`none` so the briefing knows the absence is intentional and skips probing.
 -->
 
 - **Tracker**: <your tracker, e.g. GitHub Issues / Linear team FOO / Jira project BAR / none>

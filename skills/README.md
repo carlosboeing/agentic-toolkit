@@ -7,7 +7,7 @@
 | Skill | Slash command | What it does |
 |---|---|---|
 | [`learn`](learn/) | `/learn` | Turns any commit, PR, file, folder, symbol, behaviour, or topic into a software-engineering lesson. Six target shapes, three audience levels (`expert`/`simple`/`eli5`), three depth dials (`quick`/`overview`/`deep-dive`), optional save-to-disk. |
-| [`briefing`](briefing/) | `/briefing` | Adaptive project orientation. Reads git, GitHub, the canonical `docs/` working-memory layout, and any project-tracker source declared in CLAUDE.md (`## Project context` section). Reshapes output by what's in flight. Three depth dials (`quick`/`standard`/`deep`) controlling length × source breadth × speed; optional save-to-disk. |
+| [`briefing`](briefing/) | `/briefing` | Adaptive project orientation. Convention-aware but not convention-coupled: reads git, GitHub, top-level files, and per-project memory universally; lights up with richer behaviour when canonical conventions (`## Project context`, lifecycle dirs, status frontmatter, ROADMAP sections) are detected; renders a read-only maturity-check footer on partial adoption. Three depth dials (`quick`/`standard`/`deep`) controlling length × source breadth × speed; optional save-to-disk. |
 
 (Add more rows as new skills land. Per-skill `README.md` carries the detail.)
 
