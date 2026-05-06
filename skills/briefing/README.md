@@ -41,15 +41,15 @@ The depth default is genuinely adaptive — when no depth keyword is provided, t
 
 ## Layered source model
 
-The skill reads from four layers — each with a clear failure mode. L1 is universal; L2a/L2b are conditional; L3 is the graceful-degradation layer that catches every gap.
+The skill reads from four layers — each with a clear failure mode. **Always-on** mechanics run everywhere; **Declared** and **Default paths** are conditional on the project's setup; **Fallbacks** catches every gap.
 
-### Layer 1 — Universal mechanics
+### Always-on — universal mechanics
 
 Runs in every project, knows nothing about specific conventions. Reads git state (branch, ahead/behind, dirty status, recent commits), uncommitted edits (`git status` + `git diff`, capped at 200 lines per file), local-only state (unpushed commits on any branch, stashes, worktrees, no-upstream branches), GitHub state via `gh` (your open PRs, all open PRs, assigned issues, current-branch CI status), top-level docs (`README.md`, `CLAUDE.md` — well-known by name, not a convention), and the per-project memory index at `~/.claude/projects/<slug>/memory/MEMORY.md`.
 
 The skill never runs `git pull` — only `git fetch` (read-only). If `Auto-fetch: no` is declared in your CLAUDE.md, it skips the fetch entirely.
 
-### Layer 2a — Explicit declarations via CLAUDE.md
+### Declared — explicit declarations via CLAUDE.md
 
 Add a `## Project context` section to your project's CLAUDE.md to enrich the briefing with sources it can't auto-discover:
 
@@ -68,21 +68,21 @@ Add a `## Project context` section to your project's CLAUDE.md to enrich the bri
   - Telemetry comments on issues via scripts/item-telemetry.sh
 ```
 
-Recognised trackers: `GitHub Issues`, `GitHub Project N`, `Linear …`, `Jira …`, `Notion <ID or URL>`, file paths, URLs, `none`. Each kind has its own integration recipe (the skill knows which CLI or MCP tool to invoke). Declarations are authoritative — they override anything L2b would have sniffed.
+Recognised trackers: `GitHub Issues`, `GitHub Project N`, `Linear …`, `Jira …`, `Notion <ID or URL>`, file paths, URLs, `none`. Each kind has its own integration recipe (the skill knows which CLI or MCP tool to invoke). Declarations are authoritative — they override anything the default-path sniffer would have caught.
 
 For the canonical schema, see [`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd).
 
-### Layer 2b — Convention sniffing
+### Default paths — convention sniffing
 
-For any field L2a didn't declare, the skill probes for canonical-conventions signatures (the structure documented in [the canonical guide](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md)). If they match — `docs/ROADMAP.md`, lifecycle dirs at `docs/[0-9]-*`, status frontmatter, ROADMAP sections like `## In flight` — the skill applies the canonical interpretation. If they don't match, it falls back to generic file discovery and names the gap.
+For any field you didn't declare in `## Project context`, the skill probes for canonical-conventions signatures (the structure documented in [the canonical guide](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md)). If they match — `docs/ROADMAP.md`, lifecycle dirs at `docs/[0-9]-*`, status frontmatter, ROADMAP sections like `## In flight` — the skill applies the canonical interpretation. If they don't match, it falls back to generic file discovery and names the gap.
 
-This is the "lights up with conventions" tier. A project that follows the canonical layout gets richer briefings (in-flight detection wired to your ROADMAP sections, status frontmatter recognised, ADRs surfaced) for free. A project that uses different conventions just gets L1 + L2a output, which still works — no broken behaviour.
+This is the "lights up with conventions" tier. A project that follows the canonical layout gets richer briefings (in-flight detection wired to your ROADMAP sections, status frontmatter recognised, ADRs surfaced) for free. A project that uses different conventions just gets always-on + declared output, which still works — no broken behaviour.
 
 Default-mode briefings don't lobby for convention adoption — orientation output stays focused on the project state. If you want to see what this skill probed and what it found (canonical paths matched, declarations honoured, gaps named), run `/briefing sources`. That view frames declared paths via `## Project context` as first-class equivalents to canonical defaults, not deviations.
 
-### Layer 3 — Graceful degradation
+### Fallbacks — graceful degradation
 
-Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project context`, declared tracker unreachable, detached HEAD, secret-pattern files, working memory not found at any L2b path, …). Failures that affect orientation surface as bullets in the conditional `★ About this briefing` block; failures that don't surface in `/briefing sources` if you ask for them. Never papered over, never silently fabricated.
+Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project context`, declared tracker unreachable, detached HEAD, secret-pattern files, working memory not found at any default path, …). Failures that affect orientation surface as bullets in the conditional `★ About this briefing` block; failures that don't surface in `/briefing sources` if you ask for them. Never papered over, never silently fabricated.
 
 ## Install
 
@@ -147,7 +147,7 @@ The save log is the only write the skill ever makes; everything else is read-onl
 
 A few load-bearing rules — read these if you want to understand why the skill behaves as it does, or if you want to extend it:
 
-- **Four layers, never more.** L1 universal mechanics, L2a explicit declarations, L2b convention sniffing, L3 graceful degradation. Each new source kind earns its place in one of the four. The split between L2a (explicit) and L2b (sniffed) keeps convention-specific knowledge out of the universal baseline.
+- **Four layers, never more.** Always-on universal mechanics, declared sources, default-path sniffing, and fallbacks for graceful degradation. Each new source kind earns its place in one of the four. The split between declared (explicit) and default-path (sniffed) keeps convention-specific knowledge out of the universal baseline.
 - **Convention-aware, not convention-coupled.** The skill is shareable to projects using any conventions. Adopting the canonical conventions in this repo lights it up with richer behaviour; not adopting them produces simpler but still-useful output. Never imposes; always suggests.
 - **Adaptive over fixed.** The default has no depth keyword precisely because the right shape changes with project state. `quick`/`standard`/`deep` are escape hatches when you know what you want.
 - **Read-only on the project.** The skill never modifies project files; the only exception is the briefing log it writes to `briefing-log/` when you invoke it with `save`.

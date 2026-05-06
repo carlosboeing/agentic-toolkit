@@ -66,7 +66,7 @@ The parser is order-independent and case-insensitive. Two of the same bucket is 
 
 ## Source layering
 
-> **Note on labels:** `L1`, `L2a`, `L2b`, and `L3` are internal labels used in this spec for maintainer scaffolding. User-facing output in `/briefing sources` uses the labels **Always-on** (≈ L1), **Declared** (≈ L2a), **Default paths** (≈ L2b), and **Fallbacks** (≈ L3). See the **`/briefing sources` mode** section for the user-facing rendering.
+> **Note on labels:** `L1`, `L2a`, `L2b`, and `L3` are internal architecture codes used inside this Source-layering section (and the Layer 3 failure-mode table + In-flight detection table) to discuss the model precisely. They are **not user-facing** — neither default-mode briefings nor `/briefing sources` ever emit them. Rendering instructions elsewhere in this spec use plain language (e.g. "the resolved roadmap path", "sources declared in `## Project context`"). The user-facing labels in `/briefing sources` are **Always-on** (≈ L1), **Declared** (≈ L2a), **Default paths** (≈ L2b), and **Fallbacks** (≈ L3).
 
 The briefing reads from four layers, each with a clear failure mode:
 
@@ -301,17 +301,17 @@ In adaptive mode (the default), two sections always run and four are conditional
 
 ### Snapshot                                   ← always
 - Branch: <current> (<N> ahead, <M> behind <upstream>)
-- Roadmap: X/Y items · next: <item>     ← only if a roadmap was found (L2a or L2b)
+- Roadmap: X/Y items · next: <item>     ← only if a roadmap was found (declared or detected)
 - Recent activity: <last commit / last PR / last shipped lifecycle item>
-- [Layer-2a bullets if declared: tracker counts, board column health, etc.]
+- [Bullets from sources declared in `## Project context`: tracker counts, board column health, etc.]
 
 ### What's in flight                           ← only if any strong signal
 - Working tree: <paths and one-line summary>
 - Local-only: <unpushed commits / stashes / no-upstream branches / worktrees if > 1>
-- <roadmap section title>: <items + state>     ← rendered with L2b-resolved heading
+- <roadmap section title>: <items + state>     ← rendered with the project's actual ROADMAP section name (e.g. "## In flight", "## Now")
 - Open PRs: <your PRs + review status>
-- Drafts: <lifecycle artifacts with in-flight status>     ← rendered with L2b-resolved status set
-- Tracker (if L2a): <items in progress>
+- Drafts: <lifecycle artifacts with in-flight status>     ← rendered with the project's actual status vocabulary (e.g. "status: draft|open|approved")
+- Tracker: <items in progress>     ← only if a tracker was declared in `## Project context`
 
 ### Recent activity                            ← always (last 3-5 things)
 Synthesised, not dumped. Group by theme. Reference SHA / PR# / file path.
@@ -338,9 +338,9 @@ Reference roadmap priority (if found), dependency chain, newly unblocked items.
 
 If everything else got cut, the TL;DR alone should still be useful.
 
-**Snapshot:** Always present. One-line bullets only. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts from L1; roadmap line from the L2-resolved roadmap path (if found); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add L2a bullets (tracker counts, board column health) only when those sources were declared and read.
+**Snapshot:** Always present. One-line bullets only. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts; roadmap line from the resolved roadmap path (whether declared in `## Project context` or detected at a default location); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add bullets for sources declared in `## Project context` (tracker counts, board column health) only when those sources were declared and read.
 
-**What's in flight:** Only if any Strong signal. Group bullets by source category. Render the roadmap-section bullet using the L2b-resolved heading (e.g. `ROADMAP "## In flight":` for canonical projects; `ROADMAP "## Now":` for a project using Now/Next/Later; omit entirely if no roadmap was found). Render the drafts bullet using the L2b-resolved status set (e.g. `Drafts (status: draft|open|approved):` for canonical; `Drafts (status: wip):` for a project using a different vocabulary; omit if no working memory was found). Don't dump diffs — summarise per L1's 200-line cap.
+**What's in flight:** Only if any Strong signal. Group bullets by source category. Render the roadmap-section bullet using the project's actual ROADMAP heading (e.g. `ROADMAP "## In flight":` for canonical projects; `ROADMAP "## Now":` for a project using Now/Next/Later; omit entirely if no roadmap was found). Render the drafts bullet using the project's actual status vocabulary (e.g. `Drafts (status: draft|open|approved):` for canonical; `Drafts (status: wip):` for a project using a different vocabulary; omit if no working memory was found). Don't dump diffs — summarise per the 200-line cap.
 
 **Recent activity:** Always present. Last 3–5 things, synthesised not dumped. Group by theme rather than listing commits chronologically. Cite SHA / PR# / file path so the human can drill in.
 
@@ -402,8 +402,8 @@ The depth dial scales three things together — output length, source breadth, a
 
 | Depth | Length | Sources read | Wall-clock | Use when |
 |---|---|---|---|---|
-| `quick` | < 300w | L1 essential only (git status/log/diff, last PR, last commit) plus L2-resolved roadmap head if available — ~5–7 reads | < 5s | "Remind me where I am, fast" |
-| (adaptive) | content-driven | L1 full + L2a if declared + L2b sniffing | 5–15s | Default |
+| `quick` | < 300w | git/gh essentials only (status/log/diff, last PR, last commit) plus the resolved roadmap head if available — ~5–7 reads | < 5s | "Remind me where I am, fast" |
+| (adaptive) | content-driven | full git/gh + declared sources from `## Project context` + canonical-conventions sniffing | 5–15s | Default |
 | `standard` | 600–1000w | All adaptive sources, no skipping | 10–20s | Forces full coverage |
 | `deep` | 1200–2000w | Standard + historical sources + cross-source synthesis + per-project memory files | 20–60s | "Real planning session, audit the lot" |
 
@@ -415,9 +415,9 @@ The depth dial scales three things together — output length, source breadth, a
 | Closed issues in last 30 days (`gh issue list --state closed --search "closed:>=$(date -u -v-30d +%Y-%m-%d)"`) | What got resolved — useful for "is this old issue still relevant?" |
 | Stale branches (`git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative) %(committerdate:short)' refs/heads/` — filter for `committerdate:short` older than 30 days) | Cleanup signal — branch graveyard surfaces |
 | Stale open PRs (open > 14 days) | Forgotten work; different from in-flight because not moving |
-| Recent ADRs (last 5 from L2b-resolved ADR location) | Architectural context affecting next moves |
+| Recent ADRs (last 5 from any declared or detected ADR location) | Architectural context affecting next moves |
 | Cross-source synthesis | Recurring themes across 3+ sources flagged as systemic |
-| L2a closed items | If an L2a tracker is configured, fetch closed items from last 7 days, not just open |
+| Tracker closed items | If a tracker is declared in `## Project context`, fetch closed items from last 7 days, not just open |
 | Trend analysis on changelog | Velocity / cadence / scope drift across last 5–10 entries (when a changelog was found) |
 | Per-project memory files | Read individual files in `~/.claude/projects/<slug>/memory/` (MEMORY.md index already in context) |
 
@@ -564,7 +564,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 ## What NOT to do
 
 - Don't read raw conversation transcripts — see **Depth contract**, "Not read at any depth".
-- Don't `git pull` — only `git fetch`. The fetch is read-only and never modifies the working tree (see L1's git-refs-refresh callout).
+- Don't `git pull` — only `git fetch`. The fetch is read-only and never modifies the working tree (see the git-refs-refresh callout under Layer 1 above).
 - Don't dump per-file diffs over 200 lines — summarise as `path:line-range (~N lines, looks like <one-line summary>)`.
 - Don't fabricate PR numbers, file paths, commit SHAs, or URLs. If uncertain, omit or hedge.
 - Don't compute metrics — cite them from existing tooling (line counts, ahead/behind, dates).
