@@ -304,18 +304,18 @@ In adaptive mode (the default), two sections always run and four are conditional
 - clean state        → "Last shipped Z. Next priority is W."
 
 ### Snapshot                                   ← always
-- Branch: <current> (<N> ahead, <M> behind <upstream>)
-- Roadmap: X/Y items · next: <item>     ← only if a roadmap was found (declared or detected)
-- Recent activity: <last commit / last PR / last shipped lifecycle item>
-- [Bullets from sources declared in `## Project context`: tracker counts, board column health, etc.]
+- **Branch:** <current> (<N> ahead, <M> behind <upstream>)
+- **Roadmap:** X/Y items · next: <item>     ← only if a roadmap was found (declared or detected)
+- **Recent activity:** <last commit / last PR / last shipped lifecycle item>
+- **<Field name>:** <bullets from sources declared in `## Project context`>     ← e.g. **Tracker:**, **Board:**
 
 ### What's in flight                           ← only if any strong signal
-- Working tree: <paths and one-line summary>
-- Local-only: <unpushed commits / stashes / no-upstream branches / worktrees if > 1>
-- <roadmap section title>: <items + state>     ← rendered with the project's actual ROADMAP section name (e.g. "## In flight", "## Now")
-- Open PRs: <your PRs + review status>
-- Drafts: <lifecycle artifacts with in-flight status>     ← rendered with the project's actual status vocabulary (e.g. "status: draft|open|approved")
-- Tracker: <items in progress>     ← only if a tracker was declared in `## Project context`
+- **Working tree:** <paths and one-line summary>
+- **Local-only:** <unpushed commits / stashes / no-upstream branches / worktrees if > 1>
+- **<roadmap section title>:** <items + state>     ← rendered with the project's actual ROADMAP section name (e.g. "## In flight", "## Now")
+- **Open PRs:** <your PRs + review status>
+- **Drafts:** <lifecycle artifacts with in-flight status>     ← rendered with the project's actual status vocabulary (e.g. "status: draft|open|approved")
+- **Tracker:** <items in progress>     ← only if a tracker was declared in `## Project context`
 
 ### Recent activity                            ← always (last 3-5 things)
 Synthesised, not dumped. Group by theme. Reference SHA / PR# / file path.
@@ -342,7 +342,7 @@ Reference roadmap priority (if found), dependency chain, newly unblocked items.
 
 If everything else got cut, the TL;DR alone should still be useful.
 
-**Snapshot:** Always present. One-line bullets only. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts; roadmap line from the resolved roadmap path (whether declared in `## Project context` or detected at a default location); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add bullets for sources declared in `## Project context` (tracker counts, board column health) only when those sources were declared and read.
+**Snapshot:** Always present. One-line bullets only. Each bullet starts with a **bold state label** (`**Branch:**`, `**Roadmap:**`, `**Recent activity:**`, `**<Field>:**`) so the categorical labels are scannable at a glance. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts; roadmap line from the resolved roadmap path (whether declared in `## Project context` or detected at a default location); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add bullets for sources declared in `## Project context` (tracker counts, board column health) only when those sources were declared and read — these get bold labels too (`**Tracker:**`, `**Board:**`).
 
 **What's in flight:** Only if any Strong-strength signal from the In-flight detection table. Group bullets by what they describe (Working tree, Local-only, ROADMAP, Open PRs, Drafts, Tracker — see the output template above), **not** by Strong/Medium/Weak — those labels are internal classification and must never appear in the rendered briefing. Render the roadmap-section bullet using the project's actual ROADMAP heading (e.g. `ROADMAP "## In flight":` for canonical projects; `ROADMAP "## Now":` for a project using Now/Next/Later; omit entirely if no roadmap was found). Render the drafts bullet using the project's actual status vocabulary (e.g. `Drafts (status: draft|open|approved):` for canonical; `Drafts (status: wip):` for a project using a different vocabulary; omit if no working memory was found). Don't dump diffs — summarise per the 200-line cap.
 
@@ -360,57 +360,57 @@ The **`★ About this briefing` block** is conditional — it renders only when 
 
 A short footer block that renders only when at least one bullet has content; omits entirely when no bullets apply (the typical healthy-project case).
 
-Visual format — wrap the header and footer rule lines in backticks so they render as monospace inline code, matching the visual style of Claude Code's `★ Insight` blocks. Bullets between the rules are a tight list (no blank lines between bullets); the monospace rules act as bookends and give the block visual scope without needing inter-bullet padding. Bullets that have both an *observation* and a *context/action* split across two visual lines using a **markdown hard line break** — two trailing spaces after the observation, a newline, then the em-dash continuation indented two spaces under the bullet. Each bullet reads as two beats. Short single-clause bullets stay on one line.
+Visual format — wrap the header and footer rule lines in backticks so they render as monospace inline code, matching the visual style of Claude Code's `★ Insight` blocks. Bullets between the rules are a tight list (no blank lines between siblings); the monospace rules act as bookends and give the block visual scope without needing inter-bullet padding. Bullets that have both an *observation* and a *context/action* use a **bold parent bullet for the observation plus an indented sub-bullet for the context/action**, so each bullet reads as two beats with a clear visual hierarchy. Short single-clause bullets stay on one line with bold on the observation phrase.
 
-Rendered shape (the literal markdown the model emits — the observation lines in two-line bullets each end with two trailing spaces, which are the markdown hard-line-break marker):
+Rendered shape (the literal markdown the model emits):
 
 ```
 `★ About this briefing ─────────────────────────`
-- <observation>  
-  — <context or action>
-- <short single-clause bullet>
-- <observation>  
-  — <context or action>
+- **<observation>**
+  - <context or action>
+- **<short single-clause bullet>**
+- **<observation>**
+  - <context or action>
 `─────────────────────────────────────────────────`
 ```
 
-The model emits the backticks around the rule lines (terminal renders them as monospace; the backticks themselves are hidden, just like in `★ Insight`). For two-line bullets, the model emits the observation followed by **two trailing spaces** (the markdown hard-line-break syntax), then a newline, then `  — <action>` indented by two spaces under the bullet. The `<br>` tag was tried previously but stripped by Claude Code's terminal renderer; two trailing spaces is the reliable approach.
+The model emits the backticks around the rule lines (terminal renders them as monospace; the backticks themselves are hidden, just like in `★ Insight`). The sub-bullet pattern (`-` parent, indented `-` child) renders as parent + nested-child in any markdown renderer — both markers are dashes (consistent), and the indent gives the visual two-beat structure. Earlier iterations tried `<br>` (stripped by the terminal renderer) and a leading em-dash on a hard-line-break continuation (the renderer interpreted line-leading `—` as a list marker, producing inconsistent `-` and `—` siblings); sub-bullets are the renderer-native solution.
 
 ### Bullet inventory
 
-Each bullet renders only when its trigger fires. Block omits when zero bullets apply. Two-line bullets are shown in fenced code blocks so the trailing spaces are preserved literally in this spec — the model copies the text verbatim, including the two trailing spaces after each observation.
+Each bullet renders only when its trigger fires. Block omits when zero bullets apply. Bullets that have both an observation and a context/action use a bold parent bullet plus an indented sub-bullet (shown in fenced code blocks below). Single-clause bullets get inline bold on the observation phrase.
 
 1. **Some sources unavailable** — fires when a declared or default-path source didn't resolve. Render:
 
    ```
-   Some sources unavailable  
-     — /briefing sources for details.
+   - **Some sources unavailable.**
+     - Run `/briefing sources` for details.
    ```
 
 2. **Briefing relied on git/gh only** — fires when neither declared nor default-path sources hit. Render:
 
    ```
-   Briefing relied on git/gh only  
-     — /briefing sources to see what else this skill can read.
+   - **Briefing relied on git/gh only.**
+     - Run `/briefing sources` to see what else this skill can read.
    ```
 
-3. **Stale or failed fetch** — render `Refs from last fetch <relative-date>` (single line) OR, for the auth-failure variant:
+3. **Stale or failed fetch** — render `- **Refs from last fetch <relative-date>**` (single line) OR, for the auth-failure variant:
 
    ```
-   Fetch failed (auth)  
-     — refs may be stale; check credentials.
+   - **Fetch failed (auth).**
+     - Refs may be stale; check credentials.
    ```
 
-4. **GitHub unavailable** — render: `GitHub queries skipped (gh not authenticated)` or `(gh not installed)`. (Single line — no em-dash continuation.)
+4. **GitHub unavailable** — render: `- **GitHub queries skipped** (gh not authenticated)` or `- **GitHub queries skipped** (gh not installed)`. (Single line — bold the observation, parens for context.)
 5. **Tracker integration unavailable** — render:
 
    ```
-   <Tracker> declared but <CLI> not available  
-     — install or configure MCP.
+   - **`<Tracker>` declared but `<CLI>` not available.**
+     - Install or configure MCP.
    ```
 
-6. **Depth conflict** — render: `Depth received both '<X>' and '<Y>'; using '<Y>'` OR `Depth ignored when 'sources' mode is active`. (Single line — semicolon, not em-dash.)
-7. **Detached HEAD** — render: `On detached HEAD; reporting against nearest branch <X>`. (Single line — semicolon, not em-dash.)
+6. **Depth conflict** — render: `- **Depth received both '<X>' and '<Y>'**; using '<Y>'` OR `- **Depth ignored when 'sources' mode is active**`. (Single line.)
+7. **Detached HEAD** — render: `- **On detached HEAD**; reporting against nearest branch <X>`. (Single line.)
 
 ### Bullet priority
 
@@ -487,10 +487,12 @@ What this skill reads:
 
 What was read in this project:
 
-  Always-on:    git (<state>), gh (<state>)
-  Declared:     <field>=<path> | <field>=none, ...
-  Default:      <paths that hit>, ...
-  Not found:    <paths probed but absent>
+| Layer | What was read |
+|---|---|
+| Always-on | git (`<state>`); gh (`<state>`) |
+| Declared | `<field>=<path>`, `<field>=none`, ... (one row per declared field; `none` means deliberately empty) |
+| Default | `<paths that hit>`, ... |
+| Not found | `<paths probed but absent>` |
 
 Want richer briefings? Two paths, both equally valid:
   - Declare additional locations in `## Project context`. Example:
