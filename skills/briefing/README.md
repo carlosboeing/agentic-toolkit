@@ -4,7 +4,7 @@ A single-file [Claude Code skill](https://docs.claude.com/en/docs/claude-code/sk
 
 It auto-discovers what's in flight from git, GitHub, your project's CLAUDE.md `## Project context` section (when present), and whatever working-memory layout it can detect. The output reshapes by what it finds — leads with active work if there is any, leads with what's next if everything is calm.
 
-The skill is **convention-aware but not convention-coupled**. It works generically in any repo, lights up with richer behaviour when a project follows the [canonical conventions in this repo](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md), and surfaces a read-only "convention-maturity" block in the footer when partial adoption is detected (suggesting what's missing, never editing).
+The skill is **convention-aware but not convention-coupled**. It works generically in any repo and lights up with richer behaviour when a project follows the [canonical conventions in this repo](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md). Default-mode output stays focused on orientation; if you want to know what the skill probes and what it found in your project, run `/briefing sources` for a separate self-documentation view.
 
 Designed for engineers using Claude Code who want substantive orientation, not the one-line summary the built-in `/recap` produces.
 
@@ -22,18 +22,19 @@ Type `/briefing` in any Claude Code session and you get a structured briefing wh
 | **Recent activity** | Always — last 3–5 things, synthesised not dumped |
 | **What's next** | Always — recommended action with reasoning |
 | **Decisions / attention** | Only if there's something to flag (design calls, stale work, risky operations) |
-| **Source-coverage footer** | Always — names every source actually read and every one skipped (with reason) |
+| **`★ About this briefing`** | Only if a source failure, depth conflict, detached HEAD, or thin-input case applies — otherwise omitted entirely |
 
 Sections with nothing to say are omitted entirely, not padded.
 
 ## Dials — how the briefing is shaped
 
-Three knobs you can mix and match. Order doesn't matter.
+Four knobs you can mix and match. Order doesn't matter.
 
 | Dial | Keywords | Default | Effect |
 |---|---|---|---|
-| **Depth** | `quick` (or `peek`), `standard`, `deep` (or `deep-dive`/`audit`) | **adaptive (no override)** | Length × source breadth × wall-clock. `quick` < 300w, < 5s; `standard` 600–1000w, forces all six sections; `deep` 1200–2000w, adds historical sources, stale-branch sweep, ADR scan, per-project memory |
-| **Save** | `save` (or `--save`/`export`) | off | Write the briefing to `<repo>/.claude/briefing-log/` (or `~/.claude/briefing-log/` outside a git repo) |
+| **Mode** | `sources` | briefing | Switch to the self-documentation view that lists what this skill probes and what it found. Mutex with depth tiers — see `/briefing sources` below. |
+| **Depth** | `quick` (or `peek`), `standard`, `deep` (or `deep-dive`) | **adaptive (no override)** | Length × source breadth × wall-clock. `quick` < 300w, < 5s; `standard` 600–1000w, forces all six sections; `deep` 1200–2000w, adds historical sources, stale-branch sweep, ADR scan, per-project memory. Does not apply when `sources` mode is active. |
+| **Save** | `save` (or `--save`/`export`) | off | Write the output to `<repo>/.claude/briefing-log/` (or `~/.claude/briefing-log/` outside a git repo). Compatible with all modes. |
 | **Help** | `help` (or `?`/`usage`/`--help`/`-h`) | off | Render synopsis and stop |
 
 The depth default is genuinely adaptive — when no depth keyword is provided, the output's length is content-driven (sections appear or disappear based on what the project state contains). `quick`/`standard`/`deep` are explicit overrides for fixed-length tiers; "no dial" is its own behaviour, not a synonym for `standard`. (`/learn`'s depth dial defaults to `standard`; `/briefing`'s defaults to adaptive — same canonical keyword vocabulary, different defaults that fit each skill's job.)
@@ -77,11 +78,11 @@ For any field L2a didn't declare, the skill probes for canonical-conventions sig
 
 This is the "lights up with conventions" tier. A project that follows the canonical layout gets richer briefings (in-flight detection wired to your ROADMAP sections, status frontmatter recognised, ADRs surfaced) for free. A project that uses different conventions just gets L1 + L2a output, which still works — no broken behaviour.
 
-When L2b detects **partial adoption** (some signatures match, others don't), the briefing's footer renders a read-only **convention-maturity block** listing what's present (✓), what's missing (✗), and a link to the canonical guide. Suggestions, not edits — the user decides whether to adopt.
+Default-mode briefings don't lobby for convention adoption — orientation output stays focused on the project state. If you want to see what this skill probed and what it found (canonical paths matched, declarations honoured, gaps named), run `/briefing sources`. That view frames declared paths via `## Project context` as first-class equivalents to canonical defaults, not deviations.
 
 ### Layer 3 — Graceful degradation
 
-Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project context`, declared tracker unreachable, detached HEAD, secret-pattern files, working memory not found at any L2b path, …). Every gap surfaces in the briefing's source-coverage footer with the reason — never papered over, never silently fabricated.
+Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project context`, declared tracker unreachable, detached HEAD, secret-pattern files, working memory not found at any L2b path, …). Failures that affect orientation surface as bullets in the conditional `★ About this briefing` block; failures that don't surface in `/briefing sources` if you ask for them. Never papered over, never silently fabricated.
 
 ## Install
 
@@ -106,13 +107,29 @@ For the project-level install path and the shared install snippet, see [`skills/
 # ─── Standard cases ────────────────────────────────
 /briefing                            # adaptive default
 /briefing quick                      # < 300w, ~5–7 reads, < 5s
-/briefing deep save                  # full audit, written to disk
+/briefing deep save                  # extended-window briefing, written to disk
 /briefing standard                   # forces all six sections at 600–1000w
+
+# ─── Sources mode (self-documentation) ─────────────
+/briefing sources                    # what this skill probes + what it found here
+/briefing sources save               # save the sources view to <TS>-sources.md
 
 # ─── Help ──────────────────────────────────────────
 /briefing help
 /briefing ?
 ```
+
+## `/briefing sources` — self-documentation mode
+
+A separate output that documents what this skill probes and what it found in the project. Mutex with depth tiers (`quick`/`standard`/`deep`); compatible with `save`. Run it when you want to know:
+
+- What sources this skill *can* read in any project (always-on git/gh, declared `## Project context` fields, default canonical paths, fallbacks).
+- What it *did* read in this specific project (which paths matched, which were declared, which weren't found).
+- How to enrich future briefings — either by declaring additional locations in `## Project context`, or by adopting canonical conventions for zero-config behaviour.
+
+The view is descriptive, not prescriptive. A project that uses `decisions/` instead of `docs/adrs/` and declares the path is a first-class hit, not a deviation. Both paths — declared and canonical — are equally valid. The view exists to make the skill's mechanics legible, not to lobby for any particular layout.
+
+Output is organised by four user-facing layers (the same source model the skill uses internally, with friendlier labels): **Always-on**, **Declared (highest priority)**, **Default paths (when not declared)**, and **Fallbacks**. Empty layers render as `(none)` rather than disappearing — transparency is the point.
 
 ## Saved briefings (`briefing-log`)
 
@@ -120,7 +137,7 @@ When you append `save`, the briefing is written to disk so you can re-read it la
 
 - **Location**: `<repo>/.claude/briefing-log/` if you're in a git repo, else `~/.claude/briefing-log/`.
 - **Filename**: `YYYY-MM-DDTHHMM.md` (UTC, ISO8601 to the minute, no colons in the filename for filesystem portability).
-- **Frontmatter**: `type`, `date`, `project`, `branch`, `depth`, `in-flight` — searchable.
+- **Frontmatter**: `type`, `date`, `project`, `branch`, then either `depth` + `in-flight` (default-mode saves) or `mode: sources` (sources-mode saves) — mutex, every record has exactly one of those two.
 - **Overwrite policy**: never silent. If the filename already exists, a `-2`, `-3`, … suffix is appended.
 - **Gitignore**: not auto-ignored. Whether to commit your `briefing-log/` is up to you and your team.
 
@@ -136,7 +153,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Read-only on the project.** The skill never modifies project files; the only exception is the briefing log it writes to `briefing-log/` when you invoke it with `save`.
 - **`git fetch`, never `git pull`.** Fetching updates refs without modifying the working tree, so the briefing can compute accurate ahead/behind without risking a merge mid-task. `Auto-fetch: no` skips even the fetch.
 - **Anti-fabrication.** Every data point comes from a source read this invocation. No invented PR numbers, file paths, SHAs, or URLs. Stale data labelled stale beats stale data presented as fresh.
-- **Honest about gaps.** Source unreachable, declared tracker missing, no `## Project context` section, network down — every gap names itself in the source-coverage footer.
+- **Honest about gaps.** Source unreachable, declared tracker missing, no `## Project context` section, network down — orientation-affecting gaps name themselves in the conditional `★ About this briefing` block. Setup-affecting gaps surface in `/briefing sources` if you ask for them. Never papered over.
 - **No transcripts.** The skill never reads raw conversation transcripts on disk, even at `deep`. That would undermine the working-memory discipline (`docs/` artifacts become optional if briefings can recover from transcripts), and the on-disk format is undocumented Anthropic internals.
 - **Single file.** All ~530 lines live in one `SKILL.md`. Easy to share, easy to extend, easy to grep.
 
@@ -170,7 +187,8 @@ That's it. No package install, no plugin marketplace, no auth setup beyond the o
 ## See also
 
 - **[`SKILL.md`](SKILL.md)** — the skill itself, drop-in to `~/.claude/skills/briefing/`.
-- **[`docs/2-design/2026-05-03-briefing-skill-shareability-design.md`](../../docs/2-design/2026-05-03-briefing-skill-shareability-design.md)** — current design (4-layer architecture, convention-maturity check). Supersedes the original 2026-05-02 design.
+- **[`docs/2-design/2026-05-03-briefing-footer-redesign-design.md`](../../docs/2-design/2026-05-03-briefing-footer-redesign-design.md)** — footer redesign (conditional `★ About this briefing` block + `/briefing sources` mode). Most recent design.
+- **[`docs/2-design/2026-05-03-briefing-skill-shareability-design.md`](../../docs/2-design/2026-05-03-briefing-skill-shareability-design.md)** — prior design (4-layer architecture). Background for the layered source model. Superseded for the footer behaviour by the redesign above.
 - **[`docs/2-design/2026-05-02-briefing-skill-design.md`](../../docs/2-design/2026-05-02-briefing-skill-design.md)** — original design (3-layer model). Historical reference; the layered-source-model rationale and the deferred Approach C (Stop-hook snapshot schema) live here.
 - **[`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd)** — the canonical `## Project context` schema this skill consumes.
 - **[`templates/default-project/CLAUDE.md`](../../templates/default-project/CLAUDE.md)** — generic CLAUDE.md scaffold that ships with the section pre-populated.
