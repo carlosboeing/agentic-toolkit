@@ -354,13 +354,15 @@ The **`★ About this briefing` block** is conditional — it renders only when 
 
 Replaces the always-rendered source-coverage footer + convention-maturity block. Renders only when at least one bullet has content; omits entirely when no bullets apply (the typical healthy-project case).
 
-Visual format:
+Visual format — bullets are separated by blank lines (loose list) so the block reads at a glance even when several bullets co-render:
 
 ```
 ★ About this briefing ─────────────────────────
 - <bullet 1>
+
 - <bullet 2>
-…
+
+- <bullet 3>
 ─────────────────────────────────────────────────
 ```
 
