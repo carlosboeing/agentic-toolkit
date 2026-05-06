@@ -394,6 +394,8 @@ All other bullets are independent and may co-render with each other.
 
 ## Depth contract
 
+> Depth keywords (`quick`/`standard`/`deep`) control source breadth and output length. They do not apply to `/briefing sources`, which is a separate mode (see **`/briefing sources` mode** above).
+
 The depth dial scales three things together — output length, source breadth, and wall-clock — because deep output requires deep input which takes time.
 
 | Depth | Length | Sources read | Wall-clock | Use when |
@@ -419,6 +421,66 @@ The depth dial scales three things together — output length, source breadth, a
 
 **Not read at any depth:** raw conversation transcripts on disk. Reading them would undermine the working-memory discipline the canonical conventions describe (artifacts become optional if briefings can recover from transcripts), transcripts are noisy (corrections, abandoned approaches, false starts), and the on-disk format is undocumented Anthropic internals. The principled equivalent is a Stop hook with an explicit snapshot schema — deferred (Approach C in the design doc).
 
+## /briefing sources mode
+
+Triggered by passing `sources` as the mode keyword. Mutex with depth tiers (`quick`/`standard`/`deep`); compatible with `save`. Produces a self-documentation view of what this skill probes and what it found in the project.
+
+### Output template
+
+```
+Briefing sources — <project-name>
+
+What this skill reads:
+
+  Always-on
+    git status, recent commits, stashes, worktrees, GitHub PRs/issues/CI
+
+  Declared (highest priority)
+    `## Project context` in CLAUDE.md
+    Fields: Tracker, Board, Roadmap, Changelog, Architecture, Working memory, Auto-fetch, Other
+
+  Default paths (when not declared)
+    Roadmap → docs/ROADMAP.md → ROADMAP.md
+    Changelog → docs/CHANGELOG.md → CHANGELOG.md
+    Working memory → docs/[0-9]-*/, docs/adrs/, files with `status:` frontmatter
+    ADRs → docs/adrs/NNNN-*.md → docs/architecture/decisions/, decisions/, adr/
+
+  Fallbacks
+    Names every gap in the output; never fabricates.
+
+What was read in this project:
+
+  Always-on:    git (<state>), gh (<state>)
+  Declared:     <field>=<path> | <field>=none, ...
+  Default:      <paths that hit>, ...
+  Not found:    <paths probed but absent>
+
+Want richer briefings? Two paths, both equally valid:
+  - Declare additional locations in `## Project context`. Example:
+      - **Adrs**: docs/architecture/decisions/
+  - Or adopt canonical conventions for zero-config: <CANONICAL_CONVENTIONS_URL>
+
+Last synced from canonical: <YYYY-MM-DD>
+```
+
+### Empty-layer rendering
+
+When a layer has no entries (e.g. project declared no `## Project context` and no canonical default paths matched), render the layer header with `(none)` underneath rather than omitting the layer. Transparency is the purpose of this view.
+
+### Date stamp
+
+The `Last synced from canonical: <YYYY-MM-DD>` stamp is a maintainer-tracked date carried in this `SKILL.md`. It records when the layer descriptions and probe paths in this view were last reconciled against the canonical conventions guide. Format: ISO date (e.g. `2026-05-03`). Update whenever the canonical guide changes in a way that affects this view's content.
+
+### Parser interaction
+
+- **Mutex with depth keywords.** If a user types `/briefing sources deep`, the parser still renders the sources view; bullet 6 of `★ About this briefing` renders inside the sources view's footer with text `Depth ignored when 'sources' mode is active`.
+- **Compatible with `save`.** See **Save behaviour** for frontmatter shape.
+- **`help` wins.** If `help` is present, render the synopsis and stop (existing rule).
+
+### Tone
+
+The view is descriptive, not prescriptive. The "Two paths, both equally valid" framing is non-preferential between Declared and Default-paths approaches: a project using `decisions/` instead of `docs/adrs/` and declaring the path is a first-class hit, not a deviation. Never imply canonical conventions are preferred.
+
 ## Save behaviour
 
 Triggered by passing `save` (or synonyms `--save`, `export`) — see **How to parse the args**.
@@ -434,9 +496,13 @@ else
 fi
 mkdir -p "$DEST"
 
-# Filename — ISO8601 to the minute, UTC
+# Filename — ISO8601 to the minute, UTC. Sources-mode saves get a `-sources` suffix.
 TS=$(date -u +%Y-%m-%dT%H%M)
-FILE="$DEST/$TS.md"
+if [ "$MODE" = "sources" ]; then
+  FILE="$DEST/$TS-sources.md"
+else
+  FILE="$DEST/$TS.md"
+fi
 
 # On collision, append -2, -3, ...
 N=2; while [[ -e "$FILE" ]]; do FILE="$DEST/$TS-$N.md"; N=$((N+1)); done
@@ -444,7 +510,7 @@ N=2; while [[ -e "$FILE" ]]; do FILE="$DEST/$TS-$N.md"; N=$((N+1)); done
 
 Once `$FILE` is computed, write the file using the Write tool (not `cat`/heredoc — the briefing body comes from your conversation render, not from a shell variable). The file's content is YAML frontmatter followed by the verbatim rendered briefing.
 
-**Frontmatter** — six fields, in this order:
+**Frontmatter** — six fields, in this order. Default-mode saves carry `depth:`; sources-mode saves carry `mode: sources` instead. The two fields are mutex — every save record has exactly one.
 
 ```yaml
 ---
@@ -452,12 +518,15 @@ type: briefing-log
 date: YYYY-MM-DDTHH:MM
 project: <git-repo-name or cwd basename>
 branch: <current>
+# Default-mode briefing save:
 depth: <quick|standard|deep|adaptive>
 in-flight: <yes|no>
+# OR, for /briefing sources save:
+# mode: sources
 ---
 ```
 
-**Body:** the verbatim rendered briefing (the same text the user just saw), including the source-coverage footer and (if applicable) the convention-maturity block.
+**Body:** the verbatim rendered output. For default-mode saves, that's the briefing including any `★ About this briefing` block. For sources-mode saves, that's the full `/briefing sources` view including the date stamp.
 
 **Final line printed to the user** after the file is written:
 
