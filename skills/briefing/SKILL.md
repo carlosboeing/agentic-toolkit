@@ -34,6 +34,7 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
 ```
 /briefing [depth] [save] [help]              # default — orientation briefing
 /briefing sources [save] [help]              # self-documentation view (what this skill probes + finds)
+/briefing setup [help]                       # wizard: build/update `## Project context` in CLAUDE.md
 
   depth     adaptive (default) | quick | standard | deep
             Length × source breadth. Adaptive is content-driven (sections appear
@@ -41,7 +42,11 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
             Synonyms — quick: peek; deep: deep-dive
   sources   Render the self-documentation view: what this skill probes
             (Always-on / Declared / Default paths / Fallbacks) and what it
-            found in the current project. Mutex with depth tiers.
+            found in the current project. Mutex with depth tiers and `setup`.
+  setup     Wizard flow: probes the project, proposes a `## Project context`
+            block for CLAUDE.md, and (with explicit user confirmation) writes
+            it (with a `.bak` backup). Mutex with depth tiers, `sources`, and
+            `save`.
   save      Write the output to disk.                       default: off
             (synonyms: --save, export)
   help      Show this synopsis instead of running.          default: off
@@ -53,6 +58,7 @@ Examples:
   /briefing deep save          # deep tier, written to disk
   /briefing sources            # self-documentation view
   /briefing sources save       # self-documentation view, written to disk
+  /briefing setup              # wizard: build/update `## Project context`
 ```
 
 Order of args does not matter. `/briefing deep save` and `/briefing save deep` are equivalent. If any help keyword (the full set is listed under **How to parse the args** below — `help`, `--help`, `-h`, `?`, `usage`) appears anywhere in the args, the skill renders this Synopsis as the response and stops — no briefing, no save.
@@ -63,7 +69,7 @@ The depth default is **adaptive**: when no depth keyword is provided, the briefi
 
 Walk the tokens once and bucket each one:
 
-- **Mode keywords** (closed set): `sources`. Default mode is briefing.
+- **Mode keywords** (closed set): `sources`, `setup`. Default mode is briefing.
 - **Depth keywords** (closed set): `quick`, `peek`, `standard`, `deep`, `deep-dive`. Default: adaptive (no override) if no depth keyword is present.
 - **Save keywords** (closed set): `save`, `--save`, `export`. Default off.
 - **Help keywords** (closed set): `help`, `--help`, `-h`, `?`, `usage`. If any appear, **short-circuit**: render the Synopsis above and stop.
@@ -71,7 +77,13 @@ Walk the tokens once and bucket each one:
 
 The parser is order-independent and case-insensitive. Two of the same bucket is an error of intent — pick the **rightmost** occurrence and surface the override via the depth-conflict bullet in the `★ About this briefing` block (see **About this briefing** section below). The bullet text follows the pattern `Depth received both '<X>' and '<Y>'; using '<Y>'`.
 
-**Mutex rule — sources mode vs depth tiers:** when `sources` is present AND a depth keyword is present, render the sources view; the depth keyword is ignored. Surface the conflict via the depth-conflict bullet inside the sources view, with text `Depth ignored when 'sources' mode is active`.
+**Mutex rule — modes vs depth tiers:** when any mode keyword (`sources` or `setup`) is present AND a depth keyword is present, render the mode's view; the depth keyword is ignored. Surface the conflict via bullet 6 of `★ About this briefing` inside the mode's view: `Depth ignored when '<mode>' mode is active`.
+
+**Mutex rule — modes are mutually exclusive:** when both `sources` and `setup` are present, that's an error of intent. Render `Cannot combine 'sources' and 'setup' modes — pick one.` and stop.
+
+**Save compatibility:**
+- `sources` + `save`: compatible (writes the sources view to `briefing-log/<TS>-sources.md`).
+- `setup` + `save`: not compatible — the wizard's output is interactive, not a static document. Surface as bullet 6 of `★ About this briefing` inside the wizard view: `Save ignored when 'setup' mode is active`. Proceed with the wizard.
 
 ## Source layering
 
@@ -426,7 +438,7 @@ Each bullet renders only when its trigger fires. Block omits when zero bullets a
      - Install or configure MCP.
    ```
 
-6. **Depth conflict** — render: `- **Depth received both '<X>' and '<Y>'**; using '<Y>'` OR `- **Depth ignored when 'sources' mode is active**`. (Single line.)
+6. **Depth or save conflict** — render one of: `- **Depth received both '<X>' and '<Y>'**; using '<Y>'`, `- **Depth ignored when '<sources|setup>' mode is active**`, OR `- **Save ignored when 'setup' mode is active**`. (Single line.)
 7. **Detached HEAD** — render: `- **On detached HEAD**; reporting against nearest branch <X>`. (Single line.)
 
 ### Bullet priority
@@ -552,9 +564,130 @@ The view is descriptive, not prescriptive. The "Two paths, both equally valid" f
 
 When the user's CLAUDE.md or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to skill output. Skill specs override conversational defaults for their own scope.
 
+## /briefing setup mode
+
+Triggered by passing `setup` as the mode keyword. A wizard that builds (or updates) the `## Project context` section in CLAUDE.md.
+
+This is the only mode that writes to a project file other than `briefing-log/`. The write happens after explicit user confirmation, with a one-time backup at `CLAUDE.md.before-briefing-setup.bak` created first.
+
+**Compatibility:**
+
+- Mutex with depth tiers (`quick`/`standard`/`deep`).
+- Mutex with `sources` (only one mode per invocation).
+- `save` is not compatible — the wizard's output is interactive, not a static document. Surface bullet 6 of `★ About this briefing` (`Save ignored when 'setup' mode is active`) and proceed with the wizard.
+
+### What it does
+
+1. **Probe** the project state — same probes as `/briefing sources` (git remote, GitHub PRs/issues, canonical paths, working-memory dirs, ADR locations, per-project memory).
+2. **Read** CLAUDE.md (if it exists) and look for an existing `## Project context` section.
+3. **Propose** a `## Project context` block populated from probes (see **Detection rules** below).
+4. **Output** the proposal with detection notes plus a confirmation prompt.
+5. **On user `yes`**, back up CLAUDE.md and write the new section. **On `no`**, print the block for manual paste.
+
+### Output template
+
+```
+Setup proposal for `<project-name>`
+
+## What I found
+
+- <one bullet per probed source: detected value or "no detection">
+- ...
+
+## Proposed `## Project context` block
+
+```markdown
+## Project context
+
+- **Tracker**: <detected or `<placeholder: ...>`>
+- **Board**: <detected or `none`>
+- **Roadmap**: <detected or `none`>
+- **Changelog**: <detected or `none`>
+- **Architecture**: <detected or `none`>
+- **Working memory**: <detected or `none`>
+- **Auto-fetch**: yes
+- **Other**:
+  - <suggested bullets, or `<placeholder>`>
+```
+
+## Where to insert
+
+<line-number + anchor description, e.g. "After the title `# <name>` (line 1)" or "After `## What this project is` (line 9)">
+
+## To apply
+
+Reply:
+- `yes` — write to CLAUDE.md (creates `CLAUDE.md.before-briefing-setup.bak` first)
+- `no` — keep the block above for manual paste; no write
+- (paste a revised block) — apply your revision instead
+```
+
+If the proposed block contains `<placeholder>` markers, add a warning before the prompt:
+
+```
+Note: <N> placeholder(s) remain (see fields marked `<placeholder: ...>` above).
+You can write now and fill them in CLAUDE.md afterwards, or cancel and edit
+the proposal first.
+```
+
+### Detection rules
+
+Pre-fill rules per field:
+
+- **Tracker** — Try `gh issue list --limit 1` against the current GitHub remote. If it returns issues → `GitHub Issues`. Else if `linear-cli` is in `$PATH` → `<placeholder: Linear team <NAME>>`. Else if no detection → `<placeholder: GitHub Issues / Linear team X / Jira project Y / none>`.
+- **Board** — No reliable detection. Default `none` with a note that the user can paste a URL.
+- **Roadmap** — Probe `docs/ROADMAP.md` → `ROADMAP.md` (root) → `none`.
+- **Changelog** — Probe `docs/CHANGELOG.md` → `CHANGELOG.md` (root) → `none`.
+- **Architecture** — Probe `docs/architecture.md` → `docs/system/` → `none`.
+- **Working memory** — Canonical layout (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all present) → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`.
+- **Auto-fetch** — Always default `yes`. Not auto-detected (user changes to `no` if needed).
+- **Other** — Pre-suggest bullets based on detections: non-canonical working-memory layouts (e.g. `docs/plans/` with date-prefixed files), test-artefact directories (e.g. `tmp/tst_*`), custom scripts in `bin/` or `scripts/`. If nothing notable, leave a `<placeholder>` line.
+
+### Existing `## Project context`
+
+If CLAUDE.md already has a `## Project context` section:
+
+1. Parse the existing fields.
+2. Compute the diff against the proposed (detected) block.
+3. Show the diff per-field: changing values, additions, fields that match.
+4. Confirm: `Update <field> from <current> → <proposed>? yes / no / skip-all`.
+5. Apply only confirmed changes; don't blanket-overwrite.
+
+### Insertion location (no existing section)
+
+If `## Project context` doesn't exist in CLAUDE.md:
+
+- If a `## What this project is` (or similar one-line "what this is" section) exists, insert after that section.
+- Otherwise, insert directly after the title `# <name>` on line 1.
+
+If CLAUDE.md doesn't exist at all, propose creating one from the canonical scaffold ([`templates/default-project/CLAUDE.md`](`<CANONICAL_CONVENTIONS_URL>`/raw/templates/default-project/CLAUDE.md)) with the `## Project context` populated. Tell the user the title is a placeholder.
+
+### Backup mechanics
+
+Before write, copy the existing CLAUDE.md to `CLAUDE.md.before-briefing-setup.bak` (overwriting any prior backup — single rolling backup). On success, confirm: `Wrote ## Project context to CLAUDE.md (line N). Backup at CLAUDE.md.before-briefing-setup.bak.`
+
+If CLAUDE.md doesn't exist, no backup is needed; create the new file with `# <project-name>` placeholder + the proposed `## Project context`.
+
+### Output isolation
+
+The wizard's output is *exactly* the template above (proposal + confirmation prompt) plus, after user reply, a write-confirmation or manual-paste-fallback line. Same exclusions as `/briefing sources`:
+
+- No default-mode briefing sections (TL;DR / Snapshot / What's in flight / etc.).
+- No `/briefing sources` view layers.
+- No `★ About this briefing` bullets except bullet 6 (depth or save conflict).
+- No response-style wrappers (Claude's `## Open decisions`, `★ Insight`, free-form "What's next").
+
+When the user's CLAUDE.md or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to this wizard's output. Skill specs override conversational defaults for their own scope.
+
+### Tone
+
+Helpful and explanatory. Show your work — explain what was detected, why each field has the value you proposed, what placeholders mean. The user is in setup-config mode, not consumption mode; appropriate verbosity is fine.
+
+The confirmation prompt should be unambiguous about what `yes` does (write file + create backup) and what alternatives are available.
+
 ## Save behaviour
 
-Triggered by passing `save` (or synonyms `--save`, `export`) — see **How to parse the args**.
+Triggered by passing `save` (or synonyms `--save`, `export`) — see **How to parse the args**. Compatible with default-mode briefing and with `/briefing sources`; **not** compatible with `/briefing setup` (see the setup mode section above).
 
 Determine the destination directory and a non-colliding filename, then create the directory if needed:
 
@@ -615,7 +748,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 - **No emojis, no hype.** "Last shipped X" not "Successfully shipped X! 🎉".
 - **Concise over comprehensive.** Bullets when structure helps scanning. No "It's worth noting that…"
 - **Honest about gaps.** Source unreachable / empty → name it, don't fabricate.
-- **Read-only on everything except `briefing-log/`.** The save log is the only write the skill ever makes; it lands in a dedicated directory, never in project files.
+- **Read-only on everything except `briefing-log/` and (in `setup` mode only) `CLAUDE.md`.** Two writes the skill performs: (1) the save log writes to `briefing-log/` when `save` is passed; (2) the `setup` mode writes to `CLAUDE.md` after explicit user confirmation, with a `.bak` backup created first. No other modes touch project files.
 - **Suggest, don't impose.** Default-mode output never lobbies for convention adoption. Audit-style suggestions live in `/briefing sources` and are framed descriptively: equivalent info in different locations (declared via `## Project context`) is a first-class hit, not a deviation. Never auto-applies a convention; never edits CLAUDE.md or any other project file.
 - **Prefer "you" framing.** This is a personal orientation tool ("you stopped mid-X"). For orientation, "you" is sharper than "we" or "the code" — the user invoked the skill *to be reminded what they were doing*.
 - **No time estimates.** Don't say "this should take 2 hours." Estimate scope (small / medium / large by analogy to similar past items in the changelog) at most.
