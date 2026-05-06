@@ -545,7 +545,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 - **Concise over comprehensive.** Bullets when structure helps scanning. No "It's worth noting that…"
 - **Honest about gaps.** Source unreachable / empty → name it, don't fabricate.
 - **Read-only on everything except `briefing-log/`.** The save log is the only write the skill ever makes; it lands in a dedicated directory, never in project files.
-- **Suggest, don't impose.** When canonical-conventions adoption is partial, the maturity block surfaces the gaps and links the canonical guide. Never auto-applies a convention; never edits CLAUDE.md or any other project file.
+- **Suggest, don't impose.** Default-mode output never lobbies for convention adoption. Audit-style suggestions live in `/briefing sources` and are framed descriptively: equivalent info in different locations (declared via `## Project context`) is a first-class hit, not a deviation. Never auto-applies a convention; never edits CLAUDE.md or any other project file.
 - **Prefer "you" framing.** This is a personal orientation tool ("you stopped mid-X"). For orientation, "you" is sharper than "we" or "the code" — the user invoked the skill *to be reminded what they were doing*.
 - **No time estimates.** Don't say "this should take 2 hours." Estimate scope (small / medium / large by analogy to similar past items in the changelog) at most.
 
@@ -557,7 +557,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 - **Don't pretend a tracker integration worked when it didn't.** If the CLI is missing or the MCP failed, name the gap; do not invent items.
 - **Don't overstate freshness.** If `git fetch` failed and refs are 2 days old, say so. The cost of stale data presented as fresh is higher than the cost of stale data labelled stale.
 - **Don't synthesise patterns from thin data.** "Trend" requires 3+ data points. Below that, report individual facts; don't editorialise into a pattern.
-- **Don't presume conventions.** If L2b detects no canonical-conventions signatures, do NOT render the maturity block (it would be presumptuous to suggest "our" conventions to a project that hasn't adopted any of them).
+- **Don't presume conventions.** Default-mode output never prescribes canonical adoption. The `/briefing sources` view shows what was probed and what was found regardless, and frames non-canonical paths as first-class via `## Project context` declarations.
 
 ## What NOT to do
 
@@ -569,5 +569,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't pad sections with nothing to say. In adaptive mode, omit empty sections entirely.
 - Don't estimate time-to-completion. Estimate scope by analogy to similar changelog items at most.
 - Don't write outside `briefing-log/`. Every other path this skill touches is read-only.
-- Don't render the convention-maturity block when nothing canonical was detected. Suggesting our conventions to a project that's chosen others is presumptuous; the block is for projects that have *partially* adopted, where naming the gap is helpful.
-- Don't *skip* the convention-maturity block when partial-adoption IS detected. The block is required output in that case, not optional. Forgetting to run the 7-signature check before rendering the footer is a spec violation.
+- Don't render the `★ About this briefing` block when no bullet has content — omit entirely.
+- Don't put audit/setup content in default-mode briefing output. That belongs in `/briefing sources`.
+- Don't presume canonical conventions are preferred over declared paths. Both are first-class in `/briefing sources`.
+- Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: suggestion content lives in `/briefing sources` only.
