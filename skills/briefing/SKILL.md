@@ -360,17 +360,17 @@ The **`★ About this briefing` block** is conditional — it renders only when 
 
 A short footer block that renders only when at least one bullet has content; omits entirely when no bullets apply (the typical healthy-project case).
 
-Visual format — bullets are separated by blank lines (loose list) so the block reads at a glance even when several bullets co-render:
+Visual format — wrap the header and footer rule lines in backticks so they render as monospace inline code, matching the visual style of Claude Code's `★ Insight` blocks. Bullets between the rules are a tight list (no blank lines); the monospace rules act as bookends and give the block visual scope without needing inter-bullet padding:
 
 ```
-★ About this briefing ─────────────────────────
+`★ About this briefing ─────────────────────────`
 - <bullet 1>
-
 - <bullet 2>
-
 - <bullet 3>
-─────────────────────────────────────────────────
+`─────────────────────────────────────────────────`
 ```
+
+The backticks are part of the literal output — the model emits them, and the terminal renders the rule lines as monospace (the backticks themselves are hidden in the rendering, just like in `★ Insight` blocks).
 
 ### Bullet inventory
 
