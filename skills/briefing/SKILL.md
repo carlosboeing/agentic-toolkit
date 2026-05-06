@@ -32,18 +32,27 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
 ## Synopsis
 
 ```
-/briefing [mode] [save] [help]
+/briefing [depth] [save] [help]              # default — orientation briefing
+/briefing sources [save] [help]              # self-documentation view (what this skill probes + finds)
 
-  mode    adaptive (default) | quick | standard | deep | sources
-          Depth tiers (quick/standard/deep) control how much briefing reads.
-          `sources` is a separate mode that documents what this skill probes
-          and what it found in the project. Can't be combined with depth
-          tiers — use one or the other.
-          Synonyms — quick: peek; deep: deep-dive
-  save    write the output to disk                          default: off
-          (synonyms: --save, export)
-  help    show this synopsis instead of running             default: off
-          (synonyms: ?, usage, --help, -h)
+  depth     adaptive (default) | quick | standard | deep
+            Length × source breadth. Adaptive is content-driven (sections appear
+            based on project state). Explicit tiers force fixed-length output.
+            Synonyms — quick: peek; deep: deep-dive
+  sources   Render the self-documentation view: what this skill probes
+            (Always-on / Declared / Default paths / Fallbacks) and what it
+            found in the current project. Mutex with depth tiers.
+  save      Write the output to disk.                       default: off
+            (synonyms: --save, export)
+  help      Show this synopsis instead of running.          default: off
+            (synonyms: ?, usage, --help, -h)
+
+Examples:
+  /briefing                    # adaptive default-mode briefing
+  /briefing quick              # quick tier
+  /briefing deep save          # deep tier, written to disk
+  /briefing sources            # self-documentation view
+  /briefing sources save       # self-documentation view, written to disk
 ```
 
 Order of args does not matter. `/briefing deep save` and `/briefing save deep` are equivalent. If any help keyword (the full set is listed under **How to parse the args** below — `help`, `--help`, `-h`, `?`, `usage`) appears anywhere in the args, the skill renders this Synopsis as the response and stops — no briefing, no save.
