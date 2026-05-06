@@ -32,14 +32,17 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
 ## Synopsis
 
 ```
-/briefing [depth] [save] [help]
+/briefing [mode] [save] [help]
 
-  depth   quick | standard | deep                      default: adaptive (no override)
-          (synonyms — quick: peek
-                      deep:  deep-dive, audit)
-  save    write the briefing to disk                   default: off
+  mode    adaptive (default) | quick | standard | deep | sources
+          Depth tiers (quick/standard/deep) control how much briefing reads.
+          `sources` is a separate mode that documents what this skill probes
+          and what it found in the project. Mutex with depth tiers.
+          Synonyms — quick: peek; deep: deep-dive
+          (`audit` is no longer a synonym — see /briefing sources)
+  save    write the output to disk                          default: off
           (synonyms: --save, export)
-  help    show this synopsis instead of running        default: off
+  help    show this synopsis instead of running             default: off
           (synonyms: ?, usage, --help, -h)
 ```
 
@@ -51,14 +54,19 @@ The depth default is **adaptive**: when no depth keyword is provided, the briefi
 
 Walk the tokens once and bucket each one:
 
-- **Depth keywords** (closed set): `quick`, `peek`, `standard`, `deep`, `deep-dive`, `audit`. Default: adaptive (no override) if no depth keyword is present.
+- **Mode keywords** (closed set): `sources`. Default mode is briefing.
+- **Depth keywords** (closed set): `quick`, `peek`, `standard`, `deep`, `deep-dive`. Default: adaptive (no override) if no depth keyword is present.
 - **Save keywords** (closed set): `save`, `--save`, `export`. Default off.
 - **Help keywords** (closed set): `help`, `--help`, `-h`, `?`, `usage`. If any appear, **short-circuit**: render the Synopsis above and stop.
 - **Anything else**: respond with `unknown arg <X> — try /briefing help` and stop.
 
-The parser is order-independent and case-insensitive. Two of the same bucket is an error of intent — pick the **rightmost** occurrence in the input and mention the override in the briefing's source-coverage footer (e.g., `Note: depth received both 'quick' and 'deep'; using 'deep'`). The source-coverage footer itself is defined under **Output template** below.
+The parser is order-independent and case-insensitive. Two of the same bucket is an error of intent — pick the **rightmost** occurrence and surface the override via the depth-conflict bullet in the `★ About this briefing` block (see **About this briefing** section below). The bullet text follows the pattern `Depth received both '<X>' and '<Y>'; using '<Y>'`.
+
+**Mutex rule — sources mode vs depth tiers:** when `sources` is present AND a depth keyword is present, render the sources view; the depth keyword is ignored. Surface the conflict via the depth-conflict bullet inside the sources view, with text `Depth ignored when 'sources' mode is active`.
 
 ## Source layering
+
+> **Note on labels:** `L1`, `L2a`, `L2b`, and `L3` are internal labels used in this spec for maintainer scaffolding. User-facing output in `/briefing sources` uses the labels **Always-on** (≈ L1), **Declared** (≈ L2a), **Default paths** (≈ L2b), and **Fallbacks** (≈ L3). See the **`/briefing sources` mode** section for the user-facing rendering.
 
 The briefing reads from four layers, each with a clear failure mode:
 
