@@ -32,7 +32,7 @@ Four knobs you can mix and match. Order doesn't matter.
 
 | Dial | Keywords | Default | Effect |
 |---|---|---|---|
-| **Mode** | `sources`, `setup` | briefing | `sources` switches to the self-documentation view (what this skill probes, what it found). `setup` runs a wizard that builds/updates `## Project context` in CLAUDE.md (with backup). Mutex with depth tiers and with each other — see the dedicated subsections below. |
+| **Mode** | `sources`, `setup` | briefing | `sources` switches to the self-documentation view (what this skill probes, what it found). `setup` adds or updates the `## Project context` section in CLAUDE.md (with backup, after you confirm). Can't be combined with depth tiers or with each other — see the dedicated subsections below. |
 | **Depth** | `quick` (or `peek`), `standard`, `deep` (or `deep-dive`) | **adaptive (no override)** | Length × source breadth × wall-clock. `quick` < 300w, < 5s; `standard` 600–1000w, forces all six sections; `deep` 1200–2000w, adds historical sources, stale-branch sweep, ADR scan, per-project memory. Does not apply when `sources` mode is active. |
 | **Save** | `save` (or `--save`/`export`) | off | Write the output to `<repo>/.claude/briefing-log/` (or `~/.claude/briefing-log/` outside a git repo). Compatible with all modes. |
 | **Help** | `help` (or `?`/`usage`/`--help`/`-h`) | off | Render synopsis and stop |
@@ -114,7 +114,7 @@ For the project-level install path and the shared install snippet, see [`skills/
 /briefing sources                    # what this skill probes + what it found here
 /briefing sources save               # save the sources view to <TS>-sources.md
 
-# ─── Setup mode (wizard for ## Project context) ────
+# ─── Setup mode (add or update ## Project context) ─
 /briefing setup                      # propose + apply a ## Project context block
 
 # ─── Help ──────────────────────────────────────────
@@ -134,9 +134,9 @@ The view is descriptive, not prescriptive. A project that uses `decisions/` inst
 
 Output is organised by four user-facing layers (the same source model the skill uses internally, with friendlier labels): **Always-on**, **Declared (highest priority)**, **Default paths (when not declared)**, and **Fallbacks**. Empty layers render as `(none)` rather than disappearing — transparency is the point.
 
-## `/briefing setup` — wizard for `## Project context`
+## `/briefing setup` — add or update `## Project context`
 
-The `setup` mode runs a one-shot wizard that builds (or updates) the [`## Project context` block](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd) in your CLAUDE.md. Useful when you want richer briefings on a project that hasn't declared its tracker / roadmap / working-memory locations yet.
+The `setup` mode adds (or updates) the [`## Project context` block](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd) in your CLAUDE.md. Useful when you want richer briefings on a project that hasn't declared its tracker / roadmap / working-memory locations yet.
 
 What it does:
 
@@ -148,7 +148,7 @@ What it does:
 
 This is the **only** mode that writes to a project file other than `briefing-log/`. Writes happen only after explicit user confirmation, with a backup created first. No silent edits.
 
-If `## Project context` already exists, the wizard runs in **diff mode**: parses the existing fields, computes per-field changes against the proposal, and asks for field-by-field confirmation before applying anything. Doesn't blanket-overwrite.
+If `## Project context` already exists, setup mode runs in **diff mode**: it parses the existing fields, computes per-field changes against the proposal, and asks for field-by-field confirmation before applying anything. Doesn't blanket-overwrite.
 
 `setup` is mutex with depth tiers (`quick`/`standard`/`deep`), with `sources`, and with `save`. Run it on its own, then optionally re-run `/briefing` to see how the new declarations enrich your briefings.
 

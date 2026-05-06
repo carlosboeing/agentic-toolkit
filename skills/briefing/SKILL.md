@@ -34,7 +34,7 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
 ```
 /briefing [depth] [save] [help]              # default — orientation briefing
 /briefing sources [save] [help]              # self-documentation view (what this skill probes + finds)
-/briefing setup [help]                       # wizard: build/update `## Project context` in CLAUDE.md
+/briefing setup [help]                       # add or update `## Project context` in CLAUDE.md
 
   depth     adaptive (default) | quick | standard | deep
             Length × source breadth. Adaptive is content-driven (sections appear
@@ -48,7 +48,7 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
             your tracker, roadmap, changelog, and other locations from
             CLAUDE.md directly instead of guessing.
 
-            The wizard reads what's already in your project, fills in
+            Setup mode reads what's already in your project, fills in
             each field where it can detect a value, marks the rest with
             `<placeholder>`, and shows you the proposed section. Nothing
             is written until you say yes. Before writing, it copies your
@@ -67,7 +67,7 @@ Examples:
   /briefing deep save          # deep tier, written to disk
   /briefing sources            # self-documentation view
   /briefing sources save       # self-documentation view, written to disk
-  /briefing setup              # wizard: build/update `## Project context`
+  /briefing setup              # add or update `## Project context` in CLAUDE.md
 ```
 
 Order of args does not matter. `/briefing deep save` and `/briefing save deep` are equivalent. If any help keyword (the full set is listed under **How to parse the args** below — `help`, `--help`, `-h`, `?`, `usage`) appears anywhere in the args, the skill renders this Synopsis as the response and stops — no briefing, no save.
@@ -92,7 +92,7 @@ The parser is order-independent and case-insensitive. Two of the same bucket is 
 
 **Save compatibility:**
 - `sources` + `save`: compatible (writes the sources view to `briefing-log/<TS>-sources.md`).
-- `setup` + `save`: not compatible — the wizard's output is interactive, not a static document. Surface as bullet 6 of `★ About this briefing` inside the wizard view: `Save ignored when 'setup' mode is active`. Proceed with the wizard.
+- `setup` + `save`: not compatible — setup mode's output is interactive (proposal + confirmation prompt), not a static document. Surface as bullet 6 of `★ About this briefing` inside the setup view: `Save ignored when 'setup' mode is active`. Proceed with setup.
 
 ## Source layering
 
@@ -575,7 +575,7 @@ When the user's CLAUDE.md or another global rule mandates a closing-block format
 
 ## /briefing setup mode
 
-Triggered by passing `setup` as the mode keyword. A wizard that builds (or updates) the `## Project context` section in CLAUDE.md.
+Triggered by passing `setup` as the mode keyword. Adds (or updates) the `## Project context` section in CLAUDE.md.
 
 This is the only mode that writes to a project file other than `briefing-log/`. The write happens after explicit user confirmation, with a one-time backup at `CLAUDE.md.before-briefing-setup.bak` created first.
 
@@ -583,7 +583,7 @@ This is the only mode that writes to a project file other than `briefing-log/`. 
 
 - Mutex with depth tiers (`quick`/`standard`/`deep`).
 - Mutex with `sources` (only one mode per invocation).
-- `save` is not compatible — the wizard's output is interactive, not a static document. Surface bullet 6 of `★ About this briefing` (`Save ignored when 'setup' mode is active`) and proceed with the wizard.
+- `save` is not compatible — setup mode's output is interactive (proposal + confirmation prompt), not a static document. Surface bullet 6 of `★ About this briefing` (`Save ignored when 'setup' mode is active`) and proceed with setup.
 
 ### What it does
 
@@ -679,14 +679,14 @@ If CLAUDE.md doesn't exist, no backup is needed; create the new file with `# <pr
 
 ### Output isolation
 
-The wizard's output is *exactly* the template above (proposal + confirmation prompt) plus, after user reply, a write-confirmation or manual-paste-fallback line. Same exclusions as `/briefing sources`:
+Setup mode's output is *exactly* the template above (proposal + confirmation prompt) plus, after user reply, a write-confirmation or manual-paste-fallback line. Same exclusions as `/briefing sources`:
 
 - No default-mode briefing sections (TL;DR / Snapshot / What's in flight / etc.).
 - No `/briefing sources` view layers.
 - No `★ About this briefing` bullets except bullet 6 (depth or save conflict).
 - No response-style wrappers (Claude's `## Open decisions`, `★ Insight`, free-form "What's next").
 
-When the user's CLAUDE.md or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to this wizard's output. Skill specs override conversational defaults for their own scope.
+When the user's CLAUDE.md or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to setup mode's output. Skill specs override conversational defaults for their own scope.
 
 ### Tone
 
