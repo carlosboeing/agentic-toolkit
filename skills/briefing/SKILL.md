@@ -37,9 +37,9 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
   mode    adaptive (default) | quick | standard | deep | sources
           Depth tiers (quick/standard/deep) control how much briefing reads.
           `sources` is a separate mode that documents what this skill probes
-          and what it found in the project. Mutex with depth tiers.
+          and what it found in the project. Can't be combined with depth
+          tiers — use one or the other.
           Synonyms — quick: peek; deep: deep-dive
-          (`audit` is no longer a synonym — see /briefing sources)
   save    write the output to disk                          default: off
           (synonyms: --save, export)
   help    show this synopsis instead of running             default: off
@@ -280,15 +280,19 @@ What triggers the briefing's adaptive output to lead with active work. Universal
 | Worktrees (count > 1) | Medium | from L1 `git worktree list` |
 | Recent commits in last 24h | Weak | from L1 `git log --since=1.day`; orientation only, never leads |
 
-**Detection rule:** if any *Strong* signal is present, the output leads with the **What's in flight** section. Otherwise lead with **Recent activity** and **What's next**. Don't sum or score — any single Strong hit is enough to flip the lead. Medium signals never trigger the lead but are reported (under **What's in flight** when it runs, otherwise under **Recent activity**). Weak signals never lead and feed **Recent activity** only.
+**Detection rule:** if any signal labelled **Strong** in the table above is present, the output leads with the **What's in flight** section. Otherwise lead with **Recent activity** and **What's next**. Don't sum or score — any single Strong-labelled signal is enough to flip the lead. Medium-labelled signals never trigger the lead but are reported (under **What's in flight** when it runs, otherwise under **Recent activity**). Weak-labelled signals never lead and feed **Recent activity** only.
 
-The table's row order is the order the resulting bullets should be reported in, not a priority ranking — Strong signals are equally sufficient to trigger the lead.
+The table's row order is the order the resulting bullets should be reported in, not a priority ranking — Strong-labelled signals are equally sufficient to trigger the lead.
+
+**Strong/Medium/Weak are internal classification only.** Never echo them in the rendered briefing — bullets describe their own subject ("Working tree dirty", "Open PRs", "Stashes"), not their detection strength.
 
 (The output sections themselves are defined under **Output template** below.)
 
 ## Output template
 
 In adaptive mode (the default), two sections always run and four are conditional on signal presence; sections with nothing to say are omitted entirely, not padded. Explicit depth keywords reshape this contract — `standard` forces all six, `quick` collapses, `deep` extends — and are codified under **Depth contract** below.
+
+> **Spec annotations:** the `←` comments in the template below (e.g. `← always`, `← only if any strong signal`) are *spec annotations* explaining when each section renders — they must NOT appear in the actual briefing the user sees.
 
 ```markdown
 ## Briefing — <project name>
@@ -340,7 +344,7 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **Snapshot:** Always present. One-line bullets only. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts; roadmap line from the resolved roadmap path (whether declared in `## Project context` or detected at a default location); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add bullets for sources declared in `## Project context` (tracker counts, board column health) only when those sources were declared and read.
 
-**What's in flight:** Only if any Strong signal. Group bullets by source category. Render the roadmap-section bullet using the project's actual ROADMAP heading (e.g. `ROADMAP "## In flight":` for canonical projects; `ROADMAP "## Now":` for a project using Now/Next/Later; omit entirely if no roadmap was found). Render the drafts bullet using the project's actual status vocabulary (e.g. `Drafts (status: draft|open|approved):` for canonical; `Drafts (status: wip):` for a project using a different vocabulary; omit if no working memory was found). Don't dump diffs — summarise per the 200-line cap.
+**What's in flight:** Only if any Strong-strength signal from the In-flight detection table. Group bullets by what they describe (Working tree, Local-only, ROADMAP, Open PRs, Drafts, Tracker — see the output template above), **not** by Strong/Medium/Weak — those labels are internal classification and must never appear in the rendered briefing. Render the roadmap-section bullet using the project's actual ROADMAP heading (e.g. `ROADMAP "## In flight":` for canonical projects; `ROADMAP "## Now":` for a project using Now/Next/Later; omit entirely if no roadmap was found). Render the drafts bullet using the project's actual status vocabulary (e.g. `Drafts (status: draft|open|approved):` for canonical; `Drafts (status: wip):` for a project using a different vocabulary; omit if no working memory was found). Don't dump diffs — summarise per the 200-line cap.
 
 **Recent activity:** Always present. Last 3–5 things, synthesised not dumped. Group by theme rather than listing commits chronologically. Cite SHA / PR# / file path so the human can drill in.
 
@@ -352,7 +356,7 @@ The **`★ About this briefing` block** is conditional — it renders only when 
 
 ## About this briefing — conditional footer block
 
-Replaces the always-rendered source-coverage footer + convention-maturity block. Renders only when at least one bullet has content; omits entirely when no bullets apply (the typical healthy-project case).
+A short footer block that renders only when at least one bullet has content; omits entirely when no bullets apply (the typical healthy-project case).
 
 Visual format — bullets are separated by blank lines (loose list) so the block reads at a glance even when several bullets co-render:
 
@@ -425,7 +429,7 @@ The depth dial scales three things together — output length, source breadth, a
 
 ## /briefing sources mode
 
-Triggered by passing `sources` as the mode keyword. Mutex with depth tiers (`quick`/`standard`/`deep`); compatible with `save`. Produces a self-documentation view of what this skill probes and what it found in the project.
+Triggered by passing `sources` as the mode keyword. Can't be combined with depth tiers (`quick`/`standard`/`deep`) — pick one or the other. Compatible with `save`. Produces a self-documentation view of what this skill probes and what it found in the project.
 
 ### Output template
 
@@ -448,7 +452,8 @@ What this skill reads:
     ADRs → docs/adrs/NNNN-*.md → docs/architecture/decisions/, decisions/, adr/
 
   Fallbacks
-    Names every gap in the output; never fabricates.
+    When a source can't be reached or doesn't exist, this skill names
+    the gap explicitly rather than inventing data.
 
 What was read in this project:
 
@@ -462,7 +467,7 @@ Want richer briefings? Two paths, both equally valid:
       - **Adrs**: docs/architecture/decisions/
   - Or adopt canonical conventions for zero-config: <CANONICAL_CONVENTIONS_URL>
 
-Last synced from canonical: <YYYY-MM-DD>
+Last synced from the conventions guide: <YYYY-MM-DD>
 ```
 
 ### Empty-layer rendering
@@ -471,7 +476,7 @@ When a layer has no entries (e.g. project declared no `## Project context` and n
 
 ### Date stamp
 
-The `Last synced from canonical: <YYYY-MM-DD>` stamp is a maintainer-tracked date carried in this `SKILL.md`. It records when the layer descriptions and probe paths in this view were last reconciled against the canonical conventions guide. Format: ISO date (e.g. `2026-05-03`). Update whenever the canonical guide changes in a way that affects this view's content.
+The `Last synced from the conventions guide: <YYYY-MM-DD>` stamp is a maintainer-tracked date carried in this `SKILL.md`. It records when the layer descriptions and probe paths in this view were last reconciled against the canonical conventions guide. Format: ISO date (e.g. `2026-05-03`). Update whenever the canonical guide changes in a way that affects this view's content.
 
 ### Parser interaction
 
