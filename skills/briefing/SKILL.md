@@ -350,7 +350,9 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **What's next:** Always present. Recommended next action with reasoning. Reference roadmap priority (if found), dependency chain, newly-unblocked items. One paragraph or 2–3 bullets, not a wall of text.
 
-**Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
+**Decisions / attention:** Only if there's something to say about the **project's state or work in progress**. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a project-convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
+
+**Not for:** suggestions about adopting `## Project context`, canonical conventions, declaring additional fields, or anything else about how the user could enrich future briefings — that's setup content, not project content. It lives exclusively in `★ About this briefing` bullet 2 (the `/briefing sources` redirect) and the `/briefing sources` view itself. If the absence of `## Project context` is the only "decision" you'd flag, render no `Decisions / attention` section at all — bullet 2 of `★ About this briefing` already prompts the user.
 
 The **`★ About this briefing` block** is conditional — it renders only when at least one bullet has content (see **About this briefing** below for the bullet inventory and trigger rules). When no bullet applies, the block omits entirely and the briefing ends with whatever section ran last. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser surface as bullet 6 inside `★ About this briefing` (text: `Depth received both '<X>' and '<Y>'; using '<Y>'`).
 
@@ -579,4 +581,4 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't render the `★ About this briefing` block when no bullet has content — omit entirely.
 - Don't put audit/setup content in default-mode briefing output. That belongs in `/briefing sources`.
 - Don't presume canonical conventions are preferred over declared paths. Both are first-class in `/briefing sources`.
-- Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: suggestion content lives in `/briefing sources` only.
+- Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: any content about the briefing skill's *setup* (declaring `## Project context`, adopting canonical conventions, enriching briefings) lives in `★ About this briefing` bullet 2 and `/briefing sources` only — never in `Decisions / attention`, `What's next`, or any other body section. If you find yourself writing a body bullet that ends with "…if you want richer briefings" or "…the briefing-readable fields", you've leaked setup content into orientation content; cut it.
