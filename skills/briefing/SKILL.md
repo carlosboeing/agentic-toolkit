@@ -184,6 +184,8 @@ Read the `## Project context` section from CLAUDE.md (already in your context). 
 
 Declared fields are **authoritative** — they override any L2b sniffing. A field set to `none` means "deliberately empty" (do not probe further); an absent field means "L2b can probe a default" (see L2b table below).
 
+For complete examples (canonical + non-canonical project layouts), per-field decision guidance, and discovery hints (how to figure out what to put in each field), see [§5.8 of the canonical conventions guide](`<CANONICAL_CONVENTIONS_URL>`#58--project-context-section-in-claudemd).
+
 Presence check: grep for `^## Project context` in the project's CLAUDE.md. If absent, skip the L2a read entirely and proceed to L2b.
 
 #### Tracker integration recipes

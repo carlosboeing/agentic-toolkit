@@ -510,6 +510,67 @@ Each line is `- **Field**: value`. Recognised fields:
 | `Auto-fetch` | `yes` (default) or `no` — whether briefings may run `git fetch` to refresh refs |
 | `Other` | Free-form bullet list for project-specific context (custom scripts, story-tracking quirks, telemetry sources) |
 
+#### Complete examples
+
+A fully-populated section for a typical solo project following the canonical conventions:
+
+```markdown
+## Project context
+
+- **Tracker**: GitHub Issues
+- **Board**: none
+- **Roadmap**: docs/ROADMAP.md
+- **Changelog**: docs/CHANGELOG.md
+- **Architecture**: docs/architecture.md
+- **Working memory**: docs/ (numbered lifecycle convention)
+- **Auto-fetch**: yes
+- **Other**:
+  - Test reports live in `tmp/tst_<name>/`, not in repo
+  - Manual UI smoke tests via `npm run dev` before merge
+```
+
+A non-canonical project that uses flat `docs/plans/` and tracks work in Linear:
+
+```markdown
+## Project context
+
+- **Tracker**: Linear team SHARELOG
+- **Board**: https://linear.app/sharelog/team/SHARELOG/board
+- **Roadmap**: docs/plans/ROADMAP.md
+- **Changelog**: none
+- **Architecture**: none
+- **Working memory**: docs/plans/
+- **Auto-fetch**: yes
+- **Other**:
+  - Date-prefixed plan files in `docs/plans/` (e.g. `2026-02-19-feature-name-plan.md`)
+  - Top-level `docs/<topic>-plan.md` files are also working memory
+```
+
+#### When to declare, omit, or use `none`
+
+Three meaningfully different states per field:
+
+- **Set a value** when the field has a concrete location or source. Most common case.
+- **Omit the field entirely** when you want the briefing to fall back to the canonical default path (e.g. omit `Roadmap` if `docs/ROADMAP.md` is exactly where it should be — the briefing finds it via convention sniffing).
+- **Set the field to `none`** when the absence is *intentional* — e.g. `**Tracker**: none` for a project that genuinely has no issue tracker, or `**Board**: none` when no project board exists. This tells the briefing to skip probing rather than treating absence as a gap.
+
+The distinction matters because the briefing's `★ About this briefing` block fires "tracker integration unavailable" when a tracker is *declared but unreachable*; declaring `none` suppresses that bullet entirely.
+
+#### Discovery hints
+
+Working out what to put in each field — questions to ask yourself:
+
+- **`Tracker`** — Where do you (and your collaborators) track issues? GitHub Issues / Linear / Jira / a file like `TODO.md` / nowhere (`none`)? If multiple, pick the canonical one and mention the others under `Other`.
+- **`Board`** — Does the tracker have a kanban-style board view? Paste the URL. If you only use a flat list, `none`.
+- **`Roadmap`** — Where do you write "what's next"? `docs/ROADMAP.md` is the canonical default; if you put it elsewhere (`ROADMAP.md` at repo root, a Notion page, a Linear cycle view), declare it.
+- **`Changelog`** — Where does shipped work get recorded? Same rule as Roadmap.
+- **`Architecture`** — Is there a single doc or directory describing the system's current shape? `docs/architecture.md` or `docs/system/` are common; `none` is fine if architecture is small enough to live in README.
+- **`Working memory`** — Where do designs, plans, brainstorms, retros live? `docs/` (with numbered subdirs) is canonical; flat layouts like `docs/plans/` work too — declare the directory.
+- **`Auto-fetch`** — Default `yes` is fine for most projects. Set `no` if you're often offline, on a slow connection, or have a fetch hook that's expensive.
+- **`Other`** — Anything else AI tools should know: custom scripts, where test artefacts live, naming conventions for non-canonical files, integration quirks. Free-form bullets.
+
+#### Layered fallback
+
 **Absent fields fall back to layer-1 defaults at canonical paths.** A field set to `none` means "deliberately empty" (the briefing won't probe further); an absent field means "try the default" (the briefing will look at the canonical path).
 
 The canonical scaffold lives in [`templates/default-project/CLAUDE.md`](../templates/default-project/CLAUDE.md). Bootstrapped projects inherit the section for free; existing projects pick it up via §10.6.
