@@ -478,8 +478,8 @@ What this skill reads:
   Default paths (when not declared)
     Roadmap → docs/ROADMAP.md → ROADMAP.md
     Changelog → docs/CHANGELOG.md → CHANGELOG.md
-    Working memory → docs/[0-9]-*/, docs/adrs/, files with `status:` frontmatter
-    ADRs → docs/adrs/NNNN-*.md → docs/architecture/decisions/, decisions/, adr/
+    Working memory → `docs/[0-9]-*/`, `docs/adrs/`, files with `status:` frontmatter
+    ADRs → `docs/adrs/NNNN-*.md` → `docs/architecture/decisions/`, `decisions/`, `adr/`
 
   Fallbacks
     When a source can't be reached or doesn't exist, this skill names
@@ -504,7 +504,7 @@ Want richer briefings? Two paths, both equally valid:
       - **Adrs**: docs/architecture/decisions/
   - Or adopt canonical conventions for zero-config: <CANONICAL_CONVENTIONS_URL>
 
-Last synced from the conventions guide: <YYYY-MM-DD>
+Last synced from the conventions guide: 2026-05-06
 ```
 
 ### Empty-layer rendering
