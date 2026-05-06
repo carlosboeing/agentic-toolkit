@@ -360,31 +360,55 @@ The **`★ About this briefing` block** is conditional — it renders only when 
 
 A short footer block that renders only when at least one bullet has content; omits entirely when no bullets apply (the typical healthy-project case).
 
-Visual format — wrap the header and footer rule lines in backticks so they render as monospace inline code, matching the visual style of Claude Code's `★ Insight` blocks. Bullets between the rules are a tight list (no blank lines between bullets); the monospace rules act as bookends and give the block visual scope without needing inter-bullet padding. Bullets that have both an *observation* and a *context/action* split across two visual lines using `<br>` between them — observation on line 1, indented em-dash continuation on line 2 — so each bullet reads as two beats. Short single-clause bullets stay on one line.
+Visual format — wrap the header and footer rule lines in backticks so they render as monospace inline code, matching the visual style of Claude Code's `★ Insight` blocks. Bullets between the rules are a tight list (no blank lines between bullets); the monospace rules act as bookends and give the block visual scope without needing inter-bullet padding. Bullets that have both an *observation* and a *context/action* split across two visual lines using a **markdown hard line break** — two trailing spaces after the observation, a newline, then the em-dash continuation indented two spaces under the bullet. Each bullet reads as two beats. Short single-clause bullets stay on one line.
 
-Rendered shape:
+Rendered shape (the literal markdown the model emits — the observation lines in two-line bullets each end with two trailing spaces, which are the markdown hard-line-break marker):
 
 ```
 `★ About this briefing ─────────────────────────`
-- <observation>
+- <observation>  
   — <context or action>
 - <short single-clause bullet>
-- <observation>
+- <observation>  
   — <context or action>
 `─────────────────────────────────────────────────`
 ```
 
-The model emits the backticks around the rule lines (terminal renders them as monospace; the backticks themselves are hidden, just like in `★ Insight`). For two-line bullets, the model emits `<br>` between the observation and the em-dash continuation; the terminal renders `<br>` as a hard line break inside the list item.
+The model emits the backticks around the rule lines (terminal renders them as monospace; the backticks themselves are hidden, just like in `★ Insight`). For two-line bullets, the model emits the observation followed by **two trailing spaces** (the markdown hard-line-break syntax), then a newline, then `  — <action>` indented by two spaces under the bullet. The `<br>` tag was tried previously but stripped by Claude Code's terminal renderer; two trailing spaces is the reliable approach.
 
 ### Bullet inventory
 
-Each bullet renders only when its trigger fires. Block omits when zero bullets apply.
+Each bullet renders only when its trigger fires. Block omits when zero bullets apply. Two-line bullets are shown in fenced code blocks so the trailing spaces are preserved literally in this spec — the model copies the text verbatim, including the two trailing spaces after each observation.
 
-1. **Some sources unavailable** — fires when a declared or default-path source didn't resolve. Render: `Some sources unavailable<br>— /briefing sources for details.`
-2. **Briefing relied on git/gh only** — fires when neither declared nor default-path sources hit. Render: `Briefing relied on git/gh only<br>— /briefing sources to see what else this skill can read.`
-3. **Stale or failed fetch** — render: `Refs from last fetch <relative-date>` (single line) OR `Fetch failed (auth)<br>— refs may be stale; check credentials.` (two lines, em-dash variant).
+1. **Some sources unavailable** — fires when a declared or default-path source didn't resolve. Render:
+
+   ```
+   Some sources unavailable  
+     — /briefing sources for details.
+   ```
+
+2. **Briefing relied on git/gh only** — fires when neither declared nor default-path sources hit. Render:
+
+   ```
+   Briefing relied on git/gh only  
+     — /briefing sources to see what else this skill can read.
+   ```
+
+3. **Stale or failed fetch** — render `Refs from last fetch <relative-date>` (single line) OR, for the auth-failure variant:
+
+   ```
+   Fetch failed (auth)  
+     — refs may be stale; check credentials.
+   ```
+
 4. **GitHub unavailable** — render: `GitHub queries skipped (gh not authenticated)` or `(gh not installed)`. (Single line — no em-dash continuation.)
-5. **Tracker integration unavailable** — render: `<Tracker> declared but <CLI> not available<br>— install or configure MCP.`
+5. **Tracker integration unavailable** — render:
+
+   ```
+   <Tracker> declared but <CLI> not available  
+     — install or configure MCP.
+   ```
+
 6. **Depth conflict** — render: `Depth received both '<X>' and '<Y>'; using '<Y>'` OR `Depth ignored when 'sources' mode is active`. (Single line — semicolon, not em-dash.)
 7. **Detached HEAD** — render: `On detached HEAD; reporting against nearest branch <X>`. (Single line — semicolon, not em-dash.)
 
