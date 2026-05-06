@@ -223,7 +223,7 @@ The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`,
 
 ### Convention-maturity check
 
-**This check is REQUIRED on every invocation.** Run it after L2 completes and before rendering the output footer. Tally which canonical-conventions signatures are present vs missing. If partial-adoption is detected (at least one signature present AND at least one missing), the maturity block in the footer is **mandatory output** — not optional, not skippable.
+This check is invoked specifically by the `/briefing sources` mode (and used to drive bullet 2 of `★ About this briefing` when applicable — see **About this briefing**). It is **not** rendered in default-mode briefings. Tally which canonical-conventions signatures are present vs missing.
 
 | # | Signature | How to check |
 |---|---|---|
@@ -235,26 +235,12 @@ The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`,
 | 6 | ROADMAP uses canonical sections (`## In flight`, `## Next actions`, `## Recently shipped` at minimum) | grep on roadmap; require all three |
 | 7 | ADRs at `docs/adrs/NNNN-*.md` | filesystem probe with name pattern |
 
-**Rendering rule (three cases, exhaustive):**
+The 7-signature tally feeds two outputs:
 
-- **Partial adoption** (≥1 ✓ AND ≥1 ✗) → **MUST render the maturity block in the footer.** Not optional. Not "if convenient." Required output.
-- **Fully canonical** (all 7 ✓) → no maturity block; the project has fully adopted, nothing to suggest.
-- **Zero canonical** (all 7 ✗) → no maturity block; the project hasn't adopted these conventions at all, suggesting them would be presumptuous.
+- **`/briefing sources` view** — populates the "What was read in this project" / "Not found" rows (see **`/briefing sources` mode** section).
+- **Default-mode bullet 2** — when no canonical signatures hit and no `## Project context` was declared, render bullet 2 of `★ About this briefing` (`Briefing relied on git/gh only — /briefing sources to see what else this skill can read.`).
 
-If you find yourself producing a footer without running the 7-signature tally, you have skipped a required step — go back and run it.
-
-The block format:
-
-```
-Project orientation maturity (briefing quality could improve):
-- [<✓|✗>] <signature 1 name> — <one-line note: what it gives you / where to fix>
-- [<✓|✗>] <signature 2 name> — …
-…
-
-Adopt or learn more: <CANONICAL_CONVENTIONS_URL>
-```
-
-Read-only. Suggestions, not edits.
+Read-only. Descriptive, not prescriptive.
 
 ### Layer 3 — Graceful degradation
 
@@ -264,15 +250,15 @@ Standing instructions for when a source fails. Never fabricate; always name the 
 |---|---|
 | Not in a git repo | Skip git/gh entirely; fall back to file discovery only |
 | Git repo, no remote | Skip `git fetch` and `gh` queries; report local state only |
-| `gh` missing or unauthed | Skip GitHub queries; note the gap in the footer |
-| `git fetch` slow / network down | Use stale refs; footer: *"ahead/behind from last fetch <date>"* |
-| `git fetch` fails with auth error on a configured remote | Use stale refs; footer: *"fetch failed (auth) — refs may be stale; check credentials"* — distinct signal from "no remote" |
-| L2a absent + L2b detected nothing | Run L1 only; if no maturity-block trigger, render the footer with a one-line *"No `## Project context` section detected and no canonical-conventions signatures found — orientation relies on git+filesystem discovery only. See `<CANONICAL_CONVENTIONS_URL>` to opt in."* |
-| L2a absent + L2b partial | Render the convention-maturity block in the footer (see check above) |
-| Declared L2a source unreachable (auth-walled, missing CLI/MCP) | Name the gap explicitly; continue with the remaining sources |
-| Working memory not found at any L2b path | Footer note: *"no working-memory artifacts detected; orientation relies on git history."* |
+| `gh` missing or unauthed | Skip GitHub queries; render `★ About this briefing` bullet 4 (`GitHub queries skipped (gh not authenticated)` or `(gh not installed)`) |
+| `git fetch` slow / network down | Use stale refs; render `★ About this briefing` bullet 3 (`Refs from last fetch <relative-date>`) |
+| `git fetch` fails with auth error on a configured remote | Use stale refs; render `★ About this briefing` bullet 3 variant (`Fetch failed (auth) — refs may be stale; check credentials`) |
+| L2a absent + L2b detected nothing | Run L1 only; render `★ About this briefing` bullet 2 (`Briefing relied on git/gh only — /briefing sources to see what else this skill can read.`) |
+| L2a absent + L2b partial | Stay quiet in default-mode output. User can run `/briefing sources` to see what was found. |
+| Declared L2a source unreachable (auth-walled, missing CLI/MCP) | Render `★ About this briefing` bullet 1 (`Some sources unavailable — /briefing sources for details.`) or, when the unreachable source is specifically a tracker integration, bullet 5 (`<Tracker> declared but <CLI> not available — install or configure MCP`) |
+| Working memory not found at any L2b path | If a path was declared via `## Project context` and failed → bullet 1. Otherwise stay quiet. |
 | Diff over per-file cap (200 lines) | Summarise rather than dump |
-| Detached HEAD | Say so; find the nearest branch ref and report against it |
+| Detached HEAD | Render `★ About this briefing` bullet 7 (`On detached HEAD; reporting against nearest branch <X>`) |
 | Empty repo / no `docs/` | Produce a minimal briefing; do not invent suggestions |
 | Untracked file matches secret pattern (`.env*`, `*.pem`, `*.key`, `id_rsa*`, `credentials*`) | Skip silently — never read |
 
@@ -340,9 +326,7 @@ Reference roadmap priority (if found), dependency chain, newly unblocked items.
 - Risky operations needed (force push? release cut?)
 - Stale work to triage (old PRs / ancient stashes / forgotten branches)
 
----
-Sources: read <list>; skipped <list> (reason).
-[Convention-maturity block — REQUIRED when partial adoption is detected; see Convention-maturity check section]
+[★ About this briefing — conditional, see About this briefing section below]
 [Optional: Saved to <path>]
 ```
 
@@ -364,7 +348,49 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **Decisions / attention:** Only if there's something to say. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
 
-The **source-coverage footer** (the block under the `---` rule) names every source actually read on the `Sources:` line and every source not read under `skipped <list>` with the reason in parens (auth, missing CLI, declared `none`, network failure, etc.). The **convention-maturity block** is mandatory output when partial-adoption is detected (per the **Convention-maturity check** section above) — render the block with all 7 ✓/✗ rows and the canonical-conventions URL. Skipping this block on a partial-adoption project is a spec violation. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser (e.g. `Note: depth received both 'quick' and 'deep'; using 'deep'`) also surface in this footer.
+The **`★ About this briefing` block** is conditional — it renders only when at least one bullet has content (see **About this briefing** below for the bullet inventory and trigger rules). When no bullet applies, the block omits entirely and the briefing ends with whatever section ran last. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser surface as bullet 6 inside `★ About this briefing` (text: `Depth received both '<X>' and '<Y>'; using '<Y>'`).
+
+## About this briefing — conditional footer block
+
+Replaces the always-rendered source-coverage footer + convention-maturity block. Renders only when at least one bullet has content; omits entirely when no bullets apply (the typical healthy-project case).
+
+Visual format:
+
+```
+★ About this briefing ─────────────────────────
+- <bullet 1>
+- <bullet 2>
+…
+─────────────────────────────────────────────────
+```
+
+### Bullet inventory
+
+Each bullet renders only when its trigger fires. Block omits when zero bullets apply.
+
+1. **Some sources unavailable** — when a declared or default-path source didn't resolve. Render: `Some sources unavailable — /briefing sources for details.`
+2. **Briefing relied on git/gh only** — when neither declared nor default-path sources hit. Render: `Briefing relied on git/gh only — /briefing sources to see what else this skill can read.`
+3. **Stale or failed fetch** — render: `Refs from last fetch <relative-date>` or `Fetch failed (auth) — refs may be stale; check credentials`.
+4. **GitHub unavailable** — render: `GitHub queries skipped (gh not authenticated)` or `(gh not installed)`.
+5. **Tracker integration unavailable** — render: `<Tracker> declared but <CLI> not available — install or configure MCP`.
+6. **Depth conflict** — render: `Depth received both '<X>' and '<Y>'; using '<Y>'` OR `Depth ignored when 'sources' mode is active`.
+7. **Detached HEAD** — render: `On detached HEAD; reporting against nearest branch <X>`.
+
+### Bullet priority
+
+When more than one bullet would render, prefer the more specific signal:
+
+- Bullet 1 (some sources unavailable) supersedes bullet 2 (briefing relied on git/gh only) when both fire — e.g. a declared path failed to resolve AND no other paths hit either. Both point to the same command; bullet 1 is the more specific report.
+- Bullet 5 (tracker integration unavailable) supersedes bullet 1 when the unavailable source is specifically a tracker integration declared via `## Project context`. Bullet 5 names the tracker and the missing CLI/MCP; bullet 1 is the generic version.
+
+All other bullets are independent and may co-render with each other.
+
+### Removed (compared to prior footer)
+
+- The `Sources: read X, Y, Z` enumeration (briefing body shows what was read).
+- Skip-mentions for declared-`none` sources (no signal value).
+- The 7-row maturity table (relocated to `/briefing sources`).
+- The "Adopt or learn more" link (relocated to `/briefing sources`).
 
 ## Depth contract
 
