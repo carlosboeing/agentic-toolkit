@@ -43,14 +43,19 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
   sources   Render the self-documentation view: what this skill probes
             (Always-on / Declared / Default paths / Fallbacks) and what it
             found in the current project. Mutex with depth tiers and `setup`.
-  setup     Add the `## Project context` section to your CLAUDE.md (or
-            update it if it's already there) so future briefings can read
-            your tracker, roadmap, changelog, and other locations directly
-            instead of guessing. Looks at your project, suggests sensible
-            values for each field, shows you the proposed section, and only
-            writes after you say yes (saves a `.bak` copy of CLAUDE.md
-            first, so you can roll back). Mutex with depth tiers, `sources`,
-            and `save`.
+  setup     Add the `## Project context` section to your CLAUDE.md, or
+            update it if it's already there. Future briefings then read
+            your tracker, roadmap, changelog, and other locations from
+            CLAUDE.md directly instead of guessing.
+
+            The wizard reads what's already in your project, fills in
+            each field where it can detect a value, marks the rest with
+            `<placeholder>`, and shows you the proposed section. Nothing
+            is written until you say yes. Before writing, it copies your
+            CLAUDE.md to CLAUDE.md.before-briefing-setup.bak so you can
+            restore the original.
+
+            Can't be combined with depth tiers, `sources`, or `save`.
   save      Write the output to disk.                       default: off
             (synonyms: --save, export)
   help      Show this synopsis instead of running.          default: off
