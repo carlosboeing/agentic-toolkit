@@ -128,11 +128,8 @@ git log --oneline -10                                   # last 10 commits
 > **Never `git pull`.** Only `git fetch`. The fetch is read-only — it
 > updates refs without modifying the working tree, so the briefing can
 > compute accurate ahead/behind without risking a merge mid-task.
-> Before running the command below, read the `Auto-fetch` value from
-> Layer 2a's `## Project context`; if it is `no`, omit the fetch entirely.
-> If the fetch fails with an authentication error (distinct from "no
-> remote"), continue with stale refs and surface the auth failure in the
-> footer — see Layer 3.
+> If the fetch fails (network down, no remote, auth error), continue
+> with stale refs and surface the failure in the footer — see Layer 3.
 
 ```bash
 git fetch --quiet 2>/dev/null || true   # safe no-op if no remote
@@ -200,7 +197,6 @@ Read the `## Project context` section from CLAUDE.md (already in your context). 
 - **Changelog** — file path or external URL of recent shipped work.
 - **Architecture** — file path or directory of architecture docs.
 - **Working memory** — directory holding the lifecycle artifacts (e.g. `docs/`).
-- **Auto-fetch** — `yes` (default) or `no`; controls whether the briefing may run `git fetch` to refresh refs.
 - **Other** — free-form bullet list for project-specific context.
 
 Declared fields are **authoritative** — they override any L2b sniffing. A field set to `none` means "deliberately empty" (do not probe further); an absent field means "L2b can probe a default" (see L2b table below).
@@ -511,7 +507,7 @@ What this skill reads:
 
   Declared (highest priority)
     `## Project context` in CLAUDE.md
-    Fields: Tracker, Board, Roadmap, Changelog, Architecture, Working memory, Auto-fetch, Other
+    Fields: Tracker, Board, Roadmap, Changelog, Architecture, Working memory, Other
 
   Default paths (when not declared)
     Roadmap → docs/ROADMAP.md → ROADMAP.md
@@ -614,7 +610,6 @@ Setup proposal for `<project-name>`
 - **Changelog**: <detected or `none`>
 - **Architecture**: <detected or `none`>
 - **Working memory**: <detected or `none`>
-- **Auto-fetch**: yes
 - **Other**:
   - <suggested bullets, or `<placeholder>`>
 ```
@@ -649,7 +644,6 @@ Pre-fill rules per field:
 - **Changelog** — Probe `docs/CHANGELOG.md` → `CHANGELOG.md` (root) → `none`.
 - **Architecture** — Probe `docs/architecture.md` → `docs/system/` → `none`.
 - **Working memory** — Canonical layout (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all present) → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`.
-- **Auto-fetch** — Always default `yes`. Not auto-detected (user changes to `no` if needed).
 - **Other** — Pre-suggest bullets based on detections: non-canonical working-memory layouts (e.g. `docs/plans/` with date-prefixed files), test-artefact directories (e.g. `tmp/tst_*`), custom scripts in `bin/` or `scripts/`. If nothing notable, leave a `<placeholder>` line.
 
 ### Existing `## Project context`

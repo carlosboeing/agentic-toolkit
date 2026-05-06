@@ -507,7 +507,6 @@ Each line is `- **Field**: value`. Recognised fields:
 | `Changelog` | File path or external URL of recent shipped work |
 | `Architecture` | File path or directory of architecture docs |
 | `Working memory` | Directory holding lifecycle artifacts (default: `docs/` following this guide's numbered-lifecycle convention) |
-| `Auto-fetch` | `yes` (default) or `no` — whether briefings may run `git fetch` to refresh refs |
 | `Other` | Free-form bullet list for project-specific context (custom scripts, story-tracking quirks, telemetry sources) |
 
 #### Complete examples
@@ -523,7 +522,6 @@ A fully-populated section for a typical solo project following the canonical con
 - **Changelog**: docs/CHANGELOG.md
 - **Architecture**: docs/architecture.md
 - **Working memory**: docs/ (numbered lifecycle convention)
-- **Auto-fetch**: yes
 - **Other**:
   - Test reports live in `tmp/tst_<name>/`, not in repo
   - Manual UI smoke tests via `npm run dev` before merge
@@ -540,7 +538,6 @@ A non-canonical project that uses flat `docs/plans/` and tracks work in Linear:
 - **Changelog**: none
 - **Architecture**: none
 - **Working memory**: docs/plans/
-- **Auto-fetch**: yes
 - **Other**:
   - Date-prefixed plan files in `docs/plans/` (e.g. `2026-02-19-feature-name-plan.md`)
   - Top-level `docs/<topic>-plan.md` files are also working memory
@@ -566,7 +563,6 @@ Working out what to put in each field — questions to ask yourself:
 - **`Changelog`** — Where does shipped work get recorded? Same rule as Roadmap.
 - **`Architecture`** — Is there a single doc or directory describing the system's current shape? `docs/architecture.md` or `docs/system/` are common; `none` is fine if architecture is small enough to live in README.
 - **`Working memory`** — Where do designs, plans, brainstorms, retros live? `docs/` (with numbered subdirs) is canonical; flat layouts like `docs/plans/` work too — declare the directory.
-- **`Auto-fetch`** — Default `yes` is fine for most projects. Set `no` if you're often offline, on a slow connection, or have a fetch hook that's expensive.
 - **`Other`** — Anything else AI tools should know: custom scripts, where test artefacts live, naming conventions for non-canonical files, integration quirks. Free-form bullets.
 
 #### Layered fallback

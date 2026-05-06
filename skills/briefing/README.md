@@ -47,7 +47,7 @@ The skill reads from four layers — each with a clear failure mode. **Always-on
 
 Runs in every project, knows nothing about specific conventions. Reads git state (branch, ahead/behind, dirty status, recent commits), uncommitted edits (`git status` + `git diff`, capped at 200 lines per file), local-only state (unpushed commits on any branch, stashes, worktrees, no-upstream branches), GitHub state via `gh` (your open PRs, all open PRs, assigned issues, current-branch CI status), top-level docs (`README.md`, `CLAUDE.md` — well-known by name, not a convention), and the per-project memory index at `~/.claude/projects/<slug>/memory/MEMORY.md`.
 
-The skill never runs `git pull` — only `git fetch` (read-only). If `Auto-fetch: no` is declared in your CLAUDE.md, it skips the fetch entirely.
+The skill never runs `git pull` — only `git fetch` (read-only). If the fetch fails (network down, no remote, auth error), the briefing continues with stale refs and surfaces the failure in the footer.
 
 ### Declared — explicit declarations via CLAUDE.md
 
@@ -62,7 +62,6 @@ Add a `## Project context` section to your project's CLAUDE.md to enrich the bri
 - **Changelog**: docs/CHANGELOG.md
 - **Architecture**: docs/architecture.md
 - **Working memory**: docs/ (numbered lifecycle convention)
-- **Auto-fetch**: yes
 - **Other**:
   - Story tracking lives in Linear, team SHARELOG
   - Telemetry comments on issues via scripts/item-telemetry.sh
@@ -172,7 +171,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Convention-aware, not convention-coupled.** The skill is shareable to projects using any conventions. Adopting the canonical conventions in this repo lights it up with richer behaviour; not adopting them produces simpler but still-useful output. Never imposes; always suggests.
 - **Adaptive over fixed.** The default has no depth keyword precisely because the right shape changes with project state. `quick`/`standard`/`deep` are escape hatches when you know what you want.
 - **Read-only on the project.** The skill never modifies project files; the only exception is the briefing log it writes to `briefing-log/` when you invoke it with `save`.
-- **`git fetch`, never `git pull`.** Fetching updates refs without modifying the working tree, so the briefing can compute accurate ahead/behind without risking a merge mid-task. `Auto-fetch: no` skips even the fetch.
+- **`git fetch`, never `git pull`.** Fetching updates refs without modifying the working tree, so the briefing can compute accurate ahead/behind without risking a merge mid-task. Fetch failures are tolerated — the briefing falls back to stale refs and surfaces the gap in the footer.
 - **Anti-fabrication.** Every data point comes from a source read this invocation. No invented PR numbers, file paths, SHAs, or URLs. Stale data labelled stale beats stale data presented as fresh.
 - **Honest about gaps.** Source unreachable, declared tracker missing, no `## Project context` section, network down — orientation-affecting gaps name themselves in the conditional `★ About this briefing` block. Setup-affecting gaps surface in `/briefing sources` if you ask for them. Never papered over.
 - **No transcripts.** The skill never reads raw conversation transcripts on disk, even at `deep`. That would undermine the working-memory discipline (`docs/` artifacts become optional if briefings can recover from transcripts), and the on-disk format is undocumented Anthropic internals.

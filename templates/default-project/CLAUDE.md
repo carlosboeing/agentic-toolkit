@@ -23,8 +23,6 @@ guessing. Each line is `- **Field**: value`. Recognised fields:
   - **Architecture**  — file path or directory of architecture docs
   - **Working memory** — directory holding the lifecycle artifacts
                          (default: docs/ following the numbered-lifecycle convention)
-  - **Auto-fetch**    — `yes` (default) or `no` for whether briefings may
-                        run `git fetch` to refresh refs
   - **Other**         — free-form bullet list for project-specific context
 
 Declared fields are authoritative. Absent fields fall back to convention
@@ -40,7 +38,6 @@ If you don't use one of these (e.g., no formal tracker), set the value to
 - **Changelog**: docs/CHANGELOG.md
 - **Architecture**: docs/architecture.md
 - **Working memory**: docs/ (numbered lifecycle convention)
-- **Auto-fetch**: yes
 - **Other**:
   - (free-form bullets for project-specific notes)
 

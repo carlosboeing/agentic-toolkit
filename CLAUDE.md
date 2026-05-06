@@ -18,7 +18,6 @@ Declares where project-tracking information lives so the [`/briefing`](skills/br
 - **Changelog**: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 - **Architecture**: none (per-type catalog READMEs serve the always-current-state role — see [README.md](README.md) and [skills/README.md](skills/README.md); this is documented in the `docs/` framing below)
 - **Working memory**: `docs/` (numbered lifecycle convention)
-- **Auto-fetch**: yes
 - **Other**:
   - Repo is the source of truth for skills; the harness loads from `~/.claude/skills/`. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly.
   - No CI configured; validation is manual / via `/ultrareview` on demand.
