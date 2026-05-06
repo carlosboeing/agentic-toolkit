@@ -334,6 +334,12 @@ Reference roadmap priority (if found), dependency chain, newly unblocked items.
 [Optional: Saved to <path>]
 ```
 
+### Output isolation
+
+The default-mode briefing's output is the template above plus the conditional `★ About this briefing` block — nothing else. **Don't append response-style wrappers** that the model would normally add in a general task: no separate `## Open decisions` block, no extra `★ Insight` block, no free-form "What's next" paragraph outside the briefing's `### What's next` section. The briefing's own structure (TL;DR / Snapshot / What's in flight / Recent activity / What's next / Decisions / attention / `★ About this briefing`) covers everything a wrapper would. The skill output IS the response.
+
+When the user's CLAUDE.md or another global rule mandates a closing-block format (e.g. `## Open decisions` for blocking questions), that rule applies to general conversational replies — not to skill output. Skill specs override conversational defaults for their own scope.
+
 ### Section-by-section rules
 
 **TL;DR:** 1–2 sentences. Always present. Lead with the most important thing:
@@ -525,6 +531,16 @@ The `Last synced from the conventions guide: <YYYY-MM-DD>` stamp is a maintainer
 
 The view is descriptive, not prescriptive. The "Two paths, both equally valid" framing is non-preferential between Declared and Default-paths approaches: a project using `decisions/` instead of `docs/adrs/` and declaring the path is a first-class hit, not a deviation. Never imply canonical conventions are preferred.
 
+### Output isolation
+
+`/briefing sources` is a self-contained view. The output is *exactly* the template above (with the conditional "Notable non-canonical artifacts" section when applicable) — nothing else. Don't include:
+
+- **Default-mode briefing sections** — TL;DR, Snapshot, What's in flight, Recent activity, What's next, Decisions / attention. Those belong to `/briefing` (default mode), not sources mode. The user has explicitly asked for the self-documentation view; don't bolt the orientation view on top.
+- **`★ About this briefing` bullets other than bullet 6 (depth conflict).** Bullet 2 ("Briefing relied on git/gh only — `/briefing sources` to see what else this skill can read") is *circular* when the user is already in sources mode — suppress it. Bullets 1, 3, 4, 5, 7 don't apply either: they describe the default-mode briefing's source coverage, not the sources view's own state. Only bullet 6 (depth conflict, e.g. `Depth ignored when 'sources' mode is active`) legitimately fires here.
+- **Response-style wrappers from outside the skill** — no `## Open decisions` block, no extra `★ Insight` block, no "What's next" framing the model would add in a general task. The skill output IS the response.
+
+When the user's CLAUDE.md or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to skill output. Skill specs override conversational defaults for their own scope.
+
 ## Save behaviour
 
 Triggered by passing `save` (or synonyms `--save`, `export`) — see **How to parse the args**.
@@ -617,3 +633,4 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't put audit/setup content in default-mode briefing output. That belongs in `/briefing sources`.
 - Don't presume canonical conventions are preferred over declared paths. Both are first-class in `/briefing sources`.
 - Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: any content about the briefing skill's *setup* (declaring `## Project context`, adopting canonical conventions, enriching briefings) lives in `★ About this briefing` bullet 2 and `/briefing sources` only — never in `Decisions / attention`, `What's next`, or any other body section. If you find yourself writing a body bullet that ends with "…if you want richer briefings" or "…the briefing-readable fields", you've leaked setup content into orientation content; cut it.
+- Don't wrap skill output with general response-style blocks. Both `/briefing` and `/briefing sources` produce complete outputs per their templates — appending Claude's normal `## Open decisions` block, an extra `★ Insight` block, or a free-form "What's next" paragraph is wrapper-creep. Global response-style rules (e.g. from CLAUDE.md) govern conversational replies; the skill spec overrides them for skill output. See **Output isolation** in both `## Output template` and `## /briefing sources mode`.
