@@ -487,12 +487,17 @@ What this skill reads:
 
 What was read in this project:
 
-| Layer | What was read |
-|---|---|
-| Always-on | git (`<state>`); gh (`<state>`) |
-| Declared | `<field>=<path>`, `<field>=none`, ... (one row per declared field; `none` means deliberately empty) |
-| Default | `<paths that hit>`, ... |
-| Not found | `<paths probed but absent>` |
+- **Always-on:** git (`<state>`); gh (`<state>`)
+- **Declared:** `<field>=<path>`, `<field>=none`, ... OR `(none)` if `## Project context` is absent
+- **Default paths matched:** `<paths that hit>`, ... OR `(none)`
+- **Not found:** `<paths probed but absent>`
+
+Notable non-canonical artifacts (conditional — render this section only when the skill detected working-memory-like files outside the canonical paths):
+
+- **`<path>`** — `<one-line description>` (e.g. "design + plan pairs, date-prefixed"). Suggestion: declare under `## Project context` as `**Working memory**: <path>` to surface in future briefings.
+- **`<path>`** — ...
+
+If nothing non-canonical was detected, omit this section entirely.
 
 Want richer briefings? Two paths, both equally valid:
   - Declare additional locations in `## Project context`. Example:
