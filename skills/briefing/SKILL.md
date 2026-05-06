@@ -43,10 +43,10 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
   sources   Render the self-documentation view: what this skill probes
             (Always-on / Declared / Default paths / Fallbacks) and what it
             found in the current project. Mutex with depth tiers and `setup`.
-  setup     Wizard flow: probes the project, proposes a `## Project context`
-            block for CLAUDE.md, and (with explicit user confirmation) writes
-            it (with a `.bak` backup). Mutex with depth tiers, `sources`, and
-            `save`.
+  setup     Build or update `## Project context` in CLAUDE.md. Probes the
+            project, proposes a populated block, and writes it after you
+            confirm (creates a `.bak` backup first). Mutex with depth tiers,
+            `sources`, and `save`.
   save      Write the output to disk.                       default: off
             (synonyms: --save, export)
   help      Show this synopsis instead of running.          default: off
