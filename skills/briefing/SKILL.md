@@ -2,7 +2,7 @@
 name: briefing
 description: |
   Adaptive project orientation. Auto-discovers project state from git, GitHub,
-  CLAUDE.md's ## Project context section (when present), and any working-memory
+  CLAUDE.md's ## Project Context section (when present), and any working-memory
   layout it can sniff. Reshapes output based on what's in flight — leads with
   active work if there is any, leads with what's next if not. Use whenever you
   start a session and need to catch up: "where am I, what was I doing, what's
@@ -13,7 +13,7 @@ argument-hint: "[depth] [save] [help]"
 
 # `/briefing` — Adaptive project orientation
 
-This skill produces a structured briefing of project state on demand. It auto-discovers what's in flight from git, GitHub, the project's CLAUDE.md `## Project context` section (when present), and whatever working-memory layout it can detect. The output reshapes based on what it finds — leads with active work if there is any, leads with what's next if everything is calm.
+This skill produces a structured briefing of project state on demand. It auto-discovers what's in flight from git, GitHub, the project's CLAUDE.md `## Project Context` section (when present), and whatever working-memory layout it can detect. The output reshapes based on what it finds — leads with active work if there is any, leads with what's next if everything is calm.
 
 The audience is you, returning to a project after a session, a day, a week, or a vacation. You want to know where you are, what you were doing, and what to pick up — without re-reading every file. The skill is read-only on the project (it never modifies project files); the only exception is the briefing log it writes when you invoke it with `save`.
 
@@ -27,14 +27,14 @@ A single absolute URL, defined once and reused throughout the skill. If this is 
 <CANONICAL_CONVENTIONS_URL> = https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md
 ```
 
-When the skill needs to point users at the conventions guide (e.g. in the convention-maturity footer block, or when explaining what `## Project context` is), it renders this URL — optionally with a section anchor like `#58--project-context-section-in-claudemd` for §5.8 or `#65-ai-agent-update-triggers-working-memory-discipline` for §6.5.
+When the skill needs to point users at the conventions guide (e.g. in the convention-maturity footer block, or when explaining what `## Project Context` is), it renders this URL — optionally with a section anchor like `#58--project-context-section-in-claudemd` for §5.8 or `#65-ai-agent-update-triggers-working-memory-discipline` for §6.5.
 
 ## Synopsis
 
 ```
 /briefing [depth] [save] [help]              # default — orientation briefing
 /briefing sources [save] [help]              # self-documentation view (what this skill probes + finds)
-/briefing setup [help]                       # add or update `## Project context` in CLAUDE.md
+/briefing setup [help]                       # add or update `## Project Context` in CLAUDE.md
 
   depth     adaptive (default) | quick | standard | deep
             Length × source breadth. Adaptive is content-driven (sections appear
@@ -43,7 +43,7 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
   sources   Render the self-documentation view: what this skill probes
             (Always-on / Declared / Default paths / Fallbacks) and what it
             found in the current project. Mutex with depth tiers and `setup`.
-  setup     Add the `## Project context` section to your CLAUDE.md, or
+  setup     Add the `## Project Context` section to your CLAUDE.md, or
             update it if it's already there. Future briefings then read
             your tracker, roadmap, changelog, and other locations from
             CLAUDE.md directly instead of guessing.
@@ -67,7 +67,7 @@ Examples:
   /briefing deep save          # deep tier, written to disk
   /briefing sources            # self-documentation view
   /briefing sources save       # self-documentation view, written to disk
-  /briefing setup              # add or update `## Project context` in CLAUDE.md
+  /briefing setup              # add or update `## Project Context` in CLAUDE.md
 ```
 
 Order of args does not matter. `/briefing deep save` and `/briefing save deep` are equivalent. If any help keyword (the full set is listed under **How to parse the args** below — `help`, `--help`, `-h`, `?`, `usage`) appears anywhere in the args, the skill renders this Synopsis as the response and stops — no briefing, no save.
@@ -96,18 +96,18 @@ The parser is order-independent and case-insensitive. Two of the same bucket is 
 
 ## Source layering
 
-> **Note on labels:** `L1`, `L2a`, `L2b`, and `L3` are internal architecture codes used inside this Source-layering section (and the Layer 3 failure-mode table + In-flight detection table) to discuss the model precisely. They are **not user-facing** — neither default-mode briefings nor `/briefing sources` ever emit them. Rendering instructions elsewhere in this spec use plain language (e.g. "the resolved roadmap path", "sources declared in `## Project context`"). The user-facing labels in `/briefing sources` are **Always-on** (≈ L1), **Declared** (≈ L2a), **Default paths** (≈ L2b), and **Fallbacks** (≈ L3).
+> **Note on labels:** `L1`, `L2a`, `L2b`, and `L3` are internal architecture codes used inside this Source-layering section (and the Layer 3 failure-mode table + In-flight detection table) to discuss the model precisely. They are **not user-facing** — neither default-mode briefings nor `/briefing sources` ever emit them. Rendering instructions elsewhere in this spec use plain language (e.g. "the resolved roadmap path", "sources declared in `## Project Context`"). The user-facing labels in `/briefing sources` are **Always-on** (≈ L1), **Declared** (≈ L2a), **Default paths** (≈ L2b), and **Fallbacks** (≈ L3).
 
 The briefing reads from four layers, each with a clear failure mode:
 
 | Layer | What it does | Fails when… |
 |---|---|---|
 | **L1 — Universal mechanics** | Probes git, GitHub, top-level files, per-project memory. Knows nothing about specific conventions. | The project isn't a git repo (skip git/gh; fall back to file discovery only). |
-| **L2a — Explicit declarations** | Reads `## Project context` from CLAUDE.md. Declared fields are authoritative. | The section is absent (skip L2a entirely; rely on L2b). |
+| **L2a — Explicit declarations** | Reads `## Project Context` from CLAUDE.md. Declared fields are authoritative. | The section is absent (skip L2a entirely; rely on L2b). |
 | **L2b — Convention sniffing** | Probes for canonical-conventions signatures (`docs/0-brainstorms/`, `docs/ROADMAP.md`, status frontmatter, ROADMAP section names). Fills in any field L2a didn't declare. | The project doesn't follow the canonical conventions (skip the lit-up behaviour; degrade to L1-only output). |
 | **L3 — Graceful degradation** | Standing instructions for every failure mode. Names every gap in the footer; never fabricates. | (L3 is itself the failure-handling layer; it doesn't fail.) |
 
-Run L1 unconditionally. Read L2a if `## Project context` is present in CLAUDE.md. Run L2b for any field L2a didn't declare. Apply L3's standing instructions to any source that fails along the way.
+Run L1 unconditionally. Read L2a if `## Project Context` is present in CLAUDE.md. Run L2b for any field L2a didn't declare. Apply L3's standing instructions to any source that fails along the way.
 
 ### Layer 1 — Universal mechanics
 
@@ -189,7 +189,7 @@ If the index file exists (some users maintain one via an auto-memory system), re
 
 ### Layer 2a — Explicit declarations via CLAUDE.md
 
-Read the `## Project context` section from CLAUDE.md (already in your context). Each line is `- **Field**: value`. Recognised fields:
+Read the `## Project Context` section from CLAUDE.md (already in your context). Each line is `- **Field**: value`. Recognised fields:
 
 - **Tracker** — where work items live (e.g. `GitHub Issues`, `Linear team FOO`, `Jira project BAR`, `Notion`, `GitHub Project N`, file path, or `none`).
 - **Board** — URL of the active board / project view.
@@ -203,7 +203,11 @@ Declared fields are **authoritative** — they override any L2b sniffing. A fiel
 
 For complete examples (canonical + non-canonical project layouts), per-field decision guidance, and discovery hints (how to figure out what to put in each field), see [§5.8 of the canonical conventions guide](`<CANONICAL_CONVENTIONS_URL>`#58--project-context-section-in-claudemd).
 
-Presence check: grep for `^## Project context` in the project's CLAUDE.md. If absent, skip the L2a read entirely and proceed to L2b.
+Presence check: grep **case-insensitively** for `^## Project Context` in the project's CLAUDE.md (so `## Project Context`, `## Project context`, `## PROJECT CONTEXT`, etc. all match). The canonical form is `## Project Context` (Title Case) — but tolerate older lowercase variants for backward compatibility. If absent, skip the L2a read entirely and proceed to L2b.
+
+```bash
+grep -i '^## Project Context' CLAUDE.md
+```
 
 #### Tracker integration recipes
 
@@ -255,7 +259,7 @@ This check is invoked specifically by the `/briefing sources` mode (and used to 
 
 | # | Signature | How to check |
 |---|---|---|
-| 1 | `## Project context` section in CLAUDE.md | grep `^## Project context` on `CLAUDE.md` |
+| 1 | `## Project Context` section in CLAUDE.md | `grep -i '^## Project Context' CLAUDE.md` (case-insensitive — tolerates `## Project context` variants) |
 | 2 | `docs/ROADMAP.md` exists | filesystem probe |
 | 3 | `docs/CHANGELOG.md` exists | filesystem probe |
 | 4 | Lifecycle dirs present (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` at minimum) | filesystem probe; require all three |
@@ -266,7 +270,7 @@ This check is invoked specifically by the `/briefing sources` mode (and used to 
 The 7-signature tally feeds two outputs:
 
 - **`/briefing sources` view** — populates the "What was read in this project" / "Not found" rows (see **`/briefing sources` mode** section).
-- **Default-mode bullet 2** — when no canonical signatures hit and no `## Project context` was declared, render bullet 2 of `★ About this briefing` (`Briefing relied on git/gh only — /briefing sources to see what else this skill can read.`).
+- **Default-mode bullet 2** — when no canonical signatures hit and no `## Project Context` was declared, render bullet 2 of `★ About this briefing` (`Briefing relied on git/gh only — /briefing sources to see what else this skill can read.`).
 
 Read-only. Descriptive, not prescriptive.
 
@@ -284,7 +288,7 @@ Standing instructions for when a source fails. Never fabricate; always name the 
 | L2a absent + L2b detected nothing | Run L1 only; render `★ About this briefing` bullet 2 (`Briefing relied on git/gh only — /briefing sources to see what else this skill can read.`) |
 | L2a absent + L2b partial | Stay quiet in default-mode output. User can run `/briefing sources` to see what was found. |
 | Declared L2a source unreachable (auth-walled, missing CLI/MCP) | Render `★ About this briefing` bullet 1 (`Some sources unavailable — /briefing sources for details.`) or, when the unreachable source is specifically a tracker integration, bullet 5 (`<Tracker> declared but <CLI> not available — install or configure MCP`) |
-| Working memory not found at any L2b path | If a path was declared via `## Project context` and failed → bullet 1. Otherwise stay quiet. |
+| Working memory not found at any L2b path | If a path was declared via `## Project Context` and failed → bullet 1. Otherwise stay quiet. |
 | Diff over per-file cap (200 lines) | Summarise rather than dump |
 | Detached HEAD | Render `★ About this briefing` bullet 7 (`On detached HEAD; reporting against nearest branch <X>`) |
 | Empty repo / no `docs/` | Produce a minimal briefing; do not invent suggestions |
@@ -335,7 +339,7 @@ In adaptive mode (the default), two sections always run and four are conditional
 - **Branch:** <current> (<N> ahead, <M> behind <upstream>)
 - **Roadmap:** X/Y items · next: <item>     ← only if a roadmap was found (declared or detected)
 - **Recent activity:** <last commit / last PR / last shipped lifecycle item>
-- **<Field name>:** <bullets from sources declared in `## Project context`>     ← e.g. **Tracker:**, **Board:**
+- **<Field name>:** <bullets from sources declared in `## Project Context`>     ← e.g. **Tracker:**, **Board:**
 
 ### What's in flight                           ← only if any strong signal
 - **Working tree:** <paths and one-line summary>
@@ -343,7 +347,7 @@ In adaptive mode (the default), two sections always run and four are conditional
 - **<roadmap section title>:** <items + state>     ← rendered with the project's actual ROADMAP section name (e.g. "## In flight", "## Now")
 - **Open PRs:** <your PRs + review status>
 - **Drafts:** <lifecycle artifacts with in-flight status>     ← rendered with the project's actual status vocabulary (e.g. "status: draft|open|approved")
-- **Tracker:** <items in progress>     ← only if a tracker was declared in `## Project context`
+- **Tracker:** <items in progress>     ← only if a tracker was declared in `## Project Context`
 
 ### Recent activity                            ← always (last 3-5 things)
 Synthesised, not dumped. Group by theme. Reference SHA / PR# / file path.
@@ -376,7 +380,7 @@ When the user's CLAUDE.md or another global rule mandates a closing-block format
 
 If everything else got cut, the TL;DR alone should still be useful.
 
-**Snapshot:** Always present. One-line bullets only. Each bullet starts with a **bold state label** (`**Branch:**`, `**Roadmap:**`, `**Recent activity:**`, `**<Field>:**`) so the categorical labels are scannable at a glance. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts; roadmap line from the resolved roadmap path (whether declared in `## Project context` or detected at a default location); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add bullets for sources declared in `## Project context` (tracker counts, board column health) only when those sources were declared and read — these get bold labels too (`**Tracker:**`, `**Board:**`).
+**Snapshot:** Always present. One-line bullets only. Each bullet starts with a **bold state label** (`**Branch:**`, `**Roadmap:**`, `**Recent activity:**`, `**<Field>:**`) so the categorical labels are scannable at a glance. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts; roadmap line from the resolved roadmap path (whether declared in `## Project Context` or detected at a default location); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add bullets for sources declared in `## Project Context` (tracker counts, board column health) only when those sources were declared and read — these get bold labels too (`**Tracker:**`, `**Board:**`).
 
 **What's in flight:** Only if any Strong-strength signal from the In-flight detection table. Group bullets by what they describe (Working tree, Local-only, ROADMAP, Open PRs, Drafts, Tracker — see the output template above), **not** by Strong/Medium/Weak — those labels are internal classification and must never appear in the rendered briefing. Render the roadmap-section bullet using the project's actual ROADMAP heading (e.g. `ROADMAP "## In flight":` for canonical projects; `ROADMAP "## Now":` for a project using Now/Next/Later; omit entirely if no roadmap was found). Render the drafts bullet using the project's actual status vocabulary (e.g. `Drafts (status: draft|open|approved):` for canonical; `Drafts (status: wip):` for a project using a different vocabulary; omit if no working memory was found). Don't dump diffs — summarise per the 200-line cap.
 
@@ -386,7 +390,7 @@ If everything else got cut, the TL;DR alone should still be useful.
 
 **Decisions / attention:** Only if there's something to say about the **project's state or work in progress**. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a project-convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
 
-**Not for:** suggestions about adopting `## Project context`, canonical conventions, declaring additional fields, or anything else about how the user could enrich future briefings — that's setup content, not project content. It lives exclusively in `★ About this briefing` bullet 2 (the `/briefing sources` redirect) and the `/briefing sources` view itself. If the absence of `## Project context` is the only "decision" you'd flag, render no `Decisions / attention` section at all — bullet 2 of `★ About this briefing` already prompts the user.
+**Not for:** suggestions about adopting `## Project Context`, canonical conventions, declaring additional fields, or anything else about how the user could enrich future briefings — that's setup content, not project content. It lives exclusively in `★ About this briefing` bullet 2 (the `/briefing sources` redirect) and the `/briefing sources` view itself. If the absence of `## Project Context` is the only "decision" you'd flag, render no `Decisions / attention` section at all — bullet 2 of `★ About this briefing` already prompts the user.
 
 The **`★ About this briefing` block** is conditional — it renders only when at least one bullet has content (see **About this briefing** below for the bullet inventory and trigger rules). When no bullet applies, the block omits entirely and the briefing ends with whatever section ran last. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser surface as bullet 6 inside `★ About this briefing` (text: `Depth received both '<X>' and '<Y>'; using '<Y>'`).
 
@@ -451,7 +455,7 @@ Each bullet renders only when its trigger fires. Block omits when zero bullets a
 When more than one bullet would render, prefer the more specific signal:
 
 - Bullet 1 (some sources unavailable) supersedes bullet 2 (briefing relied on git/gh only) when both fire — e.g. a declared path failed to resolve AND no other paths hit either. Both point to the same command; bullet 1 is the more specific report.
-- Bullet 5 (tracker integration unavailable) supersedes bullet 1 when the unavailable source is specifically a tracker integration declared via `## Project context`. Bullet 5 names the tracker and the missing CLI/MCP; bullet 1 is the generic version.
+- Bullet 5 (tracker integration unavailable) supersedes bullet 1 when the unavailable source is specifically a tracker integration declared via `## Project Context`. Bullet 5 names the tracker and the missing CLI/MCP; bullet 1 is the generic version.
 
 All other bullets are independent and may co-render with each other.
 
@@ -471,7 +475,7 @@ The depth dial scales three things together — output length, source breadth, a
 | Depth | Length | Sources read | Wall-clock | Use when |
 |---|---|---|---|---|
 | `quick` | < 300w | git/gh essentials only (status/log/diff, last PR, last commit) plus the resolved roadmap head if available — ~5–7 reads | < 5s | "Remind me where I am, fast" |
-| (adaptive) | content-driven | full git/gh + declared sources from `## Project context` + canonical-conventions sniffing | 5–15s | Default |
+| (adaptive) | content-driven | full git/gh + declared sources from `## Project Context` + canonical-conventions sniffing | 5–15s | Default |
 | `standard` | 600–1000w | All adaptive sources, no skipping | 10–20s | Forces full coverage |
 | `deep` | 1200–2000w | Standard + historical sources + cross-source synthesis + per-project memory files | 20–60s | "Real planning session, audit the lot" |
 
@@ -485,7 +489,7 @@ The depth dial scales three things together — output length, source breadth, a
 | Stale open PRs (open > 14 days) | Forgotten work; different from in-flight because not moving |
 | Recent ADRs (last 5 from any declared or detected ADR location) | Architectural context affecting next moves |
 | Cross-source synthesis | Recurring themes across 3+ sources flagged as systemic |
-| Tracker closed items | If a tracker is declared in `## Project context`, fetch closed items from last 7 days, not just open |
+| Tracker closed items | If a tracker is declared in `## Project Context`, fetch closed items from last 7 days, not just open |
 | Trend analysis on changelog | Velocity / cadence / scope drift across last 5–10 entries (when a changelog was found) |
 | Per-project memory files | Read individual files in `~/.claude/projects/<slug>/memory/` (MEMORY.md index already in context) |
 
@@ -506,7 +510,7 @@ What this skill reads:
     git status, recent commits, stashes, worktrees, GitHub PRs/issues/CI
 
   Declared (highest priority)
-    `## Project context` in CLAUDE.md
+    `## Project Context` in CLAUDE.md
     Fields: Tracker, Board, Roadmap, Changelog, Architecture, Working memory, Other
 
   Default paths (when not declared)
@@ -522,19 +526,19 @@ What this skill reads:
 What was read in this project:
 
 - **Always-on:** git (`<state>`); gh (`<state>`)
-- **Declared:** `<field>=<path>`, `<field>=none`, ... OR `(none)` if `## Project context` is absent
+- **Declared:** `<field>=<path>`, `<field>=none`, ... OR `(none)` if `## Project Context` is absent
 - **Default paths matched:** `<paths that hit>`, ... OR `(none)`
 - **Not found:** `<paths probed but absent>`
 
 Notable non-canonical artifacts (conditional — render this section only when the skill detected working-memory-like files outside the canonical paths):
 
-- **`<path>`** — `<one-line description>` (e.g. "design + plan pairs, date-prefixed"). Suggestion: declare under `## Project context` as `**Working memory**: <path>` to surface in future briefings.
+- **`<path>`** — `<one-line description>` (e.g. "design + plan pairs, date-prefixed"). Suggestion: declare under `## Project Context` as `**Working memory**: <path>` to surface in future briefings.
 - **`<path>`** — ...
 
 If nothing non-canonical was detected, omit this section entirely.
 
 Want richer briefings? Two paths, both equally valid:
-  - Declare additional locations in `## Project context`. Example:
+  - Declare additional locations in `## Project Context`. Example:
       - **Adrs**: docs/architecture/decisions/
   - Or adopt canonical conventions for zero-config: <CANONICAL_CONVENTIONS_URL>
 
@@ -543,7 +547,7 @@ Last synced from the conventions guide: 2026-05-06
 
 ### Empty-layer rendering
 
-When a layer has no entries (e.g. project declared no `## Project context` and no canonical default paths matched), render the layer header with `(none)` underneath rather than omitting the layer. Transparency is the purpose of this view.
+When a layer has no entries (e.g. project declared no `## Project Context` and no canonical default paths matched), render the layer header with `(none)` underneath rather than omitting the layer. Transparency is the purpose of this view.
 
 ### Date stamp
 
@@ -571,7 +575,7 @@ When the user's CLAUDE.md or another global rule mandates a closing-block format
 
 ## /briefing setup mode
 
-Triggered by passing `setup` as the mode keyword. Adds (or updates) the `## Project context` section in CLAUDE.md.
+Triggered by passing `setup` as the mode keyword. Adds (or updates) the `## Project Context` section in CLAUDE.md.
 
 This is the only mode that writes to a project file other than `briefing-log/`. The write happens after explicit user confirmation, with a one-time backup at `CLAUDE.md.before-briefing-setup.bak` created first.
 
@@ -584,8 +588,8 @@ This is the only mode that writes to a project file other than `briefing-log/`. 
 ### What it does
 
 1. **Probe** the project state — same probes as `/briefing sources` (git remote, GitHub PRs/issues, canonical paths, working-memory dirs, ADR locations, per-project memory).
-2. **Read** CLAUDE.md (if it exists) and look for an existing `## Project context` section.
-3. **Propose** a `## Project context` block populated from probes (see **Detection rules** below).
+2. **Read** CLAUDE.md (if it exists) and look for an existing `## Project Context` section.
+3. **Propose** a `## Project Context` block populated from probes (see **Detection rules** below).
 4. **Output** the proposal with detection notes plus a confirmation prompt.
 5. **On user `yes`**, back up CLAUDE.md and write the new section. **On `no`**, print the block for manual paste.
 
@@ -599,10 +603,10 @@ Setup proposal for `<project-name>`
 - <one bullet per probed source: detected value or "no detection">
 - ...
 
-## Proposed `## Project context` block
+## Proposed `## Project Context` block
 
 ```markdown
-## Project context
+## Project Context
 
 - **Tracker**: <detected or `<placeholder: ...>`>
 - **Board**: <detected or `none`>
@@ -646,30 +650,34 @@ Pre-fill rules per field:
 - **Working memory** — Canonical layout (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all present) → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`.
 - **Other** — Pre-suggest bullets based on detections: non-canonical working-memory layouts (e.g. `docs/plans/` with date-prefixed files), test-artefact directories (e.g. `tmp/tst_*`), custom scripts in `bin/` or `scripts/`. If nothing notable, leave a `<placeholder>` line.
 
-### Existing `## Project context`
+### Always write Title Case
 
-If CLAUDE.md already has a `## Project context` section:
+Always emit the canonical `## Project Context` (Title Case) header — even when updating an existing section that uses a lowercase variant (`## Project context`, `## PROJECT CONTEXT`, etc.). The probe in L2a is case-insensitive so older variants still resolve, but new writes use the canonical form. If diffing an existing lowercase section, surface the case fix as one of the diff items so the user sees and confirms it.
+
+### Existing `## Project Context`
+
+If CLAUDE.md already has a `## Project Context` section (matched case-insensitively):
 
 1. Parse the existing fields.
 2. Compute the diff against the proposed (detected) block.
-3. Show the diff per-field: changing values, additions, fields that match.
+3. Show the diff per-field: changing values, additions, fields that match. If the existing header was lowercase, list the case fix as a top-level diff item (`Header: ## Project context → ## Project Context`).
 4. Confirm: `Update <field> from <current> → <proposed>? yes / no / skip-all`.
 5. Apply only confirmed changes; don't blanket-overwrite.
 
 ### Insertion location (no existing section)
 
-If `## Project context` doesn't exist in CLAUDE.md:
+If `## Project Context` doesn't exist in CLAUDE.md:
 
 - If a `## What this project is` (or similar one-line "what this is" section) exists, insert after that section.
 - Otherwise, insert directly after the title `# <name>` on line 1.
 
-If CLAUDE.md doesn't exist at all, propose creating one from the canonical scaffold ([`templates/default-project/CLAUDE.md`](`<CANONICAL_CONVENTIONS_URL>`/raw/templates/default-project/CLAUDE.md)) with the `## Project context` populated. Tell the user the title is a placeholder.
+If CLAUDE.md doesn't exist at all, propose creating one from the canonical scaffold ([`templates/default-project/CLAUDE.md`](`<CANONICAL_CONVENTIONS_URL>`/raw/templates/default-project/CLAUDE.md)) with the `## Project Context` populated. Tell the user the title is a placeholder.
 
 ### Backup mechanics
 
-Before write, copy the existing CLAUDE.md to `CLAUDE.md.before-briefing-setup.bak` (overwriting any prior backup — single rolling backup). On success, confirm: `Wrote ## Project context to CLAUDE.md (line N). Backup at CLAUDE.md.before-briefing-setup.bak.`
+Before write, copy the existing CLAUDE.md to `CLAUDE.md.before-briefing-setup.bak` (overwriting any prior backup — single rolling backup). On success, confirm: `Wrote ## Project Context to CLAUDE.md (line N). Backup at CLAUDE.md.before-briefing-setup.bak.`
 
-If CLAUDE.md doesn't exist, no backup is needed; create the new file with `# <project-name>` placeholder + the proposed `## Project context`.
+If CLAUDE.md doesn't exist, no backup is needed; create the new file with `# <project-name>` placeholder + the proposed `## Project Context`.
 
 ### Output isolation
 
@@ -752,7 +760,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 - **Concise over comprehensive.** Bullets when structure helps scanning. No "It's worth noting that…"
 - **Honest about gaps.** Source unreachable / empty → name it, don't fabricate.
 - **Read-only on everything except `briefing-log/` and (in `setup` mode only) `CLAUDE.md`.** Two writes the skill performs: (1) the save log writes to `briefing-log/` when `save` is passed; (2) the `setup` mode writes to `CLAUDE.md` after explicit user confirmation, with a `.bak` backup created first. No other modes touch project files.
-- **Suggest, don't impose.** Default-mode output never lobbies for convention adoption. Audit-style suggestions live in `/briefing sources` and are framed descriptively: equivalent info in different locations (declared via `## Project context`) is a first-class hit, not a deviation. Never auto-applies a convention; never edits CLAUDE.md or any other project file.
+- **Suggest, don't impose.** Default-mode output never lobbies for convention adoption. Audit-style suggestions live in `/briefing sources` and are framed descriptively: equivalent info in different locations (declared via `## Project Context`) is a first-class hit, not a deviation. Never auto-applies a convention; never edits CLAUDE.md or any other project file.
 - **Prefer "you" framing.** This is a personal orientation tool ("you stopped mid-X"). For orientation, "you" is sharper than "we" or "the code" — the user invoked the skill *to be reminded what they were doing*.
 - **No time estimates.** Don't say "this should take 2 hours." Estimate scope (small / medium / large by analogy to similar past items in the changelog) at most.
 
@@ -764,7 +772,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 - **Don't pretend a tracker integration worked when it didn't.** If the CLI is missing or the MCP failed, name the gap; do not invent items.
 - **Don't overstate freshness.** If `git fetch` failed and refs are 2 days old, say so. The cost of stale data presented as fresh is higher than the cost of stale data labelled stale.
 - **Don't synthesise patterns from thin data.** "Trend" requires 3+ data points. Below that, report individual facts; don't editorialise into a pattern.
-- **Don't presume conventions.** Default-mode output never prescribes canonical adoption. The `/briefing sources` view shows what was probed and what was found regardless, and frames non-canonical paths as first-class via `## Project context` declarations.
+- **Don't presume conventions.** Default-mode output never prescribes canonical adoption. The `/briefing sources` view shows what was probed and what was found regardless, and frames non-canonical paths as first-class via `## Project Context` declarations.
 
 ## What NOT to do
 
@@ -779,5 +787,5 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't render the `★ About this briefing` block when no bullet has content — omit entirely.
 - Don't put audit/setup content in default-mode briefing output. That belongs in `/briefing sources`.
 - Don't presume canonical conventions are preferred over declared paths. Both are first-class in `/briefing sources`.
-- Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: any content about the briefing skill's *setup* (declaring `## Project context`, adopting canonical conventions, enriching briefings) lives in `★ About this briefing` bullet 2 and `/briefing sources` only — never in `Decisions / attention`, `What's next`, or any other body section. If you find yourself writing a body bullet that ends with "…if you want richer briefings" or "…the briefing-readable fields", you've leaked setup content into orientation content; cut it.
+- Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: any content about the briefing skill's *setup* (declaring `## Project Context`, adopting canonical conventions, enriching briefings) lives in `★ About this briefing` bullet 2 and `/briefing sources` only — never in `Decisions / attention`, `What's next`, or any other body section. If you find yourself writing a body bullet that ends with "…if you want richer briefings" or "…the briefing-readable fields", you've leaked setup content into orientation content; cut it.
 - Don't wrap skill output with general response-style blocks. Both `/briefing` and `/briefing sources` produce complete outputs per their templates — appending Claude's normal `## Open decisions` block, an extra `★ Insight` block, or a free-form "What's next" paragraph is wrapper-creep. Global response-style rules (e.g. from CLAUDE.md) govern conversational replies; the skill spec overrides them for skill output. See **Output isolation** in both `## Output template` and `## /briefing sources mode`.

@@ -2,7 +2,7 @@
 
 A single-file [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that produces a structured briefing of project state on demand — built for the moment you return to a project after a session, a day, a week, or a vacation, and want to know **where you are, what you were doing, and what to pick up** without re-reading every file.
 
-It auto-discovers what's in flight from git, GitHub, your project's CLAUDE.md `## Project context` section (when present), and whatever working-memory layout it can detect. The output reshapes by what it finds — leads with active work if there is any, leads with what's next if everything is calm.
+It auto-discovers what's in flight from git, GitHub, your project's CLAUDE.md `## Project Context` section (when present), and whatever working-memory layout it can detect. The output reshapes by what it finds — leads with active work if there is any, leads with what's next if everything is calm.
 
 The skill is **convention-aware but not convention-coupled**. It works generically in any repo and lights up with richer behaviour when a project follows the [canonical conventions in this repo](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md). Default-mode output stays focused on orientation; if you want to know what the skill probes and what it found in your project, run `/briefing sources` for a separate self-documentation view.
 
@@ -32,7 +32,7 @@ Four knobs you can mix and match. Order doesn't matter.
 
 | Dial | Keywords | Default | Effect |
 |---|---|---|---|
-| **Mode** | `sources`, `setup` | briefing | `sources` switches to the self-documentation view (what this skill probes, what it found). `setup` adds or updates the `## Project context` section in CLAUDE.md (with backup, after you confirm). Can't be combined with depth tiers or with each other — see the dedicated subsections below. |
+| **Mode** | `sources`, `setup` | briefing | `sources` switches to the self-documentation view (what this skill probes, what it found). `setup` adds or updates the `## Project Context` section in CLAUDE.md (with backup, after you confirm). Can't be combined with depth tiers or with each other — see the dedicated subsections below. |
 | **Depth** | `quick` (or `peek`), `standard`, `deep` (or `deep-dive`) | **adaptive (no override)** | Length × source breadth × wall-clock. `quick` < 300w, < 5s; `standard` 600–1000w, forces all six sections; `deep` 1200–2000w, adds historical sources, stale-branch sweep, ADR scan, per-project memory. Does not apply when `sources` mode is active. |
 | **Save** | `save` (or `--save`/`export`) | off | Write the output to `<repo>/.claude/briefing-log/` (or `~/.claude/briefing-log/` outside a git repo). Compatible with all modes. |
 | **Help** | `help` (or `?`/`usage`/`--help`/`-h`) | off | Render synopsis and stop |
@@ -51,10 +51,10 @@ The skill never runs `git pull` — only `git fetch` (read-only). If the fetch f
 
 ### Declared — explicit declarations via CLAUDE.md
 
-Add a `## Project context` section to your project's CLAUDE.md to enrich the briefing with sources it can't auto-discover:
+Add a `## Project Context` section to your project's CLAUDE.md to enrich the briefing with sources it can't auto-discover:
 
 ```markdown
-## Project context
+## Project Context
 
 - **Tracker**: GitHub Issues
 - **Board**: https://github.com/me/repo/projects/3
@@ -73,15 +73,15 @@ For the canonical schema, see [`guide-project-structure-and-conventions.md` §5.
 
 ### Default paths — convention sniffing
 
-For any field you didn't declare in `## Project context`, the skill probes for canonical-conventions signatures (the structure documented in [the canonical guide](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md)). If they match — `docs/ROADMAP.md`, lifecycle dirs at `docs/[0-9]-*`, status frontmatter, ROADMAP sections like `## In flight` — the skill applies the canonical interpretation. If they don't match, it falls back to generic file discovery and names the gap.
+For any field you didn't declare in `## Project Context`, the skill probes for canonical-conventions signatures (the structure documented in [the canonical guide](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md)). If they match — `docs/ROADMAP.md`, lifecycle dirs at `docs/[0-9]-*`, status frontmatter, ROADMAP sections like `## In flight` — the skill applies the canonical interpretation. If they don't match, it falls back to generic file discovery and names the gap.
 
 This is the "lights up with conventions" tier. A project that follows the canonical layout gets richer briefings (in-flight detection wired to your ROADMAP sections, status frontmatter recognised, ADRs surfaced) for free. A project that uses different conventions just gets always-on + declared output, which still works — no broken behaviour.
 
-Default-mode briefings don't lobby for convention adoption — orientation output stays focused on the project state. If you want to see what this skill probed and what it found (canonical paths matched, declarations honoured, gaps named), run `/briefing sources`. That view frames declared paths via `## Project context` as first-class equivalents to canonical defaults, not deviations.
+Default-mode briefings don't lobby for convention adoption — orientation output stays focused on the project state. If you want to see what this skill probed and what it found (canonical paths matched, declarations honoured, gaps named), run `/briefing sources`. That view frames declared paths via `## Project Context` as first-class equivalents to canonical defaults, not deviations.
 
 ### Fallbacks — graceful degradation
 
-Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project context`, declared tracker unreachable, detached HEAD, secret-pattern files, working memory not found at any default path, …). Failures that affect orientation surface as bullets in the conditional `★ About this briefing` block; failures that don't surface in `/briefing sources` if you ask for them. Never papered over, never silently fabricated.
+Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project Context`, declared tracker unreachable, detached HEAD, secret-pattern files, working memory not found at any default path, …). Failures that affect orientation surface as bullets in the conditional `★ About this briefing` block; failures that don't surface in `/briefing sources` if you ask for them. Never papered over, never silently fabricated.
 
 ## Install
 
@@ -113,8 +113,8 @@ For the project-level install path and the shared install snippet, see [`skills/
 /briefing sources                    # what this skill probes + what it found here
 /briefing sources save               # save the sources view to <TS>-sources.md
 
-# ─── Setup mode (add or update ## Project context) ─
-/briefing setup                      # propose + apply a ## Project context block
+# ─── Setup mode (add or update ## Project Context) ─
+/briefing setup                      # propose + apply a ## Project Context block
 
 # ─── Help ──────────────────────────────────────────
 /briefing help
@@ -125,29 +125,29 @@ For the project-level install path and the shared install snippet, see [`skills/
 
 A separate output that documents what this skill probes and what it found in the project. Mutex with depth tiers (`quick`/`standard`/`deep`); compatible with `save`. Run it when you want to know:
 
-- What sources this skill *can* read in any project (always-on git/gh, declared `## Project context` fields, default canonical paths, fallbacks).
+- What sources this skill *can* read in any project (always-on git/gh, declared `## Project Context` fields, default canonical paths, fallbacks).
 - What it *did* read in this specific project (which paths matched, which were declared, which weren't found).
-- How to enrich future briefings — either by declaring additional locations in `## Project context`, or by adopting canonical conventions for zero-config behaviour.
+- How to enrich future briefings — either by declaring additional locations in `## Project Context`, or by adopting canonical conventions for zero-config behaviour.
 
 The view is descriptive, not prescriptive. A project that uses `decisions/` instead of `docs/adrs/` and declares the path is a first-class hit, not a deviation. Both paths — declared and canonical — are equally valid. The view exists to make the skill's mechanics legible, not to lobby for any particular layout.
 
 Output is organised by four user-facing layers (the same source model the skill uses internally, with friendlier labels): **Always-on**, **Declared (highest priority)**, **Default paths (when not declared)**, and **Fallbacks**. Empty layers render as `(none)` rather than disappearing — transparency is the point.
 
-## `/briefing setup` — add or update `## Project context`
+## `/briefing setup` — add or update `## Project Context`
 
-The `setup` mode adds (or updates) the [`## Project context` block](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd) in your CLAUDE.md. Useful when you want richer briefings on a project that hasn't declared its tracker / roadmap / working-memory locations yet.
+The `setup` mode adds (or updates) the [`## Project Context` block](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd) in your CLAUDE.md. Useful when you want richer briefings on a project that hasn't declared its tracker / roadmap / working-memory locations yet.
 
 What it does:
 
 1. Probes the project state (git remote, GitHub PRs/issues, canonical paths, working-memory dirs).
-2. Reads CLAUDE.md (if present) and looks for an existing `## Project context` section.
-3. Proposes a populated `## Project context` block — pre-filling detected fields, marking unknowable fields as `<placeholder>`, suggesting `Other` bullets based on what was found.
+2. Reads CLAUDE.md (if present) and looks for an existing `## Project Context` section.
+3. Proposes a populated `## Project Context` block — pre-filling detected fields, marking unknowable fields as `<placeholder>`, suggesting `Other` bullets based on what was found.
 4. Shows the proposal + a confirmation prompt.
 5. **On `yes`**, writes to CLAUDE.md (creating `CLAUDE.md.before-briefing-setup.bak` first as a one-time backup). **On `no`**, prints the block for manual paste.
 
 This is the **only** mode that writes to a project file other than `briefing-log/`. Writes happen only after explicit user confirmation, with a backup created first. No silent edits.
 
-If `## Project context` already exists, setup mode runs in **diff mode**: it parses the existing fields, computes per-field changes against the proposal, and asks for field-by-field confirmation before applying anything. Doesn't blanket-overwrite.
+If `## Project Context` already exists, setup mode runs in **diff mode**: it parses the existing fields, computes per-field changes against the proposal, and asks for field-by-field confirmation before applying anything. Doesn't blanket-overwrite.
 
 `setup` is mutex with depth tiers (`quick`/`standard`/`deep`), with `sources`, and with `save`. Run it on its own, then optionally re-run `/briefing` to see how the new declarations enrich your briefings.
 
@@ -173,7 +173,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Read-only on the project.** The skill never modifies project files; the only exception is the briefing log it writes to `briefing-log/` when you invoke it with `save`.
 - **`git fetch`, never `git pull`.** Fetching updates refs without modifying the working tree, so the briefing can compute accurate ahead/behind without risking a merge mid-task. Fetch failures are tolerated — the briefing falls back to stale refs and surfaces the gap in the footer.
 - **Anti-fabrication.** Every data point comes from a source read this invocation. No invented PR numbers, file paths, SHAs, or URLs. Stale data labelled stale beats stale data presented as fresh.
-- **Honest about gaps.** Source unreachable, declared tracker missing, no `## Project context` section, network down — orientation-affecting gaps name themselves in the conditional `★ About this briefing` block. Setup-affecting gaps surface in `/briefing sources` if you ask for them. Never papered over.
+- **Honest about gaps.** Source unreachable, declared tracker missing, no `## Project Context` section, network down — orientation-affecting gaps name themselves in the conditional `★ About this briefing` block. Setup-affecting gaps surface in `/briefing sources` if you ask for them. Never papered over.
 - **No transcripts.** The skill never reads raw conversation transcripts on disk, even at `deep`. That would undermine the working-memory discipline (`docs/` artifacts become optional if briefings can recover from transcripts), and the on-disk format is undocumented Anthropic internals.
 - **Single file.** All ~530 lines live in one `SKILL.md`. Easy to share, easy to extend, easy to grep.
 
@@ -190,7 +190,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Claude Code** installed (any recent version).
 - **`git`** (almost certainly already installed).
 - **`gh` CLI** authenticated, optional but strongly recommended — without it the skill skips GitHub PR/issue/CI lookups and notes the gap in the footer.
-- A project-tracker CLI or MCP server, only if you've declared one in `## Project context` (e.g. `linear-cli`, Notion MCP).
+- A project-tracker CLI or MCP server, only if you've declared one in `## Project Context` (e.g. `linear-cli`, Notion MCP).
 
 ## Sharing
 
@@ -200,7 +200,7 @@ This whole thing is one `SKILL.md` file. To share with someone:
 2. They put it at `~/.claude/skills/briefing/SKILL.md`.
 3. Restart Claude Code.
 
-For the briefing to be richer than Layer 1 in a colleague's repo, they also add a `## Project context` section to that repo's CLAUDE.md. The `templates/default-project/CLAUDE.md` in this repo includes the section as scaffolding.
+For the briefing to be richer than Layer 1 in a colleague's repo, they also add a `## Project Context` section to that repo's CLAUDE.md. The `templates/default-project/CLAUDE.md` in this repo includes the section as scaffolding.
 
 That's it. No package install, no plugin marketplace, no auth setup beyond the optional `gh` CLI.
 
@@ -210,7 +210,7 @@ That's it. No package install, no plugin marketplace, no auth setup beyond the o
 - **[`docs/2-design/2026-05-03-briefing-footer-redesign-design.md`](../../docs/2-design/2026-05-03-briefing-footer-redesign-design.md)** — footer redesign (conditional `★ About this briefing` block + `/briefing sources` mode). Most recent design.
 - **[`docs/2-design/2026-05-03-briefing-skill-shareability-design.md`](../../docs/2-design/2026-05-03-briefing-skill-shareability-design.md)** — prior design (4-layer architecture). Background for the layered source model. Superseded for the footer behaviour by the redesign above.
 - **[`docs/2-design/2026-05-02-briefing-skill-design.md`](../../docs/2-design/2026-05-02-briefing-skill-design.md)** — original design (3-layer model). Historical reference; the layered-source-model rationale and the deferred Approach C (Stop-hook snapshot schema) live here.
-- **[`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd)** — the canonical `## Project context` schema this skill consumes.
+- **[`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd)** — the canonical `## Project Context` schema this skill consumes.
 - **[`templates/default-project/CLAUDE.md`](../../templates/default-project/CLAUDE.md)** — generic CLAUDE.md scaffold that ships with the section pre-populated.
 - **[`/learn`](../learn/)** — sibling skill in this repo. Same single-file shape, same closed-keyword parser pattern, same canonical depth vocabulary (`quick`/`standard`/`deep`) — different default behaviour and different problem domain (lessons, not orientation).
 

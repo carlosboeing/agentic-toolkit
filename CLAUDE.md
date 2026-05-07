@@ -8,7 +8,7 @@ This file is auto-loaded on every session. It's the CC-facing brief; `README.md`
 
 A personal collection of Claude Code resources I've built up — skills, guides, references — designed to be portable and shareable. Public-ish (currently a private GitHub repo, may go public later). Not a polished product; opinionated to one workflow.
 
-## Project context
+## Project Context
 
 Declares where project-tracking information lives so the [`/briefing`](skills/briefing/) skill (and other AI tools) can read it without guessing. Convention: [§5.8 of the conventions guide](guides/guide-project-structure-and-conventions.md#58--project-context-section-in-claudemd).
 

@@ -493,7 +493,7 @@ Why Mermaid:
 
 Fall back to other tools (draw.io, Excalidraw) only when Mermaid genuinely can't represent what you need. Commit both source and rendered output if you do.
 
-### 5.8 `## Project context` section in CLAUDE.md
+### 5.8 `## Project Context` section in CLAUDE.md
 
 CLAUDE.md should declare where project-tracking information lives, so AI tools can read it without guessing. The canonical consumer is the [`/briefing`](../skills/briefing/) skill — it auto-discovers state across git, GitHub, the canonical `docs/` working-memory layout, and any tracker source declared here.
 
@@ -514,7 +514,7 @@ Each line is `- **Field**: value`. Recognised fields:
 A fully-populated section for a typical solo project following the canonical conventions:
 
 ```markdown
-## Project context
+## Project Context
 
 - **Tracker**: GitHub Issues
 - **Board**: none
@@ -530,7 +530,7 @@ A fully-populated section for a typical solo project following the canonical con
 A non-canonical project that uses flat `docs/plans/` and tracks work in Linear:
 
 ```markdown
-## Project context
+## Project Context
 
 - **Tracker**: Linear team SHARELOG
 - **Board**: https://linear.app/sharelog/team/SHARELOG/board
@@ -971,7 +971,7 @@ Audit `docs/1-discovery/` for files that aren't actually research artifacts (no 
 
 - Add/refresh the `docs/ = working memory` framing.
 - Update the layout block to match the new structure.
-- Add a `## Project context` section per §5.8. Copy the field list from [`templates/default-project/CLAUDE.md`](../templates/default-project/CLAUDE.md) and fill in the values. If a field doesn't apply (no formal tracker, no separate architecture doc, etc.), set the value to `none` so the `/briefing` skill knows the absence is intentional.
+- Add a `## Project Context` section per §5.8. Copy the field list from [`templates/default-project/CLAUDE.md`](../templates/default-project/CLAUDE.md) and fill in the values. If a field doesn't apply (no formal tracker, no separate architecture doc, etc.), set the value to `none` so the `/briefing` skill knows the absence is intentional.
 - Run a fresh CC session and confirm context loading is coherent.
 
 ### 10.7 Verification
