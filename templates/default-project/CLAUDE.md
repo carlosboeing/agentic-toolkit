@@ -8,7 +8,7 @@ This file is auto-loaded on every session. It is the operator-facing brief; `REA
 
 <one paragraph: what the project is, who/what it's for, current stage. Replace this placeholder.>
 
-## Project Context
+## Project Map
 
 <!--
 This section declares where project-tracking information lives so AI tools
