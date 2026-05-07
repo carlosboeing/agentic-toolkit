@@ -533,54 +533,112 @@ Triggered by passing `sources` as the mode keyword. Can't be combined with depth
 
 ### Output template
 
+Sources mode renders as markdown — H2 title, H3 sub-sections, fenced code blocks for column-aligned data rows, and a closing block that adapts to project state. Section ordering follows probe order (Project State → Project Map → Canonical Structure → Other Layouts Found), so the reader walks the same path the skill walks.
+
+````
+## Briefing Sources for <project-name>
+
+A read-only view of every source `/briefing` checks — git/GitHub state, your declared `## Project Map`, canonical-structure signals, and non-default layouts found in the project. Use it to spot gaps; pair with `/briefing setup` to fill them interactively.
+
+### Project State (git + GitHub)
+
+Live universal probes — run in every project.
+
 ```
-Briefing sources — <project-name>
-
-What this skill reads:
-
-  Always-on
-    git status, recent commits, stashes, worktrees, GitHub PRs/issues/CI
-
-  Declared (highest priority)
-    `## Project Map` in CLAUDE.md
-    Fields: Tracker, Board, Roadmap, Changelog, Architecture, Working memory, Other
-
-  Default paths (when not declared)
-    Roadmap → docs/ROADMAP.md → ROADMAP.md
-    Changelog → docs/CHANGELOG.md → CHANGELOG.md
-    Working memory → `docs/[0-9]-*/`, `docs/adrs/`, files with `status:` frontmatter
-    ADRs → `docs/adrs/NNNN-*.md` → `docs/architecture/decisions/`, `decisions/`, `adr/`
-
-  Fallbacks
-    When a source can't be reached or doesn't exist, this skill names
-    the gap explicitly rather than inventing data.
-
-What was read in this project:
-
-- **Always-on:** git (`<state>`); gh (`<state>`)
-- **Declared:** `<field>=<path>`, `<field>=none`, ... OR `(none)` if `## Project Map` is absent
-- **Default paths matched:** `<paths that hit>`, ... OR `(none)`
-- **Inferred from prose:** `<field>=<path>` (`<CLAUDE.md or README.md>`), ... — only when Default paths's canonical probe missed AND a prose scan found a high-confidence link. Omit this line entirely when nothing was inferred.
-- **Not found:** `<paths probed but absent>`
-
-Notable non-canonical artifacts (conditional — render this section only when the skill detected working-memory-like files outside the canonical paths):
-
-- **`<path>`** — `<one-line description>` (e.g. "design + plan pairs, date-prefixed"). Suggestion: declare under `## Project Map` as `**Working memory**: <path>` to surface in future briefings.
-- **`<path>`** — ...
-
-If nothing non-canonical was detected, omit this section entirely.
-
-Want richer briefings? Two paths, both equally valid:
-  - Declare additional locations in `## Project Map`. Example:
-      - **Adrs**: docs/architecture/decisions/
-  - Or adopt canonical conventions for zero-config: <CANONICAL_CONVENTIONS_URL>
-
-Last synced from the conventions guide: 2026-05-06
+✓ git    <branch · clean/dirty · ahead/behind · stashes · worktrees>
+✓ gh     <auth state · PR / issue / CI counts>
 ```
 
-### Empty-layer rendering
+### Project Map (<state in CLAUDE.md>)
 
-When a layer has no entries (e.g. project declared no `## Project Map` and no canonical default paths matched), render the layer header with `(none)` underneath rather than omitting the layer. Transparency is the purpose of this view.
+Where you tell the skill which paths matter.
+
+```
+✓ <field>          <value>                  [optional one-line suffix]
+⊘ <field>          declared none
+✗ <field>          <one-line gap description, or — if no auto-detection>
+```
+
+### Canonical Structure (<state>)
+
+Auto-fills undeclared Map fields when the project follows convention paths.
+
+```
+✓ <signal>         <one-line summary>
+✗ <signal>         <one-line gap description>
+```
+
+### Other Layouts Found
+
+Non-default paths the skill noticed.
+
+```
+• <path>            <one-line description>
+                    <optional continuation lines>
+```
+
+---
+
+**Legend:** ✓ found · ⊘ declared none · ✗ missing · — no auto-detection
+
+**<status line>**
+
+→ **`/briefing setup`**
+<reason tailored to state>
+
+*Last synced from the conventions guide: 2026-05-06*
+````
+
+### Heading state suffixes
+
+Each H3 heading folds current state into a parenthetical so the reader sees status at scan-time without reading the body.
+
+| Section | State condition | Heading |
+|---|---|---|
+| Project State | always | `### Project State (git + GitHub)` |
+| Project Map | `## Project Map` declared in CLAUDE.md | `### Project Map (Declared in CLAUDE.md)` |
+| Project Map | `## Project Map` absent | `### Project Map (No Section Found in CLAUDE.md)` |
+| Canonical Structure | ≥ 1 signal returns ✓ or ✗ | `### Canonical Structure` |
+| Canonical Structure | No signal preconditions met | `### Canonical Structure (Not Detected)` — code block omitted, hint stays |
+| Other Layouts Found | ≥ 1 non-canonical artifact found | `### Other Layouts Found` |
+| Other Layouts Found | none found | section omitted entirely (no heading, no body) |
+
+The `(git + GitHub)` parenthetical stays lowercase: `git` and `gh`/`GitHub` are tool names with established casing, not Title-Case content words.
+
+### Marker rules
+
+Every data row carries one of three markers, with zone-specific semantics:
+
+| Zone | ✓ means | ⊘ means | ✗ means |
+|---|---|---|---|
+| **Project State** | Probe ran successfully | (not used — always-on probes have no deliberately-none state) | Probe failed (not a git repo, `gh` missing, `gh` unauthed) |
+| **Project Map** | Field has a usable value (declared, detected, or inferred) | Field declared as `none` (deliberate empty) | Field undeclared AND not detected AND not inferred |
+| **Canonical Structure** | Default-paths probe found the canonical signature | (not used) | Probe ran (precondition met) but signature not present |
+
+For Project Map fields with no auto-detection mechanism in sources mode (Tracker, Board, Other), `✗` rows render the suffix as `—` rather than a probe-paths list.
+
+`Other Layouts Found` rows use `•` (no status marker) — they are FYI findings, not state indicators.
+
+The legend rendering is unconditional — render every time, even when only one marker type is in use, so users learning the symbols see them defined consistently.
+
+### Adaptive closing
+
+Below the `---` rule: legend, status, CTA, date stamp. The status line summarises Project Map state in plain English; the CTA always points at `/briefing setup` with reason text tailored to state.
+
+| Project Map state | Status line | CTA reason |
+|---|---|---|
+| All fields ✓ or ⊘ (no ✗) | `**All declared Map fields resolved.**` | `Declare additional sources or fix any ✗ above.` |
+| Any ✗ in Project Map zone | `**Project Map has <N> missing field(s).**` | `Probe the project, populate missing fields, write only after you confirm.` |
+| `## Project Map` section absent | `` **No `## Project Map` section in CLAUDE.md.** `` | `Adds the section interactively. Probes the project, fills detectable fields, writes only after you confirm.` |
+
+The CTA always renders as two lines:
+
+```
+→ **`/briefing setup`**
+<reason on its own line>
+```
+
+The arrow + bold backticked command on their own line is the visual anchor; the reason on the line below stays compact (single sentence).
 
 ### Date stamp
 
@@ -594,11 +652,13 @@ The `Last synced from the conventions guide: <YYYY-MM-DD>` stamp is a maintainer
 
 ### Tone
 
-The view is descriptive, not prescriptive. The "Two paths, both equally valid" framing is non-preferential between Declared and Default-paths approaches: a project using `decisions/` instead of `docs/adrs/` and declaring the path is a first-class hit, not a deviation. Never imply canonical conventions are preferred.
+The view is descriptive, not prescriptive. The CTA points at `/briefing setup` because that's the dedicated entry point for declaring `## Project Map` — not as a recommendation to adopt canonical conventions. Declared paths are first-class even when non-canonical: a project declaring `decisions/` for ADRs is as resolved as one using `docs/adrs/`. Never imply canonical conventions are preferred over declared paths.
+
+Section hints (one line under each heading) describe the section's *purpose*, not its contents (the rows do that). They orient first-time readers without lecturing returning ones.
 
 ### Output isolation
 
-`/briefing sources` is a self-contained view. The output is *exactly* the template above (with the conditional "Notable non-canonical artifacts" section when applicable) — nothing else. Don't include:
+`/briefing sources` is a self-contained view. The output is *exactly* the template above (with the conditional `### Other Layouts Found` section rendered when artifacts are present, and the `### Canonical Structure` body omitted when no signal preconditions are met) — nothing else. Don't include:
 
 - **Default-mode briefing sections** — TL;DR, Snapshot, What's in flight, Recent activity, What's next, Decisions / attention. Those belong to `/briefing` (default mode), not sources mode. The user has explicitly asked for the self-documentation view; don't bolt the orientation view on top.
 - **`★ About this briefing` bullets other than bullet 6 (depth conflict).** Bullet 2 ("Briefing relied on git/gh only — `/briefing sources` to see what else this skill can read") is *circular* when the user is already in sources mode — suppress it. Bullets 1, 3, 4, 5, 7 don't apply either: they describe the default-mode briefing's source coverage, not the sources view's own state. Only bullet 6 (depth conflict, e.g. `Depth ignored when 'sources' mode is active`) legitimately fires here.
