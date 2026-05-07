@@ -78,6 +78,12 @@ Conventional Commits format: `<type>(<scope>): <description>`. Types: `feat`, `f
 
 Don't use `#N` in the subject or body unless intentionally referencing a GitHub issue (auto-links).
 
+### Pre-commit checklist (when shipping)
+
+A "ship" is a commit that changes user-facing behaviour or content (new skill mode, new guide, refactor of how a skill renders). When you're about to commit one, **`docs/ROADMAP.md` and `docs/CHANGELOG.md` must be staged in the same commit** — one atomic unit covering "what shipped" plus "where it's recorded". Move the relevant ROADMAP item to `## Recently shipped`; append a CHANGELOG entry under today's date.
+
+Heuristic for spotting a ship: the staged diff touches `skills/`, `plugins/`, `agents/`, `hooks/`, `mcp-servers/`, `output-styles/`, `commands/`, `guides/`, `reference/`, `prompts/`, or `templates/`. The decision rule is *user-facing behaviour change*, not *file path* — so doc-internal cleanup (typo fixes, comment polish, internal-note formatting) opt out and commit alone.
+
 ## Working principles for CC sessions
 
 - **The repo is small and read-easy.** Don't dispatch search agents for cross-file analysis — `grep`/`rg` and direct reads are faster.
