@@ -19,7 +19,7 @@ Declares where project-tracking information lives so the [`/briefing`](skills/br
 - **Architecture**: none (per-type catalog READMEs serve the always-current-state role — see [README.md](README.md) and [skills/README.md](skills/README.md); this is documented in the `docs/` framing below)
 - **Working memory**: `docs/` (numbered lifecycle convention)
 - **Other**:
-  - Repo is the source of truth for skills; the harness loads from `~/.claude/skills/`. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly.
+  - Repo is the source of truth for skills; the harness loads from `~/.claude/skills/`. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. If `~/.claude/` is under source control (currently: `carlosboeing/claude-config`), commit and push the synced files there too as a separate `chore(<scope>): sync from claude-code-resources` commit.
   - No CI configured; validation is manual / via `/ultrareview` on demand.
 
 ## Layout
