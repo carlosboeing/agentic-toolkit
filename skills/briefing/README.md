@@ -202,7 +202,7 @@ This whole thing is one `SKILL.md` file. To share with someone:
 2. They put it at `~/.claude/skills/briefing/SKILL.md`.
 3. Restart Claude Code.
 
-For the briefing to be richer than Layer 1 in a colleague's repo, they also add a `## Project Map` section to that repo's CLAUDE.md. The `templates/default-project/CLAUDE.md` in this repo includes the section as scaffolding.
+For the briefing to be richer than Always-on in a colleague's repo, they also add a `## Project Map` section to that repo's CLAUDE.md. The `templates/default-project/CLAUDE.md` in this repo includes the section as scaffolding.
 
 That's it. No package install, no plugin marketplace, no auth setup beyond the optional `gh` CLI.
 

@@ -96,22 +96,20 @@ The parser is order-independent and case-insensitive. Two of the same bucket is 
 
 ## Source layering
 
-> **Note on labels:** `L1`, `L2a`, `L2b`, and `L3` are internal architecture codes used inside this Source-layering section (and the Layer 3 failure-mode table + In-flight detection table) to discuss the model precisely. They are **not user-facing** — neither default-mode briefings nor `/briefing sources` ever emit them. Rendering instructions elsewhere in this spec use plain language (e.g. "the resolved roadmap path", "sources declared in `## Project Map`"). The user-facing labels in `/briefing sources` are **Always-on** (≈ L1), **Declared** (≈ L2a), **Default paths** (≈ L2b), and **Fallbacks** (≈ L3).
-
-The briefing reads from four layers, each with a clear failure mode:
+The briefing reads from four layers, each with a clear failure mode. The same names are used throughout this spec and in user-facing output (e.g. `/briefing sources`) — no separate vocabulary.
 
 | Layer | What it does | Fails when… |
 |---|---|---|
-| **L1 — Universal mechanics** | Probes git, GitHub, top-level files, per-project memory. Knows nothing about specific conventions. | The project isn't a git repo (skip git/gh; fall back to file discovery only). |
-| **L2a — Explicit declarations** | Reads `## Project Map` from CLAUDE.md. Declared fields are authoritative. | The section is absent (skip L2a entirely; rely on L2b). |
-| **L2b — Convention sniffing** | Probes for canonical-conventions signatures (`docs/0-brainstorms/`, `docs/ROADMAP.md`, status frontmatter, ROADMAP section names). Fills in any field L2a didn't declare. | The project doesn't follow the canonical conventions (skip the lit-up behaviour; degrade to L1-only output). |
-| **L3 — Graceful degradation** | Standing instructions for every failure mode. Names every gap in the footer; never fabricates. | (L3 is itself the failure-handling layer; it doesn't fail.) |
+| **Always-on — universal mechanics** | Probes git, GitHub, top-level files, per-project memory. Knows nothing about specific conventions. | The project isn't a git repo (skip git/gh; fall back to file discovery only). |
+| **Declared — explicit declarations** | Reads `## Project Map` from CLAUDE.md. Declared fields are authoritative. | The section is absent (skip Declared entirely; rely on Default paths). |
+| **Default paths — convention sniffing** | Probes for canonical-conventions signatures (`docs/0-brainstorms/`, `docs/ROADMAP.md`, status frontmatter, ROADMAP section names). Fills in any field Declared didn't specify. | The project doesn't follow the canonical conventions (skip the lit-up behaviour; degrade to Always-on-only output). |
+| **Fallbacks — graceful degradation** | Standing instructions for every failure mode. Names every gap in the output; never fabricates. | (Fallbacks is itself the failure-handling layer; it doesn't fail.) |
 
-Run L1 unconditionally. Read L2a if `## Project Map` is present in CLAUDE.md. Run L2b for any field L2a didn't declare. Apply L3's standing instructions to any source that fails along the way.
+**Precedence and ordering:** Always-on runs unconditionally. Declared takes precedence over Default paths — read Declared if `## Project Map` is present in CLAUDE.md. Default paths fills any field Declared didn't specify. Fallbacks applies to any source that fails along the way.
 
-### Layer 1 — Universal mechanics
+### Always-on — universal mechanics
 
-These sources run unconditionally, with no project configuration required and no convention assumed. Probe each one in order; if a step fails, apply the matching Layer 3 instruction and continue.
+These sources run unconditionally, with no project configuration required and no convention assumed. Probe each one in order; if a step fails, apply the matching Fallbacks instruction and continue.
 
 **Git state (branch, ahead/behind, dirty status, recent history):**
 
@@ -129,7 +127,7 @@ git log --oneline -10                                   # last 10 commits
 > updates refs without modifying the working tree, so the briefing can
 > compute accurate ahead/behind without risking a merge mid-task.
 > If the fetch fails (network down, no remote, auth error), continue
-> with stale refs and surface the failure in the footer — see Layer 3.
+> with stale refs and surface the failure in the footer — see Fallbacks.
 
 ```bash
 git fetch --quiet 2>/dev/null || true   # safe no-op if no remote
@@ -166,7 +164,7 @@ gh issue list --state open --assignee @me   # issues assigned to you
 gh run list --branch "$(git rev-parse --abbrev-ref HEAD)" --limit 5   # CI status of current branch
 ```
 
-If `gh` is missing or unauthenticated, skip these and note the gap in the footer (Layer 3).
+If `gh` is missing or unauthenticated, skip these and note the gap in the footer (Fallbacks).
 
 **Top-level docs (well-known by name, not a convention):**
 
@@ -174,7 +172,7 @@ If `gh` is missing or unauthenticated, skip these and note the gap in the footer
 ls -l README.md CLAUDE.md 2>/dev/null   # mtimes for staleness check
 ```
 
-These files are typically already loaded in the conversation context; the recheck is for noticing recent edits, not for re-reading content unless mtimes suggest staleness. They are universal open-source-convention files, not project-specific — that's why they live in L1.
+These files are typically already loaded in the conversation context; the recheck is for noticing recent edits, not for re-reading content unless mtimes suggest staleness. They are universal open-source-convention files, not project-specific — that's why they live in Always-on.
 
 **Per-project memory:**
 
@@ -185,9 +183,9 @@ slug="$(pwd | sed 's|/|-|g')"               # /a/b/c → -a-b-c
 ls -l "$HOME/.claude/projects/$slug/memory/MEMORY.md" 2>/dev/null
 ```
 
-If the index file exists (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one. This is a Claude Code mechanic, not a project convention, so it lives in L1.
+If the index file exists (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one. This is a Claude Code mechanic, not a project convention, so it lives in Always-on.
 
-### Layer 2a — Explicit declarations via CLAUDE.md
+### Declared — explicit declarations via CLAUDE.md
 
 Read the `## Project Map` section from CLAUDE.md (already in your context). Each line is `- **Field**: value`. Recognised fields:
 
@@ -199,7 +197,7 @@ Read the `## Project Map` section from CLAUDE.md (already in your context). Each
 - **Working memory** — directory holding the lifecycle artifacts (e.g. `docs/`).
 - **Other** — free-form bullet list for project-specific context.
 
-Declared fields are **authoritative** — they override any L2b sniffing. A field set to `none` means "deliberately empty" (do not probe further); an absent field means "L2b can probe a default" (see L2b table below).
+Declared fields are **authoritative** — they override any Default paths sniffing. A field set to `none` means "deliberately empty" (do not probe further); an absent field means "Default paths can probe a default" (see Default paths table below).
 
 For complete examples (canonical + non-canonical project layouts), per-field decision guidance, and discovery hints (how to figure out what to put in each field), see [§5.8 of the canonical conventions guide](`<CANONICAL_CONVENTIONS_URL>`#58--project-map-section-in-claudemd).
 
@@ -214,7 +212,7 @@ The probe matches all variants:
 grep -i -E '^## Project (Map|Context)' CLAUDE.md
 ```
 
-If absent, skip the L2a read entirely and proceed to L2b. When a deprecated variant matches, L2a still reads the section as authoritative; the deprecation does not affect parsing. `/briefing setup` proposes a header rename to the canonical form when run on a project with a deprecated section name (see **Existing `## Project Map`** below).
+If absent, skip the Declared read entirely and proceed to Default paths. When a deprecated variant matches, Declared still reads the section as authoritative; the deprecation does not affect parsing. `/briefing setup` proposes a header rename to the canonical form when run on a project with a deprecated section name (see **Existing `## Project Map`** below).
 
 #### Tracker integration recipes
 
@@ -231,11 +229,11 @@ For each declared tracker, use the matching query path. Name the gap explicitly 
 | `<URL>` | `WebFetch` (best-effort; flag if auth-walled) |
 | `none` | Skip; note in footer |
 
-### Layer 2b — Convention sniffing
+### Default paths — convention sniffing
 
-For each "what's the project's structure?" question that L2a did not declare, probe for canonical-conventions signatures. The canonical conventions are documented at `<CANONICAL_CONVENTIONS_URL>`; this skill is *aware* of them but not *coupled* to them — when none of the signatures match, the skill degrades gracefully to L1-only output.
+For each "what's the project's structure?" question that Declared did not declare, probe for canonical-conventions signatures. The canonical conventions are documented at `<CANONICAL_CONVENTIONS_URL>`; this skill is *aware* of them but not *coupled* to them — when none of the signatures match, the skill degrades gracefully to Always-on-only output.
 
-| Question | If L2a declared it | Else, L2b probe order | Fallback (no match) |
+| Question | If Declared specified it | Else, Default paths probe order | Fallback (no match) |
 |---|---|---|---|
 | Where's the roadmap? | Use `Roadmap` field | `docs/ROADMAP.md` (canonical) → `ROADMAP.md` (root) | Note in footer; skip roadmap section |
 | Where's the changelog? | Use `Changelog` field | `docs/CHANGELOG.md` (canonical) → `CHANGELOG.md` (root) | Note in footer; skip changelog references |
@@ -247,7 +245,7 @@ For each "what's the project's structure?" question that L2a did not declare, pr
 When probing the lifecycle for-loop, prefer the canonical glob if detected; otherwise list what was actually found:
 
 ```bash
-# Canonical-conventions glob (used when L2b detects the canonical layout)
+# Canonical-conventions glob (used when Default paths detects the canonical layout)
 for d in docs/[0-9]-* docs/adrs; do
   [ -d "$d" ] || continue
   find "$d" -maxdepth 1 -name '*.md' -print0 2>/dev/null \
@@ -262,7 +260,7 @@ The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`,
 
 #### Prose-inference fallback
 
-When L2a is absent (no `## Project Map` section in CLAUDE.md, even after case-insensitive probe) AND L2b's primary canonical-path probe finds nothing for a given field, attempt a soft prose scan of `CLAUDE.md` and `README.md` as a last-resort fallback before declaring the field "not found".
+When Declared is absent (no `## Project Map` section in CLAUDE.md, even after case-insensitive probe) AND Default paths's primary canonical-path probe finds nothing for a given field, attempt a soft prose scan of `CLAUDE.md` and `README.md` as a last-resort fallback before declaring the field "not found".
 
 Per-field inference rules (only the fields with high signal-to-noise; others stay "not found"):
 
@@ -308,7 +306,7 @@ The 7-signature tally feeds two outputs:
 
 Read-only. Descriptive, not prescriptive.
 
-### Layer 3 — Graceful degradation
+### Fallbacks — graceful degradation
 
 Standing instructions for when a source fails. Never fabricate; always name the gap.
 
@@ -319,10 +317,10 @@ Standing instructions for when a source fails. Never fabricate; always name the 
 | `gh` missing or unauthed | Skip GitHub queries; render `★ About this briefing` bullet 4 (`GitHub queries skipped (gh not authenticated)` or `(gh not installed)`) |
 | `git fetch` slow / network down | Use stale refs; render `★ About this briefing` bullet 3 (`Refs from last fetch <relative-date>`) |
 | `git fetch` fails with auth error on a configured remote | Use stale refs; render `★ About this briefing` bullet 3 variant (`Fetch failed (auth) — refs may be stale; check credentials`) |
-| L2a absent + L2b detected nothing | Run L1 only; render `★ About this briefing` bullet 2 (`Briefing relied on git/gh only — /briefing sources to see what else this skill can read.`) |
-| L2a absent + L2b partial | Stay quiet in default-mode output. User can run `/briefing sources` to see what was found. |
-| Declared L2a source unreachable (auth-walled, missing CLI/MCP) | Render `★ About this briefing` bullet 1 (`Some sources unavailable — /briefing sources for details.`) or, when the unreachable source is specifically a tracker integration, bullet 5 (`<Tracker> declared but <CLI> not available — install or configure MCP`) |
-| Working memory not found at any L2b path | If a path was declared via `## Project Map` and failed → bullet 1. Otherwise stay quiet. |
+| Declared absent + Default paths detected nothing | Run Always-on only; render `★ About this briefing` bullet 2 (`Briefing relied on git/gh only — /briefing sources to see what else this skill can read.`) |
+| Declared absent + Default paths partial | Stay quiet in default-mode output. User can run `/briefing sources` to see what was found. |
+| Declared Declared source unreachable (auth-walled, missing CLI/MCP) | Render `★ About this briefing` bullet 1 (`Some sources unavailable — /briefing sources for details.`) or, when the unreachable source is specifically a tracker integration, bullet 5 (`<Tracker> declared but <CLI> not available — install or configure MCP`) |
+| Working memory not found at any Default paths path | If a path was declared via `## Project Map` and failed → bullet 1. Otherwise stay quiet. |
 | Diff over per-file cap (200 lines) | Summarise rather than dump |
 | Detached HEAD | Render `★ About this briefing` bullet 7 (`On detached HEAD; reporting against nearest branch <X>`) |
 | Empty repo / no `docs/` | Produce a minimal briefing; do not invent suggestions |
@@ -334,17 +332,17 @@ What triggers the briefing's adaptive output to lead with active work. Universal
 
 | Signal | Strength | Source / notes |
 |---|---|---|
-| Open PR authored by me | Strong | from L1 `gh pr list --author @me --state open` |
-| Unpushed commits on current branch | Strong | from L1 `git rev-list --count @{upstream}..HEAD`; covers "branch ahead of upstream" |
-| Unpushed commits on *other* local branches | Strong | from L1 `git for-each-ref` + ahead counts |
-| Stashes | Strong | from L1 `git stash list`; the most-forgotten state in git |
-| Working tree dirty (uncommitted edits) | Strong | from L1 `git status --porcelain`; read content of changed files (200-line cap) |
-| Tracker items in "in progress" status | Strong | from L2a tracker integration; only if a tracker is declared |
-| ROADMAP "in-flight section" non-empty | Strong | from L2b-resolved roadmap path + L2b-resolved in-flight section regex |
-| Lifecycle artifacts with in-flight status | Strong | from L2b-resolved working-memory dirs + L2b-resolved in-flight status set |
-| Local-only branches (no upstream) | Medium | from L1 `git branch -vv` filter |
-| Worktrees (count > 1) | Medium | from L1 `git worktree list` |
-| Recent commits in last 24h | Weak | from L1 `git log --since=1.day`; orientation only, never leads |
+| Open PR authored by me | Strong | from Always-on `gh pr list --author @me --state open` |
+| Unpushed commits on current branch | Strong | from Always-on `git rev-list --count @{upstream}..HEAD`; covers "branch ahead of upstream" |
+| Unpushed commits on *other* local branches | Strong | from Always-on `git for-each-ref` + ahead counts |
+| Stashes | Strong | from Always-on `git stash list`; the most-forgotten state in git |
+| Working tree dirty (uncommitted edits) | Strong | from Always-on `git status --porcelain`; read content of changed files (200-line cap) |
+| Tracker items in "in progress" status | Strong | from Declared tracker integration; only if a tracker is declared |
+| ROADMAP "in-flight section" non-empty | Strong | from the resolved roadmap path + in-flight section regex (via Default paths) |
+| Lifecycle artifacts with in-flight status | Strong | from the resolved working-memory dirs + in-flight status set (via Default paths) |
+| Local-only branches (no upstream) | Medium | from Always-on `git branch -vv` filter |
+| Worktrees (count > 1) | Medium | from Always-on `git worktree list` |
+| Recent commits in last 24h | Weak | from Always-on `git log --since=1.day`; orientation only, never leads |
 
 **Detection rule:** if any signal labelled **Strong** in the table above is present, the output leads with the **What's in flight** section. Otherwise lead with **Recent activity** and **What's next**. Don't sum or score — any single Strong-labelled signal is enough to flip the lead. Medium-labelled signals never trigger the lead but are reported (under **What's in flight** when it runs, otherwise under **Recent activity**). Weak-labelled signals never lead and feed **Recent activity** only.
 
@@ -562,7 +560,7 @@ What was read in this project:
 - **Always-on:** git (`<state>`); gh (`<state>`)
 - **Declared:** `<field>=<path>`, `<field>=none`, ... OR `(none)` if `## Project Map` is absent
 - **Default paths matched:** `<paths that hit>`, ... OR `(none)`
-- **Inferred from prose:** `<field>=<path>` (`<CLAUDE.md or README.md>`), ... — only when L2b's canonical probe missed AND a prose scan found a high-confidence link. Omit this line entirely when nothing was inferred.
+- **Inferred from prose:** `<field>=<path>` (`<CLAUDE.md or README.md>`), ... — only when Default paths's canonical probe missed AND a prose scan found a high-confidence link. Omit this line entirely when nothing was inferred.
 - **Not found:** `<paths probed but absent>`
 
 Notable non-canonical artifacts (conditional — render this section only when the skill detected working-memory-like files outside the canonical paths):
@@ -677,11 +675,11 @@ the proposal first.
 
 Pre-fill rules per field:
 
-- **Tracker** — Try `gh issue list --limit 1` against the current GitHub remote. If it returns issues → `GitHub Issues`. Else apply the L2b prose-inference rule (scan CLAUDE.md/README for explicit mentions of `Linear team <name>`, `Jira project <name>`, `Notion`). Else if `linear-cli` is in `$PATH` → `<placeholder: Linear team <NAME>>`. Else if no detection → `<placeholder: GitHub Issues / Linear team X / Jira project Y / none>`.
+- **Tracker** — Try `gh issue list --limit 1` against the current GitHub remote. If it returns issues → `GitHub Issues`. Else apply the Default paths prose-inference rule (scan CLAUDE.md/README for explicit mentions of `Linear team <name>`, `Jira project <name>`, `Notion`). Else if `linear-cli` is in `$PATH` → `<placeholder: Linear team <NAME>>`. Else if no detection → `<placeholder: GitHub Issues / Linear team X / Jira project Y / none>`.
 - **Board** — No reliable detection. Default `none` with a note that the user can paste a URL.
-- **Roadmap** — Probe `docs/ROADMAP.md` → `ROADMAP.md` (root) → L2b prose inference (markdown links to `*roadmap*.md`) → `none`.
-- **Changelog** — Probe `docs/CHANGELOG.md` → `CHANGELOG.md` (root) → L2b prose inference (markdown links to `*changelog*.md`) → `none`.
-- **Architecture** — Probe `docs/architecture.md` → `docs/system/` → L2b prose inference (markdown links to `*architecture*.md`) → `none`.
+- **Roadmap** — Probe `docs/ROADMAP.md` → `ROADMAP.md` (root) → Default paths prose inference (markdown links to `*roadmap*.md`) → `none`.
+- **Changelog** — Probe `docs/CHANGELOG.md` → `CHANGELOG.md` (root) → Default paths prose inference (markdown links to `*changelog*.md`) → `none`.
+- **Architecture** — Probe `docs/architecture.md` → `docs/system/` → Default paths prose inference (markdown links to `*architecture*.md`) → `none`.
 - **Working memory** — Canonical layout (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all present) → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`. (Prose inference skipped — directory inference is too low signal.)
 - **Other** — Pre-suggest bullets based on detections: non-canonical working-memory layouts (e.g. `docs/plans/` with date-prefixed files), test-artefact directories (e.g. `tmp/tst_*`), custom scripts in `bin/` or `scripts/`. If nothing notable, leave a `<placeholder>` line.
 
@@ -689,11 +687,11 @@ When a value comes from prose inference, mark it in the proposal output with `(i
 
 ### Always write the canonical name
 
-Always emit the canonical `## Project Map` (Title Case) header. The L2a probe matches both the canonical name and two deprecated earlier names (`## Project Context`, `## Project context`) for backward compatibility, but new writes always use `## Project Map`. When updating an existing section under any deprecated name, surface the rename as one of the diff items so the user sees and confirms it.
+Always emit the canonical `## Project Map` (Title Case) header. The Declared probe matches both the canonical name and two deprecated earlier names (`## Project Context`, `## Project context`) for backward compatibility, but new writes always use `## Project Map`. When updating an existing section under any deprecated name, surface the rename as one of the diff items so the user sees and confirms it.
 
 ### Existing `## Project Map` (or deprecated variants)
 
-If CLAUDE.md already has a `## Project Map` section — or the deprecated `## Project Context` / `## Project context` — matched by the L2a case-insensitive probe:
+If CLAUDE.md already has a `## Project Map` section — or the deprecated `## Project Context` / `## Project context` — matched by the Declared case-insensitive probe:
 
 1. Parse the existing fields.
 2. Compute the diff against the proposed (detected) block.
@@ -814,7 +812,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 ## What NOT to do
 
 - Don't read raw conversation transcripts — see **Depth contract**, "Not read at any depth".
-- Don't `git pull` — only `git fetch`. The fetch is read-only and never modifies the working tree (see the git-refs-refresh callout under Layer 1 above).
+- Don't `git pull` — only `git fetch`. The fetch is read-only and never modifies the working tree (see the git-refs-refresh callout under Always-on above).
 - Don't dump per-file diffs over 200 lines — summarise as `path:line-range (~N lines, looks like <one-line summary>)`.
 - Don't fabricate PR numbers, file paths, commit SHAs, or URLs. If uncertain, omit or hedge.
 - Don't compute metrics — cite them from existing tooling (line counts, ahead/behind, dates).
