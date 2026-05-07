@@ -79,6 +79,8 @@ This is the "lights up with conventions" tier. A project that follows the canoni
 
 Default-mode briefings don't lobby for convention adoption — orientation output stays focused on the project state. If you want to see what this skill probed and what it found (canonical paths matched, declarations honoured, gaps named), run `/briefing sources`. That view frames declared paths via `## Project Context` as first-class equivalents to canonical defaults, not deviations.
 
+**Prose-inference last resort.** If `## Project Context` is absent AND the canonical-path probes find nothing for a given field, the skill scans `CLAUDE.md` and `README.md` prose for high-confidence hints — markdown links matching `*roadmap*.md`, `*changelog*.md`, `*architecture*.md`, and explicit tracker mentions like `GitHub Issues` or `Linear team <name>`. Inferred values render with an `(inferred from CLAUDE.md)` suffix in briefings and appear in their own row in `/briefing sources` so you can see where the information came from. Inference never writes — to make values authoritative, run `/briefing setup`.
+
 ### Fallbacks — graceful degradation
 
 Standing instructions for every failure mode (no git repo, no remote, `gh` missing, network down, fetch auth failure, no `## Project Context`, declared tracker unreachable, detached HEAD, secret-pattern files, working memory not found at any default path, …). Failures that affect orientation surface as bullets in the conditional `★ About this briefing` block; failures that don't surface in `/briefing sources` if you ask for them. Never papered over, never silently fabricated.

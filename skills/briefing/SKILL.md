@@ -253,6 +253,33 @@ The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`,
 
 **zsh portability note:** if you write a follow-up command that extracts the `status:` value into a shell variable, **do not name the variable `status`** — it's read-only in zsh (it holds the last command's exit code). Use `st`, `state`, or similar instead. The canonical block above is safe because it uses `grep -l '^status:'` (file listing only); the trap is in ad-hoc rewrites that read the value.
 
+#### Prose-inference fallback
+
+When L2a is absent (no `## Project Context` section in CLAUDE.md, even after case-insensitive probe) AND L2b's primary canonical-path probe finds nothing for a given field, attempt a soft prose scan of `CLAUDE.md` and `README.md` as a last-resort fallback before declaring the field "not found".
+
+Per-field inference rules (only the fields with high signal-to-noise; others stay "not found"):
+
+| Field | Inference rule |
+|---|---|
+| **Roadmap** | Case-insensitive scan for markdown links to files matching `*roadmap*.md` (e.g. `[ROADMAP](docs/ROADMAP.md)`, `see [our roadmap](roadmap.md)`). One match → use it. Multiple → prefer the one in CLAUDE.md over README.md (CLAUDE.md is more authoritative). Zero or ambiguous → fall through to "not found". |
+| **Changelog** | Same pattern, matching `*changelog*.md`. |
+| **Architecture** | Same pattern, matching `*architecture*.md` or `*arch*.md`. |
+| **Tracker** | Scan for explicit prose mentions of `GitHub Issues` (with capital G/I), `Linear team <name>`, `Jira project <name>`, `Notion`. Single explicit mention → infer that tracker; multiple distinct trackers mentioned → don't infer (real ambiguity), fall through to "not found". |
+
+**Skipped fields** (not worth the inference complexity):
+
+- `Board` — URL-based, low signal-to-noise.
+- `Working memory` — directory inference is hard to do precisely; the user's project layout is rarely described in prose.
+- `Other` — by definition unstructured; nothing to infer.
+
+**Surfacing inferred values:**
+
+- In default-mode briefing: inferred fields render the same as declared/canonical-detected fields, but with an `(inferred)` suffix in the snapshot bullet, e.g. `**Roadmap:** docs/ROADMAP.md (inferred from CLAUDE.md) — 3 in flight, 5 next-action queued`.
+- In `/briefing sources` "What was read in this project": inferred fields appear in a new line `**Inferred from prose:** <field>=<path> (CLAUDE.md), ...` between `Default paths matched:` and `Not found:`.
+- The `★ About this briefing` block is unchanged — inference doesn't fire any bullet by itself.
+
+**No writes from inference.** Inferred values stay inferred. To make them authoritative, the user runs `/briefing setup`, which proposes the inferred values as detected starting points for the `## Project Context` section. Setup mode's detection rules use the same prose-inference logic.
+
 ### Convention-maturity check
 
 This check is invoked specifically by the `/briefing sources` mode (and used to drive bullet 2 of `★ About this briefing` when applicable — see **About this briefing**). It is **not** rendered in default-mode briefings. Tally which canonical-conventions signatures are present vs missing.
@@ -528,6 +555,7 @@ What was read in this project:
 - **Always-on:** git (`<state>`); gh (`<state>`)
 - **Declared:** `<field>=<path>`, `<field>=none`, ... OR `(none)` if `## Project Context` is absent
 - **Default paths matched:** `<paths that hit>`, ... OR `(none)`
+- **Inferred from prose:** `<field>=<path>` (`<CLAUDE.md or README.md>`), ... — only when L2b's canonical probe missed AND a prose scan found a high-confidence link. Omit this line entirely when nothing was inferred.
 - **Not found:** `<paths probed but absent>`
 
 Notable non-canonical artifacts (conditional — render this section only when the skill detected working-memory-like files outside the canonical paths):
@@ -642,13 +670,15 @@ the proposal first.
 
 Pre-fill rules per field:
 
-- **Tracker** — Try `gh issue list --limit 1` against the current GitHub remote. If it returns issues → `GitHub Issues`. Else if `linear-cli` is in `$PATH` → `<placeholder: Linear team <NAME>>`. Else if no detection → `<placeholder: GitHub Issues / Linear team X / Jira project Y / none>`.
+- **Tracker** — Try `gh issue list --limit 1` against the current GitHub remote. If it returns issues → `GitHub Issues`. Else apply the L2b prose-inference rule (scan CLAUDE.md/README for explicit mentions of `Linear team <name>`, `Jira project <name>`, `Notion`). Else if `linear-cli` is in `$PATH` → `<placeholder: Linear team <NAME>>`. Else if no detection → `<placeholder: GitHub Issues / Linear team X / Jira project Y / none>`.
 - **Board** — No reliable detection. Default `none` with a note that the user can paste a URL.
-- **Roadmap** — Probe `docs/ROADMAP.md` → `ROADMAP.md` (root) → `none`.
-- **Changelog** — Probe `docs/CHANGELOG.md` → `CHANGELOG.md` (root) → `none`.
-- **Architecture** — Probe `docs/architecture.md` → `docs/system/` → `none`.
-- **Working memory** — Canonical layout (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all present) → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`.
+- **Roadmap** — Probe `docs/ROADMAP.md` → `ROADMAP.md` (root) → L2b prose inference (markdown links to `*roadmap*.md`) → `none`.
+- **Changelog** — Probe `docs/CHANGELOG.md` → `CHANGELOG.md` (root) → L2b prose inference (markdown links to `*changelog*.md`) → `none`.
+- **Architecture** — Probe `docs/architecture.md` → `docs/system/` → L2b prose inference (markdown links to `*architecture*.md`) → `none`.
+- **Working memory** — Canonical layout (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all present) → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`. (Prose inference skipped — directory inference is too low signal.)
 - **Other** — Pre-suggest bullets based on detections: non-canonical working-memory layouts (e.g. `docs/plans/` with date-prefixed files), test-artefact directories (e.g. `tmp/tst_*`), custom scripts in `bin/` or `scripts/`. If nothing notable, leave a `<placeholder>` line.
+
+When a value comes from prose inference, mark it in the proposal output with `(inferred from CLAUDE.md)` or `(inferred from README.md)` so the user understands the source before they confirm.
 
 ### Always write Title Case
 
