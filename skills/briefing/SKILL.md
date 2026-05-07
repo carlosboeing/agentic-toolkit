@@ -430,7 +430,7 @@ The **`★ About this briefing` block** is conditional — it renders only when 
 
 A short footer block that renders only when at least one bullet has content; omits entirely when no bullets apply (the typical healthy-project case).
 
-Visual format — wrap the header and footer rule lines in backticks so they render as monospace inline code, matching the visual style of Claude Code's `★ Insight` blocks. Bullets between the rules are a tight list (no blank lines between siblings); the monospace rules act as bookends and give the block visual scope without needing inter-bullet padding. Bullets that have both an *observation* and a *context/action* use a **bold parent bullet for the observation plus an indented sub-bullet for the context/action**, so each bullet reads as two beats with a clear visual hierarchy. Short single-clause bullets stay on one line with bold on the observation phrase.
+Visual format — wrap the header and footer rule lines in backticks so they render as monospace inline code, matching the visual style of Claude Code's `★ Insight` blocks. Bullets between the rules are a tight list (no blank lines between siblings); the monospace rules act as bookends and give the block visual scope without needing inter-bullet padding. Bullets that have both an *observation* and a *context/action* use a **bold parent bullet for the observation plus an indented sub-bullet for the context/action**, so each bullet reads as two beats with a clear visual hierarchy. Short single-clause bullets stay on one line with bold on the observation phrase. When a bullet has *two distinct action options* (sources vs setup), render two indented sub-bullets — one per option — each as `` **`/<command>`** — <brief reason> `` so each command stands alone visually rather than getting buried in a "run X or Y" sentence.
 
 Rendered shape (the literal markdown the model emits):
 
@@ -441,6 +441,9 @@ Rendered shape (the literal markdown the model emits):
 - **<short single-clause bullet>**
 - **<observation>**
   - <context or action>
+- **<observation>** — <inline cause>
+  - **`<command-1>`** — <reason>
+  - **`<command-2>`** — <reason>
 `─────────────────────────────────────────────────`
 ```
 
@@ -454,15 +457,18 @@ Each bullet renders only when its trigger fires. Block omits when zero bullets a
 
    ```
    - **Some sources unavailable.**
-     - Run `/briefing sources` for details.
+     - **`/briefing sources`** — see details
    ```
 
 2. **Briefing relied on git/gh only** — fires when neither declared nor default-path sources hit. Render:
 
    ```
-   - **Briefing relied on git/gh only.**
-     - Run `/briefing sources` to see what else this skill can read.
+   - **Briefing relied on git/gh only** — no `## Project Map` declared.
+     - **`/briefing sources`** — see what else this skill could read
+     - **`/briefing setup`** — declare paths in CLAUDE.md
    ```
+
+   Multi-action exception: bullet 2 is the only inventory entry that renders **two indented sub-bullets** (one per command — `sources` and `setup`). All other bullets render at most one sub-bullet per the standard observation/sub-bullet pattern.
 
 3. **Stale or failed fetch** — render `- **Refs from last fetch <relative-date>**` (single line) OR, for the auth-failure variant:
 
@@ -486,7 +492,7 @@ Each bullet renders only when its trigger fires. Block omits when zero bullets a
 
 When more than one bullet would render, prefer the more specific signal:
 
-- Bullet 1 (some sources unavailable) supersedes bullet 2 (briefing relied on git/gh only) when both fire — e.g. a declared path failed to resolve AND no other paths hit either. Both point to the same command; bullet 1 is the more specific report.
+- Bullet 1 (some sources unavailable) supersedes bullet 2 (briefing relied on git/gh only) when both fire — e.g. a declared path failed to resolve AND no other paths hit either. Bullet 1 names the specific gap; bullet 2 is the broader "shallow render" framing and becomes redundant when bullet 1 already named what failed.
 - Bullet 5 (tracker integration unavailable) supersedes bullet 1 when the unavailable source is specifically a tracker integration declared via `## Project Map`. Bullet 5 names the tracker and the missing CLI/MCP; bullet 1 is the generic version.
 
 All other bullets are independent and may co-render with each other.
