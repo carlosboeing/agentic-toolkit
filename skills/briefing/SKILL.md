@@ -688,9 +688,10 @@ This is the only mode that writes to a project file other than `briefing-log/`. 
 
 1. **Probe** the project state — same probes as `/briefing sources` (git remote, GitHub PRs/issues, canonical paths, working-memory dirs, ADR locations, per-project memory).
 2. **Read** CLAUDE.md (if it exists) and look for an existing `## Project Map` section.
-3. **Propose** a `## Project Map` block populated from probes (see **Detection rules** below).
-4. **Output** the proposal with detection notes plus a confirmation prompt.
-5. **On user `yes`**, back up CLAUDE.md and write the new section. **On `no`**, print the block for manual paste.
+3. **Propose** a `## Project Map` block populated from probes (see **Detection rules** below). Classify each field as **high confidence** (canonical path matched, tracker CLI returned data) or **low confidence** (defaulted to `none`, prose-inferred, or fell back to a non-canonical signal — see **Low-confidence prompts** below).
+4. **Output** the proposal — a short summary of what was probed, the proposed block, and the insertion location.
+5. **Invoke `AskUserQuestion`** with one structured question per low-confidence field (see **Low-confidence prompts** below). When every field is high confidence, invoke `AskUserQuestion` with a single yes/no question to confirm the write.
+6. **Apply the user's choices** — override each field with the selected option (or the user's free-form `Other` value), then write to CLAUDE.md after backup. The structured selection is itself the commitment; no separate confirmation step. If the user picks "Don't write" / "No", print the block for manual paste and stop.
 
 ### Output template
 
@@ -721,15 +722,14 @@ Setup proposal for `<project-name>`
 
 <line-number + anchor description, e.g. "After the title `# <name>` (line 1)" or "After `## What this project is` (line 9)">
 
-## To apply
+## Apply
 
-Reply:
-- `yes` — write to CLAUDE.md (creates `CLAUDE.md.before-briefing-setup.bak` first)
-- `no` — keep the block above for manual paste; no write
-- (paste a revised block) — apply your revision instead
+Answering the question(s) below writes the resolved block to CLAUDE.md (creating `CLAUDE.md.before-briefing-setup.bak` as a one-time backup first).
 ```
 
-If the proposed block contains `<placeholder>` markers, add a warning before the prompt:
+After printing the template above, the model invokes `AskUserQuestion` once with one question per low-confidence field (or, when every field is high confidence, a single yes/no question to confirm the write). See **Low-confidence prompts** below for the question shape and option rules. Do **not** render the numbered list, the four-option `Reply` block, or any free-form override syntax in the message body — the structured questions replace them.
+
+If the proposed block contains `<placeholder>` markers, add a one-line note before the questions:
 
 ```
 Note: <N> placeholder(s) remain (see fields marked `<placeholder: ...>` above).
@@ -751,6 +751,103 @@ Pre-fill rules per field:
 
 When a value comes from prose inference, mark it in the proposal output with `(inferred from CLAUDE.md)` or `(inferred from README.md)` so the user understands the source before they confirm.
 
+### Low-confidence prompts
+
+For new writes (no existing `## Project Map` section), classify each proposed field by detection confidence and surface low-confidence fields as structured questions via the `AskUserQuestion` tool. The pattern keeps the happy path one-turn for high-confidence projects while giving the user explicit per-field attention where detection is shaky — using the harness's native question UI rather than free-form override syntax in prose.
+
+Existing-section updates use the same `AskUserQuestion` rendering for per-field diff confirmation (see **Existing `## Project Map`** below).
+
+**Confidence classification per field:**
+
+| Field | High confidence | Low confidence (prompt the user) |
+|---|---|---|
+| Tracker | `gh issue list` returned issues for the current GitHub remote | Prose-inferred, CLI-on-PATH-only (e.g. `linear-cli` present but not exercised), or no detection (default `<placeholder>`) |
+| Board | (always low — no reliable auto-detection) | Anything found via prose inference; or default `none` when CLAUDE.md/README contains URLs that look like project boards (GitHub Projects, Linear views, Notion boards) |
+| Roadmap | Canonical path (`docs/ROADMAP.md`, `ROADMAP.md`) | Prose-inferred, default `none` |
+| Changelog | Canonical path | Prose-inferred, default `none` |
+| Architecture | Canonical path (`docs/architecture.md`, `docs/system/`) | Prose-inferred, default `none` (especially when CLAUDE.md/README mentions architecture documentation in prose but the path didn't match `*architecture*.md` / `*arch*.md` — e.g. `docs/5-guides/PROJECT.md`) |
+| Working memory | Canonical layout detected (`docs/0-brainstorms/` + `docs/2-design/` + `docs/3-plans/` all present) | `status:` frontmatter fallback (acceptable but flag the user so they can confirm or narrow), default `none` |
+| Other | (none — see below) | Any auto-suggested bullet describing transitional / uncertain state (e.g. systems being replaced, gitignored runtime, branches with unmerged commits that touch the artifact) |
+
+The model is the judge — if a detection looks shaky for project-specific reasons not enumerated above (e.g. the canonical path was found but contains conflicting evidence), prompt anyway. The bias is toward asking when in doubt; per-field prompts are cheap.
+
+**`Other` bullets** are not prompted by default — they're inherently judgment-laden and a per-bullet flow would dominate the questions. Surface a question only for individual bullets describing state that may not survive (the `.workflow/items/` example: "transitioning to SQLite-backed server per BL#116" — that warrants a `Keep / Drop` question on that single bullet).
+
+#### Rendering — `AskUserQuestion`
+
+After printing the proposal block, invoke `AskUserQuestion` **once** with one question per low-confidence field (1–4 questions per call). When more than four low-confidence fields exist (rare — a Project Map only has seven total), batch into multiple `AskUserQuestion` calls in sequence; the model applies each batch's answers before invoking the next.
+
+Per-question shape:
+
+| Field | Description |
+|---|---|
+| `question` | Concise framing of the choice, ending with `?`. Reference the conflict or context in plain language. Examples: ``Tracker URLs don't match `gh issue list` (returned empty) and contradict your "no tracker in use" Other bullet — how to resolve?``; `Architecture path?`; `Keep the bullet about \`.workflow/items/\` (PR #362 reportedly removes it)?` |
+| `header` | Short field label, ≤12 chars. Examples: `Tracker`, `Board`, `Roadmap`, `Architecture`, `Working mem`, `Other bullet`. |
+| `options` | 2–3 options, each `{label, description}`. Always include a no-op option last (e.g. `Don't change`, `Leave as proposed`) so users can punt without typing into `Other`. |
+| `multiSelect` | `false` for nearly all field questions. `true` only when reviewing several `Other` bullets together (each bullet a selectable item to drop). |
+
+**Recommended option rule.** When one alternative is materially better — matches probed reality, resolves a contradiction, follows the project's other declared values — make it the **first** option and append `(Recommended)` to the `label`. The `description` says why. When no option is materially better than the others (genuinely a judgment call), omit the `(Recommended)` marker entirely; do not pick arbitrarily.
+
+The user can also pick the auto-included `Other` to paste a custom value (path, URL, free-form text). Treat the `Other` text as the override value verbatim.
+
+**Worked example** — the Tracker/Board conflict from the personal-finance project:
+
+```
+question: "Tracker and Board URLs don't match `gh issue list` (returned empty) and contradict your 'no tracker in use' Other bullet — how to resolve?"
+header: "Tracker/Board"
+options: [
+  { label: "Match reality (Recommended)",
+    description: "Set Tracker: none, Board: none. Drops the contradiction; reflects what gh reports." },
+  { label: "Keep aspirations",
+    description: "Keep both URLs (signalling intent to adopt). Drop or rewrite the contradicting Other bullet." },
+  { label: "Leave unchanged",
+    description: "No write; review and decide later." }
+]
+```
+
+#### Reply handling
+
+`AskUserQuestion` returns the user's selected `label` per question (or their custom `Other` text). Apply each selection as the override for the corresponding field, then:
+
+- **All low-confidence answers were the no-op option** — write the proposal as-is (the user reviewed and accepted).
+- **At least one override** — apply the overrides, write the resolved block to CLAUDE.md, and show the user the actual diff (line range, what was written).
+- **User picked "Don't write" / "No"** on the high-confidence yes/no question — print the block for manual paste, do not write.
+- **User typed a paste-revised block in `Other`** — apply that block verbatim.
+
+The `.bak` backup is the safety net if the user wants to undo.
+
+#### When all fields are high confidence
+
+Skip the per-field questions and invoke `AskUserQuestion` once with a single yes/no:
+
+```
+question: "Write the proposed `## Project Map` to CLAUDE.md?"
+header: "Apply"
+options: [
+  { label: "Yes, write it (Recommended)",
+    description: "Adds the section. Creates CLAUDE.md.before-briefing-setup.bak as a one-time backup." },
+  { label: "No, just print",
+    description: "Skips the write. The block stays in this conversation for manual paste." }
+]
+```
+
+#### Fallback when `AskUserQuestion` is unavailable
+
+If the runtime can't invoke `AskUserQuestion` (some subagent contexts, automated harnesses), fall back to a compact text form — one bullet per low-confidence field with a lettered option list:
+
+```
+Confirm or override (<N> field(s)):
+
+1. **<Field>** — <one-line context>.
+   - A. <option> (Recommended)
+   - B. <option>
+   - C. Don't change
+
+Reply: `1: A, 2: B` (or paste a revised block).
+```
+
+The text fallback is the emergency path; the `AskUserQuestion` path is the default.
+
 ### Always write the canonical name
 
 Always emit the canonical `## Project Map` (Title Case) header. The Declared probe matches both the canonical name and two deprecated earlier names (`## Project Context`, `## Project context`) for backward compatibility, but new writes always use `## Project Map`. When updating an existing section under any deprecated name, surface the rename as one of the diff items so the user sees and confirms it.
@@ -762,8 +859,8 @@ If CLAUDE.md already has a `## Project Map` section — or the deprecated `## Pr
 1. Parse the existing fields.
 2. Compute the diff against the proposed (detected) block.
 3. Show the diff per-field: changing values, additions, fields that match. **If the existing header is a deprecated name**, list the rename as a top-level diff item: `Header: ## Project Context → ## Project Map` (or `## Project context → ## Project Map` for the doubly-deprecated lowercase form).
-4. Confirm: `Update <field> from <current> → <proposed>? yes / no / skip-all`.
-5. Apply only confirmed changes; don't blanket-overwrite.
+4. Invoke `AskUserQuestion` with one question per **changed** field (1–4 per call; batch if more). Each question's options are `{label: "Update", description: "<current> → <proposed>"}`, `{label: "Keep current", description: "<current>"}`, and `{label: "Use other value (Other)", description: "Paste a custom value"}` — `(Recommended)` goes on `Update` only when the proposal materially improves the field (e.g. resolves a probed contradiction, fills a missing path the model verified exists). Include the deprecated-header rename as its own question with `Update` recommended.
+5. Apply only the changes the user selected; don't blanket-overwrite. Fields whose answer was `Keep current` retain their existing value.
 
 ### Insertion location (no existing section)
 
@@ -793,9 +890,11 @@ When the user's CLAUDE.md or another global rule mandates a closing-block format
 
 ### Tone
 
-Helpful and explanatory. Show your work — explain what was detected, why each field has the value you proposed, what placeholders mean. The user is in setup-config mode, not consumption mode; appropriate verbosity is fine.
+Helpful but tight. Show your work in the proposal — what was detected, where each field's value came from, what placeholders mean — but resist re-explaining the same context across multiple sections. The proposal block, the insertion location, and the structured questions are the load-bearing output; everything else is supporting prose and should be one or two lines, not paragraphs.
 
-The confirmation prompt should be unambiguous about what `yes` does (write file + create backup) and what alternatives are available.
+Each `AskUserQuestion`'s `description` carries the consequence of that option in one line. Avoid duplicating that context in the message body before the question — the question UI shows the description alongside the option, so a separate "two coherent options" / "to apply" / "reply with one of" pre-amble is redundant and adds noise.
+
+Output isolation (subsection above) reinforces this: prose must not duplicate what the structured question already says.
 
 ## Save behaviour
 

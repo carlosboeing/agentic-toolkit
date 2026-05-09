@@ -144,12 +144,12 @@ What it does:
 1. Probes the project state (git remote, GitHub PRs/issues, canonical paths, working-memory dirs).
 2. Reads CLAUDE.md (if present) and looks for an existing `## Project Map` section.
 3. Proposes a populated `## Project Map` block — pre-filling detected fields, marking unknowable fields as `<placeholder>`, suggesting `Other` bullets based on what was found.
-4. Shows the proposal + a confirmation prompt.
-5. **On `yes`**, writes to CLAUDE.md (creating `CLAUDE.md.before-briefing-setup.bak` first as a one-time backup). **On `no`**, prints the block for manual paste.
+4. Shows the proposal, then asks structured questions via Claude Code's native question UI: one question per low-confidence field (defaulted to `none`, prose-inferred, fell back to a non-canonical signal, or contradicts probed reality). Each question lists 2–3 concrete options with descriptions plus an `Other` slot for free-form values. When one alternative is materially better, it's marked `(Recommended)`. High-confidence fields render silently — the only question in that case is a single yes/no on whether to write.
+5. **On the recommended/affirmative answer**, writes to CLAUDE.md (creating `CLAUDE.md.before-briefing-setup.bak` first as a one-time backup) with any user overrides applied. **On the no-op / "Don't write"** answer, prints the block for manual paste.
 
 This is the **only** mode that writes to a project file other than `briefing-log/`. Writes happen only after explicit user confirmation, with a backup created first. No silent edits.
 
-If `## Project Map` already exists, setup mode runs in **diff mode**: it parses the existing fields, computes per-field changes against the proposal, and asks for field-by-field confirmation before applying anything. Doesn't blanket-overwrite.
+If `## Project Map` already exists, setup mode runs in **diff mode**: it parses the existing fields, computes per-field changes against the proposal, and asks one structured question per changed field (`Update` / `Keep current` / `Other`) before applying anything. Doesn't blanket-overwrite. Fields whose answer was `Keep current` retain their existing value.
 
 `setup` is mutex with depth tiers (`quick`/`standard`/`deep`), with `sources`, and with `save`. Run it on its own, then optionally re-run `/briefing` to see how the new declarations enrich your briefings.
 
