@@ -80,6 +80,7 @@ Conventional Commits format: `<type>(<scope>): <description>`. Types: `feat`, `f
 - **Don't add features the user didn't ask for.** No speculative scaffolding, no premature abstractions.
 - **Don't suppress errors.** Surface failure modes plainly; don't fabricate success.
 - **No emojis in files** unless the user explicitly asks.
+- **Docs are for humans: structure + illustrations.** Headers, bullets, tables, Mermaid diagrams — not walls of prose. Anything visual (UX mockups, hi-fi concepts, screenshot examples) gets images: self-contained single-file HTML mockup in the doc's assets folder (e.g. `docs/2-design/mockups/`), headless screenshots (light + dark when theming matters), HTML + PNGs committed together, PNGs embedded with relative links so they render on GitHub. See [guide §5.9](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md).
 
 ## Working-memory discipline (required for AI sessions)
 

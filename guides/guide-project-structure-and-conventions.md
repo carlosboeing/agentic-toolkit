@@ -573,6 +573,20 @@ Working out what to put in each field — questions to ask yourself:
 
 The canonical scaffold lives in [`templates/default-project/CLAUDE.md`](../templates/default-project/CLAUDE.md). Bootstrapped projects inherit the section for free; existing projects pick it up via §10.6.
 
+### 5.9 Readable docs and illustrations (HTML → PNG mockups)
+
+Docs in `docs/` — designs, plans, brainstorms, discovery, reviews, retros — are written for humans first. Structure over prose: section headers, bullet points, tables for enumerable facts, Mermaid for flows/architecture/sequences (§5.7). Long unbroken text is a smell; if a section can't be skimmed, restructure it.
+
+**Illustrate, don't just describe.** When a doc discusses anything visual — UI/UX mockups, hi-fi concepts, screenshot examples, before/after comparisons — embed images:
+
+1. Build a **self-contained single-file HTML mockup** (inline CSS, no build step, no external assets) under the doc's assets folder, e.g. `docs/2-design/mockups/<topic>-concept.html`. Single-file keeps it git-native, openable in any browser, and editable by AI in one pass. Include a light/dark toggle when theming is part of the design.
+2. **Screenshot it headlessly** (Playwright or equivalent; serve over a throwaway local HTTP server if `file://` is blocked) — one PNG per state/theme that matters.
+3. **Commit HTML and PNGs together** and embed the PNGs in the doc with relative links so they render on GitHub. The PNG is what the doc shows; the HTML is the editable source of truth and doubles as a visual spec for implementation.
+
+Why this over design tools: artifacts version in git next to the doc, render in every markdown viewer, need no external account or export step, and an AI session can regenerate both halves when the design changes. (Same fallback rule as §5.7: reach for Figma/Excalidraw only when a hand-written mockup genuinely can't represent what you need — and still commit the rendered output.)
+
+First use in the wild: the Penmark v1 design doc (`carlosboeing/penmark`, `docs/2-design/`), where a commented-preview concept shipped as one HTML file + light/dark PNGs.
+
 ---
 
 ## 6. Workflow
