@@ -19,8 +19,9 @@ The repo splits into three clusters. The cluster headers below also organise [`C
 | Path | What | Install path |
 |---|---|---|
 | [`skills/`](skills/) | Claude Code skills (drop-in `SKILL.md` files). See [`skills/README.md`](skills/README.md). | `~/.claude/skills/<name>/` |
+| [`hooks/`](hooks/) | Lifecycle hooks (shell scripts + settings fragments). See [`hooks/README.md`](hooks/README.md). | `~/.claude/hooks/<name>.sh` |
 
-Future cluster members (slots, not yet populated): `plugins/`, `commands/`, `agents/`, `hooks/`, `mcp-servers/`, `output-styles/`. Created when the first item of each type arrives.
+Future cluster members (slots, not yet populated): `plugins/`, `commands/`, `agents/`, `mcp-servers/`, `output-styles/`. Created when the first item of each type arrives.
 
 ### Other consumables (read or copy-paste)
 
