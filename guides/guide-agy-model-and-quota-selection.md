@@ -6,11 +6,14 @@ last_reviewed: 2026-06-14
 related:
   - guide-harness-plugin-parity.md
   - reference/reference-harness-capability-map.md
+  - reference/reference-cross-harness-models.md
 ---
 
 # Antigravity model and quota selection
 
 Practical defaults for `agy` when running long autonomous sessions. **Not** platform-enforced routing — apply manually or via project rules / orchestrator config.
+
+For a **harness-agnostic** model comparison (Claude Code, Cursor, and Agy), see [reference-cross-harness-models.md](../reference/reference-cross-harness-models.md). This guide covers **Agy-only** quota pools and session tactics.
 
 ## Two independent quota pools
 

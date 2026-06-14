@@ -54,5 +54,6 @@ Quick comparison for the five concerns in [agent delegation layer design](../doc
 
 ## Links
 
+- [Cross-harness model comparison](reference-cross-harness-models.md)
 - [Discovery: 2026-06-14 research](../docs/1-discovery/2026-06-14-harness-parity-model-routing-research.md)
 - [Claude Code plugins snapshot](reference-claude-code-plugins.md)
