@@ -16,7 +16,7 @@ Quick comparison for the five concerns in [agent delegation layer design](../doc
 
 | Concern | What you want | Best fit today | Notes |
 |---------|---------------|----------------|-------|
-| **1 — Multi-POV deliberation** | Council/debate on design docs | Superpowers brainstorming + optional native review | Octo timed out on Penmark; **no Agy port** |
+| **1 — Multi-POV deliberation** | Council/debate on design docs | Superpowers brainstorming + optional native review | Octo timed out in production trial; **no Agy port** |
 | **2 — RTK / token optimization** | Smaller context | RTK hooks (independent of this doc) | Install regardless of delegation build |
 | **3 — Difficulty / task routing** | easy→cheap, hard→opus | **reference-workflow** `modelRouting` | Extend with harness-specific model names |
 | **4 — Capability MCP** | Vision, PDF, … | Per-server MCP in each harness | Same servers, different config files |
@@ -34,16 +34,16 @@ Quick comparison for the five concerns in [agent delegation layer design](../doc
 | **lite-harness** | One API, multiple harnesses | No | Harness default | No Agy harness |
 | **Antigravity `agy`** | Google agent CLI + IDE | Bundled plugins only | Manual `/model` only | Native |
 
-## Penmark v0.5 — what actually mattered
+## Autonomous run evidence (2026-06 trial)
 
 | Component | Load-bearing? |
 |-----------|---------------|
 | Superpowers + self-review | Yes |
-| vitest + eslint + Docker Playwright | Yes |
-| ui-ux-pro-max / impeccable (webview UI) | Yes (R14–R15) |
+| Shell test gates (build, lint, unit, browser goldens) | Yes |
+| ui-ux-pro-max / impeccable (UI-heavy work) | Yes |
 | Octo | No (4/4 timeout) |
 | Financial plugins | No |
-| CI (GitHub Actions) | Blocked (billing) — local gates only |
+| Remote CI | Optional — local gates sufficient when CI unavailable |
 
 ## Decision pointers
 

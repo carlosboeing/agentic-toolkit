@@ -70,4 +70,3 @@ Cursor’s continual-learning plugin updates **`AGENTS.md`** learned sections. W
 
 - [Harness plugin parity](guide-harness-plugin-parity.md)
 - [Default project template](../templates/default-project/CLAUDE.md)
-- example-org root (reference implementation)

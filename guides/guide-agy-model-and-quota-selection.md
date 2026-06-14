@@ -38,9 +38,9 @@ Check before long runs: **Models & Quota** in the Agy UI (or equivalent in CLI s
 ## Session strategy
 
 1. **At session start:** read quota; if Gemini weekly is low (e.g. &lt;15%), plan Claude pool for serious work.
-2. **Default coding:** Sonnet (Claude pool) — matches Penmark v0.5 “finish the run” when Gemini was ~9% left.
+2. **Default coding:** Sonnet (Claude pool) — especially when Gemini weekly quota is low (e.g. &lt;15% remaining).
 3. **Burn Gemini when healthy:** Flash for research, comments, doc passes.
-4. **Escalate:** Pro (Gemini) → still stuck → Sonnet → Opus for R16-style integration.
+4. **Escalate:** Pro (Gemini) → still stuck → Sonnet → Opus for hard cross-layer integration.
 5. **Persist choice:** `/model` in Agy applies to the session until changed.
 
 ## What Agy does not do
@@ -61,7 +61,7 @@ For soft hints in Agy (not enforced), add `.agents/rules/model-routing.md`:
 - Default implementation: Claude Sonnet 4.6 (Thinking)
 - Escalate to Opus: cross-layer integration, repeated test failures after 2 fix cycles
 - Use Gemini Flash only when Gemini weekly quota > 20%
-- Before R16-style work: confirm Claude pool headroom
+- Before hard integration work: confirm Claude pool headroom
 ```
 
 ## Google AI Pro vs agent quota

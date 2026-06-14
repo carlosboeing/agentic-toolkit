@@ -78,7 +78,7 @@ Cross-harness skills available to any agent harness reading this directory.
 
 ## Minimum viable set (autonomous coding runs)
 
-Evidence from Penmark v0.5: Superpowers + shell gates do ~90% of the work; Octo was never load-bearing.
+Evidence from a long autonomous run (2026-06): Superpowers + shell gates do ~90% of the work; Octo was never load-bearing.
 
 | Priority | Capability | Official Agy path |
 |----------|------------|-------------------|
@@ -162,7 +162,7 @@ cat ~/.gemini/config/mcp_config.json
 
 ## Project-specific run prompts
 
-Keep run prompts (e.g. "autonomous v0.5 until tag X") in **each app repo**. Link to this guide for harness setup — don't duplicate the matrix per project.
+Keep run prompts (e.g. "autonomous sprint until milestone X") in **each app repo**. Link to this guide for harness setup — don't duplicate the matrix per project.
 
 ## See also
 
