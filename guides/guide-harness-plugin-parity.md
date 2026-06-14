@@ -5,6 +5,7 @@ scope: [harness-parity, plugins, skills, antigravity, cursor]
 last_reviewed: 2026-06-14
 last_audited: 2026-06-14
 related:
+  - guide-browser-automation-mcp-vs-cli.md
   - guide-cross-harness-project-instructions.md
   - reference/reference-harness-capability-map.md
   - reference/reference-claude-code-plugins.md
@@ -86,7 +87,7 @@ Evidence from a long autonomous run (2026-06): Superpowers + shell gates do ~90%
 | P1 | ui-ux-pro-max | `npm i -g uipro-cli` → `uipro init --ai antigravity` in repo |
 | P2 | Context7 | MCP in `mcp_config.json` (or `npx ctx7 setup --mcp --antigravity` / `--cli --antigravity`) |
 | P2 | claude-mem | MCP in `mcp_config.json` (or `npx claude-mem install`, pick Gemini CLI in picker) |
-| P3 | Playwright MCP | Add `@playwright/mcp` to `mcp_config.json` (optional if shell Docker goldens suffice; consider Playwright CLI instead — see browser automation notes) |
+| P3 | Playwright MCP | Add `@playwright/mcp` to `mcp_config.json` for exploratory/ad-hoc browsing; in Agy the bundled chrome-devtools-plugin covers live work, so this is optional — keep the Playwright CLI for goldens (see [browser automation guide](guide-browser-automation-mcp-vs-cli.md)) |
 | P3 | Browser live debug | **chrome-devtools-plugin** (Google bundled; replaces superpowers-chrome) |
 
 ## Claude Code plugins → Antigravity
@@ -99,7 +100,7 @@ Legend: **Official** | **Substitute** | **MCP** | **Symlink skill** | **Skip**
 | ui-ux-pro-max | **Official** — uipro |
 | context7 | **Official** — already wired as MCP; fresh: `npx ctx7 setup --mcp --antigravity` |
 | claude-mem | **Official** — already wired as MCP; fresh: `npx claude-mem install` (pick Gemini CLI) |
-| playwright | **MCP** — `@playwright/mcp` in `mcp_config.json`; or **Substitute** with chrome-devtools-plugin for live debug / Playwright CLI for coding agents (see browser automation notes) |
+| playwright | **MCP** — `@playwright/mcp` for exploratory/ad-hoc browsing; **Substitute** with chrome-devtools-plugin (bundled) for live debug in Agy; keep Playwright CLI (`@playwright/test`) for specs/goldens (see [browser automation guide](guide-browser-automation-mcp-vs-cli.md)) |
 | superpowers-chrome | **Substitute** — chrome-devtools-plugin |
 | frontend-design | **Import** (`agy plugin import claude`) or **Bundled** at `~/.gemini/config/plugins/frontend-design` |
 | code-review, pr-review-toolkit, feature-dev | **Substitute** — Superpowers review / brainstorming / subagent skills |
@@ -114,14 +115,15 @@ Legend: **Official** | **Substitute** | **MCP** | **Symlink skill** | **Skip**
 
 ## Browser automation: MCP vs CLI vs chrome-devtools
 
-| | Playwright MCP | Playwright CLI (`@playwright/cli`) | chrome-devtools-plugin (Agy bundled) |
-|---|---|---|---|
-| **Protocol** | JSON over MCP — streams DOM into context | Shell commands — saves snapshots to disk | MCP — accessibility tree snapshots |
-| **Token cost** | High (schema bloat + streamed state) | 4-10x lower than MCP | Moderate (lazy-loaded, on-demand) |
-| **Best for** | Autonomous loops needing deep continuous DOM introspection | Coding agents writing tests, fixing bugs | Live debugging, exploratory automation |
-| **Recommendation** | Consider removing from Claude Code in favor of CLI | Use in Claude Code / Cursor | Use in Antigravity (already bundled) |
+Keep **both** Playwright MCP and the Playwright CLI; choose **per job**, not one globally. Full decision guide with the reasoning, token-cost truth, and corrected myths: [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md).
 
-**Recommendation:** Use **Playwright CLI** in Claude Code/Cursor (token-efficient), **chrome-devtools-plugin** in Antigravity (already bundled, no extra install). Skip Playwright MCP unless you need deep autonomous DOM introspection loops.
+| Tool | Use for | Per harness |
+|---|---|---|
+| **Playwright MCP** (`@playwright/mcp`) | Exploratory / ad-hoc / web browsing / live aesthetic review — the interactive REPL loop | Claude Code, Cursor |
+| **Playwright CLI** (`@playwright/test`) | Repeatable flows, visual-regression goldens, anything committed or re-run | Claude Code, Cursor, Antigravity |
+| **chrome-devtools-plugin** (Agy bundled) | Live debugging / exploratory in Antigravity (replaces superpowers-chrome) | Antigravity |
+
+The CLI is **`@playwright/test`** (the `playwright` binary provides `test`, `codegen`, `screenshot`, `open`) — there is no `@playwright/cli` package. MCP idle cost is harness-dependent: Claude Code can defer tool schemas (~names until first use), so "skip the MCP to save context" only holds on eager-loading harnesses. Judging *looks* needs screenshots + vision either way — the accessibility snapshot shows structure, not aesthetics.
 
 ## Third-party routers (optional)
 

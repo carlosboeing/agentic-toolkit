@@ -10,6 +10,7 @@ How-to guides for using Claude Code productively. Each guide is a stable, evergr
 | [`guide-creating-claude-code-skills.md`](guide-creating-claude-code-skills.md) | A practitioner's guide to writing Claude Code skills — when to write a skill vs a hook/plugin/CLAUDE.md, how to design the command surface (arguments, dials, help mode, dispatchers), how to write the body (anti-fabrication, standing instructions), single-file vs multi-file tradeoffs, and a list of pitfalls. Drawn from shipping the `/learn` skill in this repo. |
 | [`guide-cross-harness-project-instructions.md`](guide-cross-harness-project-instructions.md) | One canonical `CLAUDE.md` with `AGENTS.md` / `GEMINI.md` symlinks so Cursor, Claude Code, and Antigravity read the same project brief. |
 | [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md) | Official vs substitute vs skip mapping from Claude Code / Cursor plugins to Antigravity (`agy`) installs, skills, and MCP. |
+| [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | When to use Playwright MCP vs the Playwright CLI vs chrome-devtools-plugin for agentic (non-CI) browser work — exploratory browsing and aesthetics vs repeatable flows and goldens, per-harness defaults, the harness-dependent token-cost truth, and corrected myths. |
 | [`guide-agy-model-and-quota-selection.md`](guide-agy-model-and-quota-selection.md) | Manual model and quota strategy for long Agy sessions — Gemini vs Claude pools, Flash/Pro/Sonnet/Opus defaults. |
 
 ## Conventions
