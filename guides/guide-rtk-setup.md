@@ -49,30 +49,37 @@ Claude Code intercepts Bash executions and passes them to the RTK rewrite engine
     }
     ```
 
-### 2. Antigravity (BeforeTool Hook)
-Antigravity intercepts `run_shell_command` tool calls using a custom shell hook script.
+### 2. Antigravity CLI & IDE (BeforeTool Hook)
+Antigravity intercepts `run_shell_command` tool calls globally using a custom shell hook script. Both the Antigravity CLI and the Antigravity IDE load settings from their respective global user directories, ensuring a project-agnostic setup.
+
 *   **Hook Script**: [~/.gemini/hooks/rtk-hook-gemini.sh](~/.gemini/hooks/rtk-hook-gemini.sh)
     ```bash
     #!/bin/bash
     exec rtk hook gemini
     ```
-*   **Settings File**: [~/.gemini/settings.json](~/.gemini/settings.json)
+*   **Settings Files (Global Scope)**:
+    *   **Antigravity CLI (`agy`)**: [~/.gemini/antigravity-cli/settings.json](~/.gemini/antigravity-cli/settings.json)
+    *   **Antigravity IDE**: [~/.gemini/settings.json](~/.gemini/settings.json)
 *   **Wiring**:
+    Copy this block into the `"hooks"` object of **both** settings files:
     ```json
-    "hooks": {
-      "BeforeTool": [
-        {
-          "matcher": "run_shell_command",
-          "hooks": [
-            {
-              "type": "command",
-              "command": "~/.gemini/hooks/rtk-hook-gemini.sh"
-            }
-          ]
-        }
-      ]
-    }
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.gemini/hooks/rtk-hook-gemini.sh"
+          }
+        ]
+      }
+    ]
     ```
+
+> [!NOTE]
+> **Upstream Integration (PR 2093)**:
+> An open pull request [rtk-ai/rtk#2093](https://github.com/rtk-ai/rtk/pull/2093) introduces a native hook command `rtk hook antigravity` (alias `rtk hook agy`) and initialization support via `rtk init --agent antigravity`. Until this PR is merged and released, we use the backward-compatible `rtk hook gemini` (via `rtk-hook-gemini.sh`), which successfully intercepts and rewrites the identical `run_shell_command` tool payload globally.
+
 
 ### 3. Cursor (beforeShellExecution Hook)
 Cursor intercepts shell executions globally using a lifecycle event hook.
