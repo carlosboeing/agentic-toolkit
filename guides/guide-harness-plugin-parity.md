@@ -38,6 +38,13 @@ Configured in `~/.gemini/config/mcp_config.json`.
 |--------|------|-------|-------|
 | `claude-mem` | HTTP (lazy) | 19 | Memory/observations/corpus |
 | `context7` | HTTP (lazy) | 2 | `resolve-library-id`, `query-docs` |
+| `headroom` | stdio (lazy) | 3 | Context compression (compress/retrieve/stats) |
+
+### CLI Proxies & Token Optimizers
+
+| Tool | Hook Type | Mapped Harnesses | Notes |
+|------|-----------|------------------|-------|
+| `rtk` | Pre-execution hooks & instructions | Claude Code, Antigravity (`agy`), Cursor, Codex, OpenCode | CLI proxy that intercepts and compresses command outputs to save 60–90%+ context tokens. |
 
 ### Bundled plugins (`~/.gemini/config/plugins/`)
 
