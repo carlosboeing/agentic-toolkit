@@ -1,6 +1,6 @@
-# claude-code-resources — instructions for Claude Code
+# claude-code-resources — instructions for AI agents
 
-This file is auto-loaded on every session. It's the CC-facing brief; `README.md` is the human-facing one.
+This file is auto-loaded on every session. It's the agent-facing brief; `README.md` is the human-facing one. `AGENTS.md` symlinks to this file for harnesses that expect that filename.
 
 > **Note:** this `CLAUDE.md` is specific to a meta-resources catalog — it talks about `skills/`, `guides/`, `reference/` as content kinds. It is **distinct from** [`templates/default-project/CLAUDE.md`](templates/default-project/CLAUDE.md), which is the *generic* project brief used when bootstrapping a new project. The two share DNA but have different jobs; do not deduplicate them.
 
@@ -19,7 +19,7 @@ Declares where project-tracking information lives so the [`/briefing`](skills/br
 - **Architecture**: none (per-type catalog READMEs serve the always-current-state role — see [README.md](README.md) and [skills/README.md](skills/README.md); this is documented in the `docs/` framing below)
 - **Working memory**: `docs/` (numbered lifecycle convention)
 - **Other**:
-  - Repo is the source of truth for skills; the harness loads from `~/.claude/skills/`. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. If `~/.claude/` is under source control (currently: `carlosboeing/claude-config`), commit and push the synced files there too as a separate `chore(<scope>): sync from claude-code-resources` commit.
+  - Repo is the source of truth for skills; the active harness loads from its user-level skills directory (e.g., `~/.claude/skills/` for Claude Code, `~/.gemini/config/skills/` for agy, `~/.codex/skills/` or `~/.agents/skills/` for Codex). After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. If the harness config directory is under source control (e.g., `carlosboeing/claude-config`), commit and push the synced files there too as a separate `chore(<scope>): sync from claude-code-resources` commit.
   - No CI configured; validation is manual / via `/ultrareview` on demand.
 
 ## Layout
@@ -84,7 +84,7 @@ A "ship" is a commit that changes user-facing behaviour or content (new skill mo
 
 Heuristic for spotting a ship: the staged diff touches `skills/`, `plugins/`, `agents/`, `hooks/`, `mcp-servers/`, `output-styles/`, `commands/`, `guides/`, `reference/`, `prompts/`, or `templates/`. The decision rule is *user-facing behaviour change*, not *file path* — so doc-internal cleanup (typo fixes, comment polish, internal-note formatting) opt out and commit alone.
 
-## Working principles for CC sessions
+## Working principles for agent sessions
 
 - **The repo is small and read-easy.** Don't dispatch search agents for cross-file analysis — `grep`/`rg` and direct reads are faster.
 - **Don't add features the user didn't ask for.** No speculative scaffolding for future skill types, no auto-generated indexes, no CI configs unless requested.
