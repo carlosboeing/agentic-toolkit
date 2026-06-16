@@ -100,7 +100,7 @@ To support multiple platforms and harnesses, the briefing skill abstracts the pr
   - If both exist, use the active runtime's default.
   - If neither exists, default to `CLAUDE.md` under Claude Code, and `AGENTS.md` under others.
 - **Symlink / Pointer Resolution:**
-  - If a project contains `AGENTS.md` pointing to `CLAUDE.md` (or vice-versa) or a symlink exists, resolve the target but perform edits using the native filename expected by the active runtime.
+  - If a project contains `AGENTS.md` pointing to `CLAUDE.md` (or vice-versa) or a symlink exists, resolve the target. To preserve the symlink itself and avoid overwriting it, all setup writes/edits must be written directly to the resolved target file (e.g., `CLAUDE.md`) rather than replacing the symlink path.
 - **Backup File:**
   - The backup file is always `<instructions-file>.before-briefing-setup.bak`.
 
@@ -229,7 +229,7 @@ Read the `## Project Map` section from `<instructions-file>` (already in your co
 
 Declared fields are **authoritative** — they override any Default paths sniffing. A field set to `none` means "deliberately empty" (do not probe further); an absent field means "Default paths can probe a default" (see Default paths table below).
 
-For complete examples (canonical + non-canonical project layouts), per-field decision guidance, and discovery hints (how to figure out what to put in each field), see [§5.8 of the canonical conventions guide](`<CANONICAL_CONVENTIONS_URL>`#58--project-map-section-in-claudemd).
+For complete examples (canonical + non-canonical project layouts), per-field decision guidance, and discovery hints (how to figure out what to put in each field), see [§5.8 of the canonical conventions guide](<CANONICAL_CONVENTIONS_URL>#58--project-map-section-in-claudemd).
 
 Presence check: grep **case-insensitively** for `^## Project Map` OR the deprecated `^## Project Context` in the project's `<instructions-file>`. The canonical form is `## Project Map` (Title Case). Tolerate two earlier names for backward compatibility:
 
@@ -321,7 +321,7 @@ This check is invoked specifically by the `/briefing sources` mode (and used to 
 
 | # | Signature | How to check |
 |---|---|---|
-| 1 | `## Project Map` section in `<instructions-file>` | `grep -i -E '^## Project (Map\|Context)' <instructions-file>` (case-insensitive — tolerates the deprecated `## Project Context` name and lowercase variants) |
+| 1 | `## Project Map` section in `<instructions-file>` | `grep -i -E '^## Project (Map&#124;Context)' <instructions-file>` (case-insensitive — tolerates the deprecated `## Project Context` name and lowercase variants) |
 | 2 | `docs/ROADMAP.md` exists | filesystem probe |
 | 3 | `docs/CHANGELOG.md` exists | filesystem probe |
 | 4 | Lifecycle dirs present (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` at minimum) | filesystem probe; require all three |
@@ -899,11 +899,11 @@ If `## Project Map` doesn't exist in `<instructions-file>`:
 - If a `## What this project is` (or similar one-line "what this is" section) exists, insert after that section.
 - Otherwise, insert directly after the title `# <name>` on line 1.
 
-If `<instructions-file>` doesn't exist at all, propose creating one (as `CLAUDE.md` under Claude Code, or `AGENTS.md` under others) from the canonical scaffold (e.g., [`templates/default-project/CLAUDE.md`](`<CANONICAL_CONVENTIONS_URL>`/raw/templates/default-project/CLAUDE.md) or the platform's corresponding template) with the `## Project Map` populated. Tell the user the title is a placeholder.
+If `<instructions-file>` doesn't exist at all, propose creating one (as `CLAUDE.md` under Claude Code, or `AGENTS.md` under others) from the canonical scaffold (e.g., [`templates/default-project/CLAUDE.md`](<CANONICAL_CONVENTIONS_URL>/raw/templates/default-project/CLAUDE.md) or the platform's corresponding template) with the `## Project Map` populated. Tell the user the title is a placeholder.
 
 ### Backup mechanics
 
-Before write, copy the existing `<instructions-file>` to `<instructions-file>.before-briefing-setup.bak` (overwriting any prior backup — single rolling backup). On success, confirm: `Wrote ## Project Map to <instructions-file> (line N). Backup at <instructions-file>.before-briefing-setup.bak.`
+Before write, copy the existing `<instructions-file>` to `<instructions-file>.before-briefing-setup.bak` (overwriting any prior backup — single rolling backup). The backup copy must be a regular (dereferenced) file containing the target file's content (i.e., copying the target contents, not just copying the symlink pointer, to prevent backup data loss). On success, confirm: `Wrote ## Project Map to <instructions-file> (line N). Backup at <instructions-file>.before-briefing-setup.bak.`
 
 If `<instructions-file>` doesn't exist, no backup is needed; create the new file (as `CLAUDE.md` under Claude Code, or `AGENTS.md` under others) with `# <project-name>` placeholder + the proposed `## Project Map`.
 
@@ -1013,7 +1013,7 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't compute metrics — cite them from existing tooling (line counts, ahead/behind, dates).
 - Don't pad sections with nothing to say. In adaptive mode, omit empty sections entirely.
 - Don't estimate time-to-completion. Estimate scope by analogy to similar changelog items at most.
-- Don't write outside `briefing-log/`. Every other path this skill touches is read-only.
+- Don't write outside `briefing-log/` and (in setup mode only) `<instructions-file>`. Every other path this skill touches is read-only.
 - Don't render the `★ About this briefing` block when no bullet has content — omit entirely.
 - Don't put audit/setup content in default-mode briefing output. That belongs in `/briefing sources`.
 - Don't presume canonical conventions are preferred over declared paths. Both are first-class in `/briefing sources`.
