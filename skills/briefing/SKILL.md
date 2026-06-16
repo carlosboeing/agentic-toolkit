@@ -206,14 +206,25 @@ These files are typically already loaded in the conversation context; the rechec
 
 **Per-project memory:**
 
-Claude Code stores per-project state under a slug derived from the project's full path: leading `/` becomes `-`, and every other `/` also becomes `-`. So `/Users/me/Projects/foo` lives at `~/.claude/projects/-Users-me-Projects-foo/`.
+AI runtimes store per-project state or context under specific directories. For example, Claude Code uses a path slug (leading `/` becomes `-`, and every other `/` also becomes `-`) so `/Users/me/Projects/foo` lives at `~/.claude/projects/-Users-me-Projects-foo/`. Other runtimes use similar directory conventions.
+
+Probe the following locations for project memory:
 
 ```bash
 slug="$(pwd | sed 's|/|-|g')"               # /a/b/c → -a-b-c
+
+# Probe Claude Code memory index
 ls -l "$HOME/.claude/projects/$slug/memory/MEMORY.md" 2>/dev/null
+
+# Probe Antigravity CLI (agy) memory index (using either default or -cli paths)
+ls -l "$HOME/.gemini/antigravity/brain/projects/$slug/memory/MEMORY.md" 2>/dev/null
+ls -l "$HOME/.gemini/antigravity-cli/brain/projects/$slug/memory/MEMORY.md" 2>/dev/null
+
+# Probe Codex memory index
+ls -l "$HOME/.codex/projects/$slug/memory/MEMORY.md" 2>/dev/null
 ```
 
-If the index file exists (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one. This is a Claude Code mechanic, not a project convention, so it lives in Always-on.
+If the index file exists in the active runtime's path (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one. This is a runtime-specific mechanic, not a project convention, so it lives in Always-on.
 
 ### Declared — explicit declarations via <instructions-file>
 
@@ -559,7 +570,7 @@ The depth dial scales three things together — output length, source breadth, a
 | Cross-source synthesis | Recurring themes across 3+ sources flagged as systemic |
 | Tracker closed items | If a tracker is declared in `## Project Map`, fetch closed items from last 7 days, not just open |
 | Trend analysis on changelog | Velocity / cadence / scope drift across last 5–10 entries (when a changelog was found) |
-| Per-project memory files | Read individual files in `~/.claude/projects/<slug>/memory/` (MEMORY.md index already in context) |
+| Per-project memory files | Read individual files in the resolved per-project memory directory (e.g. `~/.claude/projects/<slug>/memory/` or `~/.gemini/antigravity/brain/projects/<slug>/memory/`) (MEMORY.md index already in context) |
 
 **Not read at any depth:** raw conversation transcripts on disk. Reading them would undermine the working-memory discipline the canonical conventions describe (artifacts become optional if briefings can recover from transcripts), transcripts are noisy (corrections, abandoned approaches, false starts), and the on-disk format is undocumented Anthropic internals. The principled equivalent is a Stop hook with an explicit snapshot schema — deferred (Approach C in the design doc).
 
@@ -935,11 +946,25 @@ Determine the destination directory and a non-colliding filename, then create th
 ```bash
 # Determine destination — repo-local if in a git repo, otherwise home
 if git rev-parse --show-toplevel >/dev/null 2>&1; then
-  DEST="$(git rev-parse --show-toplevel)/.claude/briefing-log"
+  ROOT="$(git rev-parse --show-toplevel)"
 else
-  DEST="$HOME/.claude/briefing-log"
+  ROOT="$HOME"
+fi
+
+# Detect platform prefix
+if [ -d "$ROOT/.claude" ] || [ -d "$HOME/.claude" ]; then
+  DEST="$ROOT/.claude/briefing-log"
+elif [ -d "$ROOT/.gemini" ] || [ -d "$HOME/.gemini" ]; then
+  DEST="$ROOT/.gemini/briefing-log"
+elif [ -d "$ROOT/.codex" ] || [ -d "$HOME/.codex" ]; then
+  DEST="$ROOT/.codex/briefing-log"
+elif [ -d "$ROOT/.cursor" ] || [ -d "$HOME/.cursor" ]; then
+  DEST="$ROOT/.cursor/briefing-log"
+else
+  DEST="$ROOT/.briefing-log"
 fi
 mkdir -p "$DEST"
+```
 
 # Filename — ISO8601 to the minute, UTC. Sources-mode saves get a `-sources` suffix.
 TS=$(date -u +%Y-%m-%dT%H%M)
