@@ -2,7 +2,7 @@
 name: briefing
 description: |
   Adaptive project orientation. Auto-discovers project state from git, GitHub,
-  CLAUDE.md's ## Project Map section (when present), and any working-memory
+  the <instructions-file>'s ## Project Map section (when present), and any working-memory
   layout it can sniff. Reshapes output based on what's in flight — leads with
   active work if there is any, leads with what's next if not. Use whenever you
   start a session and need to catch up: "where am I, what was I doing, what's
@@ -13,7 +13,7 @@ argument-hint: "[depth] [save] [help]"
 
 # `/briefing` — Adaptive project orientation
 
-This skill produces a structured briefing of project state on demand. It auto-discovers what's in flight from git, GitHub, the project's CLAUDE.md `## Project Map` section (when present), and whatever working-memory layout it can detect. The output reshapes based on what it finds — leads with active work if there is any, leads with what's next if everything is calm.
+This skill produces a structured briefing of project state on demand. It auto-discovers what's in flight from git, GitHub, the project's `<instructions-file>` `## Project Map` section (when present), and whatever working-memory layout it can detect. The output reshapes based on what it finds — leads with active work if there is any, leads with what's next if everything is calm.
 
 The audience is you, returning to a project after a session, a day, a week, or a vacation. You want to know where you are, what you were doing, and what to pick up — without re-reading every file. The skill is read-only on the project (it never modifies project files); the only exception is the briefing log it writes when you invoke it with `save`.
 
@@ -34,7 +34,7 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
 ```
 /briefing [depth] [save] [help]              # default — orientation briefing
 /briefing sources [save] [help]              # self-documentation view (what this skill probes + finds)
-/briefing setup [help]                       # add or update `## Project Map` in CLAUDE.md
+/briefing setup [help]                       # add or update `## Project Map` in <instructions-file>
 
   depth     adaptive (default) | quick | standard | deep
             Length × source breadth. Adaptive is content-driven (sections appear
@@ -43,16 +43,16 @@ When the skill needs to point users at the conventions guide (e.g. in the conven
   sources   Render the self-documentation view: what this skill probes
             (Always-on / Declared / Default paths / Fallbacks) and what it
             found in the current project. Mutex with depth tiers and `setup`.
-  setup     Add the `## Project Map` section to your CLAUDE.md, or
+  setup     Add the `## Project Map` section to your `<instructions-file>`, or
             update it if it's already there. Future briefings then read
             your tracker, roadmap, changelog, and other locations from
-            CLAUDE.md directly instead of guessing.
+            `<instructions-file>` directly instead of guessing.
 
             Setup mode reads what's already in your project, fills in
             each field where it can detect a value, marks the rest with
             `<placeholder>`, and shows you the proposed section. Nothing
             is written until you say yes. Before writing, it copies your
-            CLAUDE.md to CLAUDE.md.before-briefing-setup.bak so you can
+            `<instructions-file>` to `<instructions-file>.before-briefing-setup.bak` so you can
             restore the original.
 
             Can't be combined with depth tiers, `sources`, or `save`.
@@ -67,7 +67,7 @@ Examples:
   /briefing deep save          # deep tier, written to disk
   /briefing sources            # self-documentation view
   /briefing sources save       # self-documentation view, written to disk
-  /briefing setup              # add or update `## Project Map` in CLAUDE.md
+  /briefing setup              # add or update `## Project Map` in <instructions-file>
 ```
 
 Order of args does not matter. `/briefing deep save` and `/briefing save deep` are equivalent. If any help keyword (the full set is listed under **How to parse the args** below — `help`, `--help`, `-h`, `?`, `usage`) appears anywhere in the args, the skill renders this Synopsis as the response and stops — no briefing, no save.
@@ -87,6 +87,22 @@ When executing the instructions in this skill (reading files, executing commands
 | **Search files** | `Grep` | `grep_search` | Native search | `shell` (e.g. `grep`) |
 | **Ask user** | `AskUserQuestion` | `ask_question` | Native input | `wait_user` / `ask_question` |
 | **Dispatch subagent** | `Agent` | `invoke_subagent` | Native agent | `spawn_agent` |
+
+## Instructions file resolution
+
+To support multiple platforms and harnesses, the briefing skill abstracts the project instructions file (e.g., `CLAUDE.md` or `AGENTS.md`) as `<instructions-file>`. When reading or writing this file, resolve the path using these rules:
+
+- **Active Runtime Defaults:**
+  - On Claude Code, default to `CLAUDE.md`.
+  - On agy, Cursor, and Codex, default to `AGENTS.md`.
+- **Existing Files Check:**
+  - If only one file exists, use it.
+  - If both exist, use the active runtime's default.
+  - If neither exists, default to `CLAUDE.md` under Claude Code, and `AGENTS.md` under others.
+- **Symlink / Pointer Resolution:**
+  - If a project contains `AGENTS.md` pointing to `CLAUDE.md` (or vice-versa) or a symlink exists, resolve the target but perform edits using the native filename expected by the active runtime.
+- **Backup File:**
+  - The backup file is always `<instructions-file>.before-briefing-setup.bak`.
 
 ## How to parse the args
 
@@ -115,11 +131,11 @@ The briefing reads from four layers, each with a clear failure mode. The same na
 | Layer | What it does | Fails when… |
 |---|---|---|
 | **Always-on — universal mechanics** | Probes git, GitHub, top-level files, per-project memory. Knows nothing about specific conventions. | The project isn't a git repo (skip git/gh; fall back to file discovery only). |
-| **Declared — explicit declarations** | Reads `## Project Map` from CLAUDE.md. Declared fields are authoritative. | The section is absent (skip Declared entirely; rely on Default paths). |
+| **Declared — explicit declarations** | Reads `## Project Map` from `<instructions-file>`. Declared fields are authoritative. | The section is absent (skip Declared entirely; rely on Default paths). |
 | **Default paths — convention sniffing** | Probes for canonical-conventions signatures (`docs/0-brainstorms/`, `docs/ROADMAP.md`, status frontmatter, ROADMAP section names). Fills in any field Declared didn't specify. | The project doesn't follow the canonical conventions (skip the lit-up behaviour; degrade to Always-on-only output). |
 | **Fallbacks — graceful degradation** | Standing instructions for every failure mode. Names every gap in the output; never fabricates. | (Fallbacks is itself the failure-handling layer; it doesn't fail.) |
 
-**Precedence and ordering:** Always-on runs unconditionally. Declared takes precedence over Default paths — read Declared if `## Project Map` is present in CLAUDE.md. Default paths fills any field Declared didn't specify. Fallbacks applies to any source that fails along the way.
+**Precedence and ordering:** Always-on runs unconditionally. Declared takes precedence over Default paths — read Declared if `## Project Map` is present in `<instructions-file>`. Default paths fills any field Declared didn't specify. Fallbacks applies to any source that fails along the way.
 
 ### Always-on — universal mechanics
 
@@ -183,7 +199,7 @@ If `gh` is missing or unauthenticated, skip these and note the gap in the footer
 **Top-level docs (well-known by name, not a convention):**
 
 ```bash
-ls -l README.md CLAUDE.md 2>/dev/null   # mtimes for staleness check
+ls -l README.md <instructions-file> 2>/dev/null   # mtimes for staleness check
 ```
 
 These files are typically already loaded in the conversation context; the recheck is for noticing recent edits, not for re-reading content unless mtimes suggest staleness. They are universal open-source-convention files, not project-specific — that's why they live in Always-on.
@@ -199,9 +215,9 @@ ls -l "$HOME/.claude/projects/$slug/memory/MEMORY.md" 2>/dev/null
 
 If the index file exists (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one. This is a Claude Code mechanic, not a project convention, so it lives in Always-on.
 
-### Declared — explicit declarations via CLAUDE.md
+### Declared — explicit declarations via <instructions-file>
 
-Read the `## Project Map` section from CLAUDE.md (already in your context). Each line is `- **Field**: value`. Recognised fields:
+Read the `## Project Map` section from `<instructions-file>` (already in your context). Each line is `- **Field**: value`. Recognised fields:
 
 - **Tracker** — where work items live (e.g. `GitHub Issues`, `Linear team FOO`, `Jira project BAR`, `Notion`, `GitHub Project N`, file path, or `none`).
 - **Board** — URL of the active board / project view.
@@ -215,7 +231,7 @@ Declared fields are **authoritative** — they override any Default paths sniffi
 
 For complete examples (canonical + non-canonical project layouts), per-field decision guidance, and discovery hints (how to figure out what to put in each field), see [§5.8 of the canonical conventions guide](`<CANONICAL_CONVENTIONS_URL>`#58--project-map-section-in-claudemd).
 
-Presence check: grep **case-insensitively** for `^## Project Map` OR the deprecated `^## Project Context` in the project's CLAUDE.md. The canonical form is `## Project Map` (Title Case). Tolerate two earlier names for backward compatibility:
+Presence check: grep **case-insensitively** for `^## Project Map` OR the deprecated `^## Project Context` in the project's `<instructions-file>`. The canonical form is `## Project Map` (Title Case). Tolerate two earlier names for backward compatibility:
 
 - `## Project Context` (Title Case) — the canonical name before the 2026-05-07 rename to Map.
 - `## Project context` (sentence case) — the original canonical name before the 2026-05-07 Title Case rename.
@@ -223,7 +239,7 @@ Presence check: grep **case-insensitively** for `^## Project Map` OR the depreca
 The probe matches all variants:
 
 ```bash
-grep -i -E '^## Project (Map|Context)' CLAUDE.md
+grep -i -E '^## Project (Map|Context)' <instructions-file>
 ```
 
 If absent, skip the Declared read entirely and proceed to Default paths. When a deprecated variant matches, Declared still reads the section as authoritative; the deprecation does not affect parsing. `/briefing setup` proposes a header rename to the canonical form when run on a project with a deprecated section name (see **Existing `## Project Map`** below).
@@ -274,13 +290,13 @@ The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`,
 
 #### Prose-inference fallback
 
-When Declared is absent (no `## Project Map` section in CLAUDE.md, even after case-insensitive probe) AND Default paths's primary canonical-path probe finds nothing for a given field, attempt a soft prose scan of `CLAUDE.md` and `README.md` as a last-resort fallback before declaring the field "not found".
+When Declared is absent (no `## Project Map` section in `<instructions-file>`, even after case-insensitive probe) AND Default paths's primary canonical-path probe finds nothing for a given field, attempt a soft prose scan of `<instructions-file>` and `README.md` as a last-resort fallback before declaring the field "not found".
 
 Per-field inference rules (only the fields with high signal-to-noise; others stay "not found"):
 
 | Field | Inference rule |
 |---|---|
-| **Roadmap** | Case-insensitive scan for markdown links to files matching `*roadmap*.md` (e.g. `[ROADMAP](docs/ROADMAP.md)`, `see [our roadmap](roadmap.md)`). One match → use it. Multiple → prefer the one in CLAUDE.md over README.md (CLAUDE.md is more authoritative). Zero or ambiguous → fall through to "not found". |
+| **Roadmap** | Case-insensitive scan for markdown links to files matching `*roadmap*.md` (e.g. `[ROADMAP](docs/ROADMAP.md)`, `see [our roadmap](roadmap.md)`). One match → use it. Multiple → prefer the one in `<instructions-file>` over README.md (`<instructions-file>` is more authoritative). Zero or ambiguous → fall through to "not found". |
 | **Changelog** | Same pattern, matching `*changelog*.md`. |
 | **Architecture** | Same pattern, matching `*architecture*.md` or `*arch*.md`. |
 | **Tracker** | Scan for explicit prose mentions of `GitHub Issues` (with capital G/I), `Linear team <name>`, `Jira project <name>`, `Notion`. Single explicit mention → infer that tracker; multiple distinct trackers mentioned → don't infer (real ambiguity), fall through to "not found". |
@@ -293,8 +309,8 @@ Per-field inference rules (only the fields with high signal-to-noise; others sta
 
 **Surfacing inferred values:**
 
-- In default-mode briefing: inferred fields render the same as declared/canonical-detected fields, but with an `(inferred)` suffix in the snapshot bullet, e.g. `**Roadmap:** docs/ROADMAP.md (inferred from CLAUDE.md) — 3 in flight, 5 next-action queued`.
-- In `/briefing sources` "What was read in this project": inferred fields appear in a new line `**Inferred from prose:** <field>=<path> (CLAUDE.md), ...` between `Default paths matched:` and `Not found:`.
+- In default-mode briefing: inferred fields render the same as declared/canonical-detected fields, but with an `(inferred)` suffix in the snapshot bullet, e.g. `**Roadmap:** docs/ROADMAP.md (inferred from <instructions-file>) — 3 in flight, 5 next-action queued`.
+- In `/briefing sources` "What was read in this project": inferred fields appear in a new line `**Inferred from prose:** <field>=<path> (<instructions-file>), ...` between `Default paths matched:` and `Not found:`.
 - The `★ About this briefing` block is unchanged — inference doesn't fire any bullet by itself.
 
 **No writes from inference.** Inferred values stay inferred. To make them authoritative, the user runs `/briefing setup`, which proposes the inferred values as detected starting points for the `## Project Map` section. Setup mode's detection rules use the same prose-inference logic.
@@ -305,7 +321,7 @@ This check is invoked specifically by the `/briefing sources` mode (and used to 
 
 | # | Signature | How to check |
 |---|---|---|
-| 1 | `## Project Map` section in CLAUDE.md | `grep -i -E '^## Project (Map\|Context)' CLAUDE.md` (case-insensitive — tolerates the deprecated `## Project Context` name and lowercase variants) |
+| 1 | `## Project Map` section in `<instructions-file>` | `grep -i -E '^## Project (Map\|Context)' <instructions-file>` (case-insensitive — tolerates the deprecated `## Project Context` name and lowercase variants) |
 | 2 | `docs/ROADMAP.md` exists | filesystem probe |
 | 3 | `docs/CHANGELOG.md` exists | filesystem probe |
 | 4 | Lifecycle dirs present (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` at minimum) | filesystem probe; require all three |
@@ -416,7 +432,7 @@ Reference roadmap priority (if found), dependency chain, newly unblocked items.
 
 The default-mode briefing's output is the template above plus the conditional `★ About this briefing` block — nothing else. **Don't append response-style wrappers** that the model would normally add in a general task: no separate `## Open decisions` block, no extra `★ Insight` block, no free-form "What's next" paragraph outside the briefing's `### What's next` section. The briefing's own structure (TL;DR / Snapshot / What's in flight / Recent activity / What's next / Decisions / attention / `★ About this briefing`) covers everything a wrapper would. The skill output IS the response.
 
-When the user's CLAUDE.md or another global rule mandates a closing-block format (e.g. `## Open decisions` for blocking questions), that rule applies to general conversational replies — not to skill output. Skill specs override conversational defaults for their own scope.
+When the user's `<instructions-file>` or another global rule mandates a closing-block format (e.g. `## Open decisions` for blocking questions), that rule applies to general conversational replies — not to skill output. Skill specs override conversational defaults for their own scope.
 
 ### Section-by-section rules
 
@@ -479,7 +495,7 @@ Each bullet renders only when its trigger fires. Block omits when zero bullets a
    ```
    - **Briefing relied on git/gh only** — no `## Project Map` declared.
      - **`/briefing sources`** — see what else this skill could read
-     - **`/briefing setup`** — declare paths in CLAUDE.md
+     - **`/briefing setup`** — declare paths in <instructions-file>
    ```
 
    Multi-action exception: bullet 2 is the only inventory entry that renders **two indented sub-bullets** (one per command — `sources` and `setup`). All other bullets render at most one sub-bullet per the standard observation/sub-bullet pattern.
@@ -569,7 +585,7 @@ Live universal probes — run in every project.
 ✓ gh     <auth state · PR / issue / CI counts>
 ```
 
-### Project Map (<state in CLAUDE.md>)
+### Project Map (<state in <instructions-file>>)
 
 Where you tell the skill which paths matter.
 
@@ -616,8 +632,8 @@ Each H3 heading folds current state into a parenthetical so the reader sees stat
 | Section | State condition | Heading |
 |---|---|---|
 | Project State | always | `### Project State (git + GitHub)` |
-| Project Map | `## Project Map` declared in CLAUDE.md | `### Project Map (Declared in CLAUDE.md)` |
-| Project Map | `## Project Map` absent | `### Project Map (No Section Found in CLAUDE.md)` |
+| Project Map | `## Project Map` declared in `<instructions-file>` | `### Project Map (Declared in <instructions-file>)` |
+| Project Map | `## Project Map` absent | `### Project Map (No Section Found in <instructions-file>)` |
 | Canonical Structure | ≥ 1 signal returns ✓ or ✗ | `### Canonical Structure` |
 | Canonical Structure | No signal preconditions met | `### Canonical Structure (Not Detected)` — code block omitted, hint stays |
 | Other Layouts Found | ≥ 1 non-canonical artifact found | `### Other Layouts Found` |
@@ -649,7 +665,7 @@ Below the `---` rule: legend, status, CTA, date stamp. The status line summarise
 |---|---|---|
 | All fields ✓ or ⊘ (no ✗) | `**All declared Map fields resolved.**` | `Declare additional sources or fix any ✗ above.` |
 | Any ✗ in Project Map zone | `**Project Map has <N> missing field(s).**` | `Probe the project, populate missing fields, write only after you confirm.` |
-| `## Project Map` section absent | `` **No `## Project Map` section in CLAUDE.md.** `` | `Adds the section interactively. Probes the project, fills detectable fields, writes only after you confirm.` |
+| `## Project Map` section absent | `` **No `## Project Map` section in <instructions-file>.** `` | `Adds the section interactively. Probes the project, fills detectable fields, writes only after you confirm.` |
 
 The CTA always renders as two lines:
 
@@ -684,13 +700,13 @@ Section hints (one line under each heading) describe the section's *purpose*, no
 - **`★ About this briefing` bullets other than bullet 6 (depth conflict).** Bullet 2 ("Briefing relied on git/gh only — `/briefing sources` to see what else this skill can read") is *circular* when the user is already in sources mode — suppress it. Bullets 1, 3, 4, 5, 7 don't apply either: they describe the default-mode briefing's source coverage, not the sources view's own state. Only bullet 6 (depth conflict, e.g. `Depth ignored when 'sources' mode is active`) legitimately fires here.
 - **Response-style wrappers from outside the skill** — no `## Open decisions` block, no extra `★ Insight` block, no "What's next" framing the model would add in a general task. The skill output IS the response.
 
-When the user's CLAUDE.md or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to skill output. Skill specs override conversational defaults for their own scope.
+When the user's `<instructions-file>` or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to skill output. Skill specs override conversational defaults for their own scope.
 
 ## /briefing setup mode
 
-Triggered by passing `setup` as the mode keyword. Adds (or updates) the `## Project Map` section in CLAUDE.md.
+Triggered by passing `setup` as the mode keyword. Adds (or updates) the `## Project Map` section in `<instructions-file>`.
 
-This is the only mode that writes to a project file other than `briefing-log/`. The write happens after explicit user confirmation, with a one-time backup at `CLAUDE.md.before-briefing-setup.bak` created first.
+This is the only mode that writes to a project file other than `briefing-log/`. The write happens after explicit user confirmation, with a one-time backup at `<instructions-file>.before-briefing-setup.bak` created first.
 
 **Compatibility:**
 
@@ -701,11 +717,11 @@ This is the only mode that writes to a project file other than `briefing-log/`. 
 ### What it does
 
 1. **Probe** the project state — same probes as `/briefing sources` (git remote, GitHub PRs/issues, canonical paths, working-memory dirs, ADR locations, per-project memory).
-2. **Read** CLAUDE.md (if it exists) and look for an existing `## Project Map` section.
+2. **Read** `<instructions-file>` (if it exists) and look for an existing `## Project Map` section.
 3. **Propose** a `## Project Map` block populated from probes (see **Detection rules** below). Classify each field as **high confidence** (canonical path matched, tracker CLI returned data) or **low confidence** (defaulted to `none`, prose-inferred, or fell back to a non-canonical signal — see **Low-confidence prompts** below).
 4. **Output** the proposal — a short summary of what was probed, the proposed block, and the insertion location.
 5. **Invoke `AskUserQuestion`** with one structured question per low-confidence field (see **Low-confidence prompts** below). When every field is high confidence, invoke `AskUserQuestion` with a single yes/no question to confirm the write.
-6. **Apply the user's choices** — override each field with the selected option (or the user's free-form `Other` value), then write to CLAUDE.md after backup. The structured selection is itself the commitment; no separate confirmation step. If the user picks "Don't write" / "No", print the block for manual paste and stop.
+6. **Apply the user's choices** — override each field with the selected option (or the user's free-form `Other` value), then write to `<instructions-file>` after backup. The structured selection is itself the commitment; no separate confirmation step. If the user picks "Don't write" / "No", print the block for manual paste and stop.
 
 ### Output template
 
@@ -738,7 +754,7 @@ Setup proposal for `<project-name>`
 
 ## Apply
 
-Answering the question(s) below writes the resolved block to CLAUDE.md (creating `CLAUDE.md.before-briefing-setup.bak` as a one-time backup first).
+Answering the question(s) below writes the resolved block to `<instructions-file>` (creating `<instructions-file>.before-briefing-setup.bak` as a one-time backup first).
 ```
 
 After printing the template above, the model invokes `AskUserQuestion` once with one question per low-confidence field (or, when every field is high confidence, a single yes/no question to confirm the write). See **Low-confidence prompts** below for the question shape and option rules. Do **not** render the numbered list, the four-option `Reply` block, or any free-form override syntax in the message body — the structured questions replace them.
@@ -747,7 +763,7 @@ If the proposed block contains `<placeholder>` markers, add a one-line note befo
 
 ```
 Note: <N> placeholder(s) remain (see fields marked `<placeholder: ...>` above).
-You can write now and fill them in CLAUDE.md afterwards, or cancel and edit
+You can write now and fill them in `<instructions-file>` afterwards, or cancel and edit
 the proposal first.
 ```
 
@@ -755,7 +771,7 @@ the proposal first.
 
 Pre-fill rules per field:
 
-- **Tracker** — Try `gh issue list --limit 1` against the current GitHub remote. If it returns issues → `GitHub Issues`. Else apply the Default paths prose-inference rule (scan CLAUDE.md/README for explicit mentions of `Linear team <name>`, `Jira project <name>`, `Notion`). Else if `linear-cli` is in `$PATH` → `<placeholder: Linear team <NAME>>`. Else if no detection → `<placeholder: GitHub Issues / Linear team X / Jira project Y / none>`.
+- **Tracker** — Try `gh issue list --limit 1` against the current GitHub remote. If it returns issues → `GitHub Issues`. Else apply the Default paths prose-inference rule (scan `<instructions-file>`/README for explicit mentions of `Linear team <name>`, `Jira project <name>`, `Notion`). Else if `linear-cli` is in `$PATH` → `<placeholder: Linear team <NAME>>`. Else if no detection → `<placeholder: GitHub Issues / Linear team X / Jira project Y / none>`.
 - **Board** — No reliable detection. Default `none` with a note that the user can paste a URL.
 - **Roadmap** — Probe `docs/ROADMAP.md` → `ROADMAP.md` (root) → Default paths prose inference (markdown links to `*roadmap*.md`) → `none`.
 - **Changelog** — Probe `docs/CHANGELOG.md` → `CHANGELOG.md` (root) → Default paths prose inference (markdown links to `*changelog*.md`) → `none`.
@@ -763,7 +779,7 @@ Pre-fill rules per field:
 - **Working memory** — Canonical layout (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all present) → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`. (Prose inference skipped — directory inference is too low signal.)
 - **Other** — Pre-suggest bullets based on detections: non-canonical working-memory layouts (e.g. `docs/plans/` with date-prefixed files), test-artefact directories (e.g. `tmp/tst_*`), custom scripts in `bin/` or `scripts/`. If nothing notable, leave a `<placeholder>` line.
 
-When a value comes from prose inference, mark it in the proposal output with `(inferred from CLAUDE.md)` or `(inferred from README.md)` so the user understands the source before they confirm.
+When a value comes from prose inference, mark it in the proposal output with `(inferred from <instructions-file>)` or `(inferred from README.md)` so the user understands the source before they confirm.
 
 ### Low-confidence prompts
 
@@ -776,10 +792,10 @@ Existing-section updates use the same `AskUserQuestion` rendering for per-field 
 | Field | High confidence | Low confidence (prompt the user) |
 |---|---|---|
 | Tracker | `gh issue list` returned issues for the current GitHub remote | Prose-inferred, CLI-on-PATH-only (e.g. `linear-cli` present but not exercised), or no detection (default `<placeholder>`) |
-| Board | (always low — no reliable auto-detection) | Anything found via prose inference; or default `none` when CLAUDE.md/README contains URLs that look like project boards (GitHub Projects, Linear views, Notion boards) |
+| Board | (always low — no reliable auto-detection) | Anything found via prose inference; or default `none` when `<instructions-file>`/README contains URLs that look like project boards (GitHub Projects, Linear views, Notion boards) |
 | Roadmap | Canonical path (`docs/ROADMAP.md`, `ROADMAP.md`) | Prose-inferred, default `none` |
 | Changelog | Canonical path | Prose-inferred, default `none` |
-| Architecture | Canonical path (`docs/architecture.md`, `docs/system/`) | Prose-inferred, default `none` (especially when CLAUDE.md/README mentions architecture documentation in prose but the path didn't match `*architecture*.md` / `*arch*.md` — e.g. `docs/5-guides/PROJECT.md`) |
+| Architecture | Canonical path (`docs/architecture.md`, `docs/system/`) | Prose-inferred, default `none` (especially when `<instructions-file>`/README mentions architecture documentation in prose but the path didn't match `*architecture*.md` / `*arch*.md` — e.g. `docs/5-guides/PROJECT.md`) |
 | Working memory | Canonical layout detected (`docs/0-brainstorms/` + `docs/2-design/` + `docs/3-plans/` all present) | `status:` frontmatter fallback (acceptable but flag the user so they can confirm or narrow), default `none` |
 | Other | (none — see below) | Any auto-suggested bullet describing transitional / uncertain state (e.g. systems being replaced, gitignored runtime, branches with unmerged commits that touch the artifact) |
 
@@ -824,7 +840,7 @@ options: [
 `AskUserQuestion` returns the user's selected `label` per question (or their custom `Other` text). Apply each selection as the override for the corresponding field, then:
 
 - **All low-confidence answers were the no-op option** — write the proposal as-is (the user reviewed and accepted).
-- **At least one override** — apply the overrides, write the resolved block to CLAUDE.md, and show the user the actual diff (line range, what was written).
+- **At least one override** — apply the overrides, write the resolved block to `<instructions-file>`, and show the user the actual diff (line range, what was written).
 - **User picked "Don't write" / "No"** on the high-confidence yes/no question — print the block for manual paste, do not write.
 - **User typed a paste-revised block in `Other`** — apply that block verbatim.
 
@@ -835,11 +851,11 @@ The `.bak` backup is the safety net if the user wants to undo.
 Skip the per-field questions and invoke `AskUserQuestion` once with a single yes/no:
 
 ```
-question: "Write the proposed `## Project Map` to CLAUDE.md?"
+question: "Write the proposed `## Project Map` to <instructions-file>?"
 header: "Apply"
 options: [
   { label: "Yes, write it (Recommended)",
-    description: "Adds the section. Creates CLAUDE.md.before-briefing-setup.bak as a one-time backup." },
+    description: "Adds the section. Creates <instructions-file>.before-briefing-setup.bak as a one-time backup." },
   { label: "No, just print",
     description: "Skips the write. The block stays in this conversation for manual paste." }
 ]
@@ -868,28 +884,28 @@ Always emit the canonical `## Project Map` (Title Case) header. The Declared pro
 
 ### Existing `## Project Map` (or deprecated variants)
 
-If CLAUDE.md already has a `## Project Map` section — or the deprecated `## Project Context` / `## Project context` — matched by the Declared case-insensitive probe:
+If `<instructions-file>` already has a `## Project Map` section — or the deprecated `## Project Context` / `## Project context` — matched by the Declared case-insensitive probe:
 
 1. Parse the existing fields.
 2. Compute the diff against the proposed (detected) block.
 3. Show the diff per-field: changing values, additions, fields that match. **If the existing header is a deprecated name**, list the rename as a top-level diff item: `Header: ## Project Context → ## Project Map` (or `## Project context → ## Project Map` for the doubly-deprecated lowercase form).
-4. Invoke `AskUserQuestion` with one question per **changed** field (1–4 per call; batch if more). Each question's options are `{label: "Update", description: "<current> → <proposed>"}`, `{label: "Keep current", description: "<current>"}`, and `{label: "Use other value (Other)", description: "Paste a custom value"}` — `(Recommended)` goes on `Update` only when the proposal materially improves the field (e.g. resolves a probed contradiction, fills a missing path the model verified exists). Include the deprecated-header rename as its own question with `Update` recommended.
+4. Invoke `AskUserQuestion` with one question per **changed** field (1–4 per call; batch if more). Each question's options are `{label: "Update", description: "<current> → <proposed>"}`, `{label: "Keep current", description: "<current>"}`, and `{label: "Use other value (Other)", description: "Paste a custom value"}` — `(Recommended)` goes on `Update` only when the proposal materially improves the field (e.g., resolves a probed contradiction, fills a missing path the model verified exists). Include the deprecated-header rename as its own question with `Update` recommended.
 5. Apply only the changes the user selected; don't blanket-overwrite. Fields whose answer was `Keep current` retain their existing value.
 
 ### Insertion location (no existing section)
 
-If `## Project Map` doesn't exist in CLAUDE.md:
+If `## Project Map` doesn't exist in `<instructions-file>`:
 
 - If a `## What this project is` (or similar one-line "what this is" section) exists, insert after that section.
 - Otherwise, insert directly after the title `# <name>` on line 1.
 
-If CLAUDE.md doesn't exist at all, propose creating one from the canonical scaffold ([`templates/default-project/CLAUDE.md`](`<CANONICAL_CONVENTIONS_URL>`/raw/templates/default-project/CLAUDE.md)) with the `## Project Map` populated. Tell the user the title is a placeholder.
+If `<instructions-file>` doesn't exist at all, propose creating one (as `CLAUDE.md` under Claude Code, or `AGENTS.md` under others) from the canonical scaffold (e.g., [`templates/default-project/CLAUDE.md`](`<CANONICAL_CONVENTIONS_URL>`/raw/templates/default-project/CLAUDE.md) or the platform's corresponding template) with the `## Project Map` populated. Tell the user the title is a placeholder.
 
 ### Backup mechanics
 
-Before write, copy the existing CLAUDE.md to `CLAUDE.md.before-briefing-setup.bak` (overwriting any prior backup — single rolling backup). On success, confirm: `Wrote ## Project Map to CLAUDE.md (line N). Backup at CLAUDE.md.before-briefing-setup.bak.`
+Before write, copy the existing `<instructions-file>` to `<instructions-file>.before-briefing-setup.bak` (overwriting any prior backup — single rolling backup). On success, confirm: `Wrote ## Project Map to <instructions-file> (line N). Backup at <instructions-file>.before-briefing-setup.bak.`
 
-If CLAUDE.md doesn't exist, no backup is needed; create the new file with `# <project-name>` placeholder + the proposed `## Project Map`.
+If `<instructions-file>` doesn't exist, no backup is needed; create the new file (as `CLAUDE.md` under Claude Code, or `AGENTS.md` under others) with `# <project-name>` placeholder + the proposed `## Project Map`.
 
 ### Output isolation
 
@@ -900,7 +916,7 @@ Setup mode's output is *exactly* the template above (proposal + confirmation pro
 - No `★ About this briefing` bullets except bullet 6 (depth or save conflict).
 - No response-style wrappers (Claude's `## Open decisions`, `★ Insight`, free-form "What's next").
 
-When the user's CLAUDE.md or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to setup mode's output. Skill specs override conversational defaults for their own scope.
+When the user's `<instructions-file>` or another global rule mandates a closing-block format, that rule applies to general conversational replies — not to setup mode's output. Skill specs override conversational defaults for their own scope.
 
 ### Tone
 
@@ -973,8 +989,8 @@ The save log is the only write this skill ever makes; everything else is read-on
 - **No emojis, no hype.** "Last shipped X" not "Successfully shipped X! 🎉".
 - **Concise over comprehensive.** Bullets when structure helps scanning. No "It's worth noting that…"
 - **Honest about gaps.** Source unreachable / empty → name it, don't fabricate.
-- **Read-only on everything except `briefing-log/` and (in `setup` mode only) `CLAUDE.md`.** Two writes the skill performs: (1) the save log writes to `briefing-log/` when `save` is passed; (2) the `setup` mode writes to `CLAUDE.md` after explicit user confirmation, with a `.bak` backup created first. No other modes touch project files.
-- **Suggest, don't impose.** Default-mode output never lobbies for convention adoption. Audit-style suggestions live in `/briefing sources` and are framed descriptively: equivalent info in different locations (declared via `## Project Map`) is a first-class hit, not a deviation. Never auto-applies a convention; never edits CLAUDE.md or any other project file.
+- **Read-only on everything except `briefing-log/` and (in `setup` mode only) `<instructions-file>`.** Two writes the skill performs: (1) the save log writes to `briefing-log/` when `save` is passed; (2) the `setup` mode writes to `<instructions-file>` after explicit user confirmation, with a `.bak` backup created first. No other modes touch project files.
+- **Suggest, don't impose.** Default-mode output never lobbies for convention adoption. Audit-style suggestions live in `/briefing sources` and are framed descriptively: equivalent info in different locations (declared via `## Project Map`) is a first-class hit, not a deviation. Never auto-applies a convention; never edits `<instructions-file>` or any other project file.
 - **Prefer "you" framing.** This is a personal orientation tool ("you stopped mid-X"). For orientation, "you" is sharper than "we" or "the code" — the user invoked the skill *to be reminded what they were doing*.
 - **No time estimates.** Don't say "this should take 2 hours." Estimate scope (small / medium / large by analogy to similar past items in the changelog) at most.
 
@@ -1002,4 +1018,4 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't put audit/setup content in default-mode briefing output. That belongs in `/briefing sources`.
 - Don't presume canonical conventions are preferred over declared paths. Both are first-class in `/briefing sources`.
 - Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: any content about the briefing skill's *setup* (declaring `## Project Map`, adopting canonical conventions, enriching briefings) lives in `★ About this briefing` bullet 2 and `/briefing sources` only — never in `Decisions / attention`, `What's next`, or any other body section. If you find yourself writing a body bullet that ends with "…if you want richer briefings" or "…the briefing-readable fields", you've leaked setup content into orientation content; cut it.
-- Don't wrap skill output with general response-style blocks. Both `/briefing` and `/briefing sources` produce complete outputs per their templates — appending Claude's normal `## Open decisions` block, an extra `★ Insight` block, or a free-form "What's next" paragraph is wrapper-creep. Global response-style rules (e.g. from CLAUDE.md) govern conversational replies; the skill spec overrides them for skill output. See **Output isolation** in both `## Output template` and `## /briefing sources mode`.
+- Don't wrap skill output with general response-style blocks. Both `/briefing` and `/briefing sources` produce complete outputs per their templates — appending Claude's normal `## Open decisions` block, an extra `★ Insight` block, or a free-form "What's next" paragraph is wrapper-creep. Global response-style rules (e.g., from `<instructions-file>`) govern conversational replies; the skill spec overrides them for skill output. See **Output isolation** in both `## Output template` and `## /briefing sources mode`.
