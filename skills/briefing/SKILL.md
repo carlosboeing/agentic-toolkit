@@ -74,6 +74,20 @@ Order of args does not matter. `/briefing deep save` and `/briefing save deep` a
 
 The depth default is **adaptive**: when no depth keyword is provided, the briefing's length is content-driven — sections appear or disappear based on what the project state actually contains. `quick`, `standard`, and `deep` are explicit overrides for fixed-length tiers; "no dial" is its own behaviour, not a synonym for `standard`.
 
+## Platform tool mappings
+
+When executing the instructions in this skill (reading files, executing commands, creating files, asking user questions), use the appropriate tool for your active runtime:
+
+| Action | Claude Code | Antigravity CLI (`agy`) | Cursor CLI | Codex |
+|---|---|---|---|---|
+| **Read file** | `Read` | `view_file` | Native view / `cat` | `shell` (e.g. `cat`) |
+| **Write/Create file** | `Write` | `write_to_file` | Native edit | `apply_patch` / `shell` |
+| **Edit file** | `Edit` | `replace_file_content` | Native edit | `apply_patch` |
+| **Run command** | `Bash` | `run_command` | Native terminal | `shell` |
+| **Search files** | `Grep` | `grep_search` | Native search | `shell` (e.g. `grep`) |
+| **Ask user** | `AskUserQuestion` | `ask_question` | Native input | `wait_user` / `ask_question` |
+| **Dispatch subagent** | `Agent` | `invoke_subagent` | Native agent | `spawn_agent` |
+
 ## How to parse the args
 
 Walk the tokens once and bucket each one:
