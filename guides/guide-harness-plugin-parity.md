@@ -39,6 +39,7 @@ Configured in `~/.gemini/config/mcp_config.json`.
 | `claude-mem` | HTTP (lazy) | 19 | Memory/observations/corpus |
 | `context7` | HTTP (lazy) | 2 | `resolve-library-id`, `query-docs` |
 | `headroom` | stdio (lazy) | 3 | Context compression (compress/retrieve/stats) |
+| `fathom` | HTTP (lazy) | 4 | Fathom meeting capture (list/search meetings, get summary/transcript) |
 
 ### CLI Proxies & Token Optimizers
 
