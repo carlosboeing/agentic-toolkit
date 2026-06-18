@@ -74,6 +74,8 @@ Cross-harness skills available to any agent harness reading this directory.
 | Skill | Type | Source |
 |-------|------|--------|
 | `briefing` | Symlink | `~/.claude/skills/briefing` (added 2026-06-14) |
+| `capture-meeting` | Symlink | `~/.claude/skills/capture-meeting` (added 2026-06-18) |
+| `externalize-deliverable` | Symlink | `~/.claude/skills/externalize-deliverable` (added 2026-06-18) |
 | `ui-ux-pro-max` | Directory | Installed via `uipro` |
 | `impeccable` | Directory | Manual install |
 | `find-skills` | Directory | Manual install |
@@ -114,6 +116,8 @@ Legend: **Official** | **Substitute** | **MCP** | **Symlink skill** | **Skip**
 | elements-of-style | **Symlink skill** from `~/.claude/skills/` if desired; low priority |
 | graphify | **Installed** — `~/.gemini/config/skills/graphify` |
 | briefing | **Symlink skill** — `~/.agents/skills/briefing` → `~/.claude/skills/briefing` |
+| capture-meeting | **Symlink skill** — `~/.agents/skills/capture-meeting` → `~/.claude/skills/capture-meeting` |
+| externalize-deliverable | **Symlink skill** — `~/.agents/skills/externalize-deliverable` → `~/.claude/skills/externalize-deliverable` |
 | learn | **Symlink skill** from `~/.claude/skills/learn` if desired |
 | octo | **Skip** — no port; multi-model review optional only |
 | financial-* (6 plugins) | **Skip** unless doing IB work in Agy |
