@@ -7,6 +7,7 @@ Project-bootstrap scaffolds for starting a new project that follows the conventi
 | Template | What |
 |---|---|
 | [`default-project/`](default-project/) | Generic single-project scaffold: `CLAUDE.md`, `README.md`, `docs/` skeleton (lifecycle + evergreen + standing indexes), `.gitignore`. |
+| [`lean-claude-settings/`](lean-claude-settings/) | A lean `.claude/settings.json` (connectors off + finance plugins off) for running Claude Code with minimal startup context. See [`guide-trimming-claude-code-startup-context.md`](../guides/guide-trimming-claude-code-startup-context.md). |
 
 (More variants may land later — software-with-tests, docs-only, infrastructure, etc. Out of v1 scope.)
 

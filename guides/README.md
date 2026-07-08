@@ -12,6 +12,7 @@ How-to guides for using Claude Code productively. Each guide is a stable, evergr
 | [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md) | Official vs substitute vs skip mapping from Claude Code / Cursor plugins to Antigravity (`agy`) installs, skills, and MCP. |
 | [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | When to use Playwright MCP vs the Playwright CLI vs chrome-devtools-plugin for agentic (non-CI) browser work — exploratory browsing and aesthetics vs repeatable flows and goldens, per-harness defaults, the harness-dependent token-cost truth, and corrected myths. |
 | [`guide-agy-model-and-quota-selection.md`](guide-agy-model-and-quota-selection.md) | Manual model and quota strategy for long Agy sessions — Gemini vs Claude pools, Flash/Pro/Sonnet/Opus defaults. |
+| [`guide-trimming-claude-code-startup-context.md`](guide-trimming-claude-code-startup-context.md) | The durable recipe for cutting Claude Code startup context (~232k → ~74k measured): a global lean baseline (`disableClaudeAiConnectors` + finance plugins off), self-hosting the integrations you use in code (Fathom worked example) so they survive the connector flag, dropping redundant browser stacks, and the measure loop. Pairs with `reference/reference-claude-code-context-costs.md`. |
 
 ## Conventions
 
