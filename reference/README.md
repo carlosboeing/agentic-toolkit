@@ -12,6 +12,7 @@ Snapshots, inventories, and lookups for coding agent configurations and historic
 | [`reference-rtk-token-savings.md`](reference-rtk-token-savings.md) | Performance metrics and command optimization strategies for RTK (Rust Token Killer) based on historical CLI runs. |
 | [`reference-headroom-savings.md`](reference-headroom-savings.md) | Installation layout and context compression metrics for Headroom context optimization proxy. |
 | [`reference-headroom-alternatives.md`](reference-headroom-alternatives.md) | Architectural comparison of Headroom alternatives including Kompact, LLMLingua-2, and Native Provider Caching. |
+| [`reference-claude-code-context-costs.md`](reference-claude-code-context-costs.md) | Per-bucket and per-server startup token costs from `/context`, with the control lever and lean replacement for each connector/plugin, plus the measure loop. |
 
 ## Conventions
 
