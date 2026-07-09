@@ -35,7 +35,7 @@ Change nothing until you can measure. Two tools:
 | `disableClaudeAiConnectors: true` (settings.json) | all claude.ai connectors | **all-or-nothing** | ✅ |
 | `enabledPlugins: {"x@mkt": false}` (settings.json) | one plugin's MCP + skills + agents | per-plugin | ✅ |
 | `claude mcp add …` (self-config MCP in `~/.claude.json`) | one server | per-server; **survives `disableClaudeAiConnectors`** | ✅ |
-| `claude --no-chrome` | Claude-in-Chrome extension integration | on/off | launch flag |
+| `/chrome` → "Enabled by default: No" | Claude-in-Chrome extension | on/off | menu toggle (reliable); `--no-chrome` is per-session only |
 
 Two facts make the recipe work:
 - Disabling connectors inside Claude Code does **not** touch the claude.ai web/desktop apps — those are separate account toggles. Lean Claude Code costs you nothing there.
@@ -79,11 +79,9 @@ Disabling (not uninstalling) reclaims 100% of a plugin's context — MCP, skills
 
 ### 4. Drop redundant integrations
 
-If two stacks cover the same ground, keep the cheaper one. Example: `claude-in-chrome` (~10k) overlaps with `superpowers-chrome` (~1.3k, drives an existing Chrome via CDP) and Playwright (~6k, fresh-browser automation). Drop it:
+If two stacks cover the same ground, keep the cheaper one. Example: `claude-in-chrome` (~10k) overlaps with `superpowers-chrome` (~1.3k, drives an existing Chrome via CDP) and Playwright (~6k, fresh-browser automation). Disable it persistently via the `/chrome` menu → set **"Enabled by default: No"**, then summon it on demand with `claude --chrome` when you actually need your real logged-in browser.
 
-```bash
-claude --no-chrome   # add to your launch alias for a persistent default
-```
+> The reliable lever is the `/chrome` menu toggle. The `claudeInChromeDefaultEnabled` / `settings.json` keys are ignored (Claude Code issues [#26204](https://github.com/anthropics/claude-code/issues/26204), [#35825](https://github.com/anthropics/claude-code/issues/35825)), and `--no-chrome` is per-session only. This matches Anthropic's own guidance — enabling Chrome by default loads its tools into every session, so keep it off and use `--chrome` when needed.
 
 ## Reversibility
 
@@ -92,7 +90,7 @@ claude --no-chrome   # add to your launch alias for a persistent default
 | `disableClaudeAiConnectors: true` | delete the line / set `false` (user or a project scope) |
 | plugin `false` | set `true` / delete the key |
 | self-config MCP | `claude mcp remove <name>` |
-| `--no-chrome` | launch with `--chrome` |
+| Claude-in-Chrome off (`/chrome` → Enabled by default: No) | `/chrome` → Enabled by default: Yes, or `claude --chrome` on demand |
 
 ## Measured result
 
