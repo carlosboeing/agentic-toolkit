@@ -3,7 +3,7 @@ title: Harness plugin and skill parity (Claude Code → Antigravity)
 type: guide
 scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor]
 last_reviewed: 2026-07-11
-last_audited: 2026-06-14
+last_audited: 2026-07-11
 related:
   - guide-browser-automation-mcp-vs-cli.md
   - guide-cross-harness-project-instructions.md

@@ -49,7 +49,7 @@ A REPL wins when you don't yet know what you'll do next — unknown pages, explo
 |---|---|---|
 | **Claude Code** | Playwright MCP (idle cost is ~tool names — see token note) | Playwright CLI |
 | **Cursor** | Playwright MCP | Playwright CLI |
-| **Antigravity** | **chrome-devtools-plugin** (already bundled, no install) for live debugging; Playwright MCP for cross-harness parity | Playwright CLI |
+| **Antigravity** | Playwright MCP for parity; chrome-devtools-plugin (already bundled, no install) is an additional live-debug tool | Playwright CLI |
 
 In Claude Code/Cursor there is also **superpowers-chrome** (CDP) for the narrow case of attaching to an existing, *authenticated* browser session — neither a fresh MCP nor a CLI run shares your logged-in cookies. In Antigravity, the bundled chrome-devtools-plugin remains the live-debug tool, but Playwright MCP is also required for the cross-harness parity baseline below.
 
@@ -137,8 +137,8 @@ flowchart TD
     A["Browser task"] --> B{"Repeatable or needs artifacts?"}
     B -->|"Yes, spec / goldens / re-run"| D["Playwright CLI (@playwright/test)"]
     B -->|"No, exploratory or ad-hoc"| C{"Which harness?"}
-    C -->|"Claude Code or Cursor"| E["Playwright MCP"]
-    C -->|"Antigravity"| F["chrome-devtools-plugin (bundled)"]
+    C -->|"Claude Code, Codex, Cursor, or Antigravity"| E["Playwright MCP"]
+    C -->|"Antigravity live debugging"| F["chrome-devtools-plugin (additional tool)"]
     E --> G{"Worth keeping?"}
     F --> G
     G -->|"Yes, graduate it"| D
@@ -156,7 +156,7 @@ npx playwright codegen <url>        # record a flow into a spec
 npx playwright screenshot <url> out.png  # one-shot screenshot
 npx playwright install              # install browsers
 
-# Playwright MCP (Claude Code / Cursor) — add to MCP config
+# Playwright MCP (Claude Code / Codex / Cursor / Antigravity) — add to MCP config
 #   package: @playwright/mcp   (default: accessibility-tree snapshots; --vision for screenshots)
 ```
 
