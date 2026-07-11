@@ -1,8 +1,8 @@
 ---
 title: Browser automation for agents — Playwright MCP vs CLI (and chrome-devtools)
 type: guide
-scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, cursor]
-last_reviewed: 2026-06-14
+scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, claude-code, codex, cursor]
+last_reviewed: 2026-07-11
 related:
   - guide-harness-plugin-parity.md
   - guide-cross-harness-project-instructions.md
@@ -49,9 +49,55 @@ A REPL wins when you don't yet know what you'll do next — unknown pages, explo
 |---|---|---|
 | **Claude Code** | Playwright MCP (idle cost is ~tool names — see token note) | Playwright CLI |
 | **Cursor** | Playwright MCP | Playwright CLI |
-| **Antigravity** | **chrome-devtools-plugin** (already bundled, no install) | Playwright CLI |
+| **Antigravity** | **chrome-devtools-plugin** (already bundled, no install) for live debugging; Playwright MCP for cross-harness parity | Playwright CLI |
 
-In Claude Code/Cursor there is also **superpowers-chrome** (CDP) for the narrow case of attaching to an existing, *authenticated* browser session — neither a fresh MCP nor a CLI run shares your logged-in cookies. In Antigravity, only add `@playwright/mcp` if you specifically want the MCP REPL loop and accept the schema cost; otherwise the bundled chrome-devtools-plugin already covers live work.
+In Claude Code/Cursor there is also **superpowers-chrome** (CDP) for the narrow case of attaching to an existing, *authenticated* browser session — neither a fresh MCP nor a CLI run shares your logged-in cookies. In Antigravity, the bundled chrome-devtools-plugin remains the live-debug tool, but Playwright MCP is also required for the cross-harness parity baseline below.
+
+## Cross-harness Playwright baseline
+
+The baseline makes Codex, Claude Code, and Antigravity comparable for portable browser-assisted skills. It keeps MCP for exploratory, stateful browser work and the Playwright CLI for repeatable browser evidence. The authoritative setup reference is [Microsoft Playwright MCP](https://github.com/microsoft/playwright-mcp).
+
+| Harness | Exploratory browser interface | Repeatable proof | Project skill root |
+|---|---|---|---|
+| Claude Code | Playwright MCP | Playwright CLI and installed browsers | `.claude/skills` |
+| Codex | Playwright MCP | Playwright CLI and installed browsers | `.agents/skills` |
+| Antigravity | Playwright MCP for parity, with chrome-devtools available for live debugging | Playwright CLI and installed browsers | `.agents/skills` |
+
+### Configure only after inspection
+
+Start with Codex: inspect the existing registration with `codex mcp list` and do not create a duplicate. If the Playwright entry is absent, use the official command:
+
+```bash
+codex mcp add playwright npx "@playwright/mcp@latest"
+```
+
+Inspect Claude Code with `claude mcp list`; if needed, add the official registration:
+
+```bash
+claude mcp add playwright npx @playwright/mcp@latest
+```
+
+For Antigravity, inspect `~/.gemini/config/mcp_config.json` and add only this standard `mcpServers.playwright` object when it is absent or malformed:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+If this rollout added the registration, rollback removes only that `playwright` entry. Never overwrite unrelated user-level configuration.
+
+### Shared smoke procedure
+
+1. MCP: open `https://example.com`, obtain the page title or heading, and capture a screenshot to a disposable local path.
+2. CLI: run `npx playwright screenshot https://example.com <disposable-path>/example.png`; verify the PNG is non-empty.
+3. Record harness, command/interface, date, browser result, and any failure. Delete disposable artifacts after recording the result.
+4. A config listing alone is not a pass. A public-page pass does not authorize bypassing a gated quote.
 
 ## Token cost — the honest version
 

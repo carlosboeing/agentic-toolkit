@@ -1,8 +1,8 @@
 ---
 title: Harness plugin and skill parity (Claude Code → Antigravity)
 type: guide
-scope: [harness-parity, plugins, skills, antigravity, cursor]
-last_reviewed: 2026-06-14
+scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor]
+last_reviewed: 2026-07-11
 last_audited: 2026-06-14
 related:
   - guide-browser-automation-mcp-vs-cli.md
@@ -97,7 +97,7 @@ Evidence from a long autonomous run (2026-06): Superpowers + shell gates do ~90%
 | P1 | ui-ux-pro-max | `npm i -g uipro-cli` → `uipro init --ai antigravity` in repo |
 | P2 | Context7 | MCP in `mcp_config.json` (or `npx ctx7 setup --mcp --antigravity` / `--cli --antigravity`) |
 | P2 | claude-mem | MCP in `mcp_config.json` (or `npx claude-mem install`, pick Gemini CLI in picker) |
-| P3 | Playwright MCP | Add `@playwright/mcp` to `mcp_config.json` for exploratory/ad-hoc browsing; in Agy the bundled chrome-devtools-plugin covers live work, so this is optional — keep the Playwright CLI for goldens (see [browser automation guide](guide-browser-automation-mcp-vs-cli.md)) |
+| P3 | Playwright MCP | Required alongside the Playwright CLI for Claude Code, Codex, and Antigravity parity; configure only after inspection using the [shared baseline](guide-browser-automation-mcp-vs-cli.md#cross-harness-playwright-baseline) |
 | P3 | Browser live debug | **chrome-devtools-plugin** (Google bundled; replaces superpowers-chrome) |
 
 ## Claude Code plugins → Antigravity
@@ -110,7 +110,7 @@ Legend: **Official** | **Substitute** | **MCP** | **Symlink skill** | **Skip**
 | ui-ux-pro-max | **Official** — uipro |
 | context7 | **Official** — already wired as MCP; fresh: `npx ctx7 setup --mcp --antigravity` |
 | claude-mem | **Official** — already wired as MCP; fresh: `npx claude-mem install` (pick Gemini CLI) |
-| playwright | **MCP** — `@playwright/mcp` for exploratory/ad-hoc browsing; **Substitute** with chrome-devtools-plugin (bundled) for live debug in Agy; keep Playwright CLI (`@playwright/test`) for specs/goldens (see [browser automation guide](guide-browser-automation-mcp-vs-cli.md)) |
+| playwright | **MCP + CLI** — `@playwright/mcp` and Playwright CLI (`@playwright/test`) are both required for Claude Code, Codex, and Antigravity parity; chrome-devtools-plugin remains an additional Agy live-debug tool. Run the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure). |
 | superpowers-chrome | **Substitute** — chrome-devtools-plugin |
 | frontend-design | **Import** (`agy plugin import claude`) or **Bundled** at `~/.gemini/config/plugins/frontend-design` |
 | code-review, pr-review-toolkit, feature-dev | **Substitute** — Superpowers review / brainstorming / subagent skills |
@@ -131,11 +131,11 @@ Keep **both** Playwright MCP and the Playwright CLI; choose **per job**, not one
 
 | Tool | Use for | Per harness |
 |---|---|---|
-| **Playwright MCP** (`@playwright/mcp`) | Exploratory / ad-hoc / web browsing / live aesthetic review — the interactive REPL loop | Claude Code, Cursor |
-| **Playwright CLI** (`@playwright/test`) | Repeatable flows, visual-regression goldens, anything committed or re-run | Claude Code, Cursor, Antigravity |
-| **chrome-devtools-plugin** (Agy bundled) | Live debugging / exploratory in Antigravity (replaces superpowers-chrome) | Antigravity |
+| **Playwright MCP** (`@playwright/mcp`) | Exploratory / ad-hoc / web browsing / live aesthetic review — the interactive REPL loop | Claude Code, Codex, Antigravity (required for parity); Cursor |
+| **Playwright CLI** (`@playwright/test`) | Repeatable flows, visual-regression goldens, anything committed or re-run | Claude Code, Codex, Antigravity (required for parity); Cursor |
+| **chrome-devtools-plugin** (Agy bundled) | Additional live debugging / exploratory tool in Antigravity (replaces superpowers-chrome); it does not replace the MCP parity check | Antigravity |
 
-The CLI is **`@playwright/test`** (the `playwright` binary provides `test`, `codegen`, `screenshot`, `open`) — there is no `@playwright/cli` package. MCP idle cost is harness-dependent: Claude Code can defer tool schemas (~names until first use), so "skip the MCP to save context" only holds on eager-loading harnesses. Judging *looks* needs screenshots + vision either way — the accessibility snapshot shows structure, not aesthetics.
+The CLI is **`@playwright/test`** (the `playwright` binary provides `test`, `codegen`, `screenshot`, `open`) — there is no `@playwright/cli` package. MCP idle cost is harness-dependent: Claude Code can defer tool schemas (~names until first use), so "skip the MCP to save context" only holds on eager-loading harnesses. Judging *looks* needs screenshots + vision either way — the accessibility snapshot shows structure, not aesthetics. Follow the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure); configuration listings alone do not establish parity.
 
 ## Third-party routers (optional)
 
