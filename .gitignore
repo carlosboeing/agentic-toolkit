@@ -1,4 +1,5 @@
 .claude/
+.worktrees/
 .DS_Store
 
 # Nested canonical superpowers clone (its own git repo; managed via git pull)
