@@ -1,0 +1,37 @@
+#!/bin/sh
+
+: "${RESUME_TEST_LAUNCHCTL_LOG:?launchctl test log must be set}"
+jq -cn '$ARGS.positional' --args -- "$@" >>"$RESUME_TEST_LAUNCHCTL_LOG" || exit 1
+
+case "${1-}" in
+  bootstrap)
+    exit "${RESUME_TEST_LAUNCHCTL_BOOTSTRAP_STATUS:-0}"
+    ;;
+  bootout)
+    if [ -n "${RESUME_TEST_LAUNCHCTL_BOOTOUT_RELEASE:-}" ]; then
+      /usr/bin/touch "$RESUME_TEST_LAUNCHCTL_BOOTOUT_RELEASE" || exit 1
+    fi
+    if [ -n "${RESUME_TEST_LAUNCHCTL_BOOTOUT_WAIT_FOR:-}" ]; then
+      schedule_resume_bootout_wait_count=0
+      while [ ! -e "$RESUME_TEST_LAUNCHCTL_BOOTOUT_WAIT_FOR" ]; do
+        schedule_resume_bootout_wait_count=$((schedule_resume_bootout_wait_count + 1))
+        [ "$schedule_resume_bootout_wait_count" -lt 500 ] || exit 1
+        /bin/sleep 0.01
+      done
+    fi
+    if [ -n "${RESUME_TEST_LAUNCHCTL_STATUS_PATH:-}" ]; then
+      jq -r '.status' "$RESUME_TEST_LAUNCHCTL_STATUS_PATH" >"$RESUME_TEST_LAUNCHCTL_STATUS_PATH.at-bootout" || exit 1
+    fi
+    status=${RESUME_TEST_LAUNCHCTL_BOOTOUT_STATUS:-0}
+    if [ "$status" -ne 0 ]; then
+      printf '%s\n' "${RESUME_TEST_LAUNCHCTL_BOOTOUT_ERROR:-Input/output error}" >&2
+    fi
+    exit "$status"
+    ;;
+  print | kickstart)
+    exit 0
+    ;;
+  *)
+    exit 64
+    ;;
+esac

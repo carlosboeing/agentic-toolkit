@@ -1,0 +1,4 @@
+#!/bin/sh
+[ "$1" = -i ] || exit 64
+shift
+exec "$@"

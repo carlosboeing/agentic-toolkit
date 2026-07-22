@@ -1,0 +1,3 @@
+#!/bin/sh
+printf '%s\n' 'injected lockf failure' >&2
+exit 69

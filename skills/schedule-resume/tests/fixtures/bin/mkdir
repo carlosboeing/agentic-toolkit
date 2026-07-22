@@ -1,0 +1,71 @@
+#!/bin/sh
+
+for schedule_resume_mkdir_argument do
+  schedule_resume_mkdir_destination=$schedule_resume_mkdir_argument
+done
+
+if [ -n "${RESUME_TEST_FAIL_MKDIR_TARGET:-}" ] &&
+  [ "$schedule_resume_mkdir_destination" = "$RESUME_TEST_FAIL_MKDIR_TARGET" ]; then
+  exit 73
+fi
+
+if [ -n "${RESUME_TEST_ATTEMPT_DIR_BARRIER:-}" ] &&
+  [ "$schedule_resume_mkdir_destination" = "${RESUME_TEST_ATTEMPT_DIR_TARGET:-}" ]; then
+  /bin/mkdir "$@" || exit $?
+  /usr/bin/touch "$RESUME_TEST_ATTEMPT_DIR_BARRIER/created.$$" || exit 1
+  schedule_resume_attempt_dir_wait_count=0
+  while [ ! -e "$RESUME_TEST_ATTEMPT_DIR_BARRIER/release" ]; do
+    schedule_resume_attempt_dir_wait_count=$((schedule_resume_attempt_dir_wait_count + 1))
+    [ "$schedule_resume_attempt_dir_wait_count" -lt 500 ] || exit 1
+    /bin/sleep 0.01
+  done
+  exit 0
+fi
+
+if [ -n "${RESUME_TEST_MAIN_CLAIM_BARRIER:-}" ] &&
+  [ "$schedule_resume_mkdir_destination" = "${RESUME_TEST_MAIN_CLAIM_TARGET:-}" ] &&
+  [ "${RESUME_TEST_ACTOR:-}" = "${RESUME_TEST_MAIN_CLAIM_ACTOR:-}" ]; then
+  /usr/bin/touch "$RESUME_TEST_MAIN_CLAIM_BARRIER/before-main-claim" || exit 1
+  schedule_resume_main_claim_wait_count=0
+  while [ ! -e "$RESUME_TEST_MAIN_CLAIM_BARRIER/allow-main-claim" ]; do
+    schedule_resume_main_claim_wait_count=$((schedule_resume_main_claim_wait_count + 1))
+    [ "$schedule_resume_main_claim_wait_count" -lt 500 ] || exit 1
+    /bin/sleep 0.01
+  done
+fi
+
+if [ -n "${RESUME_TEST_LOCK_PUBLISH_BARRIER:-}" ] &&
+  [ "$schedule_resume_mkdir_destination" = "${RESUME_TEST_LOCK_PUBLISH_TARGET:-}" ]; then
+  if [ -n "${RESUME_TEST_LOCK_PUBLISH_ACTOR:-}" ] &&
+    [ "${RESUME_TEST_ACTOR:-}" != "$RESUME_TEST_LOCK_PUBLISH_ACTOR" ]; then
+    exec /bin/mkdir "$@"
+  fi
+  /bin/mkdir "$@" || exit $?
+  /usr/bin/touch "$RESUME_TEST_LOCK_PUBLISH_BARRIER/created.$$" || exit 1
+  trap 'exec 9>&-; /usr/bin/touch "$RESUME_TEST_LOCK_PUBLISH_BARRIER/helper-released"; exit 143' TERM
+  schedule_resume_lock_publish_wait_count=0
+  while [ ! -e "$RESUME_TEST_LOCK_PUBLISH_BARRIER/release" ]; do
+    schedule_resume_lock_publish_wait_count=$((schedule_resume_lock_publish_wait_count + 1))
+    [ "$schedule_resume_lock_publish_wait_count" -lt 500 ] || exit 1
+    /bin/sleep 0.01
+  done
+  exit 0
+elif [ -n "${RESUME_TEST_MKDIR_BARRIER:-}" ] &&
+  [ "$schedule_resume_mkdir_destination" = "${RESUME_TEST_MKDIR_TARGET:-}" ]; then
+  /usr/bin/touch "$RESUME_TEST_MKDIR_BARRIER/ready.$$" || exit 1
+
+  schedule_resume_mkdir_wait_count=0
+  while :; do
+    schedule_resume_mkdir_ready_count=0
+    for schedule_resume_mkdir_ready_file in "$RESUME_TEST_MKDIR_BARRIER"/ready.*; do
+      [ -e "$schedule_resume_mkdir_ready_file" ] || continue
+      schedule_resume_mkdir_ready_count=$((schedule_resume_mkdir_ready_count + 1))
+    done
+    [ "$schedule_resume_mkdir_ready_count" -ge 2 ] && break
+    schedule_resume_mkdir_wait_count=$((schedule_resume_mkdir_wait_count + 1))
+    [ "$schedule_resume_mkdir_wait_count" -lt 500 ] || exit 1
+    /bin/sleep 0.01
+  done
+fi
+
+exec /bin/mkdir "$@"

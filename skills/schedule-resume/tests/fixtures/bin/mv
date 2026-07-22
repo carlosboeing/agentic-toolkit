@@ -1,0 +1,49 @@
+#!/bin/sh
+
+schedule_resume_mv_source=${1-}
+for schedule_resume_mv_argument do
+  schedule_resume_mv_destination=$schedule_resume_mv_argument
+done
+
+case "$schedule_resume_mv_destination" in
+  */status.json)
+    if [ -n "${RESUME_TEST_BEFORE_FINAL_STATUS_BARRIER:-}" ] &&
+      [ -f "$schedule_resume_mv_source" ] &&
+      [ "$(jq -r '.status // empty' "$schedule_resume_mv_source" 2>/dev/null)" = "${RESUME_TEST_BEFORE_FINAL_STATUS_EXPECTED:-completed}" ]; then
+      /usr/bin/touch "$RESUME_TEST_BEFORE_FINAL_STATUS_BARRIER/ready" || exit 1
+      schedule_resume_before_final_wait_count=0
+      while [ ! -e "$RESUME_TEST_BEFORE_FINAL_STATUS_BARRIER/release" ]; do
+        schedule_resume_before_final_wait_count=$((schedule_resume_before_final_wait_count + 1))
+        [ "$schedule_resume_before_final_wait_count" -lt 500 ] || exit 1
+        /bin/sleep 0.01
+      done
+    fi
+    if [ -n "${RESUME_TEST_FAIL_FINAL_STATUS_WRITE_ONCE:-}" ] &&
+      [ ! -e "$RESUME_TEST_FAIL_FINAL_STATUS_WRITE_ONCE" ] &&
+      [ -f "$schedule_resume_mv_source" ] &&
+      [ "$(jq -r '.status // empty' "$schedule_resume_mv_source" 2>/dev/null)" != running ]; then
+      /usr/bin/touch "$RESUME_TEST_FAIL_FINAL_STATUS_WRITE_ONCE" || exit 1
+      exit 73
+    fi
+    if [ -n "${RESUME_TEST_FINAL_STATUS_BARRIER:-}" ] &&
+      [ -f "$schedule_resume_mv_source" ] &&
+      [ "$(jq -r '.status // empty' "$schedule_resume_mv_source" 2>/dev/null)" != running ]; then
+      /bin/mv "$@" || exit $?
+      /usr/bin/touch "$RESUME_TEST_FINAL_STATUS_BARRIER/published" || exit 1
+      schedule_resume_final_status_wait_count=0
+      while [ ! -e "$RESUME_TEST_FINAL_STATUS_BARRIER/release" ]; do
+        schedule_resume_final_status_wait_count=$((schedule_resume_final_status_wait_count + 1))
+        [ "$schedule_resume_final_status_wait_count" -lt 500 ] || exit 1
+        /bin/sleep 0.01
+      done
+      exit 0
+    fi
+    if [ -n "${RESUME_TEST_FAIL_STATUS_WRITE_ONCE:-}" ] &&
+      [ ! -e "$RESUME_TEST_FAIL_STATUS_WRITE_ONCE" ]; then
+      /usr/bin/touch "$RESUME_TEST_FAIL_STATUS_WRITE_ONCE" || exit 1
+      exit 73
+    fi
+    ;;
+esac
+
+exec /bin/mv "$@"
