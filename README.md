@@ -54,6 +54,8 @@ curl -fsSL -o ~/.claude/skills/$SKILL/SKILL.md \
 
 See [`skills/README.md`](skills/README.md) for the full skill catalog and project-level install instructions.
 
+**Setting up on a new machine (or handing this to a colleague)?** See [`guides/guide-new-machine-setup.md`](guides/guide-new-machine-setup.md) — clone the two repos, run the skill link script, wire up the tools.
+
 ## Conventions (in this repo)
 
 - **Filenames** carry their type as a prefix: `guide-*.md`, `reference-*.md`. Slightly redundant with the directory name, but means a file is self-describing if it gets emailed, gisted, or pasted somewhere on its own.
