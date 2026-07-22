@@ -64,6 +64,8 @@ classify_result() (
     printf '%s\n' quota_retryable
   elif grep -Eiq 'service temporarily unavailable|service unavailable|service overloaded|server overloaded|at capacity|capacity limit (reached|exceeded)|service busy|try again later' "$@"; then
     printf '%s\n' availability_retryable
+  elif grep -Eiq '\btimed out\b|\btimeout\b|\betimedout\b|\beconnreset\b|\beconnrefused\b|\benetunreach\b|socket hang up|connection (error|reset|refused|closed)|network (error|unreachable)|fetch failed|bad gateway|gateway time(-| )?out|internal server error|\boverloaded(_error)?\b' "$@"; then
+    printf '%s\n' transient_retryable
   else
     printf '%s\n' failure_terminal
   fi

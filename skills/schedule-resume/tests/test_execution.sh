@@ -51,12 +51,21 @@ assert_classification quota_retryable 1 'Usage quota exceeded. Retry after the r
 assert_classification quota_retryable 1 "You've hit your limit · resets at 5pm"
 assert_classification quota_retryable 1 "You've hit your usage limit. Try again later."
 assert_classification availability_retryable 1 'Service temporarily unavailable, try again later.'
+assert_classification transient_retryable 1 'API Error: The operation timed out.'
+assert_classification transient_retryable 1 'Request timed out while contacting the API.'
+assert_classification transient_retryable 1 'API Error: Connection error.'
+assert_classification transient_retryable 1 'fetch failed'
+assert_classification transient_retryable 1 'Error: read ECONNRESET'
+assert_classification transient_retryable 1 'API Error: 502 Bad Gateway'
+assert_classification transient_retryable 1 'API Error: 529 {"type":"overloaded_error","message":"Overloaded"}'
 assert_classification authentication_terminal 1 'Authentication failed: please log in.'
 assert_classification session_terminal 1 'Session not found for the supplied identifier.'
 assert_classification permission_terminal 1 'Permission denied by sandbox policy.'
 assert_classification failure_terminal 17 'Unexpected ordinary failure.'
 assert_classification failure_terminal 1 'temporary file cleanup failed'
 assert_classification failure_terminal 1 'quota test failed'
+assert_classification failure_terminal 1 'AssertionError: expected 500 to equal 200'
+assert_classification failure_terminal 1 'AssertionError: expected 502 to equal 200'
 pass "result classification"
 
 lock_job_id=lock-test-job

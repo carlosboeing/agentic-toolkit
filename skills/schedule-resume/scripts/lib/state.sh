@@ -269,7 +269,7 @@ schedule_resume_run_attempt() (
       final_status=completed
       next_attempt_at=null
       ;;
-    quota_retryable | availability_retryable)
+    quota_retryable | availability_retryable | transient_retryable)
       final_status=retrying
       next_attempt_at=$(_schedule_resume_timestamp_after "$retry_interval_seconds") || return 1
       ;;
