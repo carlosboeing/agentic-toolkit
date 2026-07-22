@@ -35,6 +35,18 @@ curl -fsSL -o ~/.claude/skills/$SKILL/SKILL.md \
 
 Restart Claude Code (or start a new session). Type `/` and the skill should appear in the slash-command menu.
 
+### Mirror install (symlink — for editing skills in this repo)
+
+If you *develop* skills here rather than just consume them, symlink the directories instead of copying, so edits in this repo are live in `~/.claude` immediately — no re-copy step, one source of truth:
+
+```bash
+./skills/link-into-claude.sh
+```
+
+It symlinks every `skills/<name>/` in this clone into `~/.claude/skills/<name>`, using this clone's own path (portable across machines — nothing is hardcoded). Idempotent, and it never overwrites a real directory: an existing non-symlink skill is skipped with a warning. Override the target dir with `CLAUDE_CONFIG_DIR`. The symlinks are local wiring — they stay untracked in your `~/.claude` repo by design.
+
+Use copy/curl above to *share* a skill; use this to *author* one.
+
 ### Project-level alternative
 
 To install into one repo only (and travel with the repo for teammates):
