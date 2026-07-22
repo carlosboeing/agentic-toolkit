@@ -28,23 +28,7 @@ The skill confirms all consequential values before creation and states: `This wi
 
 The bundle contains `SKILL.md`, this README, `scripts/resume-job.sh`, its `scripts/lib/` modules, and static/shell tests under `tests/`. Keep the directory together and keep the helper executable.
 
-Claude Code user install:
-
-```sh
-mkdir -p ~/.claude/skills
-cp -R skills/schedule-resume ~/.claude/skills/
-chmod +x ~/.claude/skills/schedule-resume/scripts/resume-job.sh
-```
-
-Shared Codex/Agy install:
-
-```sh
-mkdir -p ~/.agents/skills
-cp -R skills/schedule-resume ~/.agents/skills/
-chmod +x ~/.agents/skills/schedule-resume/scripts/resume-job.sh
-```
-
-Codex may also load user skills from `~/.codex/skills/`; use the active runtime's configured skill directory if it does not discover `~/.agents/skills/`.
+Install it like any other skill in this repo — see the [skills catalog README](../README.md#install-any-skill-in-this-directory). [`sync-skills.sh`](../sync-skills.sh) symlinks the whole `schedule-resume/` directory (scripts, libs, tests) into each installed harness at once; the helper's executable bit travels with the repo file, so no `chmod` step is needed. To consume just this one skill instead, copy its whole directory into your harness's skills directory.
 
 ## State and scheduling
 

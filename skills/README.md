@@ -1,6 +1,6 @@
 # Skills
 
-[Claude Code skills](https://docs.claude.com/en/docs/claude-code/skills) are single-file (or small bundle) extensions that add behaviours and slash commands to Claude Code. Each skill in this directory is drop-in: copy the `SKILL.md` to `~/.claude/skills/<name>/`, restart Claude Code, done.
+[Claude Code skills](https://docs.claude.com/en/docs/claude-code/skills) are single-file (or small bundle) extensions that add behaviours and slash commands. Each skill here is drop-in: copy its `SKILL.md` into your harness's skills directory (e.g. `~/.claude/skills/<name>/`), or symlink the whole repo across all your harnesses with [`sync-skills.sh`](sync-skills.sh) — see [Install](#install-any-skill-in-this-directory).
 
 ## Catalog
 

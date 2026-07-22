@@ -20,26 +20,10 @@ When you run `/externalize-deliverable` on a file (or request a client-safe draf
 
 ## Install
 
-### User-level (works across all projects)
+See the [skills catalog README](../README.md#install-any-skill-in-this-directory) for the full options and platform notes. In short:
 
-```bash
-mkdir -p ~/.claude/skills/externalize-deliverable
-cp skills/externalize-deliverable/SKILL.md ~/.claude/skills/externalize-deliverable/SKILL.md
-```
-
-To sync to your agent skills folder for Antigravity, Cursor, and Codex:
-
-```bash
-mkdir -p ~/.agents/skills/externalize-deliverable
-ln -sf ~/Projects/carlos/claude-code-resources/skills/externalize-deliverable/SKILL.md ~/.agents/skills/externalize-deliverable/SKILL.md
-```
-
-### Project-level (travels with the repository)
-
-```bash
-mkdir -p .claude/skills/externalize-deliverable
-cp skills/externalize-deliverable/SKILL.md .claude/skills/externalize-deliverable/SKILL.md
-```
+- **Consume just this skill** — copy (or `curl`) its `SKILL.md` into your harness's skills directory. Best for sharing a single skill.
+- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to symlink every authored skill from this repo into all your installed harnesses (Claude, Codex, Agy) at once, with zero copy drift.
 
 ## Usage examples
 

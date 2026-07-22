@@ -87,20 +87,10 @@ Standing instructions for every failure mode (no git repo, no remote, `gh` missi
 
 ## Install
 
-User-level — works in every project on your machine:
+See the [skills catalog README](../README.md#install-any-skill-in-this-directory) for the full options and platform notes. In short:
 
-```bash
-mkdir -p ~/.claude/skills/briefing
-cp skills/briefing/SKILL.md ~/.claude/skills/briefing/SKILL.md
-```
-
-(If you're not in a clone of this repo, download `SKILL.md` directly from GitHub: `curl -o ~/.claude/skills/briefing/SKILL.md https://raw.githubusercontent.com/carlosboeing/claude-code-resources/main/skills/briefing/SKILL.md`.)
-
-Restart Claude Code (or start a new session). Type `/` and you should see `briefing` in the slash-command menu, with the inline argument hint `[depth] [save] [help]`.
-
-To verify it's loaded, type `/briefing help` — you should get the synopsis with no execution.
-
-For the project-level install path and the shared install snippet, see [`skills/README.md`](../README.md).
+- **Consume just this skill** — copy (or `curl`) its `SKILL.md` into your harness's skills directory. Best for sharing a single skill.
+- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to symlink every authored skill from this repo into all your installed harnesses (Claude, Codex, Agy) at once, with zero copy drift.
 
 ## Usage examples
 

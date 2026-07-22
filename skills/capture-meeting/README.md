@@ -16,26 +16,10 @@ When you run `/capture-meeting` (or ask the agent to process meeting notes), it 
 
 ## Install
 
-### User-level (works across all projects)
+See the [skills catalog README](../README.md#install-any-skill-in-this-directory) for the full options and platform notes. In short:
 
-```bash
-mkdir -p ~/.claude/skills/capture-meeting
-cp skills/capture-meeting/SKILL.md ~/.claude/skills/capture-meeting/SKILL.md
-```
-
-To sync to your agent skills folder for Antigravity, Cursor, and Codex:
-
-```bash
-mkdir -p ~/.agents/skills/capture-meeting
-ln -sf ~/Projects/carlos/claude-code-resources/skills/capture-meeting/SKILL.md ~/.agents/skills/capture-meeting/SKILL.md
-```
-
-### Project-level (travels with the repository)
-
-```bash
-mkdir -p .claude/skills/capture-meeting
-cp skills/capture-meeting/SKILL.md .claude/skills/capture-meeting/SKILL.md
-```
+- **Consume just this skill** — copy (or `curl`) its `SKILL.md` into your harness's skills directory. Best for sharing a single skill.
+- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to symlink every authored skill from this repo into all your installed harnesses (Claude, Codex, Agy) at once, with zero copy drift.
 
 ## Usage examples
 
