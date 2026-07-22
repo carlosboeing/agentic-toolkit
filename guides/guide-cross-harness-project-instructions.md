@@ -40,6 +40,12 @@ Keep it **harness-neutral** in the header:
 
 Do **not** embed Claude-only slash commands as requirements unless you guard with “Claude Code only”.
 
+## User-level defaults and project precedence
+
+Put personal, cross-project defaults in the canonical user instruction target rather than the project brief. The global Penmark rule is one example: it selects the `penmark-comments` skill for explicit reviews of writable local Markdown files, while direct user instructions and each project's instructions can override it.
+
+Keep this kind of global rule short and harness-neutral. Put workflow mechanics, dependencies, and validation in the portable skill; see [Penmark agent integration](guide-penmark-agent-integration.md). Do not add a personal global preference to a generic project template unless the project explicitly adopts it.
+
 ## Harness loading behaviour
 
 | Harness | File read | Notes |

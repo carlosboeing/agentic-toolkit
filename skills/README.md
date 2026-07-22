@@ -11,12 +11,13 @@
 | [`capture-meeting`](capture-meeting/) | `/capture-meeting` | Turn an AI meeting recording (Fathom or other tool) plus manual notes/artifacts into an audited meeting doc, then propagate decisions/action items to working memory. |
 | [`externalize-deliverable`](externalize-deliverable/) | `/externalize-deliverable` | Derive clean, client-safe versions of internal documents by stripping sensitive company-side information (negotiations, margins, internal flags) under a human review gate. |
 | [`schedule-resume`](schedule-resume/) | `/schedule-resume` | Bundled skill with a shell helper for scheduling unattended, cross-harness Claude/Agy/Codex session continuation through macOS launchd. |
+| [`penmark-comments`](penmark-comments/) | — | Adds validated Penmark v1 inline findings for explicit reviews of writable local Markdown files; direct read-only or chat-only instructions override the default. |
 
 (Add more rows as new skills land. Per-skill `README.md` carries the detail.)
 
 ## Install (any skill in this directory)
 
-User-level — works in every project on your machine:
+For a single-file skill, user-level installation works in every project on your machine:
 
 ```bash
 # from a clone of this repo:
@@ -35,6 +36,8 @@ curl -fsSL -o ~/.claude/skills/$SKILL/SKILL.md \
 ```
 
 Restart Claude Code (or start a new session). Type `/` and the skill should appear in the slash-command menu.
+
+Bundled skills need their full directory, not only `SKILL.md`. Follow the bundle's README for its required scripts and references; for example, [Penmark Comments](penmark-comments/README.md) includes a writer contract and validator.
 
 ### Mirror install (symlink — for authoring across harnesses)
 
