@@ -149,7 +149,7 @@ Use when you want **dynamic** per-prompt routing; use **reference-workflow** `mo
 
 ## Symlink rules of thumb
 
-**Do symlink:** instruction files; stable personal skills (`~/.claude/skills/X` → `~/.agents/skills/X`).
+**Do symlink:** instruction files; stable personal skills (`~/.claude/skills/X` → `~/.agents/skills/X`). Automate the authored-skill fan-out with [`../skills/sync-skills.sh`](../skills/sync-skills.sh) — it symlinks every authored skill from this repo straight into each installed harness's skill dir (Claude `~/.claude/skills`, Codex `~/.agents/skills`, Agy `~/.gemini/config/skills`). Independent of the `find-skills` tool.
 
 **Do not symlink:** full plugin directories from Cursor cache (hash paths break); MCP config; Superpowers twice.
 

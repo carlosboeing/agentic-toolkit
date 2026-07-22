@@ -36,17 +36,19 @@ curl -fsSL -o ~/.claude/skills/$SKILL/SKILL.md \
 
 Restart Claude Code (or start a new session). Type `/` and the skill should appear in the slash-command menu.
 
-### Mirror install (symlink — for editing skills in this repo)
+### Mirror install (symlink — for authoring across harnesses)
 
-If you *develop* skills here rather than just consume them, symlink the directories instead of copying, so edits in this repo are live in `~/.claude` immediately — no re-copy step, one source of truth:
+If you *develop* skills here rather than just consume them, symlink instead of copying, so edits in this repo are live immediately — no re-copy step, one source of truth:
 
 ```bash
-./skills/link-into-claude.sh
+./skills/sync-skills.sh
 ```
 
-It symlinks every `skills/<name>/` in this clone into `~/.claude/skills/<name>`, using this clone's own path (portable across machines — nothing is hardcoded). Idempotent, and it never overwrites a real directory: an existing non-symlink skill is skipped with a warning. Override the target dir with `CLAUDE_CONFIG_DIR`. The symlinks are local wiring — they stay untracked in your `~/.claude` repo by design.
+It symlinks every authored `skills/<name>/` in this clone straight into each **installed** harness's skill directory — `~/.claude/skills/`, `~/.agents/skills/` (Codex + cross-harness agents), and `~/.gemini/config/skills/` (Antigravity) — using this clone's own path (portable, nothing hardcoded). Idempotent; skips harnesses that aren't installed; never overwrites a real directory (a non-symlink skill is skipped with a warning). Edit the `TARGETS` list in the script to change which harnesses it covers.
 
-Use copy/curl above to *share* a skill; use this to *author* one.
+It is independent of the `find-skills` tool — it only creates symlinks and never touches find-skills' lockfile or its installed skills. The symlinks are local wiring; they stay untracked by design. See [`../guides/guide-harness-plugin-parity.md`](../guides/guide-harness-plugin-parity.md) for the full cross-harness model.
+
+Use copy/curl above to *share* a skill; use this to *author* one across your harnesses.
 
 ### Project-level alternative
 

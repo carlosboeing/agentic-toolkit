@@ -7,14 +7,14 @@ Stand up your Claude Code environment on a fresh machine (or hand the recipe to 
 | Piece | Lives in | Restored by |
 |---|---|---|
 | Global config (`CLAUDE.md`, `settings.json`, `docs/`) | `claude-config` repo → `~/.claude` | clone in place (step 3) |
-| Standalone skills (`briefing`, `learn`, …) | `claude-code-resources` repo | `link-into-claude.sh` (step 4) |
+| Standalone skills (`briefing`, `learn`, …) | `claude-code-resources` repo → all harness skill dirs | `sync-skills.sh` (step 4) |
 | Tool integrations (rtk, Headroom, claude-mem) | external installs | the setup guides (step 5) |
 | Separately-managed wiring | see step 6 | not covered here |
 
 ```mermaid
 flowchart TD
     A["clone claude-code-resources"] --> B["clone claude-config into ~/.claude"]
-    B --> C["run link-into-claude.sh"]
+    B --> C["run sync-skills.sh"]
     C --> D["set up rtk / Headroom / claude-mem"]
     D --> E["Claude Code ready"]
 ```
@@ -51,13 +51,13 @@ git checkout -f main            # brings in tracked files; ignored local state i
 
 `checkout -f` overwrites tracked files only — the gitignore whitelist keeps `sessions/`, `plugins/`, and other local state out of git's way. Verify on first run, then delete the `.bak` files once you're happy.
 
-### 4. Link skills into ~/.claude
+### 4. Sync skills into your harnesses
 
 ```bash
-~/Projects/carlos/claude-code-resources/skills/link-into-claude.sh
+~/Projects/carlos/claude-code-resources/skills/sync-skills.sh
 ```
 
-Symlinks every `skills/<name>/` from your clone into `~/.claude/skills/`. Idempotent, and it skips (never overwrites) any real skill directory. Re-run it any time you add a skill to the repo.
+Symlinks every authored `skills/<name>/` from your clone straight into each installed harness's skill directory — `~/.claude/skills/`, `~/.agents/skills/` (Codex), `~/.gemini/config/skills/` (Antigravity). Idempotent, skips uninstalled harnesses, and never overwrites a real skill directory. Re-run it any time you add a skill. Independent of `find-skills` (step 6) — it only creates symlinks.
 
 ### 5. Tool integrations
 
