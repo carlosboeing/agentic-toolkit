@@ -77,6 +77,7 @@ Cross-harness skills available to any agent harness reading this directory.
 | `briefing` | Symlink | `~/.claude/skills/briefing` (added 2026-06-14) |
 | `capture-meeting` | Symlink | `~/.claude/skills/capture-meeting` (added 2026-06-18) |
 | `externalize-deliverable` | Symlink | `~/.claude/skills/externalize-deliverable` (added 2026-06-18) |
+| `penmark-comments` | Symlink | `~/.claude/skills/penmark-comments` → `~/Projects/agentic-toolkit/skills/penmark-comments` (canonical resource bundle) |
 | `ui-ux-pro-max` | Directory | Installed via `uipro` |
 | `impeccable` | Directory | Manual install |
 | `find-skills` | Directory | Manual install |
@@ -119,6 +120,7 @@ Legend: **Official** | **Substitute** | **MCP** | **Symlink skill** | **Skip**
 | briefing | **Symlink skill** — `~/.agents/skills/briefing` → `~/.claude/skills/briefing` |
 | capture-meeting | **Symlink skill** — `~/.agents/skills/capture-meeting` → `~/.claude/skills/capture-meeting` |
 | externalize-deliverable | **Symlink skill** — `~/.agents/skills/externalize-deliverable` → `~/.claude/skills/externalize-deliverable` |
+| penmark-comments | **Symlink skill** — `~/.claude/skills/penmark-comments` and `~/.agents/skills/penmark-comments` directly target `~/Projects/agentic-toolkit/skills/penmark-comments`, the canonical resource bundle. [`sync-skills.sh`](../skills/sync-skills.sh) maintains this one-source model for Claude, Codex, and Agy. See the [integration guide](guide-penmark-agent-integration.md) for validation and the deferred cross-harness audit. |
 | learn | **Symlink skill** from `~/.claude/skills/learn` if desired |
 | octo | **Skip** — no port; multi-model review optional only |
 | financial-* (6 plugins) | **Skip** unless doing IB work in Agy |

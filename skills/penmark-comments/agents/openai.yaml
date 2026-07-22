@@ -1,0 +1,4 @@
+interface:
+  display_name: "Penmark Comments"
+  short_description: "Write validated inline Markdown review comments"
+  default_prompt: "Use $penmark-comments to review this local Markdown file inline."
