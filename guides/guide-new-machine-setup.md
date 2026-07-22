@@ -6,7 +6,8 @@ Stand up your Claude Code environment on a fresh machine (or hand the recipe to 
 
 | Piece | Lives in | Restored by |
 |---|---|---|
-| Global config (`CLAUDE.md`, `settings.json`, `docs/`) | `claude-config` repo → `~/.claude` | clone in place (step 3) |
+| Global config (`CLAUDE.md`, `docs/`) | `claude-config` repo → `~/.claude` | clone in place (step 3) |
+| Local config (`settings.json` — secrets + model/effort) | **not** in git (machine-local) | recreate by hand (step 3) |
 | Standalone skills (`briefing`, `learn`, …) | `claude-code-resources` repo → all harness skill dirs | `sync-skills.sh` (step 4) |
 | Tool integrations (rtk, Headroom, claude-mem) | external installs | the setup guides (step 5) |
 | Separately-managed wiring | see step 6 | not covered here |
@@ -35,12 +36,12 @@ The link script is portable — it works from wherever you clone this, not a fix
 
 ### 3. Restore ~/.claude from claude-config
 
-`~/.claude` already exists (Claude Code creates it with local state — `sessions/`, `plugins/`, etc.). The `claude-config` repo tracks only a whitelist (`CLAUDE.md`, `settings.json`, `skills/`, `docs/`), so initialize it **in place** rather than cloning over the directory:
+`~/.claude` already exists (Claude Code creates it with local state — `sessions/`, `plugins/`, etc.). The `claude-config` repo tracks only a whitelist (`CLAUDE.md`, `skills/`, `docs/`) — **not** `settings.json`, which is machine-local (see below). Initialize the repo **in place** rather than cloning over the directory:
 
 ```bash
-# Back up anything Claude Code pre-created that the repo also tracks:
+# Back up the CLAUDE.md Claude Code pre-created (the repo tracks it):
 [ -f ~/.claude/CLAUDE.md ] && mv ~/.claude/CLAUDE.md ~/.claude/CLAUDE.md.bak
-[ -f ~/.claude/settings.json ] && mv ~/.claude/settings.json ~/.claude/settings.json.bak
+# (settings.json is gitignored, so the checkout below won't touch it — no backup needed)
 
 cd ~/.claude
 git init -b main
@@ -50,6 +51,8 @@ git checkout -f main            # brings in tracked files; ignored local state i
 ```
 
 `checkout -f` overwrites tracked files only — the gitignore whitelist keeps `sessions/`, `plugins/`, and other local state out of git's way. Verify on first run, then delete the `.bak` files once you're happy.
+
+**`settings.json` is not restored by this clone** — it's intentionally untracked, because it holds a hooks secret (a Telegram bot token) plus volatile `model`/`effortLevel` that Claude Code rewrites every session. Recreate it on the new machine by copying it from your old machine or a secure backup (never commit it), then adjust the model/effort with `/model` and `/effort`. Keep secrets in an untracked file (e.g. `telegram-hooks.env`) referenced from the hook, not inline.
 
 ### 4. Sync skills into your harnesses
 
