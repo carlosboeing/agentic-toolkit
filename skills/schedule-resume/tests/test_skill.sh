@@ -20,6 +20,13 @@ assert_matches() {
   grep -E -- "$pattern" "$file" >/dev/null || fail "$message (pattern '$pattern' missing from '$file')"
 }
 
+assert_multiline_matches() {
+  file=$1
+  pattern=$2
+  message=$3
+  PATTERN=$pattern perl -0ne 'BEGIN { $pattern = $ENV{PATTERN} } if (/$pattern/s) { $found = 1 } END { exit !$found }' "$file" || fail "$message (multiline pattern '$pattern' missing from '$file')"
+}
+
 assert_not_matches() {
   file=$1
   pattern=$2
@@ -67,6 +74,14 @@ assert_contains "$SKILL_FILE" 'CLAUDE.md' "resolve Claude project instructions"
 assert_contains "$SKILL_FILE" 'AGENTS.md' "resolve Codex project instructions"
 assert_contains "$SKILL_FILE" 'GEMINI.md' "resolve Agy project instructions"
 assert_contains "$SKILL_FILE" 'absolute' "resolve an absolute project directory"
+assert_multiline_matches "$SKILL_FILE" 'explicit project directory supplied by the user wins\..*target session metadata' "give an explicit project directory precedence over target-session metadata"
+assert_contains "$SKILL_FILE" 'target session metadata' "resolve the project from target session metadata"
+assert_contains "$SKILL_FILE" '~/.claude/sessions' "read Claude target session records"
+assert_contains "$SKILL_FILE" 'sessionId' "match Claude target session IDs"
+assert_matches "$SKILL_FILE" '(cwd.*absolute.*path|absolute.*path.*cwd)' "require the target session cwd to be an absolute path"
+assert_contains "$SKILL_FILE" 'invoking working directory (fallback' "fall back to the invoking working directory"
+assert_contains "$SKILL_FILE" 'target session metadata before invoking working directory (fallback' "prefer target session metadata over the invoking-directory fallback"
+assert_matches "$SKILL_FILE" 'Immediately after `Absolute project`, show `Project source`: `explicit request`, `target-session metadata`, or `invoking working directory \(fallback — review before confirming\)`\.' "show Project source immediately after Absolute project with only approved values"
 assert_contains "$SKILL_FILE" 'one question at a time' "collect only one ambiguity at a time"
 assert_not_contains "$SKILL_FILE" 'retry interval, or completion predicate' "use the fixed completion policy when omitted"
 assert_not_matches "$SKILL_FILE" 'target defaults to (the )?(current|invoking)|use (the )?current (session|harness) as (the )?target' "do not infer target from the invoking harness"
