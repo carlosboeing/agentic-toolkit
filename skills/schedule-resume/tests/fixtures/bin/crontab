@@ -1,0 +1,35 @@
+#!/bin/sh
+# Test double for crontab: a per-user crontab backed by a single file.
+: "${RESUME_TEST_CRONTAB_FILE:?crontab test file must be set}"
+case "${1-}" in
+  -l)
+    if [ -f "$RESUME_TEST_CRONTAB_FILE" ]; then
+      cat "$RESUME_TEST_CRONTAB_FILE"
+    else
+      echo "crontab: no crontab for $(id -un 2>/dev/null || echo user)" >&2
+      exit 1
+    fi
+    ;;
+  -r)
+    rm -f "$RESUME_TEST_CRONTAB_FILE"
+    ;;
+  -)
+    if [ -n "${RESUME_TEST_CRONTAB_INSTALL_FAIL:-}" ]; then
+      cat >/dev/null
+      echo "crontab: installation failed (test injection)" >&2
+      exit "${RESUME_TEST_CRONTAB_INSTALL_FAIL}"
+    fi
+    cat >"$RESUME_TEST_CRONTAB_FILE"
+    ;;
+  "")
+    echo "usage: crontab [-l | -r | - | file]" >&2
+    exit 1
+    ;;
+  *)
+    if [ -f "$1" ]; then
+      cat "$1" >"$RESUME_TEST_CRONTAB_FILE"
+    else
+      exit 1
+    fi
+    ;;
+esac

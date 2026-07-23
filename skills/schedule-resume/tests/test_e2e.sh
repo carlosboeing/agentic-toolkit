@@ -31,8 +31,8 @@ export PATH="$e2e_root/bin:$TESTS_DIR/fixtures/bin:$PATH"
 prompt_file="$e2e_root/prompt.md"
 printf '%s\n' 'Continue the session and preserve this exact prompt.' >"$prompt_file"
 job_id=e2e-lifecycle-job
-export RESUME_TEST_LAUNCHCTL_LOG="$e2e_root/launchctl.jsonl"
-: >"$RESUME_TEST_LAUNCHCTL_LOG"
+rm -f "$RESUME_TEST_CRONTAB_FILE"
+e2e_cron_has() { [ -f "$RESUME_TEST_CRONTAB_FILE" ] && grep -q -- "# schedule-resume:$1\$" "$RESUME_TEST_CRONTAB_FILE"; }
 export RESUME_E2E_INVOCATIONS="$e2e_root/invocations.log"
 : >"$RESUME_E2E_INVOCATIONS"
 export RESUME_E2E_MODE=retry
@@ -72,6 +72,7 @@ assert_equal retrying "$(jq -r '.status' "$job_dir/status.json")" "retryable res
 assert_equal 1 "$(jq -r '.attempt_count' "$job_dir/status.json")" "record first attempt"
 assert_file_exists "$job_dir/attempts/1/stdout.log" "preserve first attempt stdout"
 assert_file_exists "$job_dir/attempts/1/stderr.log" "preserve first attempt stderr"
+e2e_cron_has "$job_id" || fail "a retrying job keeps its crontab line"
 
 export RESUME_E2E_MODE=success
 jq '.next_attempt_at = "2000-01-01T00:00:00Z"' "$job_dir/status.json" >"$e2e_root/status.tmp"
@@ -80,13 +81,14 @@ mv "$e2e_root/status.tmp" "$job_dir/status.json"
 assert_equal completed "$(jq -r '.status' "$job_dir/status.json")" "successful retry completes"
 assert_equal 2 "$(jq -r '.attempt_count' "$job_dir/status.json")" "record second attempt"
 assert_file_exists "$job_dir/attempts/2/stdout.log" "preserve second attempt stdout"
+if e2e_cron_has "$job_id"; then fail "a completed job auto-removes its crontab line"; fi
 invocations_after_success=$(wc -l <"$RESUME_E2E_INVOCATIONS" | tr -d ' ')
 "$RESUME_JOB_CLI" run "$job_id"
 assert_equal "$invocations_after_success" "$(wc -l <"$RESUME_E2E_INVOCATIONS" | tr -d ' ')" "completed job is a no-op"
 
 "$RESUME_JOB_CLI" cleanup 0
 assert_path_not_exists "$job_dir" "cleanup removes terminal job state"
-assert_path_not_exists "$HOME/Library/LaunchAgents/com.carlos.resume-job.$job_id.plist" "cleanup removes launch agent plist"
+if e2e_cron_has "$job_id"; then fail "no crontab line remains after the lifecycle"; fi
 pass "end-to-end lifecycle"
 
 sentinel_job_id=e2e-sentinel-job
@@ -116,6 +118,7 @@ mv "$e2e_root/sentinel-status.tmp" "$sentinel_job_dir/status.json"
 "$RESUME_JOB_CLI" run "$sentinel_job_id"
 assert_equal completed "$(jq -r '.status' "$sentinel_job_dir/status.json")" "sentinel line completes the job"
 assert_equal success "$(jq -r '.last_classification' "$sentinel_job_dir/status.json")" "classify sentinel line as success"
+if e2e_cron_has "$sentinel_job_id"; then fail "sentinel completion auto-removes the crontab line"; fi
 
 "$RESUME_JOB_CLI" cleanup 0
 assert_path_not_exists "$sentinel_job_dir" "cleanup removes sentinel job state"

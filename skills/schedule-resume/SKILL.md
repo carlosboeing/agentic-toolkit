@@ -21,7 +21,7 @@ Apply fixed MVP policies: permissions `full-auto` (unattended yolo), retry `unti
 
 ## Confirm and create
 
-Before create, require user confirmation listing target harness, stable ID, absolute project, UTC first-attempt time rounded to a whole minute (`:00` seconds), retry seconds, completion, permissions, and that confirmation routes creation through bundled `scripts/resume-job.sh create`. Include exactly: `This will not start another run now.` State that the computer must remain powered on and logged in, sleep can delay the trigger, and the attempt prevents idle sleep only while running.
+Before create, require user confirmation listing target harness, stable ID, absolute project, UTC first-attempt time rounded to a whole minute (`:00` seconds), retry seconds, completion, permissions, and that confirmation routes creation through bundled `scripts/resume-job.sh create`. Include exactly: `This will not start another run now.` State that the computer must remain powered on and logged in, sleep can delay the trigger, and the attempt prevents idle sleep only while running. If the helper prints a Full Disk Access warning at create time (the project, prompt, or state path is under a macOS protected folder such as Documents, Desktop, Downloads, or iCloud Drive), surface it so the user can grant `/usr/sbin/cron` Full Disk Access; jobs under other paths need no grant.
 
 Build continuation text in a temporary local prompt file, including the requested task and instruction-file context, then append this exact completion instruction as the prompt's final line: `When the entire task is genuinely complete, print SCHEDULE_RESUME_TASK_COMPLETE alone on its own line as the very last output. Do not print it while any work remains.` Preserve prompt bytes. After confirmation invoke bundled `scripts/resume-job.sh create` with all flags:
 
@@ -39,6 +39,6 @@ Creation only bootstraps the scheduler. Remove only the temporary source prompt 
 
 ## Manage jobs
 
-Use `scripts/resume-job.sh list` and `scripts/resume-job.sh status JOB`. Read-only list/status require no confirmation. For Cancel, use `scripts/resume-job.sh cancel JOB`; require an explicit job ID unless exactly one active job exists. For Cleanup, confirm destruction and retention days, then use `scripts/resume-job.sh cleanup DAYS`.
+Use `scripts/resume-job.sh list` and `scripts/resume-job.sh status JOB`. Read-only list/status require no confirmation. For Cancel, use `scripts/resume-job.sh cancel JOB`; require an explicit job ID unless exactly one active job exists. For Cleanup, confirm destruction and retention days, then use `scripts/resume-job.sh cleanup DAYS`. For a health check of the cron entries — listing schedule-resume lines, pruning orphans, and detecting any leftover launchd agents from the old backend — use `scripts/resume-job.sh doctor`.
 
-Terminal state persists until cleanup; never claim self-deletion.
+A job removes its own cron entry automatically when it reaches a terminal state; only actively scheduled or retrying jobs keep a cron line. Terminal state persists until cleanup — the state directory and its logs remain until then; never claim self-deletion.

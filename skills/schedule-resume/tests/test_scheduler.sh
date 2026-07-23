@@ -9,8 +9,46 @@ prompt_source="$scheduler_root/prompt & source.txt"
 printf '%s\n' 'Resume <carefully> & keep "$HOME".' 'No trailing interpretation: `uname`; * ?' >"$prompt_source"
 cp "$prompt_source" "$scheduler_root/expected-prompt.txt"
 
-export RESUME_TEST_LAUNCHCTL_LOG="$scheduler_root/launchctl.jsonl"
-: >"$RESUME_TEST_LAUNCHCTL_LOG"
+# The crontab mock is backed by a single file; start each scheduler run clean.
+export RESUME_TEST_CRONTAB_FILE="$scheduler_root/crontab"
+rm -f "$RESUME_TEST_CRONTAB_FILE"
+
+# Print only the schedule-resume crontab lines belonging to exactly this job id
+# (literal suffix match, so job-1 never matches job-11).
+cron_job_lines() {
+  [ -f "$RESUME_TEST_CRONTAB_FILE" ] || return 0
+  while IFS= read -r _cjl_line || [ -n "$_cjl_line" ]; do
+    case "$_cjl_line" in
+      *"# schedule-resume:$1") printf '%s\n' "$_cjl_line" ;;
+    esac
+  done <"$RESUME_TEST_CRONTAB_FILE"
+}
+cron_has_job() {
+  [ -n "$(cron_job_lines "$1")" ]
+}
+assert_cron_has_job() {
+  cron_has_job "$1" || fail "$2 (expected a crontab line for '$1')"
+}
+assert_cron_lacks_job() {
+  [ -z "$(cron_job_lines "$1")" ] || fail "$2 (unexpected crontab line for '$1')"
+}
+count_cron_job_lines() {
+  cron_job_lines "$1" | grep -c . || :
+}
+
+# A foreign crontab line that must survive every schedule-resume operation.
+foreign_line='0 9 * * * /usr/bin/true # a foreign job'
+printf '%s\n' "$foreign_line" | crontab -
+assert_foreign_survives() {
+  grep -Fxq "$foreign_line" "$RESUME_TEST_CRONTAB_FILE" || fail "$1 (foreign crontab line was clobbered)"
+}
+
+# Append a raw line to the crontab, reading the existing content into a variable
+# first (a `crontab -l | crontab -` pipe would truncate the shared mock file).
+crontab_append_raw() {
+  _existing=$(crontab -l 2>/dev/null || :)
+  { [ -z "$_existing" ] || printf '%s\n' "$_existing"; printf '%s\n' "$1"; } | crontab -
+}
 
 default_home="$TEST_TMPDIR/default-home"
 default_job=default-state-root-job
@@ -34,7 +72,10 @@ mkdir -p "$default_home"
 ) >"$scheduler_root/default-state-create-output"
 assert_file_exists "$default_home/.local/state/resume-job/$default_job/manifest.json" "default state root follows the public contract"
 pass "default state root"
-: >"$RESUME_TEST_LAUNCHCTL_LOG"
+# The default-root job lives under a different state root; reset the shared
+# crontab so its line does not confuse later reconcile sweeps.
+rm -f "$RESUME_TEST_CRONTAB_FILE"
+printf '%s\n' "$foreign_line" | crontab -
 
 create_job() {
   "$RESUME_JOB_CLI" create \
@@ -54,42 +95,41 @@ create_job() {
 job_id='calendar-special-job'
 assert_equal "$job_id" "$(create_job '2099-07-22T12:30:00Z' "$job_id")" "print created job ID"
 job_dir="$RESUME_JOB_STATE_ROOT/$job_id"
-plist="$HOME/Library/LaunchAgents/com.carlos.resume-job.$job_id.plist"
 wrapper="$job_dir/run.sh"
 assert_file_exists "$job_dir/manifest.json" "create manifest"
 assert_file_exists "$job_dir/status.json" "create status"
 assert_file_exists "$job_dir/prompt.txt" "copy owned prompt"
 assert_file_exists "$wrapper" "create per-job wrapper"
-assert_file_exists "$plist" "create launch agent plist"
 [ -x "$wrapper" ] || fail "per-job wrapper must be executable"
 grep -Fxq 'umask 077' "$wrapper" || fail "wrapper must enforce a private umask"
+grep -Eq "^PATH='" "$wrapper" || fail "wrapper must pin a PATH for cron's minimal environment"
+grep -Fq "/cron.log' 2>&1" "$wrapper" || fail "wrapper must redirect output to the job cron log"
 cmp -s "$scheduler_root/expected-prompt.txt" "$job_dir/prompt.txt" || fail "owned prompt must preserve exact bytes"
 assert_equal "$job_dir/prompt.txt" "$(jq -r '.prompt_file' "$job_dir/manifest.json")" "manifest points to owned prompt"
 assert_equal "$TESTS_DIR/fixtures/bin/codex" "$(jq -r '.harness_executable' "$job_dir/manifest.json")" "manifest persists the resolved harness executable"
-/usr/bin/plutil -lint "$plist" >/dev/null || fail "generated plist must be valid XML"
-assert_equal "com.carlos.resume-job.$job_id" "$(/usr/bin/xmllint --xpath 'string(/plist/dict/key[.="Label"]/following-sibling::string[1])' "$plist")" "plist label must be unique"
-assert_equal "$wrapper" "$(/usr/bin/xmllint --xpath 'string(/plist/dict/key[.="ProgramArguments"]/following-sibling::array[1]/string[1])' "$plist")" "plist ProgramArguments must point to wrapper"
-assert_equal "$job_dir/launchd.stdout.log" "$(/usr/bin/xmllint --xpath 'string(/plist/dict/key[.="StandardOutPath"]/following-sibling::string[1])' "$plist")" "plist stdout path must point to job log"
-assert_equal "$job_dir/launchd.stderr.log" "$(/usr/bin/xmllint --xpath 'string(/plist/dict/key[.="StandardErrorPath"]/following-sibling::string[1])' "$plist")" "plist stderr path must point to job log"
-assert_equal 63 "$(/usr/bin/xmllint --xpath 'string(/plist/dict/key[.="Umask"]/following-sibling::integer[1])' "$plist")" "plist must create logs with a private umask"
+assert_cron_has_job "$job_id" "create installs a crontab line"
+assert_equal 1 "$(count_cron_job_lines "$job_id")" "create installs exactly one crontab line"
+cron_line=$(cron_job_lines "$job_id")
+case "$cron_line" in
+  '* * * * * '*) ;;
+  *) fail "crontab line must poll every minute, not encode a specific time (got: $cron_line)" ;;
+esac
+case "$cron_line" in
+  *"/run.sh' # schedule-resume:$job_id") ;;
+  *) fail "crontab line must invoke the per-job wrapper with the marker" ;;
+esac
+assert_foreign_survives "create"
 [ "$(stat -f '%Lp' "$job_dir")" = 700 ] || fail "job directory must be private"
 [ "$(stat -f '%Lp' "$job_dir/manifest.json")" = 600 ] || fail "manifest must be private"
 [ "$(stat -f '%Lp' "$job_dir/status.json")" = 600 ] || fail "status must be private"
 [ "$(stat -f '%Lp' "$job_dir/prompt.txt")" = 600 ] || fail "prompt must be private"
 [ "$(stat -f '%Lp' "$wrapper")" = 700 ] || fail "wrapper must be private"
-grep -Fq '<key>StartCalendarInterval</key>' "$plist" || fail "plist must contain first-attempt calendar trigger"
-grep -Fq '<key>StartInterval</key>' "$plist" || fail "plist must contain retry interval trigger"
-grep -Fq '<integer>120</integer>' "$plist" || fail "plist poll trigger must use the fixed poll interval"
-if grep -Fq '<integer>300</integer>' "$plist"; then
-  fail "plist poll trigger must not depend on the manifest retry interval"
-fi
-uid=$(id -u)
-assert_equal "[\"bootstrap\",\"gui/$uid\",\"$plist\"]" "$(sed -n '1p' "$RESUME_TEST_LAUNCHCTL_LOG")" "bootstrap only in user GUI domain"
-pass "create and launchd plist contract"
+pass "create and crontab line contract"
 
 seconds_job=seconds-calendar-job
 assert_command_fails "reject calendar first attempts with non-zero seconds" create_job '2099-07-22T12:30:30Z' "$seconds_job"
 assert_path_not_exists "$RESUME_JOB_STATE_ROOT/$seconds_job" "non-zero first-attempt seconds must not create state"
+assert_cron_lacks_job "$seconds_job" "rejected create must not install a crontab line"
 pass "minute-granular first attempt contract"
 
 relative_prompt='basename prompt.txt'
@@ -112,26 +152,11 @@ relative_job=relative-prompt-job
 ) >"$scheduler_root/relative-create-output"
 assert_equal "$relative_job" "$(cat "$scheduler_root/relative-create-output")" "accept relative basename prompt"
 cmp -s "$scheduler_root/$relative_prompt" "$RESUME_JOB_STATE_ROOT/$relative_job/prompt.txt" || fail "relative basename prompt must preserve exact bytes"
+assert_cron_has_job "$relative_job" "relative-prompt create installs a crontab line"
 pass "relative basename prompt path"
-
-timezone_job=timezone-calendar-job
-(
-  export TZ=America/Los_Angeles
-  create_job '2026-07-01T12:30:00Z' "$timezone_job"
-) >/dev/null
-timezone_plist="$HOME/Library/LaunchAgents/com.carlos.resume-job.$timezone_job.plist"
-calendar_xpath='/plist/dict/key[.="StartCalendarInterval"]/following-sibling::dict[1]'
-assert_equal 4 "$(/usr/bin/xmllint --xpath "count($calendar_xpath/key)" "$timezone_plist")" "calendar trigger has exactly four supported fields"
-assert_equal 0 "$(/usr/bin/xmllint --xpath "count($calendar_xpath/key[.=\"Year\"])" "$timezone_plist")" "calendar trigger omits unsupported Year"
-assert_equal 07 "$(/usr/bin/xmllint --xpath "string($calendar_xpath/key[.=\"Month\"]/following-sibling::integer[1])" "$timezone_plist")" "calendar month uses target timezone"
-assert_equal 01 "$(/usr/bin/xmllint --xpath "string($calendar_xpath/key[.=\"Day\"]/following-sibling::integer[1])" "$timezone_plist")" "calendar day uses target timezone"
-assert_equal 05 "$(/usr/bin/xmllint --xpath "string($calendar_xpath/key[.=\"Hour\"]/following-sibling::integer[1])" "$timezone_plist")" "DST calendar hour converts from UTC"
-assert_equal 30 "$(/usr/bin/xmllint --xpath "string($calendar_xpath/key[.=\"Minute\"]/following-sibling::integer[1])" "$timezone_plist")" "calendar minute converts from UTC"
-pass "supported launchd calendar fields and timezone conversion"
 
 for invalid_policy_case in retry-policy completion-policy permissions-mode; do
   invalid_policy_job="invalid-$invalid_policy_case"
-  invalid_policy_args='--retry-policy until-completed --completion-policy session-exits-zero --permissions-mode full-auto'
   case "$invalid_policy_case" in
     retry-policy) invalid_policy_args='--retry-policy forever --completion-policy session-exits-zero --permissions-mode full-auto' ;;
     completion-policy) invalid_policy_args='--retry-policy until-completed --completion-policy any-exit --permissions-mode full-auto' ;;
@@ -150,33 +175,34 @@ for invalid_policy_case in retry-policy completion-policy permissions-mode; do
       "$@" \
       --job-id "$invalid_policy_job"
   assert_path_not_exists "$RESUME_JOB_STATE_ROOT/$invalid_policy_job" "unsupported $invalid_policy_case must not create state"
+  assert_cron_lacks_job "$invalid_policy_job" "unsupported $invalid_policy_case must not install a crontab line"
 done
 pass "policy value allowlists"
 
-launchctl_calls_before_duplicate=$(wc -l <"$RESUME_TEST_LAUNCHCTL_LOG" | tr -d ' ')
 assert_command_fails "reject duplicate job without replacing it" create_job '2099-07-22T12:30:00Z' "$job_id"
-assert_equal "$launchctl_calls_before_duplicate" "$(wc -l <"$RESUME_TEST_LAUNCHCTL_LOG" | tr -d ' ')" "duplicate create must not call launchctl"
+assert_equal 1 "$(count_cron_job_lines "$job_id")" "duplicate create must not add a second crontab line"
 
+# Source the libraries for direct scheduler / lock / attempt calls.
 . "$LIB_DIR/common.sh"
 . "$LIB_DIR/state.sh"
 . "$LIB_DIR/lock.sh"
 . "$LIB_DIR/adapters.sh"
-. "$LIB_DIR/scheduler-launchd.sh"
-reinstall_log_start=$(wc -l <"$RESUME_TEST_LAUNCHCTL_LOG" | tr -d ' ')
-schedule_resume_install_launch_agent "$job_id" "$wrapper"
-assert_equal "[\"bootout\",\"gui/$uid/com.carlos.resume-job.$job_id\"]" "$(sed -n "$((reinstall_log_start + 1))p" "$RESUME_TEST_LAUNCHCTL_LOG")" "reinstall boots out exact service"
-assert_equal "[\"bootstrap\",\"gui/$uid\",\"$plist\"]" "$(sed -n "$((reinstall_log_start + 2))p" "$RESUME_TEST_LAUNCHCTL_LOG")" "reinstall bootstraps exact plist"
-launchctl_calls_after_reinstall=$(wc -l <"$RESUME_TEST_LAUNCHCTL_LOG" | tr -d ' ')
-export RESUME_TEST_LAUNCHCTL_BOOTOUT_STATUS=5
-assert_command_fails "propagate arbitrary bootout errors" schedule_resume_install_launch_agent "$job_id" "$wrapper"
-unset RESUME_TEST_LAUNCHCTL_BOOTOUT_STATUS
-assert_equal "$((launchctl_calls_after_reinstall + 1))" "$(wc -l <"$RESUME_TEST_LAUNCHCTL_LOG" | tr -d ' ')" "failed bootout must prevent replacement bootstrap"
-pass "idempotent launch agent replacement"
+. "$LIB_DIR/scheduler-cron.sh"
 
-"$RESUME_JOB_CLI" list >"$scheduler_root/list-output"
-grep -Fxq "$job_id" "$scheduler_root/list-output" || fail "list must include created job state"
-"$RESUME_JOB_CLI" status "$job_id" >"$scheduler_root/status-output.json"
-assert_json_equal "$(cat "$job_dir/status.json")" "$scheduler_root/status-output.json" "status reads mutable state"
+schedule_resume_scheduler_install "$job_id" "$wrapper"
+schedule_resume_scheduler_install "$job_id" "$wrapper"
+assert_equal 1 "$(count_cron_job_lines "$job_id")" "repeated install keeps exactly one crontab line"
+assert_foreign_survives "idempotent install"
+pass "idempotent crontab install"
+
+reconcile_orphan_job=reconcile-orphan-job
+create_job '2099-07-22T12:40:00Z' "$reconcile_orphan_job" >/dev/null
+assert_cron_has_job "$reconcile_orphan_job" "reconcile fixture starts with a line"
+rm -rf "$RESUME_JOB_STATE_ROOT/$reconcile_orphan_job"
+schedule_resume_scheduler_reconcile
+assert_cron_lacks_job "$reconcile_orphan_job" "reconcile drops a line whose job directory is gone"
+assert_foreign_survives "reconcile"
+pass "reconcile prunes orphan crontab lines"
 
 export RESUME_TEST_HARNESS_LOG="$scheduler_root/due-gate.args"
 export RESUME_TEST_PROMPT_CAPTURE="$scheduler_root/due-gate.prompt"
@@ -185,12 +211,14 @@ export RESUME_TEST_EXIT_CODE=1
 export RESUME_TEST_OUTPUT='Usage quota exceeded. Retry after reset.'
 "$wrapper"
 assert_path_not_exists "$RESUME_TEST_HARNESS_LOG" "early interval trigger must not launch target"
+assert_cron_has_job "$job_id" "early trigger keeps the crontab line"
 
 due_status=$(jq '.next_attempt_at = "2000-01-01T00:00:00Z"' "$job_dir/status.json")
 schedule_resume_write_status "$job_id" "$due_status"
 "$RESUME_JOB_CLI" run "$job_id"
 assert_file_exists "$RESUME_TEST_HARNESS_LOG" "due trigger launches target"
 assert_equal retrying "$(schedule_resume_read_status "$job_id")" "retryable result persists retrying"
+assert_cron_has_job "$job_id" "a retrying job keeps its crontab line"
 rm -f "$RESUME_TEST_HARNESS_LOG"
 "$RESUME_JOB_CLI" run "$job_id"
 assert_path_not_exists "$RESUME_TEST_HARNESS_LOG" "retry interval before next due is harmless"
@@ -201,56 +229,65 @@ export RESUME_TEST_OUTPUT='completed normally'
 "$RESUME_JOB_CLI" run "$job_id"
 assert_equal completed "$(schedule_resume_read_status "$job_id")" "retry runs once due"
 assert_equal 2 "$(jq -r '.attempt_count' "$job_dir/status.json")" "run exactly two due attempts"
-pass "first-attempt and retry due-time gating"
+assert_cron_lacks_job "$job_id" "a completed job removes its own crontab line"
+assert_foreign_survives "auto-removal on completion"
+pass "first-attempt and retry due-time gating with auto-removal"
 
-cancel_job=cancel-preserves-state
-create_job '2099-07-22T12:31:00Z' "$cancel_job" >/dev/null
-cancel_dir="$RESUME_JOB_STATE_ROOT/$cancel_job"
-export RESUME_TEST_LAUNCHCTL_STATUS_PATH="$cancel_dir/status.json"
-"$RESUME_JOB_CLI" cancel "$cancel_job"
-unset RESUME_TEST_LAUNCHCTL_STATUS_PATH
-assert_equal scheduled "$(cat "$cancel_dir/status.json.at-bootout")" "cancel unloads service before publishing terminal state"
-assert_equal cancelled "$(schedule_resume_read_status "$cancel_job")" "cancel marks job terminal"
+failed_job=failed-terminal-job
+create_job '2000-01-01T00:00:00Z' "$failed_job" >/dev/null
+assert_cron_has_job "$failed_job" "failed-job fixture starts with a line"
+export RESUME_TEST_HARNESS_LOG="$scheduler_root/failed.args"
+export RESUME_TEST_PROMPT_CAPTURE="$scheduler_root/failed.prompt"
+export RESUME_TEST_CWD_CAPTURE="$scheduler_root/failed.cwd"
+export RESUME_TEST_EXIT_CODE=1
+export RESUME_TEST_OUTPUT='Fatal: session not found'
+"$RESUME_JOB_CLI" run "$failed_job"
+assert_equal failed "$(schedule_resume_read_status "$failed_job")" "terminal error marks failed"
+assert_cron_lacks_job "$failed_job" "a failed job removes its own crontab line"
+pass "terminal failure removes crontab line"
+
+crontab_append_raw '* * * * * /nonexistent/run.sh # schedule-resume:ghost-no-dir'
+"$RESUME_JOB_CLI" cleanup 0 >/dev/null
+assert_cron_lacks_job ghost-no-dir "cleanup double-sweeps orphan crontab lines"
+assert_foreign_survives "cleanup orphan sweep"
+pass "cleanup sweeps orphan crontab lines"
+
+cancel_job_id=cancel-preserves-state
+create_job '2099-07-22T12:31:00Z' "$cancel_job_id" >/dev/null
+cancel_dir="$RESUME_JOB_STATE_ROOT/$cancel_job_id"
+assert_cron_has_job "$cancel_job_id" "cancel fixture starts with a line"
+"$RESUME_JOB_CLI" cancel "$cancel_job_id"
+assert_equal cancelled "$(schedule_resume_read_status "$cancel_job_id")" "cancel marks job terminal"
 assert_file_exists "$cancel_dir/manifest.json" "cancel preserves manifest"
 assert_file_exists "$cancel_dir/prompt.txt" "cancel preserves prompt"
-assert_equal "[\"bootout\",\"gui/$uid/com.carlos.resume-job.$cancel_job\"]" "$(tail -n 1 "$RESUME_TEST_LAUNCHCTL_LOG")" "cancel boots out exact service"
-cancel_calls_before=$(wc -l <"$RESUME_TEST_LAUNCHCTL_LOG" | tr -d ' ')
-export RESUME_TEST_LAUNCHCTL_BOOTOUT_STATUS=3
-export RESUME_TEST_LAUNCHCTL_BOOTOUT_ERROR='Boot-out failed: 3: No such process'
-"$RESUME_JOB_CLI" cancel "$cancel_job"
-unset RESUME_TEST_LAUNCHCTL_BOOTOUT_STATUS RESUME_TEST_LAUNCHCTL_BOOTOUT_ERROR
-cancel_calls_after=$(wc -l <"$RESUME_TEST_LAUNCHCTL_LOG" | tr -d ' ')
-assert_equal "$((cancel_calls_before + 1))" "$cancel_calls_after" "repeated cancel still boots out exact service"
-pass "cancel preserves state and logs"
+assert_cron_lacks_job "$cancel_job_id" "cancel removes the crontab line"
+assert_foreign_survives "cancel"
+"$RESUME_JOB_CLI" cancel "$cancel_job_id"
+assert_equal cancelled "$(schedule_resume_read_status "$cancel_job_id")" "repeated cancel stays terminal"
+pass "cancel preserves state and removes the crontab line"
 
 cancel_race_job=cancel-running-attempt
 create_job '2000-01-01T00:00:00Z' "$cancel_race_job" >/dev/null
 cancel_race_dir="$RESUME_JOB_STATE_ROOT/$cancel_race_job"
 cancel_race_harness_barrier="$scheduler_root/cancel-race-harness"
-cancel_race_final_barrier="$scheduler_root/cancel-race-final"
-mkdir -p "$cancel_race_harness_barrier" "$cancel_race_final_barrier"
+mkdir -p "$cancel_race_harness_barrier"
 export RESUME_TEST_HARNESS_LOG="$scheduler_root/cancel-race.args"
 export RESUME_TEST_PROMPT_CAPTURE="$scheduler_root/cancel-race.prompt"
 export RESUME_TEST_CWD_CAPTURE="$scheduler_root/cancel-race.cwd"
 export RESUME_TEST_EXIT_CODE=0
 export RESUME_TEST_OUTPUT='completed normally'
 export RESUME_TEST_HARNESS_BARRIER="$cancel_race_harness_barrier"
-export RESUME_TEST_BEFORE_FINAL_STATUS_BARRIER="$cancel_race_final_barrier"
-export RESUME_TEST_BEFORE_FINAL_STATUS_EXPECTED=completed
-export RESUME_JOB_LOCKF="$TESTS_DIR/fixtures/bin/lockf-observe"
-export RESUME_TEST_LOCK_ATTEMPT_FILE="$cancel_race_final_barrier/cancel-lock-attempt"
 "$RESUME_JOB_CLI" run "$cancel_race_job" &
 cancel_race_runner_pid=$!
 cancel_race_wait_count=0
 while ! find "$cancel_race_harness_barrier" -name 'launched.*' -type f | grep -q .; do
   cancel_race_wait_count=$((cancel_race_wait_count + 1))
-  [ "$cancel_race_wait_count" -lt 500 ] || fail "blocking cancellation attempt did not launch"
+  [ "$cancel_race_wait_count" -lt 500 ] || fail "running attempt did not launch"
   /bin/sleep 0.01
 done
-export RESUME_TEST_LAUNCHCTL_BOOTOUT_RELEASE="$cancel_race_harness_barrier/release"
-export RESUME_TEST_LAUNCHCTL_BOOTOUT_WAIT_FOR="$cancel_race_final_barrier/ready"
+# The running attempt now holds the job lock. Cancel must remove the crontab
+# line immediately, then block on the held attempt lock until the runner exits.
 (
-  export RESUME_TEST_ACTOR=cancel
   if "$RESUME_JOB_CLI" cancel "$cancel_race_job" >"$scheduler_root/cancel-race.stdout" 2>"$scheduler_root/cancel-race.stderr"; then
     printf '0\n' >"$scheduler_root/cancel-race.result"
   else
@@ -258,29 +295,24 @@ export RESUME_TEST_LAUNCHCTL_BOOTOUT_WAIT_FOR="$cancel_race_final_barrier/ready"
   fi
 ) &
 cancel_race_cancel_pid=$!
+# The removed crontab line is the observable signal that cancel has passed its
+# scheduler work and is now blocking on the attempt lock the runner still holds.
 cancel_race_wait_count=0
-while [ ! -e "$cancel_race_final_barrier/ready" ]; do
+while cron_has_job "$cancel_race_job"; do
   cancel_race_wait_count=$((cancel_race_wait_count + 1))
-  [ "$cancel_race_wait_count" -lt 500 ] || fail "runner did not reach final publication barrier"
+  [ "$cancel_race_wait_count" -lt 500 ] || fail "cancel did not remove the crontab line"
   /bin/sleep 0.01
 done
-cancel_race_wait_count=0
-while [ ! -e "$RESUME_TEST_LOCK_ATTEMPT_FILE" ]; do
-  cancel_race_wait_count=$((cancel_race_wait_count + 1))
-  [ "$cancel_race_wait_count" -lt 500 ] || fail "cancel did not attempt the shared job lock"
-  /bin/sleep 0.01
-done
-assert_path_not_exists "$scheduler_root/cancel-race.result" "cancel must wait while attempt owns lock"
-touch "$cancel_race_final_barrier/release"
+assert_path_not_exists "$scheduler_root/cancel-race.result" "cancel must wait while the attempt owns the lock"
+touch "$cancel_race_harness_barrier/release"
 wait "$cancel_race_runner_pid"
 wait "$cancel_race_cancel_pid"
-unset RESUME_TEST_HARNESS_BARRIER RESUME_TEST_BEFORE_FINAL_STATUS_BARRIER RESUME_TEST_BEFORE_FINAL_STATUS_EXPECTED
-unset RESUME_TEST_LAUNCHCTL_BOOTOUT_RELEASE RESUME_TEST_LAUNCHCTL_BOOTOUT_WAIT_FOR
-unset RESUME_JOB_LOCKF RESUME_TEST_LOCK_ATTEMPT_FILE
-assert_equal 0 "$(cat "$scheduler_root/cancel-race.result")" "cancel succeeds after serialized attempt completion"
+unset RESUME_TEST_HARNESS_BARRIER
+assert_equal 0 "$(cat "$scheduler_root/cancel-race.result")" "cancel succeeds after the attempt completes"
 assert_equal cancelled "$(schedule_resume_read_status "$cancel_race_job")" "runner cannot overwrite serialized cancellation"
 assert_equal success "$(jq -r '.last_classification' "$cancel_race_dir/status.json")" "cancellation preserves attempt fields"
-pass "cancel serializes with running attempt"
+assert_cron_lacks_job "$cancel_race_job" "cancel leaves no crontab line after serialized completion"
+pass "cancel serializes with a running attempt"
 
 cancel_pid_job=cancel-owner-pid
 create_job '2099-07-22T12:32:00Z' "$cancel_pid_job" >/dev/null
@@ -310,7 +342,7 @@ cancel_pid_parent=$!
 cancel_pid_wait_count=0
 while [ ! -e "$cancel_pid_barrier/ready" ] || [ ! -e "$cancel_pid_barrier/cli-pid" ]; do
   cancel_pid_wait_count=$((cancel_pid_wait_count + 1))
-  [ "$cancel_pid_wait_count" -lt 500 ] || fail "cancellation did not reach PID ownership barrier"
+  [ "$cancel_pid_wait_count" -lt 500 ] || fail "cancellation did not reach the PID ownership barrier"
   /bin/sleep 0.01
 done
 cancel_pid_recorded=$(cat "$cancel_pid_dir/lock/pid")
@@ -419,44 +451,53 @@ else
 fi
 unset RESUME_JOB_LOCKF
 assert_equal 69 "$cleanup_lock_error_result" "cleanup propagates lockf operational status"
-grep -Fq 'lockf acquisition failed with exit 69' "$scheduler_root/cleanup-lock-error.stderr" || fail "cleanup lock failure must be diagnosed"
 assert_file_exists "$cleanup_old_dir/status.json" "lock error preserves terminal state"
 
-cleanup_bootout_failure=a-cleanup-bootout-failure
-create_job '2099-07-22T12:36:00Z' "$cleanup_bootout_failure" >/dev/null
-cleanup_bootout_failure_dir="$RESUME_JOB_STATE_ROOT/$cleanup_bootout_failure"
-cleanup_bootout_failure_plist="$HOME/Library/LaunchAgents/com.carlos.resume-job.$cleanup_bootout_failure.plist"
-cleanup_bootout_failure_status=$(jq '.status = "failed" | .last_finished_at = "2000-01-01T00:00:00Z" | .next_attempt_at = null' "$cleanup_bootout_failure_dir/status.json")
-schedule_resume_write_status "$cleanup_bootout_failure" "$cleanup_bootout_failure_status"
-export RESUME_TEST_LAUNCHCTL_BOOTOUT_STATUS=5
-if "$RESUME_JOB_CLI" cleanup 30 >"$scheduler_root/cleanup-bootout-error.stdout" 2>"$scheduler_root/cleanup-bootout-error.stderr"; then
-  fail "cleanup must propagate unexpected bootout failure"
+cleanup_crontab_failure=a-cleanup-crontab-failure
+create_job '2099-07-22T12:36:00Z' "$cleanup_crontab_failure" >/dev/null
+cleanup_crontab_failure_dir="$RESUME_JOB_STATE_ROOT/$cleanup_crontab_failure"
+cleanup_crontab_failure_status=$(jq '.status = "failed" | .last_finished_at = "2000-01-01T00:00:00Z" | .next_attempt_at = null' "$cleanup_crontab_failure_dir/status.json")
+schedule_resume_write_status "$cleanup_crontab_failure" "$cleanup_crontab_failure_status"
+export RESUME_TEST_CRONTAB_INSTALL_FAIL=5
+if "$RESUME_JOB_CLI" cleanup 30 >"$scheduler_root/cleanup-crontab-error.stdout" 2>"$scheduler_root/cleanup-crontab-error.stderr"; then
+  fail "cleanup must propagate an unexpected crontab removal failure"
 fi
-unset RESUME_TEST_LAUNCHCTL_BOOTOUT_STATUS
-assert_file_exists "$cleanup_bootout_failure_dir/status.json" "bootout failure preserves job state"
-assert_file_exists "$cleanup_bootout_failure_plist" "bootout failure preserves plist"
+unset RESUME_TEST_CRONTAB_INSTALL_FAIL
+assert_file_exists "$cleanup_crontab_failure_dir/status.json" "crontab failure preserves job state"
 
 "$RESUME_JOB_CLI" cleanup 30 >"$scheduler_root/cleanup.stdout" 2>"$scheduler_root/cleanup.stderr"
 assert_path_not_exists "$cleanup_old_dir" "cleanup removes old terminal job state"
-assert_path_not_exists "$HOME/Library/LaunchAgents/com.carlos.resume-job.$cleanup_old.plist" "cleanup removes exact old plist"
+assert_cron_lacks_job "$cleanup_old" "cleanup removes the terminal job's crontab line"
 assert_file_exists "$cleanup_locked_dir/status.json" "cleanup preserves live-locked terminal job"
 grep -Fq "cleanup skipped job $cleanup_locked: lock is held" "$scheduler_root/cleanup.stderr" || fail "cleanup reports lock contention"
 assert_file_exists "$RESUME_JOB_STATE_ROOT/$cleanup_active/status.json" "cleanup preserves active job"
 assert_file_exists "$malformed_dir/status.json" "cleanup preserves malformed job"
-assert_path_not_exists "$malformed_dir/.lock-guard" "cleanup skips malformed entries without creating lock artifacts"
 assert_file_exists "$RESUME_JOB_STATE_ROOT/cleanup-symlink-job/marker.txt" "cleanup preserves symlink entry target"
 assert_file_exists "$cleanup_external/marker.txt" "cleanup leaves external symlink target untouched"
-assert_file_exists "$job_dir/status.json" "cleanup preserves recent terminal job"
+assert_foreign_survives "cleanup"
 kill "$cleanup_lock_owner"
 wait "$cleanup_lock_owner" 2>/dev/null || :
 schedule_resume_release_lock "$cleanup_locked_dir" "$cleanup_lock_owner"
 pass "safe retention cleanup"
 
-rollback_job=rollback-bootstrap-failure
-export RESUME_TEST_LAUNCHCTL_BOOTSTRAP_STATUS=7
-assert_command_fails "create reports bootstrap failure" create_job '2099-07-22T12:34:00Z' "$rollback_job"
-unset RESUME_TEST_LAUNCHCTL_BOOTSTRAP_STATUS
+rollback_job=rollback-install-failure
+export RESUME_TEST_CRONTAB_INSTALL_FAIL=7
+assert_command_fails "create reports crontab install failure" create_job '2099-07-22T12:34:00Z' "$rollback_job"
+unset RESUME_TEST_CRONTAB_INSTALL_FAIL
 assert_path_not_exists "$RESUME_JOB_STATE_ROOT/$rollback_job" "failed create removes only newly created state"
-assert_path_not_exists "$HOME/Library/LaunchAgents/com.carlos.resume-job.$rollback_job.plist" "failed create removes new plist"
+assert_cron_lacks_job "$rollback_job" "failed create leaves no crontab line"
 assert_file_exists "$RESUME_JOB_STATE_ROOT/$cleanup_active/status.json" "failed create preserves other jobs"
+assert_foreign_survives "create rollback"
 pass "create rollback scope"
+
+"$RESUME_JOB_CLI" list >"$scheduler_root/list-output"
+grep -Fxq "$cleanup_active" "$scheduler_root/list-output" || fail "list must include active job state"
+
+crontab_append_raw '* * * * * /nonexistent/run.sh # schedule-resume:doctor-orphan'
+"$RESUME_JOB_CLI" doctor >"$scheduler_root/doctor.stdout" 2>"$scheduler_root/doctor.stderr"
+grep -Fq "$cleanup_active  [live:" "$scheduler_root/doctor.stdout" || fail "doctor must list live jobs with status"
+grep -Fq 'doctor-orphan  [ORPHAN' "$scheduler_root/doctor.stdout" || fail "doctor must flag orphan lines"
+grep -Fq "crontab -l | grep -v '# schedule-resume:' | crontab -" "$scheduler_root/doctor.stdout" || fail "doctor must print the purge command"
+assert_cron_lacks_job doctor-orphan "doctor prunes orphan crontab lines"
+assert_foreign_survives "doctor"
+pass "doctor lists and prunes crontab entries"

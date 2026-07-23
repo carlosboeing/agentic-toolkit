@@ -9,6 +9,7 @@ trap 'rm -rf "$TEST_TMPDIR"' EXIT HUP INT TERM
 
 export HOME="$TEST_TMPDIR/home"
 export RESUME_JOB_STATE_ROOT="$TEST_TMPDIR/state"
+export RESUME_TEST_CRONTAB_FILE="$TEST_TMPDIR/crontab"
 export PATH="$TESTS_DIR/fixtures/bin:$PATH"
 mkdir -p "$HOME" "$RESUME_JOB_STATE_ROOT"
 

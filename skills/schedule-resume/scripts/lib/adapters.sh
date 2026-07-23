@@ -1,12 +1,24 @@
 #!/bin/sh
 
+# Emit the idle-guard command prefix for the current platform: caffeinate on
+# macOS (prevents idle sleep while an attempt runs), nothing elsewhere. Callers
+# word-split the output, so on non-macOS the harness simply runs unguarded.
+schedule_resume_idle_guard() (
+  case "$(uname -s 2>/dev/null)" in
+    Darwin) printf '%s\n' caffeinate -i ;;
+    *) : ;;
+  esac
+)
+
 schedule_resume_execute_claude() (
   _schedule_resume_executable=$1
   _schedule_resume_session_id=$2
   _schedule_resume_project_dir=$3
   _schedule_resume_prompt_file=$4
   cd "$_schedule_resume_project_dir" || return 1
-  caffeinate -i "$_schedule_resume_executable" --resume "$_schedule_resume_session_id" --dangerously-skip-permissions --print <"$_schedule_resume_prompt_file"
+  # shellcheck disable=SC2046  # intentional word-split of the idle-guard prefix
+  set -- $(schedule_resume_idle_guard) "$_schedule_resume_executable" --resume "$_schedule_resume_session_id" --dangerously-skip-permissions --print
+  "$@" <"$_schedule_resume_prompt_file"
 )
 
 schedule_resume_execute_agy() (
@@ -15,7 +27,9 @@ schedule_resume_execute_agy() (
   _schedule_resume_project_dir=$3
   _schedule_resume_prompt_file=$4
   cd "$_schedule_resume_project_dir" || return 1
-  caffeinate -i "$_schedule_resume_executable" --conversation "$_schedule_resume_session_id" --dangerously-skip-permissions --print <"$_schedule_resume_prompt_file"
+  # shellcheck disable=SC2046  # intentional word-split of the idle-guard prefix
+  set -- $(schedule_resume_idle_guard) "$_schedule_resume_executable" --conversation "$_schedule_resume_session_id" --dangerously-skip-permissions --print
+  "$@" <"$_schedule_resume_prompt_file"
 )
 
 schedule_resume_execute_codex() (
@@ -24,7 +38,9 @@ schedule_resume_execute_codex() (
   _schedule_resume_project_dir=$3
   _schedule_resume_prompt_file=$4
   cd "$_schedule_resume_project_dir" || return 1
-  caffeinate -i "$_schedule_resume_executable" exec resume --dangerously-bypass-approvals-and-sandbox "$_schedule_resume_session_id" - <"$_schedule_resume_prompt_file"
+  # shellcheck disable=SC2046  # intentional word-split of the idle-guard prefix
+  set -- $(schedule_resume_idle_guard) "$_schedule_resume_executable" exec resume --dangerously-bypass-approvals-and-sandbox "$_schedule_resume_session_id" -
+  "$@" <"$_schedule_resume_prompt_file"
 )
 
 schedule_resume_execute_target() (

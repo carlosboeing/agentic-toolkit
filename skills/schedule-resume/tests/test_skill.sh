@@ -105,7 +105,7 @@ assert_contains "$SKILL_FILE" 'retention days' "require cleanup retention"
 assert_contains "$SKILL_FILE" 'Read-only list/status require no confirmation' "keep read-only management non-interactive"
 pass "management interaction contract"
 
-for dependency in macOS jq launchd launchctl plutil caffeinate lockf; do
+for dependency in macOS jq cron crontab caffeinate lockf; do
   assert_contains "$README_FILE" "$dependency" "document dependency '$dependency'"
 done
 for form in '--resume' '--conversation' 'exec resume' 'prompt stdin'; do
@@ -113,13 +113,13 @@ for form in '--resume' '--conversation' 'exec resume' 'prompt stdin'; do
 done
 home_tilde='~'
 assert_contains "$README_FILE" "${home_tilde}/.local/state/resume-job/<job-id>/" "document job state path"
-assert_contains "$README_FILE" 'launchd.stdout.log' "document scheduler stdout log"
-assert_contains "$README_FILE" 'launchd.stderr.log' "document scheduler stderr log"
+assert_contains "$README_FILE" 'cron.log' "document scheduler log"
 assert_contains "$README_FILE" 'attempts/<N>/stdout.log' "document per-attempt stdout log"
 assert_contains "$README_FILE" 'attempts/<N>/stderr.log' "document per-attempt stderr log"
-assert_contains "$README_FILE" "${home_tilde}/Library/LaunchAgents/com.carlos.resume-job.<job-id>.plist" "document LaunchAgent path"
-assert_contains "$README_FILE" 'calendar' "document calendar scheduling"
-assert_contains "$README_FILE" 'interval' "document interval scheduling"
+assert_contains "$README_FILE" '# schedule-resume:<job-id>' "document the crontab line marker"
+assert_matches "$README_FILE" 'polls every minute|every minute' "document minute polling"
+assert_contains "$README_FILE" 'doctor' "document the doctor command"
+assert_contains "$README_FILE" 'Full Disk Access' "document the conditional Full Disk Access requirement"
 assert_contains "$README_FILE" '0..36500' "document cleanup retention range"
 assert_matches "$README_FILE" '^/schedule-resume' "use the slash command in natural-language examples"
 assert_not_matches "$README_FILE" '^/(resume|schedule-session)' "do not invent alternate slash commands"
@@ -127,5 +127,5 @@ pass "human documentation contract"
 
 assert_contains "$CATALOG_FILE" '[`schedule-resume`](schedule-resume/)' "catalog the skill"
 assert_contains "$CATALOG_FILE" '/schedule-resume' "catalog the slash command"
-assert_matches "$CATALOG_FILE" 'schedule-resume.*(bundled|shell helper).*(macOS|launchd)|schedule-resume.*(macOS|launchd).*(bundled|shell helper)' "catalog bundled helper and launchd dependency"
+assert_matches "$CATALOG_FILE" 'schedule-resume.*(bundled|shell helper).*(macOS|cron)|schedule-resume.*(macOS|cron).*(bundled|shell helper)' "catalog bundled helper and cron backend"
 pass "catalog contract"

@@ -1,6 +1,5 @@
 #!/bin/sh
 
-: "${SCHEDULE_RESUME_POLL_INTERVAL_SECONDS:=120}"
 : "${SCHEDULE_RESUME_SENTINEL:=SCHEDULE_RESUME_TASK_COMPLETE}"
 
 schedule_resume_validate_job_id() (
@@ -46,4 +45,20 @@ _schedule_resume_atomic_write_json() (
     rm -f "$temporary"
     return 1
   fi
+)
+
+# Parse a strict UTC ISO timestamp (YYYY-MM-DDTHH:MM:SSZ) to epoch seconds.
+# The round-trip re-format rejects impossible dates (e.g. month 13) that BSD
+# date would otherwise normalize. The `date -j` form is macOS-only; the GNU
+# equivalent (`date -u -d`) is the documented Linux portability gap.
+_schedule_resume_timestamp_epoch() (
+  timestamp=${1-}
+  case "$timestamp" in
+    ????-??-??T??:??:??Z) ;;
+    *) return 1 ;;
+  esac
+
+  epoch=$(date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$timestamp" '+%s' 2>/dev/null) || return 1
+  [ "$(date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$timestamp" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null)" = "$timestamp" ] || return 1
+  printf '%s\n' "$epoch"
 )

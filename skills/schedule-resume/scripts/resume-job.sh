@@ -10,7 +10,7 @@ export RESUME_JOB_STATE_ROOT
 . "$SCRIPT_DIR/lib/state.sh"
 . "$SCRIPT_DIR/lib/lock.sh"
 . "$SCRIPT_DIR/lib/adapters.sh"
-. "$SCRIPT_DIR/lib/scheduler-launchd.sh"
+. "$SCRIPT_DIR/lib/scheduler-cron.sh"
 
 resolve_harness_executable() {
   harness_name=$1
@@ -28,7 +28,8 @@ usage() {
     '       resume-job.sh status JOB_ID' \
     '       resume-job.sh cancel JOB_ID' \
     '       resume-job.sh run JOB_ID' \
-    '       resume-job.sh cleanup RETENTION_DAYS  # decimal integer 0..36500' >&2
+    '       resume-job.sh cleanup RETENTION_DAYS  # decimal integer 0..36500' \
+    '       resume-job.sh doctor' >&2
 }
 
 require_value() {
@@ -57,8 +58,10 @@ write_wrapper() {
   wrapper_root=$4
   escaped_cli=$(printf '%s' "$wrapper_cli" | sed "s/'/'\\\\''/g") || return 1
   escaped_root=$(printf '%s' "$wrapper_root" | sed "s/'/'\\\\''/g") || return 1
+  escaped_path=$(printf '%s' "${PATH:-/usr/bin:/bin}" | sed "s/'/'\\\\''/g") || return 1
+  escaped_log=$(printf '%s' "$wrapper_root/$wrapper_job_id/cron.log" | sed "s/'/'\\\\''/g") || return 1
   temporary=$(mktemp "${wrapper_path%/*}/.wrapper.XXXXXX") || return 1
-  if ! printf '%s\n' '#!/bin/sh' 'umask 077' "RESUME_JOB_STATE_ROOT='$escaped_root'" 'export RESUME_JOB_STATE_ROOT' "exec '$escaped_cli' run '$wrapper_job_id'" >"$temporary" ||
+  if ! printf '%s\n' '#!/bin/sh' 'umask 077' "PATH='$escaped_path'" 'export PATH' "RESUME_JOB_STATE_ROOT='$escaped_root'" 'export RESUME_JOB_STATE_ROOT' "exec '$escaped_cli' run '$wrapper_job_id' >>'$escaped_log' 2>&1" >"$temporary" ||
     ! chmod 700 "$temporary" || ! mv "$temporary" "$wrapper_path"; then
     rm -f "$temporary"
     return 1
@@ -124,6 +127,11 @@ create_job() {
   esac
   prompt_parent=$(CDPATH='' cd -- "$prompt_parent_input" && pwd) || return 2
   prompt_file="$prompt_parent/${prompt_file##*/}"
+  for _fda_path in "$project_dir" "$prompt_file" "$RESUME_JOB_STATE_ROOT"; do
+    if schedule_resume_tcc_protected_path "$_fda_path"; then
+      printf 'warning: %s is under a macOS Full-Disk-Access-protected folder; cron may be denied access and the job could silently never run. Grant /usr/sbin/cron Full Disk Access in System Settings > Privacy & Security if it never fires.\n' "$_fda_path" >&2
+    fi
+  done
   if [ -z "$job_id" ]; then
     job_id="job-$(date -u '+%Y%m%dT%H%M%SZ')-$$"
   fi
@@ -154,11 +162,9 @@ create_job() {
 
   schedule_resume_create_job "$manifest" || return 1
   created=1
-  plist=$(schedule_resume_launchd_plist_path "$job_id") || return 1
   rollback() {
     if [ "${created:-0}" -eq 1 ]; then
-      _schedule_resume_bootout_service "$job_id" >/dev/null 2>&1 || :
-      rm -f "$plist"
+      schedule_resume_scheduler_remove "$job_id" >/dev/null 2>&1 || :
       rm -rf "$job_dir"
     fi
   }
@@ -171,7 +177,8 @@ create_job() {
   fi
   wrapper="$job_dir/run.sh"
   write_wrapper "$job_id" "$wrapper" "$SCRIPT_DIR/resume-job.sh" "$RESUME_JOB_STATE_ROOT" || return 1
-  schedule_resume_install_launch_agent "$job_id" "$wrapper" || return 1
+  schedule_resume_scheduler_reconcile >/dev/null 2>&1 || :
+  schedule_resume_scheduler_install "$job_id" "$wrapper" || return 1
   created=0
   trap - 0 HUP INT TERM
   printf '%s\n' "$job_id"
@@ -207,7 +214,8 @@ cancel_job() (
   status_path=$(schedule_resume_status_path "$job_id") || return 1
   current=$(jq -c . "$status_path") || return 1
   _schedule_resume_validate_status_json "$current" || return 1
-  schedule_resume_remove_launch_agent "$job_id" || return 1
+  schedule_resume_scheduler_reconcile >/dev/null 2>&1 || :
+  schedule_resume_scheduler_remove "$job_id" || return 1
 
   cancel_lock_timeout=${RESUME_JOB_CANCEL_LOCK_TIMEOUT_SECONDS:-10}
   case "$cancel_lock_timeout" in '' | *[!0-9]*) return 1 ;; esac
@@ -226,7 +234,7 @@ cancel_job() (
       return "$cancel_lock_result"
     fi
     if [ "$(date +%s)" -ge "$cancel_lock_deadline" ]; then
-      printf 'cannot cancel job %s: attempt lock remains held after launchd bootout; retry after the current runner exits\n' "$job_id" >&2
+      printf 'cannot cancel job %s: attempt lock remains held after removing the cron entry; retry after the current runner exits\n' "$job_id" >&2
       return 75
     fi
     /bin/sleep 0.05
@@ -256,14 +264,30 @@ run_job() {
   status_json=$(jq -c . "$status_path") || return 1
   _schedule_resume_validate_status_json "$status_json" || return 1
   state=$(printf '%s\n' "$status_json" | jq -r '.status') || return 1
-  case "$state" in completed | failed | cancelled) return 0 ;; esac
+  case "$state" in
+    completed | failed | cancelled)
+      schedule_resume_scheduler_remove "$job_id" >/dev/null 2>&1 || :
+      return 0
+      ;;
+  esac
   next_attempt_at=$(printf '%s\n' "$status_json" | jq -r '.next_attempt_at // empty') || return 1
   if [ -n "$next_attempt_at" ]; then
     due_epoch=$(_schedule_resume_timestamp_epoch "$next_attempt_at") || return 1
     now_epoch=$(date +%s) || return 1
     [ "$now_epoch" -ge "$due_epoch" ] || return 0
   fi
-  schedule_resume_run_attempt "$job_id"
+  if schedule_resume_run_attempt "$job_id"; then
+    run_attempt_result=0
+  else
+    run_attempt_result=$?
+  fi
+  post_state=$(jq -r '.status // empty' "$status_path" 2>/dev/null) || post_state=
+  case "$post_state" in
+    completed | failed | cancelled)
+      schedule_resume_scheduler_remove "$job_id" >/dev/null 2>&1 || :
+      ;;
+  esac
+  return "$run_attempt_result"
 }
 
 cleanup_jobs() {
@@ -290,6 +314,7 @@ cleanup_jobs() {
   export RESUME_JOB_STATE_ROOT
   set_current_process_pid || return 1
   cleanup_pid=$SCHEDULE_RESUME_CURRENT_PROCESS_PID
+  schedule_resume_scheduler_reconcile >/dev/null 2>&1 || :
   for candidate in "$cleanup_root"/*; do
     [ -d "$candidate" ] && [ ! -L "$candidate" ] || continue
     job_id=${candidate##*/}
@@ -350,7 +375,7 @@ cleanup_jobs() {
       schedule_resume_release_lock "$candidate" "$cleanup_pid" || return 1
       continue
     fi
-    if schedule_resume_remove_launch_agent "$job_id"; then
+    if schedule_resume_scheduler_remove "$job_id"; then
       :
     else
       cleanup_remove_result=$?
@@ -364,6 +389,33 @@ cleanup_jobs() {
   done
 }
 
+doctor_jobs() {
+  printf 'schedule-resume cron entries:\n'
+  crontab -l 2>/dev/null | while IFS= read -r doctor_line || [ -n "$doctor_line" ]; do
+    case "$doctor_line" in
+      *"# schedule-resume:"*)
+        doctor_jid=${doctor_line##*# schedule-resume:}
+        if schedule_resume_validate_job_id "$doctor_jid" >/dev/null 2>&1 &&
+          [ -d "$(schedule_resume_job_dir "$doctor_jid" 2>/dev/null)" ]; then
+          doctor_state=$(schedule_resume_read_status "$doctor_jid" 2>/dev/null) || doctor_state=unknown
+          printf '  %s  [live: %s]\n' "$doctor_jid" "$doctor_state"
+        else
+          printf '  %s  [ORPHAN: no job directory]\n' "$doctor_jid"
+        fi
+        ;;
+    esac
+  done
+  schedule_resume_scheduler_reconcile >/dev/null 2>&1 || :
+  doctor_leftover=$(ls "$HOME"/Library/LaunchAgents/com.carlos.resume-job.*.plist 2>/dev/null) || doctor_leftover=
+  if [ -n "$doctor_leftover" ]; then
+    printf '\nLeftover launchd agents from the old backend were found. Remove them with:\n'
+    # shellcheck disable=SC2016  # deliberately printed verbatim for the user to run
+    printf '  for p in "$HOME"/Library/LaunchAgents/com.carlos.resume-job.*.plist; do [ -e "$p" ] || continue; launchctl bootout "gui/$(id -u)/$(basename "$p" .plist)" 2>/dev/null; rm -f "$p"; done\n'
+  fi
+  printf '\nTo purge every schedule-resume cron entry:\n'
+  printf "  crontab -l | grep -v '# schedule-resume:' | crontab -\n"
+}
+
 command=${1-}
 [ -n "$command" ] || { usage; exit 2; }
 shift
@@ -374,5 +426,6 @@ case "$command" in
   cancel) cancel_job "$@" ;;
   run) run_job "$@" ;;
   cleanup) cleanup_jobs "$@" ;;
+  doctor) [ "$#" -eq 0 ] || { usage; exit 2; }; doctor_jobs ;;
   *) usage; exit 2 ;;
 esac
