@@ -107,6 +107,7 @@ for command in create list status cancel cleanup; do
 done
 assert_contains "$SKILL_FILE" 'temporary' "build a local temporary continuation prompt"
 assert_contains "$SKILL_FILE" 'Preserve prompt bytes' "preserve continuation prompt bytes"
+assert_contains "$SKILL_FILE" 'Do not include the instruction-file path or copied instruction text in the continuation prompt' "let the target harness load project instructions from its working directory"
 assert_contains "$SKILL_FILE" 'Terminal state persists until cleanup' "retain terminal jobs"
 assert_not_matches "$SKILL_FILE" 'resume-job\.sh run|launchctl[[:space:]]+(start|kickstart)' "create flow must never start a run immediately"
 assert_not_matches "$SKILL_FILE" 'claude --resume|agy --conversation|codex exec resume' "route target execution through the helper"
