@@ -33,6 +33,9 @@ Three clusters at the top level. See [README.md](README.md) for the visitor-faci
 ├── skills/                 — HARNESS MIRROR: drop-in to ~/.claude/skills/
 │   └── learn/
 │
+├── output-styles/          — HARNESS MIRROR: drop-in to ~/.claude/output-styles/
+│   └── plain-english.md
+│
 ├── guides/                 — OTHER CONSUMABLE: evergreen how-tos
 ├── reference/              — OTHER CONSUMABLE: snapshots, inventories, lookups
 ├── templates/              — OTHER CONSUMABLE: project bootstrap scaffolds
@@ -42,7 +45,7 @@ Three clusters at the top level. See [README.md](README.md) for the visitor-faci
 └── LICENSE                 — MIT
 ```
 
-Future harness mirrors (created when first content lands; never empty placeholders): `plugins/`, `commands/`, `agents/`, `hooks/`, `mcp-servers/`, `output-styles/`. Future other consumables: `prompts/`.
+Future harness mirrors (created when first content lands; never empty placeholders): `plugins/`, `commands/`, `agents/`, `hooks/`, `mcp-servers/`. Future other consumables: `prompts/`.
 
 ## `docs/` — the project's working memory
 
