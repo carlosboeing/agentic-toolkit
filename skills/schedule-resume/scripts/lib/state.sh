@@ -63,7 +63,9 @@ _schedule_resume_validate_status_json() (
     (.last_classification | . == null or type == "string") and
     (.last_started_at | . == null or type == "string") and
     (.last_finished_at | . == null or type == "string") and
-    (.next_attempt_at | . == null or type == "string")
+    (.next_attempt_at | . == null or type == "string") and
+    (.defer_count | . == null or (type == "number" and . >= 0 and floor == .)) and
+    (.last_deferred_at | . == null or type == "string")
   ' >/dev/null
 )
 
@@ -232,6 +234,26 @@ schedule_resume_run_attempt() (
   project_dir=$(printf '%s\n' "$manifest" | jq -r '.project_dir') || return 1
   prompt_file=$(printf '%s\n' "$manifest" | jq -r '.prompt_file') || return 1
   completion_policy=$(printf '%s\n' "$manifest" | jq -r '.completion_policy') || return 1
+
+  # Liveness guard: never resume a session that is currently being worked, or
+  # its transcript would be corrupted by two concurrent agents. A deferral is
+  # not an attempt (attempt_count untouched); it just re-arms the next poll.
+  liveness=$(schedule_resume_session_liveness "$target_harness" "$session_id") || liveness=absent
+  if [ "$liveness" = active ]; then
+    deferred_at=$(_schedule_resume_timestamp_now) || return 1
+    deferred_next=$(_schedule_resume_timestamp_after "$retry_interval_seconds") || return 1
+    deferred_status=$(printf '%s\n' "$current_status" | jq -c \
+      --arg deferred_at "$deferred_at" \
+      --arg next_attempt_at "$deferred_next" \
+      '.status = "scheduled" |
+        .last_classification = "deferred_session_active" |
+        .defer_count = ((.defer_count // 0) + 1) |
+        .last_deferred_at = $deferred_at |
+        .next_attempt_at = $next_attempt_at') || return 1
+    schedule_resume_write_status "$job_id" "$deferred_status" || return 1
+    return 0
+  fi
+
   attempt_count=$(( $(printf '%s\n' "$current_status" | jq -r '.attempt_count') + 1 ))
   started_at=$(_schedule_resume_timestamp_now) || return 1
   running_status=$(printf '%s\n' "$current_status" | jq -c \

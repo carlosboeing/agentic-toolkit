@@ -42,3 +42,15 @@ Creation only bootstraps the scheduler. Remove only the temporary source prompt 
 Use `scripts/resume-job.sh list` and `scripts/resume-job.sh status JOB`. Read-only list/status require no confirmation. For Cancel, use `scripts/resume-job.sh cancel JOB`; require an explicit job ID unless exactly one active job exists. For Cleanup, confirm destruction and retention days, then use `scripts/resume-job.sh cleanup DAYS`. For a health check of the cron entries — listing schedule-resume lines, pruning orphans, and detecting any leftover launchd agents from the old backend — use `scripts/resume-job.sh doctor`.
 
 A job removes its own cron entry automatically when it reaches a terminal state; only actively scheduled or retrying jobs keep a cron line. Terminal state persists until cleanup — the state directory and its logs remain until then; never claim self-deletion.
+
+## Liveness guard (Claude target only)
+
+At fire time, before a Claude job resumes, the helper reads Claude Code's own per-session registry to learn whether the target session is still live. It classifies the session as one of three states:
+
+- `active` — the session is open and the assistant is working. The job defers: it spends no attempt and no quota, re-arms its next poll, and stays scheduled. Consecutive deferrals accumulate in `defer_count`.
+- `idle` — the session is open but parked at the prompt. The job resumes in place, joining the one transcript.
+- `absent` — no live session process. The job resumes in place, exactly as before.
+
+Deferring stops a second, concurrent resume from corrupting an in-use session's transcript. A deferring job is never stalled or failed: `scripts/resume-job.sh status JOB` reports classification `deferred_session_active` with `defer_count` and `last_deferred_at`, and `scripts/resume-job.sh list` marks it as holding on an active target session. The job resumes on its own the moment the session goes idle or closes.
+
+The guard is Claude-only. Agy and Codex expose no equivalent session registry, so their resumes proceed ungated, unchanged from before.

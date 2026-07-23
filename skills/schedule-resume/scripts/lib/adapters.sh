@@ -10,6 +10,76 @@ schedule_resume_idle_guard() (
   esac
 )
 
+# Detect whether the target session is currently live, so a scheduled resume
+# never collides with a session that is actively being worked. Prints exactly
+# one of: absent | idle | active. Claude-only; harnesses without a discoverable
+# session registry are reported absent (ungated resume), exactly as before.
+schedule_resume_session_liveness() (
+  _schedule_resume_liveness_harness=$1
+  _schedule_resume_liveness_session_id=$2
+  case "$_schedule_resume_liveness_harness" in
+    claude)
+      schedule_resume_session_liveness_claude "$_schedule_resume_liveness_session_id"
+      ;;
+    *)
+      printf '%s\n' absent
+      ;;
+  esac
+)
+
+# Read Claude Code's own per-session registry (~/.claude/sessions/<pid>.json).
+# A file's name is the session PID and its .status is busy/idle. Undocumented
+# internal state, so every read degrades gracefully: a missing directory, an
+# unparseable file, or a dead PID never wedges a job.
+schedule_resume_session_liveness_claude() (
+  _schedule_resume_liveness_session_id=$1
+  _schedule_resume_liveness_dir=${SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR:-$HOME/.claude/sessions}
+  if [ ! -d "$_schedule_resume_liveness_dir" ]; then
+    printf '%s\n' absent
+    return 0
+  fi
+
+  _schedule_resume_liveness_live=0
+  _schedule_resume_liveness_active=0
+  for _schedule_resume_liveness_file in "$_schedule_resume_liveness_dir"/*.json; do
+    [ -f "$_schedule_resume_liveness_file" ] || continue
+    # Emit "<pid>\n<status>" for a matching entry; skip files that do not parse
+    # or do not carry the target UUID. A missing status becomes "unknown".
+    _schedule_resume_liveness_row=$(jq -r \
+      --arg sid "$_schedule_resume_liveness_session_id" \
+      'select(.sessionId == $sid) | (.pid | tostring), (.status // "unknown")' \
+      "$_schedule_resume_liveness_file" 2>/dev/null) || continue
+    [ -n "$_schedule_resume_liveness_row" ] || continue
+
+    _schedule_resume_liveness_pid=
+    _schedule_resume_liveness_status=
+    {
+      IFS= read -r _schedule_resume_liveness_pid &&
+        IFS= read -r _schedule_resume_liveness_status
+    } <<LIVENESS_ROW
+$_schedule_resume_liveness_row
+LIVENESS_ROW
+
+    case "$_schedule_resume_liveness_pid" in
+      '' | *[!0-9]*) continue ;;
+    esac
+    kill -0 "$_schedule_resume_liveness_pid" 2>/dev/null || continue
+
+    _schedule_resume_liveness_live=1
+    if [ "$_schedule_resume_liveness_status" != idle ]; then
+      _schedule_resume_liveness_active=1
+    fi
+  done
+
+  if [ "$_schedule_resume_liveness_active" -eq 1 ]; then
+    printf '%s\n' active
+  elif [ "$_schedule_resume_liveness_live" -eq 1 ]; then
+    printf '%s\n' idle
+  else
+    printf '%s\n' absent
+  fi
+)
+
 schedule_resume_execute_claude() (
   _schedule_resume_executable=$1
   _schedule_resume_session_id=$2

@@ -64,6 +64,18 @@ done
 
 Existing job state under `~/.local/state/resume-job/` is compatible; re-schedule an in-flight job with a fresh `create`.
 
+## Liveness guard (Claude only)
+
+Before a Claude job resumes, the helper reads Claude Code's own per-session registry (`~/.claude/sessions/<pid>.json`) to see whether the target session is still live, and classifies it:
+
+- **active** — the session is open and the assistant is working. The job **defers**: no attempt is spent, no quota is used, `next_attempt_at` is re-armed one retry interval out, and the job stays `scheduled`. Each deferral bumps `defer_count`.
+- **idle** — the session is open but parked at the prompt. The job resumes in place, appending to the one transcript.
+- **absent** — no live session process. The job resumes in place, exactly as before.
+
+This stops a scheduled resume from spawning a second agent on a session someone is actively using — two agents on one session interleave and corrupt the shared transcript. A deferring job never reads as stalled or failed: `status` reports `deferred_session_active` with `defer_count` and `last_deferred_at`, and `list` marks it as holding on an active target session. The job resumes on its own the first poll after the session goes idle or closes.
+
+Detection is Claude-only. Agy and Codex expose no equivalent session registry, so their resumes proceed ungated, exactly as before. Every read fails safe: a missing sessions directory, an unparseable file, or a dead PID all resolve to "resume," never a hang. `SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR` overrides the registry location and exists only for the tests.
+
 ## Native resume commands
 
 The helper uses prompt stdin and these current native forms:

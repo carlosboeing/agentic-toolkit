@@ -491,7 +491,7 @@ assert_foreign_survives "create rollback"
 pass "create rollback scope"
 
 "$RESUME_JOB_CLI" list >"$scheduler_root/list-output"
-grep -Fxq "$cleanup_active" "$scheduler_root/list-output" || fail "list must include active job state"
+grep -Eq "^$cleanup_active[[:space:]]" "$scheduler_root/list-output" || fail "list must include active job state"
 
 crontab_append_raw '* * * * * /nonexistent/run.sh # schedule-resume:doctor-orphan'
 "$RESUME_JOB_CLI" doctor >"$scheduler_root/doctor.stdout" 2>"$scheduler_root/doctor.stderr"
@@ -501,3 +501,113 @@ grep -Fq "crontab -l | grep -v '# schedule-resume:' | crontab -" "$scheduler_roo
 assert_cron_lacks_job doctor-orphan "doctor prunes orphan crontab lines"
 assert_foreign_survives "doctor"
 pass "doctor lists and prunes crontab entries"
+
+# --- Liveness guard integration: active target defers, idle/absent resumes ---
+gate_sessions="$scheduler_root/gate-sessions"
+
+create_claude_job() {
+  "$RESUME_JOB_CLI" create \
+    --target-harness claude \
+    --session-id "$1" \
+    --project-dir "$scheduler_root/project" \
+    --prompt-file "$prompt_source" \
+    --schedule-type calendar \
+    --first-attempt-at '2000-01-01T00:00:00Z' \
+    --retry-interval-seconds 300 \
+    --retry-policy until-completed \
+    --completion-policy session-exits-zero \
+    --permissions-mode full-auto \
+    --job-id "$2"
+}
+
+write_gate_session() {
+  jq -n --argjson pid "$1" --arg sid "$2" --arg status "$3" \
+    '{pid: $pid, sessionId: $sid, cwd: "/x", kind: "interactive", status: $status, updatedAt: 0, statusUpdatedAt: 0}' \
+    >"$4/$1.json"
+}
+
+gate_active_job=liveness-active-defers
+gate_active_dir="$RESUME_JOB_STATE_ROOT/$gate_active_job"
+gate_active_sessions="$gate_sessions/active"
+mkdir -p "$gate_active_sessions"
+/bin/sleep 30 &
+gate_active_pid=$!
+write_gate_session "$gate_active_pid" liveness-active-session busy "$gate_active_sessions"
+create_claude_job liveness-active-session "$gate_active_job" >/dev/null
+
+gate_active_args="$scheduler_root/gate-active.args"
+rm -f "$gate_active_args"
+export RESUME_TEST_HARNESS_LOG="$gate_active_args"
+export RESUME_TEST_PROMPT_CAPTURE="$scheduler_root/gate-active.prompt"
+export RESUME_TEST_CWD_CAPTURE="$scheduler_root/gate-active.cwd"
+export SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR="$gate_active_sessions"
+schedule_resume_run_attempt "$gate_active_job"
+assert_path_not_exists "$gate_active_args" "active session defers without launching the adapter"
+assert_equal scheduled "$(schedule_resume_read_status "$gate_active_job")" "deferral keeps the job scheduled"
+assert_equal 0 "$(jq -r '.attempt_count' "$gate_active_dir/status.json")" "deferral spends no attempt"
+assert_equal 1 "$(jq -r '.defer_count' "$gate_active_dir/status.json")" "deferral increments defer_count"
+assert_equal deferred_session_active "$(jq -r '.last_classification' "$gate_active_dir/status.json")" "record the deferral classification"
+[ "$(jq -r '.last_deferred_at' "$gate_active_dir/status.json")" != null ] || fail "deferral records last_deferred_at"
+[ "$(jq -r '.next_attempt_at' "$gate_active_dir/status.json")" != null ] || fail "deferral re-arms next_attempt_at"
+assert_path_not_exists "$gate_active_dir/attempts" "deferral creates no attempt artifacts"
+# A second poll while the session is still busy defers again, no attempt spent.
+schedule_resume_run_attempt "$gate_active_job"
+assert_equal 2 "$(jq -r '.defer_count' "$gate_active_dir/status.json")" "consecutive deferrals accumulate"
+assert_equal 0 "$(jq -r '.attempt_count' "$gate_active_dir/status.json")" "repeated deferral still spends no attempt"
+unset SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR
+kill "$gate_active_pid" 2>/dev/null || :
+wait "$gate_active_pid" 2>/dev/null || :
+
+"$RESUME_JOB_CLI" list >"$scheduler_root/gate-list.out"
+grep -Eq "^$gate_active_job[[:space:]]" "$scheduler_root/gate-list.out" || fail "list includes the deferring job"
+grep -Fq 'holding on active target session' "$scheduler_root/gate-list.out" || fail "list surfaces the holding-on-active-session state"
+"$RESUME_JOB_CLI" status "$gate_active_job" >"$scheduler_root/gate-status.out"
+grep -Fq deferred_session_active "$scheduler_root/gate-status.out" || fail "status surfaces the deferral classification"
+grep -Fq defer_count "$scheduler_root/gate-status.out" || fail "status surfaces defer_count"
+pass "liveness guard defers on an active target session"
+
+gate_idle_job=liveness-idle-resumes
+gate_idle_dir="$RESUME_JOB_STATE_ROOT/$gate_idle_job"
+gate_idle_sessions="$gate_sessions/idle"
+mkdir -p "$gate_idle_sessions"
+/bin/sleep 30 &
+gate_idle_pid=$!
+write_gate_session "$gate_idle_pid" liveness-idle-session idle "$gate_idle_sessions"
+create_claude_job liveness-idle-session "$gate_idle_job" >/dev/null
+gate_idle_args="$scheduler_root/gate-idle.args"
+rm -f "$gate_idle_args"
+export RESUME_TEST_HARNESS_LOG="$gate_idle_args"
+export RESUME_TEST_PROMPT_CAPTURE="$scheduler_root/gate-idle.prompt"
+export RESUME_TEST_CWD_CAPTURE="$scheduler_root/gate-idle.cwd"
+export RESUME_TEST_EXIT_CODE=0
+export RESUME_TEST_OUTPUT='completed normally'
+export SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR="$gate_idle_sessions"
+schedule_resume_run_attempt "$gate_idle_job"
+unset SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR
+assert_file_exists "$gate_idle_args" "idle session resumes and launches the adapter"
+assert_equal completed "$(schedule_resume_read_status "$gate_idle_job")" "idle resume runs a normal attempt"
+assert_equal 1 "$(jq -r '.attempt_count' "$gate_idle_dir/status.json")" "idle resume spends an attempt"
+assert_equal success "$(jq -r '.last_classification' "$gate_idle_dir/status.json")" "idle resume classifies normally"
+kill "$gate_idle_pid" 2>/dev/null || :
+wait "$gate_idle_pid" 2>/dev/null || :
+pass "liveness guard resumes on an idle target session"
+
+gate_absent_job=liveness-absent-resumes
+gate_absent_dir="$RESUME_JOB_STATE_ROOT/$gate_absent_job"
+gate_absent_sessions="$gate_sessions/absent"
+mkdir -p "$gate_absent_sessions"
+create_claude_job liveness-absent-session "$gate_absent_job" >/dev/null
+gate_absent_args="$scheduler_root/gate-absent.args"
+rm -f "$gate_absent_args"
+export RESUME_TEST_HARNESS_LOG="$gate_absent_args"
+export RESUME_TEST_PROMPT_CAPTURE="$scheduler_root/gate-absent.prompt"
+export RESUME_TEST_CWD_CAPTURE="$scheduler_root/gate-absent.cwd"
+export RESUME_TEST_EXIT_CODE=0
+export RESUME_TEST_OUTPUT='completed normally'
+export SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR="$gate_absent_sessions"
+schedule_resume_run_attempt "$gate_absent_job"
+unset SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR
+assert_file_exists "$gate_absent_args" "absent session resumes and launches the adapter"
+assert_equal completed "$(schedule_resume_read_status "$gate_absent_job")" "absent resume runs a normal attempt"
+assert_equal 1 "$(jq -r '.attempt_count' "$gate_absent_dir/status.json")" "absent resume spends an attempt"
+pass "liveness guard resumes on an absent target session"

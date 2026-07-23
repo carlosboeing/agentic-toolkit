@@ -191,8 +191,15 @@ list_jobs() {
     candidate_id=${candidate##*/}
     schedule_resume_validate_job_id "$candidate_id" >/dev/null 2>&1 || continue
     schedule_resume_read_manifest "$candidate_id" >/dev/null 2>&1 || continue
-    schedule_resume_read_status "$candidate_id" >/dev/null 2>&1 || continue
-    printf '%s\n' "$candidate_id"
+    candidate_state=$(schedule_resume_read_status "$candidate_id" 2>/dev/null) || continue
+    candidate_status_path=$(schedule_resume_status_path "$candidate_id") || continue
+    candidate_classification=$(jq -r '.last_classification // ""' "$candidate_status_path" 2>/dev/null) || candidate_classification=
+    if [ "$candidate_state" = scheduled ] && [ "$candidate_classification" = deferred_session_active ]; then
+      candidate_defer=$(jq -r '.defer_count // 0' "$candidate_status_path" 2>/dev/null) || candidate_defer=0
+      printf '%s  [%s: holding on active target session, deferrals: %s]\n' "$candidate_id" "$candidate_state" "$candidate_defer"
+    else
+      printf '%s  [%s]\n' "$candidate_id" "$candidate_state"
+    fi
   done
 }
 

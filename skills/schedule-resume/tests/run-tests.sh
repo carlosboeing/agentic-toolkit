@@ -195,6 +195,10 @@ run_execution_tests() {
   . "$TESTS_DIR/test_execution.sh"
 }
 
+run_liveness_tests() {
+  . "$TESTS_DIR/test_liveness.sh"
+}
+
 run_scheduler_tests() {
   . "$TESTS_DIR/test_scheduler.sh"
 }
@@ -214,6 +218,9 @@ case "$TEST_GROUP" in
   execution)
     run_execution_tests
     ;;
+  liveness)
+    run_liveness_tests
+    ;;
   scheduler)
     run_scheduler_tests
     ;;
@@ -226,6 +233,7 @@ case "$TEST_GROUP" in
   all)
     run_state_tests
     run_execution_tests
+    run_liveness_tests
     run_scheduler_tests
     run_skill_tests
     run_e2e_tests
