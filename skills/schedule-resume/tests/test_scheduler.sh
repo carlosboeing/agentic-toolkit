@@ -79,7 +79,10 @@ assert_equal 63 "$(/usr/bin/xmllint --xpath 'string(/plist/dict/key[.="Umask"]/f
 [ "$(stat -f '%Lp' "$wrapper")" = 700 ] || fail "wrapper must be private"
 grep -Fq '<key>StartCalendarInterval</key>' "$plist" || fail "plist must contain first-attempt calendar trigger"
 grep -Fq '<key>StartInterval</key>' "$plist" || fail "plist must contain retry interval trigger"
-grep -Fq '<integer>300</integer>' "$plist" || fail "plist retry trigger must match manifest"
+grep -Fq '<integer>120</integer>' "$plist" || fail "plist poll trigger must use the fixed poll interval"
+if grep -Fq '<integer>300</integer>' "$plist"; then
+  fail "plist poll trigger must not depend on the manifest retry interval"
+fi
 uid=$(id -u)
 assert_equal "[\"bootstrap\",\"gui/$uid\",\"$plist\"]" "$(sed -n '1p' "$RESUME_TEST_LAUNCHCTL_LOG")" "bootstrap only in user GUI domain"
 pass "create and launchd plist contract"

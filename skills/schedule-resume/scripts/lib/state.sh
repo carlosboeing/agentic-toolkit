@@ -231,6 +231,7 @@ schedule_resume_run_attempt() (
   session_id=$(printf '%s\n' "$manifest" | jq -r '.session_id') || return 1
   project_dir=$(printf '%s\n' "$manifest" | jq -r '.project_dir') || return 1
   prompt_file=$(printf '%s\n' "$manifest" | jq -r '.prompt_file') || return 1
+  completion_policy=$(printf '%s\n' "$manifest" | jq -r '.completion_policy') || return 1
   attempt_count=$(( $(printf '%s\n' "$current_status" | jq -r '.attempt_count') + 1 ))
   started_at=$(_schedule_resume_timestamp_now) || return 1
   running_status=$(printf '%s\n' "$current_status" | jq -c \
@@ -261,7 +262,7 @@ schedule_resume_run_attempt() (
   fi
   last_exit_code=$exit_code
 
-  classification=$(classify_result "$exit_code" "$stdout_file" "$stderr_file") || return 1
+  classification=$(classify_result "$exit_code" "$completion_policy" "$stdout_file" "$stderr_file") || return 1
   finished_at=$(_schedule_resume_timestamp_now) || return 1
 
   case "$classification" in
@@ -269,7 +270,7 @@ schedule_resume_run_attempt() (
       final_status=completed
       next_attempt_at=null
       ;;
-    quota_retryable | availability_retryable | transient_retryable)
+    quota_retryable | availability_retryable | transient_retryable | incomplete_retryable)
       final_status=retrying
       next_attempt_at=$(_schedule_resume_timestamp_after "$retry_interval_seconds") || return 1
       ;;

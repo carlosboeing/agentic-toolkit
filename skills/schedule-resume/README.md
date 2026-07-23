@@ -62,11 +62,13 @@ scripts/resume-job.sh create \
   --first-attempt-at UTC_ISO_WITH_00_SECONDS \
   --retry-interval-seconds N \
   --retry-policy until-completed \
-  --completion-policy session-exits-zero \
+  --completion-policy sentinel-output \
   --permissions-mode full-auto
 ```
 
 The helper copies the prompt without changing its bytes, resolves the selected harness executable to an absolute path at creation, and only bootstraps the scheduler during creation. Its fixed retry policy retries quota/availability classifications; authentication, missing session, permission, and other failures are terminal.
+
+`--completion-policy` accepts two values. `sentinel-output` (the skill's default) only completes the job once the resumed session prints the exact token `SCHEDULE_RESUME_TASK_COMPLETE` alone on its own line as its last output; any other zero exit reschedules another attempt instead of finishing early. `session-exits-zero` completes the job on any successful exit and suits narrow one-shot commands where a clean exit really does mean the work is done.
 
 Manual management:
 

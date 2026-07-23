@@ -53,7 +53,6 @@ _schedule_resume_write_plist() (
   destination=$3
   manifest=$(schedule_resume_read_manifest "$job_id") || return 1
   first_attempt_at=$(printf '%s\n' "$manifest" | jq -r '.first_attempt_at') || return 1
-  retry_interval=$(printf '%s\n' "$manifest" | jq -r '.retry_interval_seconds') || return 1
   first_epoch=$(_schedule_resume_timestamp_epoch "$first_attempt_at") || return 1
   label=$(schedule_resume_launchd_label "$job_id") || return 1
   job_dir=$(schedule_resume_job_dir "$job_id") || return 1
@@ -86,7 +85,7 @@ _schedule_resume_write_plist() (
     <key>Month</key><integer>$calendar_month</integer>
   </dict>
   <key>StartInterval</key>
-  <integer>$retry_interval</integer>
+  <integer>$SCHEDULE_RESUME_POLL_INTERVAL_SECONDS</integer>
   <key>Umask</key>
   <integer>63</integer>
   <key>StandardOutPath</key>

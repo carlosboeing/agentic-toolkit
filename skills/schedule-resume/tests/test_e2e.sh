@@ -16,6 +16,12 @@ if [ "${RESUME_E2E_MODE:-retry}" = retry ]; then
   fi
   printf '%s\n' 'Usage quota exceeded. Retry after reset.'
   exit 1
+elif [ "${RESUME_E2E_MODE:-retry}" = incomplete ]; then
+  printf '%s\n' 'Still waiting on the build; will continue next attempt.'
+  exit 0
+elif [ "${RESUME_E2E_MODE:-retry}" = sentinel ]; then
+  printf '%s\n' 'SCHEDULE_RESUME_TASK_COMPLETE'
+  exit 0
 fi
 printf '%s\n' 'completed normally'
 EOF
@@ -82,3 +88,35 @@ assert_equal "$invocations_after_success" "$(wc -l <"$RESUME_E2E_INVOCATIONS" | 
 assert_path_not_exists "$job_dir" "cleanup removes terminal job state"
 assert_path_not_exists "$HOME/Library/LaunchAgents/com.carlos.resume-job.$job_id.plist" "cleanup removes launch agent plist"
 pass "end-to-end lifecycle"
+
+sentinel_job_id=e2e-sentinel-job
+export RESUME_E2E_MODE=incomplete
+created_sentinel_job=$("$RESUME_JOB_CLI" create \
+  --target-harness claude \
+  --session-id e2e-sentinel-session \
+  --project-dir "$e2e_root/project" \
+  --prompt-file "$prompt_file" \
+  --schedule-type calendar \
+  --first-attempt-at '2000-01-01T00:00:00Z' \
+  --retry-interval-seconds 1 \
+  --retry-policy until-completed \
+  --completion-policy sentinel-output \
+  --permissions-mode full-auto \
+  --job-id "$sentinel_job_id")
+assert_equal "$sentinel_job_id" "$created_sentinel_job" "create sentinel-output E2E job"
+sentinel_job_dir="$RESUME_JOB_STATE_ROOT/$sentinel_job_id"
+
+"$RESUME_JOB_CLI" run "$sentinel_job_id"
+assert_equal retrying "$(jq -r '.status' "$sentinel_job_dir/status.json")" "exit zero without the sentinel reschedules"
+assert_equal incomplete_retryable "$(jq -r '.last_classification' "$sentinel_job_dir/status.json")" "classify missing sentinel as incomplete"
+
+export RESUME_E2E_MODE=sentinel
+jq '.next_attempt_at = "2000-01-01T00:00:00Z"' "$sentinel_job_dir/status.json" >"$e2e_root/sentinel-status.tmp"
+mv "$e2e_root/sentinel-status.tmp" "$sentinel_job_dir/status.json"
+"$RESUME_JOB_CLI" run "$sentinel_job_id"
+assert_equal completed "$(jq -r '.status' "$sentinel_job_dir/status.json")" "sentinel line completes the job"
+assert_equal success "$(jq -r '.last_classification' "$sentinel_job_dir/status.json")" "classify sentinel line as success"
+
+"$RESUME_JOB_CLI" cleanup 0
+assert_path_not_exists "$sentinel_job_dir" "cleanup removes sentinel job state"
+pass "sentinel-output completion policy end-to-end"

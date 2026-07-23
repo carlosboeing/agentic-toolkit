@@ -109,7 +109,7 @@ create_job() {
   case "$target_harness" in claude | agy | codex) ;; *) return 2 ;; esac
   case "$schedule_type" in calendar | reset) ;; *) return 2 ;; esac
   [ "$retry_policy" = until-completed ] || return 2
-  [ "$completion_policy" = session-exits-zero ] || return 2
+  case "$completion_policy" in session-exits-zero | sentinel-output) ;; *) return 2 ;; esac
   [ "$permissions_mode" = full-auto ] || return 2
   case "$retry_interval_seconds" in '' | *[!0-9]*) return 2 ;; esac
   [ "$retry_interval_seconds" -gt 0 ] || return 2

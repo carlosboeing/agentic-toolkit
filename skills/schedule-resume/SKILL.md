@@ -17,15 +17,15 @@ Extract known values. Ask one question at a time only for missing consequential 
 
 No arguments: offer the current session only when its stable ID and project are determinable, then require confirmation. Do not offer the current session when either is absent from discoverable context; ask which target session instead. For missing or ambiguous target/session, show numbered candidates with name/title, target harness, project, last activity, and stable ID when discovery exists; require an explicit numbered choice. If discovery is unavailable, request an explicit stable ID; never invent one.
 
-Apply fixed MVP policies: permissions `full-auto` (unattended yolo), retry `until-completed` (only quota/availability failures retry; terminal errors stop), completion `session-exits-zero`, and attempt protection `caffeinate -i`. Warn that yolo is dangerous.
+Apply fixed MVP policies: permissions `full-auto` (unattended yolo), retry `until-completed` (only quota/availability failures retry; terminal errors stop), completion `sentinel-output` (retry until the resumed session prints the exact completion sentinel; `session-exits-zero` remains available for narrow one-shot commands where any zero exit means done), and attempt protection `caffeinate -i`. Warn that yolo is dangerous.
 
 ## Confirm and create
 
 Before create, require user confirmation listing target harness, stable ID, absolute project, UTC first-attempt time rounded to a whole minute (`:00` seconds), retry seconds, completion, permissions, and that confirmation routes creation through bundled `scripts/resume-job.sh create`. Include exactly: `This will not start another run now.` State that the computer must remain powered on and logged in, sleep can delay the trigger, and the attempt prevents idle sleep only while running.
 
-Build continuation text in a temporary local prompt file, including the requested task and instruction-file context. Preserve prompt bytes. After confirmation invoke bundled `scripts/resume-job.sh create` with all flags:
+Build continuation text in a temporary local prompt file, including the requested task and instruction-file context, then append this exact completion instruction as the prompt's final line: `When the entire task is genuinely complete, print SCHEDULE_RESUME_TASK_COMPLETE alone on its own line as the very last output. Do not print it while any work remains.` Preserve prompt bytes. After confirmation invoke bundled `scripts/resume-job.sh create` with all flags:
 
-`--target-harness`, `--session-id`, `--project-dir`, `--prompt-file`, `--schedule-type calendar|reset`, `--first-attempt-at UTC_ISO_WITH_00_SECONDS`, `--retry-interval-seconds N`, `--retry-policy until-completed`, `--completion-policy session-exits-zero`, `--permissions-mode full-auto`.
+`--target-harness`, `--session-id`, `--project-dir`, `--prompt-file`, `--schedule-type calendar|reset`, `--first-attempt-at UTC_ISO_WITH_00_SECONDS`, `--retry-interval-seconds N`, `--retry-policy until-completed`, `--completion-policy sentinel-output`, `--permissions-mode full-auto`.
 
 Creation only bootstraps the scheduler. Remove only the temporary source prompt after the helper owns its copy.
 

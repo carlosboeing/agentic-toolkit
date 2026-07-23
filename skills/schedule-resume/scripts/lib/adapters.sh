@@ -50,10 +50,20 @@ schedule_resume_execute_target() (
 
 classify_result() (
   _schedule_resume_exit_status=$1
-  shift
+  _schedule_resume_completion_policy=$2
+  shift 2
 
   if [ "$_schedule_resume_exit_status" -eq 0 ]; then
-    printf '%s\n' success
+    if [ "$_schedule_resume_completion_policy" = sentinel-output ]; then
+      _schedule_resume_stdout_file=$1
+      if grep -Fxq "$SCHEDULE_RESUME_SENTINEL" "$_schedule_resume_stdout_file" 2>/dev/null; then
+        printf '%s\n' success
+      else
+        printf '%s\n' incomplete_retryable
+      fi
+    else
+      printf '%s\n' success
+    fi
   elif grep -Eiq 'authenticat|not logged in|log in required|login required|unauthorized|invalid (api )?(key|token)|(^|[^0-9])401([^0-9]|$)' "$@"; then
     printf '%s\n' authentication_terminal
   elif grep -Eiq '(session|conversation).*(not found|does not exist|missing|invalid)|no (such )?(session|conversation)' "$@"; then

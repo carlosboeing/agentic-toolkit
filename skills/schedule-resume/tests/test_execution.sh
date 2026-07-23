@@ -42,8 +42,9 @@ assert_classification() {
   expected=$1
   exit_code=$2
   message=$3
+  completion_policy=${4:-session-exits-zero}
   printf '%s\n' "$message" >"$classification_output"
-  assert_equal "$expected" "$(classify_result "$exit_code" "$classification_output")" "classify $expected"
+  assert_equal "$expected" "$(classify_result "$exit_code" "$completion_policy" "$classification_output")" "classify $expected"
 }
 
 assert_classification success 0 'completed normally'
@@ -66,6 +67,12 @@ assert_classification failure_terminal 1 'temporary file cleanup failed'
 assert_classification failure_terminal 1 'quota test failed'
 assert_classification failure_terminal 1 'AssertionError: expected 500 to equal 200'
 assert_classification failure_terminal 1 'AssertionError: expected 502 to equal 200'
+assert_classification success 0 "$SCHEDULE_RESUME_SENTINEL" sentinel-output
+assert_classification success 0 "Wrapping up now.
+$SCHEDULE_RESUME_SENTINEL" sentinel-output
+assert_classification incomplete_retryable 0 'Waiting on the Docker image pull; will continue next attempt.' sentinel-output
+assert_classification incomplete_retryable 0 "mentioned $SCHEDULE_RESUME_SENTINEL in passing, not as the final line" sentinel-output
+assert_classification success 0 'plain zero exit under the legacy policy' session-exits-zero
 pass "result classification"
 
 lock_job_id=lock-test-job

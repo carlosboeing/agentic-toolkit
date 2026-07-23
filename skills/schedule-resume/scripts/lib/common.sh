@@ -1,5 +1,8 @@
 #!/bin/sh
 
+: "${SCHEDULE_RESUME_POLL_INTERVAL_SECONDS:=120}"
+: "${SCHEDULE_RESUME_SENTINEL:=SCHEDULE_RESUME_TASK_COMPLETE}"
+
 schedule_resume_validate_job_id() (
   job_id=${1-}
 

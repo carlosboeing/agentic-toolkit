@@ -72,7 +72,7 @@ assert_not_contains "$SKILL_FILE" 'retry interval, or completion predicate' "use
 assert_not_matches "$SKILL_FILE" 'target defaults to (the )?(current|invoking)|use (the )?current (session|harness) as (the )?target' "do not infer target from the invoking harness"
 pass "session and project resolution contract"
 
-for policy in full-auto until-completed session-exits-zero 'caffeinate -i'; do
+for policy in full-auto until-completed session-exits-zero sentinel-output 'caffeinate -i'; do
   assert_contains "$SKILL_FILE" "$policy" "encode fixed MVP policy '$policy'"
 done
 assert_contains "$SKILL_FILE" 'quota/availability' "limit retries to availability failures"
