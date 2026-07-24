@@ -79,7 +79,7 @@ Confusing the two leads to "the design says X but the system does Y" drift.
 
 ### 2.4 Mandatory frontmatter for machine-readability
 
-Every doc inside `docs/` carries YAML frontmatter with at least `type`, `status` (lifecycle docs only), and `scope`. This lets AI agents and shell scripts query the corpus cheaply: "show me approved designs touching networking" becomes `grep -l "scope:.*network" docs/2-design/ | xargs grep -l "status: approved"`.
+Every doc inside `docs/` carries YAML frontmatter with at least `type`, `status` (lifecycle docs only), `authors`, and `scope`. This lets AI agents and shell scripts query the corpus cheaply: "show me approved designs touching networking" becomes `grep -l "scope:.*network" docs/2-design/ | xargs grep -l "status: approved"`. The `authors` field also answers "which agent (or human) wrote this?" — load-bearing when several harnesses work the same corpus. Full schemas, exemptions, and format rules: §5.4.
 
 ### 2.5 Stage-first lifecycle, numbered for clarity
 
@@ -413,7 +413,12 @@ The test before shipping any snippet: *"Could a colleague paste this and run it 
 
 ### 5.4 Frontmatter
 
-All `docs/*.md` files carry YAML frontmatter (except `notes/`, which is informal by design). Two schemas.
+All `docs/*.md` files carry YAML frontmatter, with the exemptions listed below. Two schemas.
+
+**Format rules** (these bite in practice — see the 2026-07-24 audit):
+
+- The frontmatter block starts **at byte 0** with a `---` fence line and closes with a second `---` fence. `status:` lines written as plain text under the H1 are pseudo-frontmatter — invisible to every parser and to `grep`-based corpus queries.
+- **Core field names are a closed vocabulary**: `date`, `title`, `type`, `status`, `scope`, `authors`, `reviewed_by`, `supersedes`, `superseded_by`, `related`, `last_reviewed`. Don't substitute synonyms — `date` not `created`, `scope` not `tags`, `authors` not `owner`. Extra project-specific fields are allowed, but never as a synonym for a core field.
 
 **Schema A — lifecycle and decision docs** (`0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/`, `adrs/`):
 
@@ -421,9 +426,11 @@ All `docs/*.md` files carry YAML frontmatter (except `notes/`, which is informal
 ---
 date: 2026-05-12
 title: "Install Plex"
-type: design                       # design | plan | retro | research | adr | brainstorm
+type: design                       # design | plan | retro | review | research | adr | brainstorm
 status: draft                      # draft | approved | shipped | superseded | abandoned (or open/parked for brainstorms)
+authors: ["Carlos Boeing", "claude-fable-5 (claude-code)"]  # see "Authorship" below
 scope: [containers, network]       # optional, multi-valued tags
+reviewed_by: []                    # optional — review passes, same entry grammar as authors
 supersedes:                        # optional, path of doc this replaces
 superseded_by:                     # optional, path of doc replacing this
 related: []                        # optional, paths to related docs
@@ -436,12 +443,26 @@ related: []                        # optional, paths to related docs
 ---
 title: "Container Roster"
 type: system                       # system | guide | architecture | reference
+authors: ["Carlos Boeing", "claude-fable-5 (claude-code)"]
 scope: [containers]                # what aspect(s) this doc covers
 last_reviewed: 2026-05-12          # optional — deliberate "I confirmed this is current"
 ---
 ```
 
-Project-level docs (`README.md`, `CLAUDE.md`, `CHANGELOG.md`, `ROADMAP.md`) get **no frontmatter** — they're well-known by name.
+**Authorship.** `authors` is an ordered, append-only list that always names the human plus the agent(s):
+
+- First entry: the human operator, taken from `git config user.name` (matters in multi-person projects — it says whose session produced the doc).
+- Then each contributing agent as `"<model> (<harness>)"` — e.g. `"claude-fable-5 (claude-code)"`, `"gpt-5.5-codex (codex)"`, `"gemini-3.1-pro (agy)"`. Use the real model id, not just the harness name, so multi-model work stays distinguishable.
+- Append on authoring or substantial rewrite; don't append for typo fixes. Review passes (the "one agent designs, another reviews" flow) are recorded in `reviewed_by` with the same entry grammar, never in `authors`.
+- Frontmatter is the source of truth for doc authorship, not git: commits batch multiple docs, and the committing session/harness often isn't the writing one. Git `Co-Authored-By` trailers are corroboration only.
+- Backfilling old docs: don't fabricate authorship — omit `authors` (or use `authors: [unknown]`); backfill only the fields you can state accurately.
+
+**Exemptions** (no frontmatter required):
+
+- `notes/` — informal by design.
+- `assets/`, `imports/`, and files *inside* a review/discovery bundle (raw model outputs, dispatched prompts, per-persona responses): the bundle's top-level report or README carries the frontmatter for the set.
+- Project-level docs (`README.md`, `CLAUDE.md`, `CHANGELOG.md`, `ROADMAP.md`) — well-known by name.
+- **Public user docs are out of scope entirely** (e.g. a public repo's end-user `docs/`): they may carry their own project standard, including none. Don't add agent attribution there unless the project says to.
 
 ### 5.5 Status semantics
 
@@ -698,6 +719,7 @@ This convention assumes AI coding agents (Claude Code, Codex, etc.) are primary 
 2. Does ROADMAP accurately reflect what's now In flight / Drafts / Next actions / Parked?
 3. Did anything emerge that should be in `0-brainstorms/`, `4-reviews/`, or as an ADR but isn't?
 4. Is CHANGELOG up to date with shipped work?
+5. Does every working-memory doc created or substantially edited this session have valid frontmatter per §5.4 — fenced at byte 0, core field names, `authors` naming the human plus the agent?
 
 If the answer to any is "no," the agent should propose the missing writes inline before ending the session — not silently move on.
 
