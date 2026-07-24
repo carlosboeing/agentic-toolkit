@@ -11,6 +11,9 @@ export HOME="$TEST_TMPDIR/home"
 export RESUME_JOB_STATE_ROOT="$TEST_TMPDIR/state"
 export RESUME_TEST_CRONTAB_FILE="$TEST_TMPDIR/crontab"
 export PATH="$TESTS_DIR/fixtures/bin:$PATH"
+# Force the cron backend for the shared suite so results match on every OS;
+# the launchd group overrides this for its own scope.
+export RESUME_JOB_SCHEDULER=cron
 mkdir -p "$HOME" "$RESUME_JOB_STATE_ROOT"
 
 . "$TESTS_DIR/test_helpers.sh"
@@ -203,6 +206,14 @@ run_scheduler_tests() {
   . "$TESTS_DIR/test_scheduler.sh"
 }
 
+run_scheduler_launchd_tests() {
+  if [ "$(uname -s 2>/dev/null)" != Darwin ]; then
+    printf 'ok - scheduler-launchd group skipped (macOS only)\n'
+    return 0
+  fi
+  . "$TESTS_DIR/test_scheduler_launchd.sh"
+}
+
 run_skill_tests() {
   . "$TESTS_DIR/test_skill.sh"
 }
@@ -224,6 +235,9 @@ case "$TEST_GROUP" in
   scheduler)
     run_scheduler_tests
     ;;
+  scheduler-launchd)
+    run_scheduler_launchd_tests
+    ;;
   skill)
     run_skill_tests
     ;;
@@ -235,6 +249,7 @@ case "$TEST_GROUP" in
     run_execution_tests
     run_liveness_tests
     run_scheduler_tests
+    run_scheduler_launchd_tests
     run_skill_tests
     run_e2e_tests
     ;;

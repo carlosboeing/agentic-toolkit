@@ -28,7 +28,10 @@ case "${1-}" in
     fi
     exit "$status"
     ;;
-  print | kickstart)
+  print)
+    exit "${RESUME_TEST_LAUNCHCTL_PRINT_STATUS:-0}"
+    ;;
+  kickstart)
     exit 0
     ;;
   *)

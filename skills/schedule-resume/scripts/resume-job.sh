@@ -10,7 +10,24 @@ export RESUME_JOB_STATE_ROOT
 . "$SCRIPT_DIR/lib/state.sh"
 . "$SCRIPT_DIR/lib/lock.sh"
 . "$SCRIPT_DIR/lib/adapters.sh"
-. "$SCRIPT_DIR/lib/scheduler-cron.sh"
+
+# Scheduler backend: launchd on macOS (the GUI domain keeps the login keychain
+# readable for resumed harnesses), cron elsewhere. RESUME_JOB_SCHEDULER
+# overrides detection (tests).
+if [ -z "${RESUME_JOB_SCHEDULER:-}" ]; then
+  case "$(uname -s 2>/dev/null)" in
+    Darwin) RESUME_JOB_SCHEDULER=launchd ;;
+    *) RESUME_JOB_SCHEDULER=cron ;;
+  esac
+fi
+case "$RESUME_JOB_SCHEDULER" in
+  cron) . "$SCRIPT_DIR/lib/scheduler-cron.sh" ;;
+  launchd) . "$SCRIPT_DIR/lib/scheduler-launchd.sh" ;;
+  *)
+    printf 'schedule-resume: invalid RESUME_JOB_SCHEDULER %s (expected cron or launchd)\n' "$RESUME_JOB_SCHEDULER" >&2
+    exit 2
+    ;;
+esac
 
 resolve_harness_executable() {
   harness_name=$1
@@ -127,11 +144,7 @@ create_job() {
   esac
   prompt_parent=$(CDPATH='' cd -- "$prompt_parent_input" && pwd) || return 2
   prompt_file="$prompt_parent/${prompt_file##*/}"
-  for _fda_path in "$project_dir" "$prompt_file" "$RESUME_JOB_STATE_ROOT"; do
-    if schedule_resume_tcc_protected_path "$_fda_path"; then
-      printf 'warning: %s is under a macOS Full-Disk-Access-protected folder; cron may be denied access and the job could silently never run. Grant /usr/sbin/cron Full Disk Access in System Settings > Privacy & Security if it never fires.\n' "$_fda_path" >&2
-    fi
-  done
+  schedule_resume_scheduler_preflight "$target_harness" "$project_dir" "$prompt_file" "$RESUME_JOB_STATE_ROOT" || return 2
   if [ -z "$job_id" ]; then
     job_id="job-$(date -u '+%Y%m%dT%H%M%SZ')-$$"
   fi
@@ -273,7 +286,13 @@ run_job() {
   state=$(printf '%s\n' "$status_json" | jq -r '.status') || return 1
   case "$state" in
     completed | failed | cancelled)
-      schedule_resume_scheduler_remove "$job_id" >/dev/null 2>&1 || :
+      # Under a backend without in-context self-removal (launchd), stay silent:
+      # this poll fires every minute until an interactive command reconciles.
+      if [ "${SCHEDULE_RESUME_SCHEDULER_SELF_REMOVE:-1}" -eq 1 ]; then
+        if ! schedule_resume_scheduler_remove "$job_id" >/dev/null; then
+          printf 'schedule-resume: scheduler entry removal failed for %s; it will be pruned by the next interactive schedule-resume command\n' "$job_id" >&2
+        fi
+      fi
       return 0
       ;;
   esac
@@ -291,7 +310,13 @@ run_job() {
   post_state=$(jq -r '.status // empty' "$status_path" 2>/dev/null) || post_state=
   case "$post_state" in
     completed | failed | cancelled)
-      schedule_resume_scheduler_remove "$job_id" >/dev/null 2>&1 || :
+      if [ "${SCHEDULE_RESUME_SCHEDULER_SELF_REMOVE:-1}" -eq 1 ]; then
+        if ! schedule_resume_scheduler_remove "$job_id" >/dev/null; then
+          printf 'schedule-resume: scheduler entry removal failed for %s; it will be pruned by the next interactive schedule-resume command\n' "$job_id" >&2
+        fi
+      else
+        printf 'schedule-resume: job %s reached a terminal state; its scheduler entry will be pruned by the next interactive schedule-resume command\n' "$job_id" >&2
+      fi
       ;;
   esac
   return "$run_attempt_result"
@@ -397,30 +422,7 @@ cleanup_jobs() {
 }
 
 doctor_jobs() {
-  printf 'schedule-resume cron entries:\n'
-  crontab -l 2>/dev/null | while IFS= read -r doctor_line || [ -n "$doctor_line" ]; do
-    case "$doctor_line" in
-      *"# schedule-resume:"*)
-        doctor_jid=${doctor_line##*# schedule-resume:}
-        if schedule_resume_validate_job_id "$doctor_jid" >/dev/null 2>&1 &&
-          [ -d "$(schedule_resume_job_dir "$doctor_jid" 2>/dev/null)" ]; then
-          doctor_state=$(schedule_resume_read_status "$doctor_jid" 2>/dev/null) || doctor_state=unknown
-          printf '  %s  [live: %s]\n' "$doctor_jid" "$doctor_state"
-        else
-          printf '  %s  [ORPHAN: no job directory]\n' "$doctor_jid"
-        fi
-        ;;
-    esac
-  done
-  schedule_resume_scheduler_reconcile >/dev/null 2>&1 || :
-  doctor_leftover=$(ls "$HOME"/Library/LaunchAgents/com.carlos.resume-job.*.plist 2>/dev/null) || doctor_leftover=
-  if [ -n "$doctor_leftover" ]; then
-    printf '\nLeftover launchd agents from the old backend were found. Remove them with:\n'
-    # shellcheck disable=SC2016  # deliberately printed verbatim for the user to run
-    printf '  for p in "$HOME"/Library/LaunchAgents/com.carlos.resume-job.*.plist; do [ -e "$p" ] || continue; launchctl bootout "gui/$(id -u)/$(basename "$p" .plist)" 2>/dev/null; rm -f "$p"; done\n'
-  fi
-  printf '\nTo purge every schedule-resume cron entry:\n'
-  printf "  crontab -l | grep -v '# schedule-resume:' | crontab -\n"
+  schedule_resume_scheduler_doctor
 }
 
 command=${1-}

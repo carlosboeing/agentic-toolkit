@@ -2,6 +2,10 @@
 
 : "${SCHEDULE_RESUME_SENTINEL:=SCHEDULE_RESUME_TASK_COMPLETE}"
 
+# Poll cadence shared by both scheduler backends: cron's `* * * * *` fires every
+# 60 seconds; the launchd StartInterval must match so due-gating behaves the same.
+: "${SCHEDULE_RESUME_POLL_INTERVAL_SECONDS:=60}"
+
 schedule_resume_validate_job_id() (
   job_id=${1-}
 
@@ -61,4 +65,33 @@ _schedule_resume_timestamp_epoch() (
   epoch=$(date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$timestamp" '+%s' 2>/dev/null) || return 1
   [ "$(date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$timestamp" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null)" = "$timestamp" ] || return 1
   printf '%s\n' "$epoch"
+)
+
+# True when the job's status.json exists and records a terminal state.
+schedule_resume_job_is_terminal() (
+  status_path=$(schedule_resume_status_path "${1-}") || return 1
+  [ -f "$status_path" ] || return 1
+  state=$(jq -r '.status // empty' "$status_path" 2>/dev/null) || return 1
+  case "$state" in
+    completed | failed | cancelled) return 0 ;;
+  esac
+  return 1
+)
+
+# True when the path sits under a macOS folder protected by TCC, which a
+# background scheduler process cannot read without a user grant.
+schedule_resume_tcc_protected_path() (
+  case "$(uname -s 2>/dev/null)" in Darwin) ;; *) return 1 ;; esac
+  _tcc_path=${1-}
+  [ -n "$_tcc_path" ] || return 1
+  _tcc_home=${HOME%/}
+  case "$_tcc_path" in
+    "$_tcc_home"/Documents | "$_tcc_home"/Documents/* \
+    | "$_tcc_home"/Desktop | "$_tcc_home"/Desktop/* \
+    | "$_tcc_home"/Downloads | "$_tcc_home"/Downloads/* \
+    | "$_tcc_home"/Library/Mobile\ Documents | "$_tcc_home"/Library/Mobile\ Documents/*)
+      return 0
+      ;;
+  esac
+  return 1
 )

@@ -19,12 +19,12 @@ The skill confirms all consequential values before creation and states: `This wi
 
 ## Prerequisites
 
-- A working `cron` with a per-user `crontab` (macOS ships this; Linux via cronie/vixie-cron). The helper is macOS-tested this pass.
+- On macOS: `launchd` (built in) with a logged-in GUI session — the scheduler runs jobs as user LaunchAgents in the GUI domain, which is what keeps the login keychain readable for the resumed harness. On Linux: a working `cron` with a per-user `crontab` (cronie/vixie-cron). The helper is macOS-tested this pass.
 - `jq` installed.
 - On macOS, `caffeinate` and `lockf` (both built in). `caffeinate -i` prevents idle sleep only while an attempt is running; on other platforms the idle guard is simply skipped.
-- Each target CLI installed and authenticated: `claude`, `agy`, or `codex`.
-- The computer powered on with the user logged in at trigger time. Sleep can delay a trigger.
-- **macOS Full Disk Access (conditional):** cron fires jobs without Full Disk Access for normal paths. It only needs FDA when a job's project directory, prompt, or state root lives under a TCC-protected folder (Documents, Desktop, Downloads, iCloud Drive). The helper prints a warning at create time in exactly that case; grant `/usr/sbin/cron` Full Disk Access under System Settings > Privacy & Security if so. Jobs under `~/Projects`, `~/.local`, and similar need no grant.
+- Each target CLI installed and authenticated: `claude`, `agy`, or `codex`. For Claude targets on macOS, create checks that the `Claude Code-credentials` keychain item is readable and warns if not.
+- The computer powered on with the user logged in at trigger time. Sleep can delay a trigger (launchd coalesces missed calendar firings and runs them on wake; cron drops them).
+- **Protected paths (conditional):** jobs under `~/Projects`, `~/.local`, and similar need no grant. If a job's project directory, prompt, or state root lives under a TCC-protected folder (Documents, Desktop, Downloads, iCloud Drive), the helper warns at create time: on macOS the background agent may be denied access, and on Linux-style cron setups the cron daemon may need a Full Disk Access-equivalent grant (on macOS cron that was `/usr/sbin/cron` under System Settings > Privacy & Security).
 
 ## Layout and installation
 
@@ -36,23 +36,26 @@ Install it like any other skill in this repo — see the [skills catalog README]
 
 Each job owns `~/.local/state/resume-job/<job-id>/`, including immutable manifest and prompt data, mutable status, a combined scheduler log at `cron.log`, and per-attempt logs at `attempts/<N>/stdout.log` and `attempts/<N>/stderr.log`. These files are created with private owner-only permissions.
 
-Each job is scheduled by a single crontab line that runs the job's `run.sh` wrapper:
+Each job is scheduled by one per-job scheduler entry that runs the job's `run.sh` wrapper. The backend is chosen by OS at create time:
+
+- **macOS — launchd**: a user LaunchAgent at `~/Library/LaunchAgents/com.carlos.resume-job.<job-id>.plist` with a calendar trigger for the first attempt and a 60-second poll interval. Running in the GUI domain is what lets a resumed `claude` read its login-keychain credentials — cron's security session cannot, which is why cron is not used on macOS.
+- **Linux — cron**: a single crontab line:
 
 ```text
 * * * * * '~/.local/state/resume-job/<job-id>/run.sh' # schedule-resume:<job-id>
 ```
 
-The line polls every minute; the `next_attempt_at` due-gate in the helper decides when an attempt actually runs, so early polls are harmless no-ops and the first-attempt latency is about a minute. Because `--first-attempt-at` is enforced by the due-gate (not by cron's calendar fields), it must be a UTC ISO timestamp with `:00` seconds.
+Either way the entry polls every minute; the `next_attempt_at` due-gate in the helper decides when an attempt actually runs, so early polls are harmless no-ops and the first-attempt latency is about a minute. Because `--first-attempt-at` is enforced by the due-gate (not by calendar fields), it must be a UTC ISO timestamp with `:00` seconds.
 
-Crontab edits are safe by construction: every edit is serialized by a lock, touches only lines carrying the `# schedule-resume:<job-id>` marker, and preserves all your other cron lines byte-for-byte.
+Scheduler edits are safe by construction: crontab edits are serialized by a lock, touch only lines carrying the `# schedule-resume:<job-id>` marker, and preserve all your other cron lines byte-for-byte; launchd agents are per-job plists that never touch anything else.
 
-**Automatic scheduler cleanup.** A job removes its own crontab line the moment it reaches a terminal state (completed, failed, or cancelled), so only actively scheduled or retrying jobs ever have a line. A finished job leaves just an inert state folder — nothing polling. Deleting that folder is a separate, manual step: `cleanup RETENTION_DAYS` removes terminal state older than the retention window (`0..36500` days), keeping the attempt logs available for inspection until you ask. Skipping cleanup only leaves small folders on disk; no cron lines, nothing firing.
+**Scheduler cleanup.** On Linux/cron a job removes its own crontab line the moment it reaches a terminal state (completed, failed, or cancelled). On macOS a launchd child must not boot out its own agent, so a terminal job's agent stays loaded but inert until the next interactive schedule-resume command (`create`, `cancel`, `cleanup`, or `doctor`) prunes it — until then it fires a cheap no-op poll each minute. Deleting the state folder is a separate, manual step: `cleanup RETENTION_DAYS` removes terminal state older than the retention window (`0..36500` days), keeping the attempt logs available for inspection until you ask.
 
-**Ghost prevention.** A leftover line cannot launch anything — the helper's `run` is a pure due-gate over `status.json`, so a poke at a terminal or missing job is a no-op. On top of that, every `create`/`cancel`/`cleanup` reconciles the crontab (dropping any marker line whose job directory is gone), and `doctor` prunes orphans on demand.
+**Ghost prevention.** A leftover entry cannot launch anything — the helper's `run` is a pure due-gate over `status.json`, so a poke at a terminal or missing job is a no-op. On top of that, every `create`/`cancel`/`cleanup`/`doctor` reconciles the scheduler (dropping any entry whose job directory is gone or whose job is terminal).
 
-### Migrating from the old launchd backend
+### Migrating between backends
 
-Earlier versions installed one `~/Library/LaunchAgents/com.carlos.resume-job.<job-id>.plist` per job. This version uses cron instead. `doctor` detects any leftover LaunchAgents and prints the removal command; to boot them out manually:
+`doctor` detects leftovers from the other backend — stray `# schedule-resume:` crontab lines on a launchd system, or leftover LaunchAgents on a cron system — and prints the removal command. To boot out old LaunchAgents manually:
 
 ```sh
 for p in "$HOME"/Library/LaunchAgents/com.carlos.resume-job.*.plist; do
@@ -62,7 +65,7 @@ for p in "$HOME"/Library/LaunchAgents/com.carlos.resume-job.*.plist; do
 done
 ```
 
-Existing job state under `~/.local/state/resume-job/` is compatible; re-schedule an in-flight job with a fresh `create`.
+Existing job state under `~/.local/state/resume-job/` is backend-agnostic; re-schedule an in-flight job with a fresh `create`.
 
 ## Liveness guard (Claude only)
 
@@ -106,7 +109,7 @@ scripts/resume-job.sh create \
   --permissions-mode full-auto
 ```
 
-The helper copies the prompt without changing its bytes, resolves the selected harness executable to an absolute path at creation, and only installs the cron entry during creation. Its fixed retry policy retries quota/availability/transient classifications; authentication, missing session, permission, and other failures are terminal.
+The helper copies the prompt without changing its bytes, resolves the selected harness executable to an absolute path at creation, and only installs the scheduler entry during creation. On macOS, create also preflights the environment: it fails if the launchd GUI domain is unreachable (no GUI login) and warns if a Claude target has no readable keychain credential. Its fixed retry policy retries quota/availability/transient classifications; authentication, missing session, permission, and other failures are terminal.
 
 `--completion-policy` accepts two values. `sentinel-output` (the skill's default) only completes the job once the resumed session prints the exact token `SCHEDULE_RESUME_TASK_COMPLETE` alone on its own line as its last output; any other zero exit reschedules another attempt instead of finishing early. `session-exits-zero` completes the job on any successful exit and suits narrow one-shot commands where a clean exit really does mean the work is done.
 
@@ -120,4 +123,4 @@ scripts/resume-job.sh cleanup RETENTION_DAYS
 scripts/resume-job.sh doctor
 ```
 
-Do not edit manifests, state, or crontab lines manually. Use the helper so locking, the cron lifecycle, status, and retention rules remain consistent.
+Do not edit manifests, state, crontab lines, or LaunchAgent plists manually. Use the helper so locking, the scheduler lifecycle, status, and retention rules remain consistent.

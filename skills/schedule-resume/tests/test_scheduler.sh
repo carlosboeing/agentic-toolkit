@@ -204,6 +204,20 @@ assert_cron_lacks_job "$reconcile_orphan_job" "reconcile drops a line whose job 
 assert_foreign_survives "reconcile"
 pass "reconcile prunes orphan crontab lines"
 
+reconcile_terminal_job=reconcile-terminal-job
+create_job '2099-07-22T12:41:00Z' "$reconcile_terminal_job" >/dev/null
+reconcile_terminal_status=$(jq '.status = "failed" | .last_finished_at = "2000-01-01T00:00:00Z" | .next_attempt_at = null' "$RESUME_JOB_STATE_ROOT/$reconcile_terminal_job/status.json")
+schedule_resume_write_status "$reconcile_terminal_job" "$reconcile_terminal_status"
+assert_cron_has_job "$reconcile_terminal_job" "terminal reconcile fixture starts with a line"
+schedule_resume_scheduler_reconcile
+assert_cron_lacks_job "$reconcile_terminal_job" "reconcile drops a line whose job is terminal"
+reconcile_scheduled_job=reconcile-scheduled-survives
+create_job '2099-07-22T12:42:00Z' "$reconcile_scheduled_job" >/dev/null
+schedule_resume_scheduler_reconcile
+assert_cron_has_job "$reconcile_scheduled_job" "reconcile keeps a scheduled job's line"
+assert_foreign_survives "terminal reconcile"
+pass "reconcile prunes terminal crontab lines"
+
 export RESUME_TEST_HARNESS_LOG="$scheduler_root/due-gate.args"
 export RESUME_TEST_PROMPT_CAPTURE="$scheduler_root/due-gate.prompt"
 export RESUME_TEST_CWD_CAPTURE="$scheduler_root/due-gate.cwd"

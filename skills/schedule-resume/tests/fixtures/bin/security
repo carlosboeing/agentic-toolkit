@@ -1,0 +1,4 @@
+#!/bin/sh
+# Test double for the macOS security tool: only the keychain-item existence
+# probe used by the create preflight is modeled.
+exit "${RESUME_TEST_SECURITY_STATUS:-0}"
