@@ -2,6 +2,9 @@
 title: Cross-harness project instructions (CLAUDE / AGENTS / GEMINI)
 type: guide
 scope: [harness-parity, claude-code, cursor, antigravity, gemini-cli]
+authors:
+  - "Carlos Boeing"
+  - "gpt-5 (codex)"
 last_reviewed: 2026-06-14
 related:
   - guide-harness-plugin-parity.md
@@ -42,7 +45,7 @@ Do **not** embed Claude-only slash commands as requirements unless you guard wit
 
 ## User-level defaults and project precedence
 
-Put personal, cross-project defaults in the canonical user instruction target rather than the project brief. The global Penmark rule is one example: it selects the `penmark-comments` skill for explicit reviews of writable local Markdown files, while direct user instructions and each project's instructions can override it.
+Put personal, cross-project defaults in the canonical user instruction target rather than the project brief. The global Penmark rule is one example: it selects the `penmark-comments` skill for explicit reviews of writable local Markdown files. Direct user and project instructions can override file mutation and route findings to chat without suppressing skill activation.
 
 Keep this kind of global rule short and harness-neutral. Put workflow mechanics, dependencies, and validation in the portable skill; see [Penmark agent integration](guide-penmark-agent-integration.md). Do not add a personal global preference to a generic project template unless the project explicitly adopts it.
 

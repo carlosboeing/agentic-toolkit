@@ -11,7 +11,7 @@
 | [`capture-meeting`](capture-meeting/) | `/capture-meeting` | Turn an AI meeting recording (Fathom or other tool) plus manual notes/artifacts into an audited meeting doc, then propagate decisions/action items to working memory. |
 | [`externalize-deliverable`](externalize-deliverable/) | `/externalize-deliverable` | Derive clean, client-safe versions of internal documents by stripping sensitive company-side information (negotiations, margins, internal flags) under a human review gate. |
 | [`schedule-resume`](schedule-resume/) | `/schedule-resume` | Bundled skill with a shell helper for scheduling unattended, cross-harness Claude/Agy/Codex session continuation through cron (one crontab line per job; macOS-tested). |
-| [`penmark-comments`](penmark-comments/) | — | Adds validated Penmark v1 inline findings for explicit reviews of writable local Markdown files; direct read-only or chat-only instructions override the default. |
+| [`penmark-comments`](penmark-comments/) | — | Reviews writable local Markdown through validated Penmark v1 comments when writing is allowed, or unchanged-file chat findings when read-only; both paths activate the skill. |
 
 (Add more rows as new skills land. Per-skill `README.md` carries the detail.)
 

@@ -1,12 +1,12 @@
 # Penmark Comments
 
-`penmark-comments` makes an explicit review of a writable local Markdown file write validated [Penmark](https://github.com/carlosboeing/penmark) v1 comments at the relevant passages. It is a review surface: it adds findings, never rewrites the reviewed prose, and never commits unless separately asked.
+`penmark-comments` handles explicit reviews of writable local Markdown files by writing validated [Penmark](https://github.com/carlosboeing/penmark) v1 comments at the relevant passages when allowed, or by returning the same findings in chat without changing files when mutation is forbidden. It is a review surface: it adds findings, never rewrites the reviewed prose, and never commits unless separately asked.
 
 ## When it applies
 
-The global default activates the skill for an explicit request to review, audit, critique, or comment on a writable local `.md` file. It does not apply to summaries, explanations, extraction tasks, pasted text without a writable target, or non-Markdown artifacts.
+The global default activates the skill for an explicit request to review, audit, critique, or comment on a writable local `.md` file. It does not apply to summaries, explanations, extraction tasks, pasted text without a writable target, or non-Markdown artifacts. Pull-request reviews and general code reviews do not activate this skill, even when their diff contains Markdown.
 
-Direct user and project instructions win. For example, these requests return findings in chat without changing files:
+Direct user and project instructions still control mutation. The following requests activate the skill, use its read-only branch, return findings in chat, and leave every file unchanged:
 
 - `Review design.md, but do not modify files.`
 - `Audit proposal.md read-only.`
