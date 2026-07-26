@@ -107,7 +107,7 @@ See the [evaluation report](../docs/4-reviews/2026-07-22-penmark-skill-evaluatio
 
 ## Activation-guard evidence — 2026-07-26
 
-The [activation-guard evaluation](../docs/4-reviews/2026-07-26-penmark-read-only-activation-evaluation.md) completed Codex 0.145.0's five-boundary matrix, including a Markdown-containing general code review; Claude Code 2.1.220 and Agy 1.1.7 completed read-only activation cases; Cursor remains structural-only. The durable negative Codex event streams are retained with that evaluation.
+The [activation-guard evaluation](../docs/4-reviews/2026-07-26-penmark-read-only-activation-evaluation.md) completed Codex 0.145.0's five-boundary matrix, including a Markdown-containing general code review; Claude Code 2.1.220 and Agy 1.1.7 completed read-only activation cases. Cursor's global instruction loading is structurally verified through its `AGENTS.md` symlink, while Cursor Penmark skill discovery and runtime behavior remain unverified. The durable negative Codex event streams are retained with that evaluation.
 
 ## Manual cross-harness verification runbook
 
