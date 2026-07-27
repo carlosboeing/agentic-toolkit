@@ -79,15 +79,18 @@ node skills/penmark-comments/scripts/validate-penmark-comments.mjs path/to/revie
 
 When a local Penmark checkout is available, also parse the result with Penmark's production parser. The bundle must remain usable without that checkout.
 
-For each harness, use disposable files and verify the matrix below. Capture direct, harness-visible skill-activation evidence for every writable, read-only, and chat-only review scenario; do not infer activation from a valid comment or a correct chat response. Capture direct evidence that the skill did not activate for summary and a Markdown-containing general code review.
+For each harness, use disposable files and verify the matrix below. Capture direct, harness-visible skill-activation evidence for every scenario expecting activation; do not infer activation from a valid comment or a correct chat response. Capture direct evidence that the skill did not activate for the non-activation rows.
 
 | Scenario | Expected result | Required evidence |
 |---|---|---|
-| Writable Markdown review | Valid comments in the primary file | Direct activation evidence, validator result, and mutation diff |
-| Read-only Markdown review | Findings in chat; every file byte-identical | Direct activation evidence, chat response, and before/after hashes |
-| Chat-only Markdown review | Findings in chat; every file byte-identical | Direct activation evidence, chat response, and before/after hashes |
+| Explicit request for comments | Valid comments in the primary file | Direct activation evidence, validator result, and mutation diff |
+| Plain review, no stored preference | Findings printed, then the consent gate with three options | Direct activation evidence and the rendered gate |
+| Read-only or no-edit phrasing | Findings printed, then the consent gate — these refuse changes to the work, not to the review | Direct activation evidence and the rendered gate |
+| Explicit refusal of comments (`chat only`, `no penmark`) | Findings in chat; every file byte-identical | Direct activation evidence, chat response, and before/after hashes |
 | Summary | Summary response; target byte-identical | Direct absence-of-activation evidence and before/after hashes |
-| Markdown-containing general code review | Code-review response; changed Markdown target byte-identical | Direct absence-of-activation evidence, terminal trace, and complete-tree manifests |
+| Broad change review, diff includes non-Markdown | Code-review response; no Penmark markers written | Direct absence-of-activation evidence |
+| Broad change review, Markdown-only diff | Findings printed, then the consent gate | Direct activation evidence |
+| Referential target with unrelated code uncommitted | Reference resolves to the document, then review and gate | Direct activation evidence and the resolved target named back |
 
 For a multi-source review, verify that only the primary document changes. Compare before/after SHA-256 values and validate the changed primary document.
 
