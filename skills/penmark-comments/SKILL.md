@@ -94,11 +94,12 @@ This form is already a numbered list of the single question, placed at the end o
 
 1. Read `references/penmark-agent-contract-v1.md` and run `node <skill-dir>/scripts/validate-penmark-comments.mjs <target.md>`. If existing Penmark data is invalid or uses an unsupported version, leave the file untouched and report the diagnostics.
 2. Add findings only to the primary reviewed document. Source and comparison documents stay unchanged.
-3. Choose anchors using the table below. Generate unique valid IDs, use the current harness name with `(agent)`, use local time with numeric offset, and escape entry text as the contract requires.
+3. Choose anchors using the rules below. Generate unique valid IDs, use the current harness name with `(agent)`, use local time with numeric offset, and escape entry text as the contract requires.
 4. Preserve existing Penmark marker and entry bytes. Append new entries in finding order inside the single EOF review block.
-5. Apply all new anchors and entries in one atomic file mutation. Do not rewrite the reviewed text.
-6. Run the validator again. If it fails, repair only the comments added in this operation.
-7. Do not run Git commands or commit unless separately requested.
+5. Check every anchor before writing. Quote the anchored text in the entry's `> ` line, then read the body against that quote. If the two do not read as a comment on the same passage, move the anchor — never reword the body to fit the anchor you picked.
+6. Apply all new anchors and entries in one atomic file mutation. Do not rewrite the reviewed text.
+7. Run the validator again. If it fails, repair only the comments added in this operation.
+8. Do not run Git commands or commit unless separately requested.
 
 ## Summary
 
@@ -106,14 +107,20 @@ Print after every write, including when no gate was shown:
 
 > Added N comments to `<target>`.
 >
-> - one terse line per finding
+> - one terse line per finding, each citing the anchored passage as a short quote plus `<target>:<line>`
 >
 > The document's content was preserved exactly as you wrote it — the comments are wrapped around the relevant text, not written over it. Validator passed.
 > Undo: `git checkout -- <target>`
 
+Quote the anchored passage, not a restatement of the finding. The quote is what lets the reader catch a wrong anchor without opening the document, so it has to be the text the marker actually wraps.
+
 Group findings by theme instead of listing every one when a review is large.
 
 ## Anchor choice
+
+Anchor each finding on the passage that would have to change for the finding to be resolved. When a finding says a section's scope is too narrow, the anchor goes inside that section. Topical relatedness is not an anchor — a section that merely governs the same outcome is the wrong target. When the finding's body names a specific section, requirement, or identifier, the anchor sits inside that one unless the finding is explicitly about a mismatch between two of them. Two findings may land in the same section on different blocks; that is expected, not a conflict to avoid.
+
+Then pick the marker form:
 
 | Target | Anchor |
 |---|---|
@@ -132,6 +139,7 @@ Group findings by theme instead of listing every one when a review is large.
 - Compressing the gate's three options into a sentence to satisfy a reply-format rule. The text form above already complies; squashing it further strips the consequences the user needs to choose.
 - Writing the config file for any answer other than "Yes, and stop asking".
 - Claiming the file is byte-for-byte unchanged on a write path. Span markers change the line — the guarantee is about wording.
+- Anchoring a finding on a section that is merely related to it instead of the section it critiques. A comment whose body faults one requirement must not hang off a different requirement's heading, however closely the two are connected.
 - Do not comment in source or reference documents when one primary target is being reviewed.
 - Do not put span markers inside Markdown syntax or block internals.
 - Do not invent IDs outside lowercase base32 or reuse an existing ID.
