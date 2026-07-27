@@ -85,7 +85,7 @@ When executing the instructions in this skill (reading files, executing commands
 | **Edit file** | `Edit` | `replace_file_content` | Native edit | `apply_patch` |
 | **Run command** | `Bash` | `run_command` | Native terminal | `shell` |
 | **Search files** | `Grep` | `grep_search` | Native search | `shell` (e.g. `grep`) |
-| **Ask user** | `AskUserQuestion` | `ask_question` | Native input | `wait_user` / `ask_question` |
+| **Ask user** | `AskUserQuestion` | `ask_question` | Native input | `request_user_input` |
 | **Dispatch subagent** | `Agent` | `invoke_subagent` | Native agent | `spawn_agent` |
 
 ## Instructions file resolution

@@ -53,7 +53,9 @@ Write the config file only for the "Yes, and stop asking" answer, creating the d
 
 ## Gate
 
-Print the full findings first, then ask using the harness question tool: `AskUserQuestion` on Claude Code, `ask_question` on Agy, `wait_user` or `ask_question` on Codex, native input on Cursor. Where the harness has no question tool, render the three options as plain bullets and wait for the answer.
+Print the full findings first, then ask using the harness question tool: `AskUserQuestion` on Claude Code, `ask_question` on Agy, `request_user_input` on Codex, native input on Cursor.
+
+Every one of these needs an interactive session. When the tool is unavailable for any reason — a headless run such as `claude -p` or `codex exec`, a subagent, or a harness that has none — use the text form below **verbatim**.
 
 > These findings can also go into `<target>` as Penmark inline comments — N markers next to the relevant lines, plus one comment block at the end of the file.
 >
@@ -68,6 +70,25 @@ Print the full findings first, then ask using the harness question tool: `AskUse
 | No, chat only | Leaves `<target>` byte-for-byte unchanged. The findings above are the complete review. |
 
 Substitute the real target path and count. When the target is untracked or dirty, replace the undo sentence with: "The comments are additions — remove them by deleting the marker pairs and the comment block."
+
+### Gate — text form
+
+```
+Add these N findings to `<target>` as Penmark inline comments?
+
+The document's content is preserved exactly as you wrote it. Comments are
+wrapped around the relevant text, never written over it.
+
+  1. Yes — add them to `<target>`. Undo: `git checkout -- <target>`
+  2. Yes, and stop asking — same, and remembers the choice for next time.
+  3. No — leave `<target>` unchanged. The findings above are the full review.
+
+Reply 1, 2, or 3.
+```
+
+Substitute the real count and path. Never write "the design" or "the doc" where a path belongs — with no interface chrome, that path is the only thing showing what is about to be touched.
+
+This form is already a numbered list of the single question, placed at the end of the reply, so it satisfies a reply-format convention that asks for questions that way. It needs no further compression to comply with one. Keep each option on its own line with its consequence.
 
 ## Writer steps
 
@@ -108,6 +129,7 @@ Group findings by theme instead of listing every one when a review is large.
 - Activating for a named pull request or GitHub review is an error, even when every changed file is Markdown. That review belongs on the PR.
 - Refusing an identified Markdown target because unrelated code is also uncommitted is an error. An identified target decides on its own.
 - Guessing which document "review my design" means when several are plausible. Ask which one, then review.
+- Compressing the gate's three options into a sentence to satisfy a reply-format rule. The text form above already complies; squashing it further strips the consequences the user needs to choose.
 - Writing the config file for any answer other than "Yes, and stop asking".
 - Claiming the file is byte-for-byte unchanged on a write path. Span markers change the line — the guarantee is about wording.
 - Do not comment in source or reference documents when one primary target is being reviewed.
