@@ -1,18 +1,29 @@
 # Penmark Comments
 
-`penmark-comments` handles explicit reviews of writable local Markdown files by writing validated [Penmark](https://github.com/carlosboeing/penmark) v1 comments at the relevant passages when allowed, or by returning the same findings in chat without changing files when mutation is forbidden. It is a review surface: it adds findings, never rewrites the reviewed prose, and never commits unless separately asked.
+`penmark-comments` handles explicit reviews of writable local Markdown files. It reviews the document, then asks once whether the findings should also go into the file as validated [Penmark](https://github.com/carlosboeing/penmark) v1 comments or stay in chat, and remembers the answer. It is a review surface: it adds findings, never rewrites the document's existing content, and never commits unless separately asked.
 
 ## When it applies
 
 The global default activates the skill for an explicit request to review, audit, critique, or comment on a writable local `.md` file. It does not apply to summaries, explanations, extraction tasks, pasted text without a writable target, or non-Markdown artifacts. Pull-request reviews and general code reviews do not activate this skill, even when their diff contains Markdown.
 
-Direct user and project instructions still control mutation. The following requests activate the skill, use its read-only branch, return findings in chat, and leave every file unchanged:
+Direct and project instructions control where findings go, never whether the skill runs. The skill reviews first, then resolves the surface. These requests write comments without asking, because they say so:
 
-- `Review design.md, but do not modify files.`
-- `Audit proposal.md read-only.`
+- `Review design.md and add Penmark comments.`
+
+These return findings in chat without asking, because they refuse the comments themselves:
+
+- `Review design.md, but don't add any comments.`
 - `Critique notes.md and return findings in chat only.`
 
-When a request uses several files, comments belong only in the primary reviewed document. Comparison and source documents remain read-only.
+These reach the consent gate, because they refuse changes to the work rather than to the review:
+
+- `Audit proposal.md read-only.`
+- `Review design.md, but do not modify files.`
+- `Review a design document. Do not implement or edit anything — findings only.`
+
+Answering "Yes, and stop asking" saves `{ "mode": "write" }` to `~/.config/penmark-comments/config.json`, after which the gate stops appearing. A `penmark-comments: write` line in `CLAUDE.md` or `AGENTS.md` takes precedence over that file.
+
+When a request uses several files, comments belong only in the primary reviewed document. Comparison and source documents remain unchanged.
 
 ## Bundle contents
 

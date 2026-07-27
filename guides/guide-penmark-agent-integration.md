@@ -26,7 +26,7 @@ Precedence is highest first:
 3. Global Penmark default
 4. Skill mechanics
 
-`Do not modify files`, `read-only`, and `return findings in chat` override only file mutation. The skill remains active, reviews the documents, returns the same findings in chat, and leaves every file unchanged. Summaries, explanations, and extraction tasks do not activate the skill unless Penmark is explicitly requested. Pull-request reviews and general code reviews do not activate the skill. With multiple documents, write only to the primary reviewed target; source and comparison documents stay read-only.
+`Do not modify files`, `read-only`, and similar phrases refuse changes to the work, not to the review. They no longer route findings to chat on their own — the skill reviews the document, then asks once whether the findings should also go into the file, and remembers the answer. Only an explicit refusal of the comments themselves (`don't add comments`, `no penmark`, `findings in chat only`) skips that question. Summaries, explanations, and extraction tasks do not activate the skill unless Penmark is explicitly requested. Pull-request reviews and general code reviews do not activate the skill. With multiple documents, write only to the primary reviewed target; source and comparison documents stay unchanged.
 
 ## Components
 
@@ -110,6 +110,8 @@ See the [evaluation report](../docs/4-reviews/2026-07-22-penmark-skill-evaluatio
 The [activation-guard evaluation](../docs/4-reviews/2026-07-26-penmark-read-only-activation-evaluation.md) completed Codex 0.145.0's five-boundary matrix, including a Markdown-containing general code review; Claude Code 2.1.220 and Agy 1.1.7 completed read-only activation cases. Cursor's global instruction loading is structurally verified through its `AGENTS.md` symlink, while Cursor Penmark skill discovery and runtime behavior remain unverified. The durable negative Codex event streams are retained with that evaluation.
 
 ## Manual cross-harness verification runbook
+
+> **Superseded as the default (2026-07-27).** This full matrix documents the 2026-07-26 activation-guard exercise and remains valid as reference. It is no longer the standard for routine changes: per the [consent gate design](../docs/2-design/2026-07-27-penmark-comment-consent-gate-design.md), routine changes verify activation only — four probes on one harness — because the gate and the disclosure summary make every other failure mode visible on first use. Run this full matrix only for high-risk changes, or when focused probes reveal harness-specific differences.
 
 The 2026-07-23 release is shipped with the remaining Task 6 cross-harness evidence explicitly deferred. Completing the outstanding rows below and recording the results in the [evaluation report](../docs/4-reviews/2026-07-22-penmark-skill-evaluation.md) completes that deferred Task 6 evidence; it is not a prerequisite for using the released skill.
 
@@ -579,7 +581,7 @@ Mark a row `pass` only when every expected outcome above is met. Record a timeou
 | Skill is missing | Return findings in chat; do not invent or rediscover the format. |
 | The target cannot be written | Return findings in chat and state the limitation. |
 
-To disable automatic activation, remove the global instruction section. A direct read-only, no-write, or chat-only instruction does not disable activation; it changes only the output surface from inline comments to unchanged-file chat findings. Removing the machine-local symlink disables discovery for that harness; it does not alter reviewed documents.
+To disable automatic activation, remove the global instruction section. A direct read-only or no-write instruction does not disable activation and does not by itself choose the output surface; it reaches the consent gate. Deleting `~/.config/penmark-comments/config.json` restores the gate after "Yes, and stop asking" was used. Removing the machine-local symlink disables discovery for that harness; it does not alter reviewed documents.
 
 ## Format upgrades
 
