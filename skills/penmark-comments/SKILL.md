@@ -96,7 +96,7 @@ This form is already a numbered list of the single question, placed at the end o
 2. Add findings only to the primary reviewed document. Source and comparison documents stay unchanged.
 3. Choose anchors using the rules below. Generate unique valid IDs, use the current harness name with `(agent)`, use local time with numeric offset, and escape entry text as the contract requires.
 4. Preserve existing Penmark marker and entry bytes. Append new entries in finding order inside the single EOF review block.
-5. Check every anchor before writing. Quote the anchored text in the entry's `> ` line, then read the body against that quote. If the two do not read as a comment on the same passage, move the anchor — never reword the body to fit the anchor you picked.
+5. Check every anchor before writing. Quote the anchored text in the entry's `> ` line, then read the body against that quote. If the two do not read as a comment on the same passage, move the anchor — never reword the body to fit the anchor you picked. A heading or title anchor is consistent when the body names that wider scope.
 6. Apply all new anchors and entries in one atomic file mutation. Do not rewrite the reviewed text.
 7. Run the validator again. If it fails, repair only the comments added in this operation.
 8. Do not run Git commands or commit unless separately requested.
@@ -120,6 +120,18 @@ Group findings by theme instead of listing every one when a review is large.
 
 Anchor each finding on the passage that would have to change for the finding to be resolved. When a finding says a section's scope is too narrow, the anchor goes inside that section. Topical relatedness is not an anchor — a section that merely governs the same outcome is the wrong target. When the finding's body names a specific section, requirement, or identifier, the anchor sits inside that one unless the finding is explicitly about a mismatch between two of them. Two findings may land in the same section on different blocks; that is expected, not a conflict to avoid.
 
+A finding that fits no passage still needs an anchor, because Penmark has no document-level entry — every comment hangs off a marker. Widen the anchor rather than forcing a passage:
+
+| Finding is about | Anchor |
+|---|---|
+| A specific claim, requirement, or passage | That passage |
+| Something a section should cover but does not, or the section's overall approach | That section's heading |
+| The document's framing, structure, or scope as a whole | The document title |
+
+Each row is a fallback only when the row above genuinely does not apply. Test it: if you can name a passage whose change would resolve the finding, the finding is not document-level. Most findings that feel general fail that test. The title is not a home for anything awkward to place.
+
+A heading or title anchor carries no scope of its own, so the body has to state it. Open with "Across the document" or "This section" instead of leaving the reader to infer how far the comment reaches. Wrap the entire heading or title text, never part of it.
+
 Then pick the marker form:
 
 | Target | Anchor |
@@ -139,6 +151,7 @@ Then pick the marker form:
 - Compressing the gate's three options into a sentence to satisfy a reply-format rule. The text form above already complies; squashing it further strips the consequences the user needs to choose.
 - Writing the config file for any answer other than "Yes, and stop asking".
 - Claiming the file is byte-for-byte unchanged on a write path. Span markers change the line — the guarantee is about wording.
+- Using the document title as a home for findings that were merely hard to place. Widening the anchor is for findings with no passage, not for findings you did not locate.
 - Anchoring a finding on a section that is merely related to it instead of the section it critiques. A comment whose body faults one requirement must not hang off a different requirement's heading, however closely the two are connected.
 - Do not comment in source or reference documents when one primary target is being reviewed.
 - Do not put span markers inside Markdown syntax or block internals.
