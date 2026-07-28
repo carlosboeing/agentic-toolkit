@@ -51,7 +51,7 @@ Kimi reads the shared `~/.agents/` layer natively, so the authored-skill fan-out
 | Authored skills (briefing, penmark-comments, schedule-resume, …) | Live via `~/.agents/skills/` symlinks (sync-skills.sh) — no Kimi-specific step |
 | `kimi-webbridge` skill | Vendor-installed copy at `~/.kimi-code/skills/kimi-webbridge` (v1.11.3, byte-identical to the Claude Code and Codex copies); agy covered by a symlink at `~/.gemini/config/skills/kimi-webbridge` → the Kimi copy |
 | MCP servers (context7, claude-mem, headroom, fathom, playwright) | Parity target: mirror the five entries from `~/.gemini/config/mcp_config.json` into `~/.kimi-code/mcp.json` |
-| Superpowers | Native plugin (marketplace or GitHub install) — updated via `/plugins`, **not** the canonical-clone model the other harnesses use; the clone's edits reach Kimi only after an upstream release |
+| Superpowers | Native plugin registration + canonical-clone content: `~/.kimi-code/plugins/managed/superpowers` is a whole-dir symlink to `plugins/superpowers` (v6.2.0), restored by `plugins/superpowers-relink.sh` after any `/plugins` update. `git pull` in the clone now propagates to all four harnesses |
 | RTK | Instructions mode (`rtk init --agent kimi`, needs rtk ≥ 0.44.0) — Kimi hooks can't rewrite tool input, so no transparent hook |
 
 ## Verified installed state — Antigravity (audited 2026-06-14)

@@ -17,6 +17,13 @@
 #
 # Claude Code needs nothing here: its installPath points straight at canonical.
 #
+#   Kimi Code:  runs plugins from its managed copy, but a whole-directory
+#               symlink at that path passes its symlink-resolution check, so
+#               the managed "copy" can point straight at canonical. Requires
+#               the plugin to already be registered (install natively first:
+#               /plugins install https://github.com/obra/superpowers). A
+#               `/plugins` update or reinstall clobbers the symlink — re-run.
+#
 set -euo pipefail
 
 CANON="~/Projects/agentic-toolkit/plugins/superpowers"
@@ -47,5 +54,23 @@ ln -sfn "$CANON/skills"            "$GP/skills"
 ln -sfn "$CANON/hooks"             "$GP/hooks"
 ln -sfn "$CANON/hooks/hooks.json"  "$GP/hooks.json"
 echo "antigravity: rebuilt plugin dir at $GP"
+
+# ----- Kimi Code -------------------------------------------------------------
+KP="$HOME/.kimi-code/plugins/managed/superpowers"
+if [[ -d "$HOME/.kimi-code/plugins" ]]; then
+  if [[ -L "$KP" && "$(readlink "$KP")" == "$CANON" ]]; then
+    echo "kimi:        already linked to canonical"
+  else
+    if [[ -e "$KP" && ! -L "$KP" ]]; then
+      mv "$KP" "$KP.bak-$(date +%Y%m%d%H%M%S)"
+      echo "kimi:        native managed copy moved aside to $KP.bak-*"
+    fi
+    ln -sfn "$CANON" "$KP"
+    echo "kimi:        managed dir linked to canonical"
+  fi
+else
+  echo "kimi:        SKIP -- ~/.kimi-code/plugins not found" >&2
+  echo "             install first: /plugins install https://github.com/obra/superpowers" >&2
+fi
 
 echo "done. Restart Codex and Antigravity to pick up the changes."
