@@ -1,11 +1,15 @@
 ---
 title: Harness capability map — deliberation, routing, plugins
 type: reference
-last_reviewed: 2026-06-14
+last_reviewed: 2026-07-28
+authors:
+  - "Carlos Boeing"
+  - "k3 (kimi-code)"
 related:
   - guides/guide-harness-plugin-parity.md
   - guides/guide-agy-model-and-quota-selection.md
   - docs/2-design/2026-06-04-agent-delegation-layer-design.md
+  - docs/2-design/2026-07-28-kimi-fourth-harness-parity-design.md
 ---
 
 # Harness capability map
@@ -44,6 +48,16 @@ Quick comparison for the five concerns in [agent delegation layer design](../doc
 | Octo | No (4/4 timeout) |
 | Financial plugins | No |
 | Remote CI | Optional — local gates sufficient when CI unavailable |
+
+## Kimi Code (added 2026-07-28)
+
+Fourth harness, alongside Claude Code, Codex, and Agy. The load-bearing capabilities, verified against the official docs and live probes ([design](../docs/2-design/2026-07-28-kimi-fourth-harness-parity-design.md)):
+
+- **Instructions and skills for free** — reads `~/.agents/AGENTS.md`, project `AGENTS.md`, and `~/.agents/skills/` natively; no symlinks or fan-out needed.
+- **Hooks gate but don't rewrite** — PreToolUse/Stop/UserPromptSubmit can block; PostToolUse is observation-only; no `tool_input` mutation, so RTK-style transparent command rewriting is impossible (RTK runs in instructions mode, like Codex).
+- **Headless resume** — `kimi --session session_<id> -p` auto-approves; no session PID registry, and resuming an open session injects into it (schedule-resume warns at create).
+- **Native plugin system** — superpowers installs from the marketplace (`.kimi-plugin/plugin.json`), updated via `/plugins`, not the canonical-clone model.
+- **Models** — K3 (up to 1M context, T1–T2), K2.7 Coding (T1), Highspeed variants (T0–T1); membership-plan quota, independent pool.
 
 ## Decision pointers
 

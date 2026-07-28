@@ -6,7 +6,7 @@ Snapshots, inventories, and lookups for coding agent configurations and historic
 
 | Reference File | What it covers |
 |---|---|
-| [`reference-cross-harness-models.md`](reference-cross-harness-models.md) | Comparison of LLM models by capability tiers, routing aliases, and availability/quota across Claude Code, Cursor, and Antigravity. |
+| [`reference-cross-harness-models.md`](reference-cross-harness-models.md) | Comparison of LLM models by capability tiers, routing aliases, and availability/quota across Claude Code, Cursor, Antigravity, and Kimi Code. |
 | [`reference-harness-capability-map.md`](reference-harness-capability-map.md) | Feature-by-feature capability support map across developer agent harnesses. |
 | [`reference-claude-code-plugins.md`](reference-claude-code-plugins.md) | Snapshot of installed plugins and marketplaces configured on Claude Code. |
 | [`reference-rtk-token-savings.md`](reference-rtk-token-savings.md) | Performance metrics and command optimization strategies for RTK (Rust Token Killer) based on historical CLI runs. |

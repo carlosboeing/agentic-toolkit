@@ -19,7 +19,7 @@ Declares where project-tracking information lives so the [`/briefing`](skills/br
 - **Architecture**: none (per-type catalog READMEs serve the always-current-state role — see [README.md](README.md) and [skills/README.md](skills/README.md); this is documented in the `docs/` framing below)
 - **Working memory**: `docs/` (numbered lifecycle convention)
 - **Other**:
-  - Repo is the source of truth for skills; the active harness loads from its user-level skills directory (e.g., `~/.claude/skills/` for Claude Code, `~/.gemini/config/skills/` for agy, `~/.codex/skills/` or `~/.agents/skills/` for Codex). After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. If the harness config directory is under source control (e.g., `carlosboeing/claude-config`), commit and push the synced files there too as a separate `chore(<scope>): sync from claude-code-resources` commit.
+  - Repo is the source of truth for skills; the active harness loads from its user-level skills directory (e.g., `~/.claude/skills/` for Claude Code, `~/.gemini/config/skills/` for agy, `~/.codex/skills/` or `~/.agents/skills/` for Codex). Kimi Code reads `~/.agents/skills/` natively (plus its own `~/.kimi-code/skills/` for Kimi-specific entries), so the Codex target covers it. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. If the harness config directory is under source control (e.g., `carlosboeing/claude-config`), commit and push the synced files there too as a separate `chore(<scope>): sync from claude-code-resources` commit.
   - No CI configured; validation is manual / via `/ultrareview` on demand.
 
 ## Layout

@@ -77,6 +77,7 @@ These have their own mechanisms — the link script does not touch them:
 - **`~/.agents/skills/` skills** (the `vercel-*`, `impeccable`, `deploy-to-vercel` family): installed and version-locked by a separate skill installer (`~/.agents/.skill-lock.json`). Restore via that tool.
 - **Plugins** (`enabledPlugins` in `settings.json`): installed from their marketplaces by Claude Code.
 - **Codex / Antigravity** plugin wiring: see [`../plugins/superpowers-relink.sh`](../plugins/superpowers-relink.sh).
+- **Kimi Code CLI**: install with the official script (`curl -fsSL https://code.kimi.com/kimi-code/install.sh | bash`), then `kimi` and `/login`. It reads `~/.agents/AGENTS.md` and `~/.agents/skills/` natively, so steps 3–4 already cover instructions and authored skills. `~/.kimi-code/` (config.toml, mcp.json, sessions) is machine-local and not in git — recreate MCP entries per [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md). Superpowers installs via its native plugin manager (`/plugins`), not the relink script.
 
 ## Verify
 

@@ -31,6 +31,10 @@ The `outputStyle` value must match the style's frontmatter `name` exactly, or Cl
 
 Output styles are read once at session start — changes (including activation) take effect after `/clear` or the next new session.
 
+## Other harnesses
+
+Output styles are a Claude Code mechanism — Codex, Antigravity, and Kimi Code have no equivalent. On those harnesses the same plain-English rules arrive through the `### Writing style` section of the shared `~/.agents/AGENTS.md` (which Kimi reads natively), without the system-prompt reinforcement layer.
+
 If a symlinked style file is ever not recognized, replace the symlink with a real copy and re-copy after edits:
 
 ```bash

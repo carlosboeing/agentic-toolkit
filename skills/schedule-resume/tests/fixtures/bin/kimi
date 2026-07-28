@@ -1,0 +1,24 @@
+#!/bin/sh
+printf '%s\n' "$PWD" >"$RESUME_TEST_CWD_CAPTURE"
+jq -n '$ARGS.positional' --args -- "$@" >"$RESUME_TEST_HARNESS_LOG"
+# kimi -p receives the prompt as the --prompt argument; there is no stdin
+# channel. Mirror that here so the prompt-capture comparison exercises argv.
+_kimi_prompt=
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --prompt) _kimi_prompt=$2; shift 2 ;;
+    *) shift ;;
+  esac
+done
+printf '%s' "$_kimi_prompt" >"$RESUME_TEST_PROMPT_CAPTURE"
+if [ -n "${RESUME_TEST_HARNESS_BARRIER:-}" ]; then
+  touch "$RESUME_TEST_HARNESS_BARRIER/launched.$$" || exit 1
+  schedule_resume_harness_wait_count=0
+  while [ ! -e "$RESUME_TEST_HARNESS_BARRIER/release" ]; do
+    schedule_resume_harness_wait_count=$((schedule_resume_harness_wait_count + 1))
+    [ "$schedule_resume_harness_wait_count" -lt 500 ] || exit 1
+    /bin/sleep 0.01
+  done
+fi
+printf '%s\n' "${RESUME_TEST_OUTPUT:-}"
+exit "${RESUME_TEST_EXIT_CODE:-0}"

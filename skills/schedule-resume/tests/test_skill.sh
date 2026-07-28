@@ -52,7 +52,7 @@ assert_file_exists "$CATALOG_FILE" "provide the skills catalog"
 
 frontmatter=$(awk 'NR == 1 && $0 == "---" { in_frontmatter = 1; next } in_frontmatter && $0 == "---" { exit } in_frontmatter { print }' "$SKILL_FILE")
 expected_frontmatter='name: schedule-resume
-description: Use when a scheduled or deferred coding-session continuation, usage or quota reset resume, cross-harness Claude/Agy/Codex session resume, or scheduled-job status, cancellation, or cleanup is requested.'
+description: Use when a scheduled or deferred coding-session continuation, usage or quota reset resume, cross-harness Claude/Agy/Codex/Kimi session resume, or scheduled-job status, cancellation, or cleanup is requested.'
 assert_equal "$expected_frontmatter" "$frontmatter" "frontmatter contains exactly the approved name and description"
 description=$(printf '%s\n' "$frontmatter" | sed -n 's/^description: *//p')
 case "$description" in
@@ -66,7 +66,7 @@ assert_contains "$SKILL_FILE" '/schedule-resume [natural-language request]' "doc
 assert_contains "$SKILL_FILE" 'No arguments' "cover current-session setup"
 assert_contains "$SKILL_FILE" 'Do not offer the current session' "withhold an undiscoverable current-session candidate"
 assert_contains "$SKILL_FILE" 'Invoking harness and target harness are independent' "separate invoking and target harnesses"
-assert_contains "$SKILL_FILE" 'claude|agy|codex' "allow only supported target harnesses"
+assert_contains "$SKILL_FILE" 'claude|agy|codex|kimi' "allow only supported target harnesses"
 assert_contains "$SKILL_FILE" 'numbered candidates' "require candidate discovery output"
 assert_contains "$SKILL_FILE" 'explicit numbered choice' "require explicit candidate selection"
 assert_contains "$SKILL_FILE" 'stable ID' "require stable session identity"
@@ -124,7 +124,7 @@ pass "management interaction contract"
 for dependency in macOS jq cron crontab caffeinate lockf; do
   assert_contains "$README_FILE" "$dependency" "document dependency '$dependency'"
 done
-for form in '--resume' '--conversation' 'exec resume' 'prompt stdin'; do
+for form in '--resume' '--conversation' 'exec resume' '--session' 'prompt stdin'; do
   assert_contains "$README_FILE" "$form" "document native resume form '$form'"
 done
 home_tilde='~'

@@ -7,9 +7,9 @@
 # This automates the manual `ln -sfn` fan-out documented in
 # guides/guide-harness-plugin-parity.md. It is INDEPENDENT of the `find-skills`
 # tool: `~/.agents/skills/` is just the shared cross-harness skills directory
-# (Codex and other agents read it) that find-skills happens to also use. This
-# script only creates symlinks and never touches find-skills' lockfile or its
-# installed skills.
+# (Codex, Kimi Code, and other agents read it natively) that find-skills
+# happens to also use. This script only creates symlinks and never touches
+# find-skills' lockfile or its installed skills.
 #
 # Portable: the link target is THIS clone's absolute path, discovered at
 # runtime. Idempotent -- safe to run repeatedly. Never clobbers a real
@@ -28,7 +28,7 @@ SKILLS_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # harness is installed). Entries link straight to the repo.
 TARGETS=(
   "$HOME/.claude/skills"          # Claude Code
-  "$HOME/.agents/skills"          # Codex + any cross-harness agent
+  "$HOME/.agents/skills"          # Codex + Kimi Code + any cross-harness agent (both read it natively)
   "$HOME/.gemini/config/skills"   # Antigravity (agy)
 )
 

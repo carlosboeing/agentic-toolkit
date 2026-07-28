@@ -1,9 +1,12 @@
 ---
-title: Harness plugin and skill parity (Claude Code → Antigravity)
+title: Harness plugin and skill parity (Claude Code, Codex, Antigravity, Kimi)
 type: guide
-scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor]
-last_reviewed: 2026-07-11
-last_audited: 2026-07-11
+scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor, kimi-code]
+last_reviewed: 2026-07-28
+last_audited: 2026-07-28
+authors:
+  - "Carlos Boeing"
+  - "k3 (kimi-code)"
 related:
   - guide-browser-automation-mcp-vs-cli.md
   - guide-cross-harness-project-instructions.md
@@ -28,7 +31,30 @@ How to get a similar **methodology and tooling** bar when switching between Clau
 
 Verify: `agy plugin list`, `/skills` in session, `ls ~/.agents/skills/`.
 
-## Verified installed state (audited 2026-06-14)
+## Install channels on Kimi Code
+
+| Channel | Command / path |
+|---------|----------------|
+| Native plugin | `/plugins` marketplace, or `/plugins install <github-url>` |
+| Skills | `~/.agents/skills/` (shared, read natively), `~/.kimi-code/skills/` (Kimi-specific), `.agents/skills/` + `.kimi-code/skills/` (project) |
+| Instructions | `~/.agents/AGENTS.md` + project `AGENTS.md` (read natively — no symlink needed); optional Kimi-specific `~/.kimi-code/AGENTS.md` |
+| MCP | `~/.kimi-code/mcp.json` (+ project `.kimi-code/mcp.json`); manage interactively with `/mcp-config` |
+| Hooks | `[[hooks]]` in `~/.kimi-code/config.toml` — only PreToolUse, Stop, and UserPromptSubmit can block, and no event can rewrite tool input |
+| Headless | `kimi --session session_<id> -p` (auto-approves; `-p` rejects `--yolo`/`--auto`) |
+
+Kimi reads the shared `~/.agents/` layer natively, so the authored-skill fan-out (`sync-skills.sh`) and the canonical instruction file already cover it with zero wiring. Verify: `ls ~/.agents/skills/`, `/plugins info <name>`, `kimi doctor`.
+
+## Verified installed state — Kimi (audited 2026-07-28)
+
+| Piece | State |
+|-------|-------|
+| Authored skills (briefing, penmark-comments, schedule-resume, …) | Live via `~/.agents/skills/` symlinks (sync-skills.sh) — no Kimi-specific step |
+| `kimi-webbridge` skill | Vendor-installed copy at `~/.kimi-code/skills/kimi-webbridge` (v1.11.3, byte-identical to the Claude Code and Codex copies); agy covered by a symlink at `~/.gemini/config/skills/kimi-webbridge` → the Kimi copy |
+| MCP servers (context7, claude-mem, headroom, fathom, playwright) | Parity target: mirror the five entries from `~/.gemini/config/mcp_config.json` into `~/.kimi-code/mcp.json` |
+| Superpowers | Native plugin (marketplace or GitHub install) — updated via `/plugins`, **not** the canonical-clone model the other harnesses use; the clone's edits reach Kimi only after an upstream release |
+| RTK | Instructions mode (`rtk init --agent kimi`, needs rtk ≥ 0.44.0) — Kimi hooks can't rewrite tool input, so no transparent hook |
+
+## Verified installed state — Antigravity (audited 2026-06-14)
 
 ### MCP servers
 
@@ -45,7 +71,7 @@ Configured in `~/.gemini/config/mcp_config.json`.
 
 | Tool | Hook Type | Mapped Harnesses | Notes |
 |------|-----------|------------------|-------|
-| `rtk` | Pre-execution hooks & instructions | Claude Code, Antigravity (`agy`), Cursor, Codex, OpenCode | CLI proxy that intercepts and compresses command outputs to save 60–90%+ context tokens. |
+| `rtk` | Pre-execution hooks & instructions | Claude Code, Antigravity (`agy`), Cursor, Codex, OpenCode, Kimi (instructions mode) | CLI proxy that intercepts and compresses command outputs to save 60–90%+ context tokens. Kimi has no input-rewriting hook, so it runs instruction-driven like Codex (`rtk init --agent kimi`). |
 
 ### Bundled plugins (`~/.gemini/config/plugins/`)
 
@@ -151,9 +177,9 @@ Use when you want **dynamic** per-prompt routing; use **reference-workflow** `mo
 
 ## Symlink rules of thumb
 
-**Do symlink:** instruction files; stable personal skills (`~/.claude/skills/X` → `~/.agents/skills/X`). Automate the authored-skill fan-out with [`../skills/sync-skills.sh`](../skills/sync-skills.sh) — it symlinks every authored skill from this repo straight into each installed harness's skill dir (Claude `~/.claude/skills`, Codex `~/.agents/skills`, Agy `~/.gemini/config/skills`). Independent of the `find-skills` tool.
+**Do symlink:** instruction files; stable personal skills (`~/.claude/skills/X` → `~/.agents/skills/X`). Automate the authored-skill fan-out with [`../skills/sync-skills.sh`](../skills/sync-skills.sh) — it symlinks every authored skill from this repo straight into each installed harness's skill dir (Claude `~/.claude/skills`, Codex `~/.agents/skills`, Agy `~/.gemini/config/skills`; Kimi reads the `~/.agents/skills` entry natively, so it is covered without a Kimi-specific target). Independent of the `find-skills` tool.
 
-**Do not symlink:** full plugin directories from Cursor cache (hash paths break); MCP config; Superpowers twice.
+**Do not symlink:** full plugin directories from Cursor cache (hash paths break); MCP config; Superpowers twice; vendor-managed skill copies (e.g. `kimi-webbridge` — the vendor's installer fans out byte-identical copies and rewrites them on upgrade; `kimi-webbridge status` shows the per-agent version). The one sanctioned exception is filling a gap the vendor installer doesn't cover, like the `~/.gemini/config/skills/kimi-webbridge` symlink for agy.
 
 For Agy **slash menu**, also link to `~/.gemini/antigravity-cli/skills/` if skills don't appear under `/skills`.
 

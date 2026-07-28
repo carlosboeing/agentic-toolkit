@@ -1,6 +1,6 @@
 # Schedule Resume
 
-`/schedule-resume` schedules an unattended continuation of an existing Claude Code, Agy, or Codex coding session. It can start at an explicit time or a known usage-reset time, then retry only quota or service-availability failures until the resumed session exits successfully.
+`/schedule-resume` schedules an unattended continuation of an existing Claude Code, Agy, Codex, or Kimi coding session. It can start at an explicit time or a known usage-reset time, then retry only quota or service-availability failures until the resumed session exits successfully.
 
 ## Examples
 
@@ -22,7 +22,7 @@ The skill confirms all consequential values before creation and states: `This wi
 - On macOS: `launchd` (built in) with a logged-in GUI session — the scheduler runs jobs as user LaunchAgents in the GUI domain, which is what keeps the login keychain readable for the resumed harness. On Linux: a working `cron` with a per-user `crontab` (cronie/vixie-cron). The helper is macOS-tested this pass.
 - `jq` installed.
 - On macOS, `caffeinate` and `lockf` (both built in). `caffeinate -i` prevents idle sleep only while an attempt is running; on other platforms the idle guard is simply skipped.
-- Each target CLI installed and authenticated: `claude`, `agy`, or `codex`. For Claude targets on macOS, create checks that the `Claude Code-credentials` keychain item is readable and warns if not.
+- Each target CLI installed and authenticated: `claude`, `agy`, `codex`, or `kimi`. For Claude targets on macOS, create checks that the `Claude Code-credentials` keychain item is readable and warns if not. For Kimi targets, create warns that resuming a session open in a TUI injects the prompt into the live session and switches it to auto permissions.
 - The computer powered on with the user logged in at trigger time. Sleep can delay a trigger (launchd coalesces missed calendar firings and runs them on wake; cron drops them).
 - **Protected paths (conditional):** jobs under `~/Projects`, `~/.local`, and similar need no grant. If a job's project directory, prompt, or state root lives under a TCC-protected folder (Documents, Desktop, Downloads, iCloud Drive), the helper warns at create time: on macOS the background agent may be denied access, and on Linux-style cron setups the cron daemon may need a Full Disk Access-equivalent grant (on macOS cron that was `/usr/sbin/cron` under System Settings > Privacy & Security).
 
@@ -77,17 +77,20 @@ Before a Claude job resumes, the helper reads Claude Code's own per-session regi
 
 This stops a scheduled resume from spawning a second agent on a session someone is actively using — two agents on one session interleave and corrupt the shared transcript. A deferring job never reads as stalled or failed: `status` reports `deferred_session_active` with `defer_count` and `last_deferred_at`, and `list` marks it as holding on an active target session. The job resumes on its own the first poll after the session goes idle or closes.
 
-Detection is Claude-only. Agy and Codex expose no equivalent session registry, so their resumes proceed ungated, exactly as before. Every read fails safe: a missing sessions directory, an unparseable file, or a dead PID all resolve to "resume," never a hang. `SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR` overrides the registry location and exists only for the tests.
+Detection is Claude-only. Agy, Codex, and Kimi expose no equivalent session registry, so their resumes proceed ungated, exactly as before. Kimi's variant of the risk: resuming an open session injects the prompt into the live TUI session and switches it to auto permissions (verified 2026-07-28) — no transcript corruption, but a takeover, which is why create prints a warning for Kimi targets. Every read fails safe: a missing sessions directory, an unparseable file, or a dead PID all resolve to "resume," never a hang. `SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR` overrides the registry location and exists only for the tests.
 
 ## Native resume commands
 
-The helper uses prompt stdin and these current native forms:
+The helper uses prompt stdin for Claude, Agy, and Codex — Kimi has no stdin prompt channel, so it receives the prompt as an argument instead (the shell trims trailing blank lines from the prompt text) — and these current native forms:
 
 | Target | Invocation | Yolo flag |
 |---|---|---|
 | Claude | `claude --resume SESSION --print` | `--dangerously-skip-permissions` |
 | Agy | `agy --conversation SESSION --print` | `--dangerously-skip-permissions` |
 | Codex | `codex exec resume SESSION -` | `--dangerously-bypass-approvals-and-sandbox` |
+| Kimi | `kimi --session SESSION -p PROMPT` | none needed — print mode auto-approves |
+
+Kimi session IDs carry a `session_` prefix (copy the full form from kimi's own resume hint), and sessions resolve inside their working-directory bucket, so a Kimi job's project directory must be the target session's own project. Kimi's print mode also prefixes assistant text lines with `• `; the helper strips that prefix from captured output before checking the completion sentinel, so `sentinel-output` works unchanged.
 
 These permissions are intentionally fixed as `full-auto` for unattended work and are dangerous. The skill must warn and obtain confirmation before creation.
 
@@ -97,7 +100,7 @@ The create contract is:
 
 ```text
 scripts/resume-job.sh create \
-  --target-harness claude|agy|codex \
+  --target-harness claude|agy|codex|kimi \
   --session-id ID \
   --project-dir ABSOLUTE_DIR \
   --prompt-file FILE \

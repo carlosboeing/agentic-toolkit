@@ -78,15 +78,15 @@ The depth default is **adaptive**: when no depth keyword is provided, the briefi
 
 When executing the instructions in this skill (reading files, executing commands, creating files, asking user questions), use the appropriate tool for your active runtime:
 
-| Action | Claude Code | Antigravity CLI (`agy`) | Cursor CLI | Codex |
-|---|---|---|---|---|
-| **Read file** | `Read` | `view_file` | Native view / `cat` | `shell` (e.g. `cat`) |
-| **Write/Create file** | `Write` | `write_to_file` | Native edit | `apply_patch` / `shell` |
-| **Edit file** | `Edit` | `replace_file_content` | Native edit | `apply_patch` |
-| **Run command** | `Bash` | `run_command` | Native terminal | `shell` |
-| **Search files** | `Grep` | `grep_search` | Native search | `shell` (e.g. `grep`) |
-| **Ask user** | `AskUserQuestion` | `ask_question` | Native input | `request_user_input` |
-| **Dispatch subagent** | `Agent` | `invoke_subagent` | Native agent | `spawn_agent` |
+| Action | Claude Code | Antigravity CLI (`agy`) | Cursor CLI | Codex | Kimi Code |
+|---|---|---|---|---|---|
+| **Read file** | `Read` | `view_file` | Native view / `cat` | `shell` (e.g. `cat`) | `Read` |
+| **Write/Create file** | `Write` | `write_to_file` | Native edit | `apply_patch` / `shell` | `Write` |
+| **Edit file** | `Edit` | `replace_file_content` | Native edit | `apply_patch` | `Edit` |
+| **Run command** | `Bash` | `run_command` | Native terminal | `shell` | `Bash` |
+| **Search files** | `Grep` | `grep_search` | Native search | `shell` (e.g. `grep`) | `Grep` |
+| **Ask user** | `AskUserQuestion` | `ask_question` | Native input | `request_user_input` | `AskUserQuestion` |
+| **Dispatch subagent** | `Agent` | `invoke_subagent` | Native agent | `spawn_agent` | `Agent` |
 
 ## Instructions file resolution
 
@@ -94,7 +94,7 @@ To support multiple platforms and harnesses, the briefing skill abstracts the pr
 
 - **Active Runtime Defaults:**
   - On Claude Code, default to `CLAUDE.md`.
-  - On agy, Cursor, and Codex, default to `AGENTS.md`.
+  - On agy, Cursor, Codex, and Kimi, default to `AGENTS.md`.
 - **Existing Files Check:**
   - If only one file exists, use it.
   - If both exist, use the active runtime's default.
@@ -222,6 +222,8 @@ ls -l "$HOME/.gemini/antigravity-cli/brain/projects/$slug/memory/MEMORY.md" 2>/d
 
 # Probe Codex memory index
 ls -l "$HOME/.codex/projects/$slug/memory/MEMORY.md" 2>/dev/null
+
+# Kimi Code has no per-project memory index — nothing to probe
 ```
 
 If the index file exists in the active runtime's path (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one. This is a runtime-specific mechanic, not a project convention, so it lives in Always-on.
@@ -951,18 +953,32 @@ else
   ROOT="$HOME"
 fi
 
-# Detect platform prefix
-if [ -d "$ROOT/.claude" ] || [ -d "$HOME/.claude" ]; then
-  DEST="$ROOT/.claude/briefing-log"
-elif [ -d "$ROOT/.gemini" ] || [ -d "$HOME/.gemini" ]; then
-  DEST="$ROOT/.gemini/briefing-log"
-elif [ -d "$ROOT/.codex" ] || [ -d "$HOME/.codex" ]; then
-  DEST="$ROOT/.codex/briefing-log"
-elif [ -d "$ROOT/.cursor" ] || [ -d "$HOME/.cursor" ]; then
-  DEST="$ROOT/.cursor/briefing-log"
-else
-  DEST="$ROOT/.briefing-log"
-fi
+# Detect platform prefix — the ACTIVE RUNTIME decides; substitute it into the
+# case below. Directory existence is only the fallback for an undeterminable
+# runtime: on machines with several harnesses installed, a fixed-order
+# existence check misroutes (e.g. a Kimi session would match ~/.claude first).
+case "<active-runtime>" in
+  claude)             DEST="$ROOT/.claude/briefing-log" ;;
+  kimi|kimi-code)     DEST="$ROOT/.kimi-code/briefing-log" ;;
+  agy|antigravity)    DEST="$ROOT/.gemini/briefing-log" ;;
+  codex)              DEST="$ROOT/.codex/briefing-log" ;;
+  cursor)             DEST="$ROOT/.cursor/briefing-log" ;;
+  *)
+    if [ -d "$ROOT/.claude" ] || [ -d "$HOME/.claude" ]; then
+      DEST="$ROOT/.claude/briefing-log"
+    elif [ -d "$ROOT/.kimi-code" ] || [ -d "$HOME/.kimi-code" ]; then
+      DEST="$ROOT/.kimi-code/briefing-log"
+    elif [ -d "$ROOT/.gemini" ] || [ -d "$HOME/.gemini" ]; then
+      DEST="$ROOT/.gemini/briefing-log"
+    elif [ -d "$ROOT/.codex" ] || [ -d "$HOME/.codex" ]; then
+      DEST="$ROOT/.codex/briefing-log"
+    elif [ -d "$ROOT/.cursor" ] || [ -d "$HOME/.cursor" ]; then
+      DEST="$ROOT/.cursor/briefing-log"
+    else
+      DEST="$ROOT/.briefing-log"
+    fi
+    ;;
+esac
 mkdir -p "$DEST"
 ```
 

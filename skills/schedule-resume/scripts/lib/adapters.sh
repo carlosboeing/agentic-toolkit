@@ -113,6 +113,32 @@ schedule_resume_execute_codex() (
   "$@" <"$_schedule_resume_prompt_file"
 )
 
+# Kimi resumes headlessly in print mode, which runs under the auto permission
+# policy — no bypass flag exists or is needed (the CLI rejects -p combined with
+# --yolo/--auto). Two quirks the other adapters don't have: the prompt travels
+# as an argv string (print mode has no stdin channel), and print mode prefixes
+# assistant text lines with "• ", which would defeat the sentinel policy's
+# whole-line match — so captured stdout is normalized before the caller's
+# classifier sees it.
+schedule_resume_execute_kimi() (
+  _schedule_resume_executable=$1
+  _schedule_resume_session_id=$2
+  _schedule_resume_project_dir=$3
+  _schedule_resume_prompt_file=$4
+  cd "$_schedule_resume_project_dir" || return 1
+  _schedule_resume_kimi_stdout=$(mktemp "${TMPDIR:-/tmp}/schedule-resume-kimi.XXXXXX") || return 1
+  # shellcheck disable=SC2046  # intentional word-split of the idle-guard prefix
+  set -- $(schedule_resume_idle_guard) "$_schedule_resume_executable" --session "$_schedule_resume_session_id" --prompt "$(cat "$_schedule_resume_prompt_file")"
+  if "$@" >"$_schedule_resume_kimi_stdout"; then
+    _schedule_resume_kimi_rc=0
+  else
+    _schedule_resume_kimi_rc=$?
+  fi
+  sed 's/^• //' "$_schedule_resume_kimi_stdout"
+  rm -f "$_schedule_resume_kimi_stdout"
+  return "$_schedule_resume_kimi_rc"
+)
+
 schedule_resume_execute_target() (
   _schedule_resume_target=$1
   shift
@@ -126,6 +152,9 @@ schedule_resume_execute_target() (
       ;;
     codex)
       schedule_resume_execute_codex "$@"
+      ;;
+    kimi)
+      schedule_resume_execute_kimi "$@"
       ;;
     *)
       printf 'unsupported target harness: %s\n' "$_schedule_resume_target" >&2

@@ -1,8 +1,11 @@
 ---
-title: Browser automation for agents — Playwright MCP vs CLI (and chrome-devtools)
+title: Browser automation for agents — Playwright MCP vs CLI (and chrome-devtools, WebBridge)
 type: guide
-scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, claude-code, codex, cursor]
-last_reviewed: 2026-07-11
+scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, claude-code, codex, cursor, kimi-code, webbridge]
+authors:
+  - "Carlos Boeing"
+  - "k3 (kimi-code)"
+last_reviewed: 2026-07-28
 related:
   - guide-harness-plugin-parity.md
   - guide-cross-harness-project-instructions.md
@@ -50,8 +53,23 @@ A REPL wins when you don't yet know what you'll do next — unknown pages, explo
 | **Claude Code** | Playwright MCP (idle cost is ~tool names — see token note) | Playwright CLI |
 | **Cursor** | Playwright MCP | Playwright CLI |
 | **Antigravity** | Playwright MCP for parity; chrome-devtools-plugin (already bundled, no install) is an additional live-debug tool | Playwright CLI |
+| **Kimi Code** | Playwright MCP (registered in `~/.kimi-code/mcp.json`) | Playwright CLI |
 
 In Claude Code/Cursor there is also **superpowers-chrome** (CDP) for the narrow case of attaching to an existing, *authenticated* browser session — neither a fresh MCP nor a CLI run shares your logged-in cookies. In Antigravity, the bundled chrome-devtools-plugin remains the live-debug tool, but Playwright MCP is also required for the cross-harness parity baseline below.
+
+## Kimi WebBridge — the authenticated niche
+
+[WebBridge](https://www.kimi.com/features/webbridge) is a third tool beside the MCP/CLI pair, not a replacement for either: a local daemon (`http://127.0.0.1:10086`) plus a Chrome/Edge extension that lets an agent drive your **real** browser — your login sessions, cookies, and MFA'd panels — over CDP, fully local. Its "With Local Agent" install covers Kimi Code, Claude Code, Cursor, Codex, Hermes, and OpenClaw.
+
+**Use it for:** exploratory work that needs your real login state — admin consoles, authenticated research, form filling, manually verifying a logged-in flow. This is the slot Playwright MCP can't fill without exporting session state into a sandbox.
+
+**Don't use it for:** anything repeatable or committable. There is no spec format, no goldens, no headless CI mode — smoke tests and visual regression stay on the Playwright CLI, and unauthenticated throwaway exploration stays on Playwright MCP.
+
+**The risk is the point.** WebBridge acts inside your real, authenticated profile: an agent can submit, purchase, or delete, not just read. Prefer it over a sandboxed tool only when the login state is exactly what you need, and supervise destructive-looking steps.
+
+**Tool surface** (curl-JSON against the daemon, documented in the installed `kimi-webbridge` skill): navigate, accessibility-tree snapshot, click, fill (incl. contenteditable), `evaluate` (arbitrary JS), raw CDP passthrough, screenshot-to-file, network capture, file upload, save-as-PDF, tab/session management.
+
+**Installed state (2026-07-28):** daemon v1.11.3 running with the extension connected; the vendor installer wrote byte-identical skill copies into the Kimi, Claude Code, and Codex skill dirs (plus OpenClaw); Antigravity is covered by a symlink at `~/.gemini/config/skills/kimi-webbridge`. Verified: extension connect, navigate → snapshot → close loop. Not yet verified: a real authenticated flow and screenshot fidelity for vision review — treat those as open smoke items before relying on it for either.
 
 ## Cross-harness Playwright baseline
 

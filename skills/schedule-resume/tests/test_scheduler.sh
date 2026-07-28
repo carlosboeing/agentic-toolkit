@@ -179,6 +179,43 @@ for invalid_policy_case in retry-policy completion-policy permissions-mode; do
 done
 pass "policy value allowlists"
 
+assert_command_fails "reject unsupported target harness" \
+  "$RESUME_JOB_CLI" create \
+    --target-harness cursor \
+    --session-id invalid-harness-session \
+    --project-dir "$scheduler_root/project" \
+    --prompt-file "$prompt_source" \
+    --schedule-type calendar \
+    --first-attempt-at '2099-07-22T12:30:00Z' \
+    --retry-interval-seconds 300 \
+    --retry-policy until-completed \
+    --completion-policy session-exits-zero \
+    --permissions-mode full-auto \
+    --job-id invalid-harness-job
+assert_path_not_exists "$RESUME_JOB_STATE_ROOT/invalid-harness-job" "unsupported target harness must not create state"
+assert_cron_lacks_job invalid-harness-job "unsupported target harness must not install a crontab line"
+pass "target harness allowlist"
+
+kimi_target_job=kimi-target-job
+"$RESUME_JOB_CLI" create \
+  --target-harness kimi \
+  --session-id 'session_00000000-0000-0000-0000-000000000000' \
+  --project-dir "$scheduler_root/project" \
+  --prompt-file "$prompt_source" \
+  --schedule-type calendar \
+  --first-attempt-at '2099-07-22T12:30:00Z' \
+  --retry-interval-seconds 300 \
+  --retry-policy until-completed \
+  --completion-policy sentinel-output \
+  --permissions-mode full-auto \
+  --job-id "$kimi_target_job" >"$scheduler_root/kimi-create.stdout" 2>"$scheduler_root/kimi-create.stderr"
+assert_equal "$kimi_target_job" "$(cat "$scheduler_root/kimi-create.stdout")" "accept kimi target harness"
+grep -Fq 'open in a TUI' "$scheduler_root/kimi-create.stderr" || fail "kimi create must warn about the open-session takeover"
+assert_equal "$TESTS_DIR/fixtures/bin/kimi" "$(jq -r '.harness_executable' "$RESUME_JOB_STATE_ROOT/$kimi_target_job/manifest.json")" "manifest persists the resolved kimi executable"
+"$RESUME_JOB_CLI" cancel "$kimi_target_job" >/dev/null 2>&1 || fail "cancel kimi target job"
+rm -rf "$RESUME_JOB_STATE_ROOT/$kimi_target_job"
+pass "kimi target create, warning, and cleanup"
+
 assert_command_fails "reject duplicate job without replacing it" create_job '2099-07-22T12:30:00Z' "$job_id"
 assert_equal 1 "$(count_cron_job_lines "$job_id")" "duplicate create must not add a second crontab line"
 

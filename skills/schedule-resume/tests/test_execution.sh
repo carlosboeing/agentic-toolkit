@@ -37,6 +37,34 @@ assert_adapter schedule_resume_execute_claude '["--resume","session id;$HOME","-
 assert_adapter schedule_resume_execute_agy '["--conversation","session id;$HOME","--dangerously-skip-permissions","--print"]'
 assert_adapter schedule_resume_execute_codex '["exec","resume","--dangerously-bypass-approvals-and-sandbox","session id;$HOME","-"]'
 
+# Kimi takes the prompt as an argv string (no stdin channel), and its print
+# mode prefixes assistant lines with "• " — the adapter must strip that prefix
+# so the sentinel policy's whole-line match still works.
+export RESUME_TEST_HARNESS_LOG="$execution_root/kimi.args"
+export RESUME_TEST_PROMPT_CAPTURE="$execution_root/kimi.prompt"
+export RESUME_TEST_CWD_CAPTURE="$execution_root/kimi.cwd"
+export RESUME_TEST_EXIT_CODE=0
+export RESUME_TEST_OUTPUT='• adapter success'
+schedule_resume_execute_kimi "$TESTS_DIR/fixtures/bin/kimi" 'session id;$HOME' "$execution_root/project" "$prompt_file" >"$execution_root/kimi.stdout" 2>"$execution_root/kimi.stderr"
+kimi_expected_args=$(jq -cn --arg sid 'session id;$HOME' --arg prompt "$(cat "$expected_prompt")" '["--session", $sid, "--prompt", $prompt]')
+assert_equal "$kimi_expected_args" "$(jq -c . "$RESUME_TEST_HARNESS_LOG")" "kimi adapter arguments"
+assert_equal "$(cat "$expected_prompt")" "$(cat "$RESUME_TEST_PROMPT_CAPTURE")" "kimi adapter preserves prompt text via argv"
+assert_equal "$execution_root/project" "$(cat "$RESUME_TEST_CWD_CAPTURE")" "kimi adapter project directory"
+assert_equal 'adapter success' "$(cat "$execution_root/kimi.stdout")" "kimi adapter strips the print-mode bullet prefix from stdout"
+pass "schedule_resume_execute_kimi command, prompt, and prefix normalization"
+
+export RESUME_TEST_OUTPUT="• $SCHEDULE_RESUME_SENTINEL"
+schedule_resume_execute_kimi "$TESTS_DIR/fixtures/bin/kimi" 'sid' "$execution_root/project" "$prompt_file" >"$execution_root/kimi-sentinel.stdout" 2>"$execution_root/kimi-sentinel.stderr"
+assert_equal success "$(classify_result 0 sentinel-output "$execution_root/kimi-sentinel.stdout")" "kimi sentinel classifies success after prefix normalization"
+pass "kimi sentinel completion"
+
+export RESUME_TEST_OUTPUT=''
+export RESUME_TEST_EXIT_CODE=1
+schedule_resume_execute_kimi "$TESTS_DIR/fixtures/bin/kimi" 'sid' "$execution_root/project" "$prompt_file" >"$execution_root/kimi-failure.stdout" 2>"$execution_root/kimi-failure.stderr" &&
+  fail "kimi adapter must propagate the harness exit code"
+pass "kimi adapter exit-code propagation"
+unset RESUME_TEST_OUTPUT RESUME_TEST_EXIT_CODE
+
 classification_output="$execution_root/classification.log"
 assert_classification() {
   expected=$1

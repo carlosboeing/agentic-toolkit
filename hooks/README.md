@@ -28,3 +28,7 @@ chmod +x ~/.claude/hooks/$HOOK.sh
 - Scripts read the hook JSON payload from stdin and must **fail open** on infrastructure problems (missing tools, unparseable payload) — a hook that blocks all writes because its validator is missing is worse than no hook.
 - Keep the fast path fast: bail out in milliseconds for files/events the hook doesn't care about — `PostToolUse` on `Write|Edit` fires on *every* file Claude touches.
 - Exit `2` + stderr is the blocking-feedback channel on `PostToolUse`: the message is fed back to the model, which fixes the problem and retries. Write stderr for the model, not for a human log.
+
+## Other harnesses
+
+Kimi Code has a hooks system too (`[[hooks]]` in `~/.kimi-code/config.toml`), but its event semantics differ in two load-bearing ways: only `PreToolUse`, `Stop`, and `UserPromptSubmit` can block (its `PostToolUse` is observation-only), and no event can rewrite tool input. Blocking validators like `validate-mermaid` therefore stay Claude-only; interception hooks of the RTK command-rewriting kind are impossible on Kimi.

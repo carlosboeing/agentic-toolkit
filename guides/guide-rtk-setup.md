@@ -1,8 +1,11 @@
 ---
 title: RTK Token Killer Setup Guide
 type: guide
-scope: [harness-parity, rtk, token-savings, CLI-proxy, hooks]
-last_reviewed: 2026-06-14
+scope: [harness-parity, rtk, token-savings, CLI-proxy, hooks, kimi-code]
+authors:
+  - "Carlos Boeing"
+  - "k3 (kimi-code)"
+last_reviewed: 2026-07-28
 related:
   - guide-harness-plugin-parity.md
   - guide-claude-mem-setup.md
@@ -11,7 +14,7 @@ related:
 
 # RTK Token Killer Setup Guide
 
-This guide documents the unified configuration and hook integrations of **RTK (Rust Token Killer)** across all five AI coding harnesses: Claude Code, Antigravity (`agy`), Cursor, Codex, and OpenCode.
+This guide documents the unified configuration and hook integrations of **RTK (Rust Token Killer)** across six AI coding harnesses: Claude Code, Antigravity (`agy`), Cursor, Codex, OpenCode, and Kimi Code.
 
 ---
 
@@ -102,6 +105,12 @@ Codex does not support pre-shell-execution hooks. Instead, it relies on instruct
 OpenCode also uses instruction-based prefixing.
 *   **Config File**: [CLAUDE.md](~/Projects/agentic-toolkit/CLAUDE.md)
 *   **Method**: Global `CLAUDE.md` instructions dictate prefixing shell commands with `rtk` (shared via root symlinks: `AGENTS.md` and `GEMINI.md`).
+
+### 6. Kimi Code (Instruction-based)
+Kimi's hook events can allow or deny a tool call but cannot rewrite `tool_input`, so the transparent rewrite hook RTK uses on Claude Code is impossible here. RTK runs instruction-driven, the same integration class as Codex.
+*   **Setup**: `rtk init --agent kimi` (requires rtk ≥ 0.44.0 — earlier versions have no kimi target; upgrade with `brew upgrade rtk` and make sure the binary on your PATH is the new one)
+*   **Method**: project-scoped `AGENTS.md` instructions direct the agent to prefix commands with `rtk`. The global `~/.agents/AGENTS.md` RTK section (loaded natively by Kimi) reinforces the same "no trusted hook → explicitly prefix" rule.
+*   **Verify**: run a Kimi session, then `rtk gain` should show activity.
 
 ---
 

@@ -126,7 +126,7 @@ create_job() {
       usage
       return 2
     }
-  case "$target_harness" in claude | agy | codex) ;; *) return 2 ;; esac
+  case "$target_harness" in claude | agy | codex | kimi) ;; *) return 2 ;; esac
   case "$schedule_type" in calendar | reset) ;; *) return 2 ;; esac
   [ "$retry_policy" = until-completed ] || return 2
   case "$completion_policy" in session-exits-zero | sentinel-output) ;; *) return 2 ;; esac
@@ -145,6 +145,9 @@ create_job() {
   prompt_parent=$(CDPATH='' cd -- "$prompt_parent_input" && pwd) || return 2
   prompt_file="$prompt_parent/${prompt_file##*/}"
   schedule_resume_scheduler_preflight "$target_harness" "$project_dir" "$prompt_file" "$RESUME_JOB_STATE_ROOT" || return 2
+  if [ "$target_harness" = kimi ]; then
+    printf 'warning: a kimi resume fired while the target session is open in a TUI injects the prompt into the live session and switches it to auto permissions; close the session first or accept the takeover.\n' >&2
+  fi
   if [ -z "$job_id" ]; then
     job_id="job-$(date -u '+%Y%m%dT%H%M%SZ')-$$"
   fi
