@@ -103,7 +103,7 @@ This repo's `docs/` is maintained primarily by AI agents. Conventions guide §6.
 - **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter (`status: shipped`), AND the relevant evergreen state docs (per §6.2 change discipline).
 - **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
 - **Substantive audits or retros emerging from a conversation get saved** to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
-- **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did. If not, propose the missing writes inline.
+- **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did — that includes flipping each touched lifecycle doc's own frontmatter `status` (design *and* plan move to `shipped` when they ship), not just the tracking files. If not, propose the missing writes inline.
 - **Plan checkboxes are the durable execution record.** When implementing a `docs/3-plans/` plan, mark its `- [ ]` steps `- [x]` as they land instead of tracking only in the session's todo tool — a fresh session resumes from the file, not from your todos. The session-end check includes reconciling any in-flight plan's checkboxes with reality.
 
 ## Where to look first
