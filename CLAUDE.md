@@ -104,6 +104,7 @@ This repo's `docs/` is maintained primarily by AI agents. Conventions guide §6.
 - **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
 - **Substantive audits or retros emerging from a conversation get saved** to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
 - **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did. If not, propose the missing writes inline.
+- **Plan checkboxes are the durable execution record.** When implementing a `docs/3-plans/` plan, mark its `- [ ]` steps `- [x]` as they land instead of tracking only in the session's todo tool — a fresh session resumes from the file, not from your todos. The session-end check includes reconciling any in-flight plan's checkboxes with reality.
 
 ## Where to look first
 
