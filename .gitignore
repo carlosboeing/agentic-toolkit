@@ -2,5 +2,8 @@
 .worktrees/
 .DS_Store
 
+# Playwright MCP scratch output (snapshots, screenshots) written into the cwd
+.playwright-mcp/
+
 # Nested canonical superpowers clone (its own git repo; managed via git pull)
 plugins/superpowers/
