@@ -143,6 +143,7 @@ Exploratory thinking isn't scratch — it's a first-class artifact in `docs/0-br
 │   ├── 0-brainstorms/             # pre-design ideas (worth-elaborating; one-liners → ROADMAP)
 │   ├── 1-discovery/               # research, spikes, comparative analyses
 │   ├── 2-design/                  # specs + designs (one per initiative)
+│   │   └── assets/                # attachments for these docs (§5.10)
 │   ├── 3-plans/                   # phased implementation plans
 │   ├── 4-reviews/                 # retros, audits, reviews, analyses
 │   │
@@ -600,13 +601,47 @@ Docs in `docs/` — designs, plans, brainstorms, discovery, reviews, retros — 
 
 **Illustrate, don't just describe.** When a doc discusses anything visual — UI/UX mockups, hi-fi concepts, screenshot examples, before/after comparisons — embed images:
 
-1. Build a **self-contained single-file HTML mockup** (inline CSS, no build step, no external assets) under the doc's assets folder, e.g. `docs/2-design/mockups/<topic>-concept.html`. Single-file keeps it git-native, openable in any browser, and editable by AI in one pass. Include a light/dark toggle when theming is part of the design.
+1. Build a **self-contained single-file HTML mockup** (inline CSS, no build step, no external files) in the doc's `assets/` set — e.g. `docs/2-design/assets/2026-07-31-<topic>/concept.html`, per §5.10. Single-file keeps it git-native, openable in any browser, and editable by AI in one pass. Include a light/dark toggle when theming is part of the design.
 2. **Screenshot it headlessly** (Playwright or equivalent; serve over a throwaway local HTTP server if `file://` is blocked) — one PNG per state/theme that matters.
 3. **Commit HTML and PNGs together** and embed the PNGs in the doc with relative links so they render on GitHub. The PNG is what the doc shows; the HTML is the editable source of truth and doubles as a visual spec for implementation.
 
 Why this over design tools: artifacts version in git next to the doc, render in every markdown viewer, need no external account or export step, and an AI session can regenerate both halves when the design changes. (Same fallback rule as §5.7: reach for Figma/Excalidraw only when a hand-written mockup genuinely can't represent what you need — and still commit the rendered output.)
 
 First use in the wild: the Penmark v1 design doc (`carlosboeing/penmark`, `docs/2-design/`), where a commented-preview concept shipped as one HTML file + light/dark PNGs.
+
+### 5.10 `assets/` — attachments that belong to a doc
+
+Docs accumulate things that aren't Markdown: rendered mockups and their HTML source, probe scripts, raw model outputs, captured data, screenshots. They live in an `assets/` folder inside the same lifecycle directory as the doc that owns them.
+
+**One folder name, one subfolder per set.** Not `mockups/` for one kind and `assets/` for another — a single name, with each artifact set getting its own subfolder:
+
+```
+docs/2-design/assets/
+├── 2026-07-31-terminal-rendering-evidence/
+│   ├── README.md
+│   └── altscreen-probe.py
+└── 2026-07-31-comment-preview-concept/
+    ├── concept.html
+    ├── concept-light.png
+    └── concept-dark.png
+```
+
+**Dating follows the directory, not a judgment call.** You already know which directory you are in, so the naming is decided for you:
+
+| Location | Subfolder name | Why |
+|---|---|---|
+| Numbered lifecycle dirs (`0-brainstorms/` … `4-reviews/`) | `<YYYY-MM-DD>-<slug>/` | The doc is a dated point-in-time record, so its attachments are frozen with it |
+| Evergreen dirs (`guides/`, `adrs/`, `docs/` root) | `<slug>/` | These docs get updated rather than appended (§2.3), and so do their attachments |
+
+That rule exists to protect the record. A design doc dated 2026-07-31 embeds a diagram showing what was proposed *then*. If that file kept evolving in place, the doc would silently start illustrating a design it never described — the artifact would drift out from under the prose that references it.
+
+**A living artifact belongs somewhere else.** If a mockup becomes the standing visual spec rather than a snapshot of one design, it graduates out of the numbered dirs — into `docs/guides/assets/`, a design-system folder, or the project's own UI code. Same lifecycle-versus-evergreen boundary this guide already draws for docs (§2.3), applied to their attachments.
+
+**Add a `README.md`** when the set needs explaining: several files, non-obvious provenance, or measurements worth recording. State what the artifacts are, how they were produced, and anything a reader would otherwise misinterpret — a probe's inconclusive row, a capture's known gaps. A single HTML file and its PNG explains itself; skip it.
+
+`assets/` contents are exempt from frontmatter (§5.4), including the README.
+
+**Why not `artifacts/`:** this guide already uses "artifact" throughout for the lifecycle docs themselves — "each artifact stands alone", "each phase commits its own artifacts". A folder holding everything *except* those would collide with established vocabulary.
 
 ---
 
