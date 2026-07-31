@@ -662,3 +662,11 @@ assert_file_exists "$gate_absent_args" "absent session resumes and launches the 
 assert_equal completed "$(schedule_resume_read_status "$gate_absent_job")" "absent resume runs a normal attempt"
 assert_equal 1 "$(jq -r '.attempt_count' "$gate_absent_dir/status.json")" "absent resume spends an attempt"
 pass "liveness guard resumes on an absent target session"
+
+"$RESUME_JOB_CLI" status "$gate_absent_job" --json >"$scheduler_root/status-json.out"
+assert_equal completed "$(jq -r '.status' "$scheduler_root/status-json.out")" "status --json outputs valid status JSON"
+
+"$RESUME_JOB_CLI" logs "$gate_absent_job" >"$scheduler_root/logs.out"
+grep -q "=== $gate_absent_job events.log" "$scheduler_root/logs.out" || fail "logs command prints events header"
+pass "status --json and logs CLI subcommands"
+

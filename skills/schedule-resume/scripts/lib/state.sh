@@ -65,8 +65,21 @@ _schedule_resume_validate_status_json() (
     (.last_finished_at | . == null or type == "string") and
     (.next_attempt_at | . == null or type == "string") and
     (.defer_count | . == null or (type == "number" and . >= 0 and floor == .)) and
-    (.last_deferred_at | . == null or type == "string")
+    (.last_deferred_at | . == null or type == "string") and
+    (.summary | . == null or type == "string") and
+    (.last_error | . == null or type == "string") and
+    (.last_reason | . == null or type == "string")
   ' >/dev/null
+)
+
+schedule_resume_log_event() (
+  _schedule_resume_log_job_id=$1
+  _schedule_resume_log_event_type=$2
+  _schedule_resume_log_message=$3
+  _schedule_resume_log_job_dir=$(schedule_resume_job_dir "$_schedule_resume_log_job_id") || return 1
+  _schedule_resume_log_events_file="$_schedule_resume_log_job_dir/events.log"
+  _schedule_resume_log_ts=$(_schedule_resume_timestamp_now 2>/dev/null) || _schedule_resume_log_ts=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  printf '%s [%s] %s\n' "$_schedule_resume_log_ts" "$_schedule_resume_log_event_type" "$_schedule_resume_log_message" >>"$_schedule_resume_log_events_file" 2>/dev/null || :
 )
 
 schedule_resume_create_job() (
@@ -86,11 +99,18 @@ schedule_resume_create_job() (
   (umask 077; mkdir -m 700 "$job_dir") 2>/dev/null || return 1
 
   first_attempt_at=$(printf '%s\n' "$manifest" | jq -r '.first_attempt_at') || return 1
+  target_harness=$(printf '%s\n' "$manifest" | jq -r '.target_harness') || return 1
+  session_id=$(printf '%s\n' "$manifest" | jq -r '.session_id') || return 1
+  initial_summary="Scheduled for first attempt at $first_attempt_at"
   initial_status=$(jq -n \
     --arg status "$status" \
     --arg next_attempt_at "$first_attempt_at" \
+    --arg summary "$initial_summary" \
     '{
       status: $status,
+      summary: $summary,
+      last_error: null,
+      last_reason: null,
       attempt_count: 0,
       last_exit_code: null,
       last_classification: null,
@@ -105,6 +125,7 @@ schedule_resume_create_job() (
     rmdir "$job_dir" 2>/dev/null
     return 1
   fi
+  schedule_resume_log_event "$job_id" "CREATED" "Job scheduled for target $target_harness (session $session_id) at $first_attempt_at"
 )
 
 schedule_resume_write_status() (
@@ -170,15 +191,19 @@ _schedule_resume_attempt_exit_cleanup() (
       [ -n "$persisted_attempt_count" ] &&
       [ "$persisted_attempt_count" = "$running_attempt_count" ]; then
       finished_at=$(_schedule_resume_timestamp_now 2>/dev/null) || finished_at=$started_at
+      failure_summary="Failed unexpectedly on attempt #$running_attempt_count (failure_terminal)"
       failure_status=$(printf '%s\n' "$running_status" | jq -c \
         --argjson exit_code "$last_exit_code" \
         --arg finished_at "$finished_at" \
+        --arg summary "$failure_summary" \
         '.status = "failed" |
+          .summary = $summary |
           .last_exit_code = $exit_code |
           .last_classification = "failure_terminal" |
           .last_finished_at = $finished_at |
           .next_attempt_at = null' 2>/dev/null) || failure_status=
       [ -z "$failure_status" ] || schedule_resume_write_status "$job_id" "$failure_status" >/dev/null 2>&1 || :
+      schedule_resume_log_event "$job_id" "JOB_FAILED" "$failure_summary" >/dev/null 2>&1 || :
     fi
   fi
   schedule_resume_release_lock "$job_dir" "$owner_pid" >/dev/null 2>&1 || :
@@ -242,24 +267,54 @@ schedule_resume_run_attempt() (
   if [ "$liveness" = active ]; then
     deferred_at=$(_schedule_resume_timestamp_now) || return 1
     deferred_next=$(_schedule_resume_timestamp_after "$retry_interval_seconds") || return 1
+    defer_count=$(( $(printf '%s\n' "$current_status" | jq -r '.defer_count // 0') + 1 ))
+    active_pid=
+    if [ "$target_harness" = claude ]; then
+      sessions_dir=${SCHEDULE_RESUME_CLAUDE_SESSIONS_DIR:-$HOME/.claude/sessions}
+      if [ -d "$sessions_dir" ]; then
+        for sfile in "$sessions_dir"/*.json; do
+          [ -f "$sfile" ] || continue
+          s_row=$(jq -r --arg sid "$session_id" 'select(.sessionId == $sid) | (.pid | tostring)' "$sfile" 2>/dev/null) || continue
+          [ -n "$s_row" ] || continue
+          active_pid=$s_row
+          break
+        done
+      fi
+    fi
+    if [ -n "$active_pid" ]; then
+      defer_reason="Target $target_harness session process (PID $active_pid) is active"
+    else
+      defer_reason="Target $target_harness session process is active"
+    fi
+    defer_summary="Holding on active $target_harness session. Deferred $defer_count times. Next poll at $deferred_next"
     deferred_status=$(printf '%s\n' "$current_status" | jq -c \
       --arg deferred_at "$deferred_at" \
       --arg next_attempt_at "$deferred_next" \
+      --arg summary "$defer_summary" \
+      --arg reason "$defer_reason" \
       '.status = "scheduled" |
+        .summary = $summary |
+        .last_reason = $reason |
+        .last_error = null |
         .last_classification = "deferred_session_active" |
         .defer_count = ((.defer_count // 0) + 1) |
         .last_deferred_at = $deferred_at |
         .next_attempt_at = $next_attempt_at') || return 1
     schedule_resume_write_status "$job_id" "$deferred_status" || return 1
+    schedule_resume_log_event "$job_id" "DEFERRED" "$defer_reason. Deferral #$defer_count. Next attempt at $deferred_next"
+    printf '[%s] [DEFER] Job %s: %s. Deferral #%s. Next attempt: %s\n' "$deferred_at" "$job_id" "$defer_reason" "$defer_count" "$deferred_next"
     return 0
   fi
 
   attempt_count=$(( $(printf '%s\n' "$current_status" | jq -r '.attempt_count') + 1 ))
   started_at=$(_schedule_resume_timestamp_now) || return 1
+  running_summary="Executing attempt #$attempt_count (started at $started_at)"
   running_status=$(printf '%s\n' "$current_status" | jq -c \
     --arg started_at "$started_at" \
     --argjson attempt_count "$attempt_count" \
+    --arg summary "$running_summary" \
     '.status = "running" |
+      .summary = $summary |
       .attempt_count = $attempt_count |
       .last_exit_code = null |
       .last_classification = null |
@@ -269,6 +324,8 @@ schedule_resume_run_attempt() (
 
   running_published=1
   schedule_resume_write_status "$job_id" "$running_status" || return 1
+  schedule_resume_log_event "$job_id" "ATTEMPT_START" "Attempt #$attempt_count started."
+  printf '[%s] [RUN] Job %s: Starting attempt #%s...\n' "$started_at" "$job_id" "$attempt_count"
 
   attempts_dir=$job_dir/attempts
   attempt_dir=$attempts_dir/$attempt_count
@@ -285,48 +342,85 @@ schedule_resume_run_attempt() (
   last_exit_code=$exit_code
 
   classification=$(classify_result "$exit_code" "$completion_policy" "$stdout_file" "$stderr_file") || return 1
+  error_snippet=
+  if [ "$classification" != success ]; then
+    error_snippet=$(extract_error_snippet "$stdout_file" "$stderr_file")
+  fi
   finished_at=$(_schedule_resume_timestamp_now) || return 1
 
   case "$classification" in
     success)
       final_status=completed
       next_attempt_at=null
+      if [ "$completion_policy" = sentinel-output ]; then
+        final_summary="Completed successfully on attempt #$attempt_count (matched completion sentinel ${SCHEDULE_RESUME_SENTINEL:-SCHEDULE_RESUME_TASK_COMPLETE})"
+      else
+        final_summary="Completed successfully on attempt #$attempt_count"
+      fi
       ;;
     quota_retryable | availability_retryable | transient_retryable | incomplete_retryable)
       final_status=retrying
       next_attempt_at=$(_schedule_resume_timestamp_after "$retry_interval_seconds") || return 1
+      if [ -n "$error_snippet" ]; then
+        final_summary="Attempt #$attempt_count failed ($classification): $error_snippet. Retrying at $next_attempt_at"
+      else
+        final_summary="Attempt #$attempt_count failed ($classification). Retrying at $next_attempt_at"
+      fi
       ;;
     *)
       final_status=failed
       next_attempt_at=null
+      if [ -n "$error_snippet" ]; then
+        final_summary="Failed on attempt #$attempt_count ($classification): $error_snippet"
+      else
+        final_summary="Failed on attempt #$attempt_count ($classification)"
+      fi
       ;;
   esac
 
   if [ "$next_attempt_at" = null ]; then
     final_status_json=$(printf '%s\n' "$running_status" | jq -c \
       --arg status "$final_status" \
+      --arg summary "$final_summary" \
       --argjson exit_code "$exit_code" \
       --arg classification "$classification" \
+      --arg error_snippet "$error_snippet" \
       --arg finished_at "$finished_at" \
       '.status = $status |
+        .summary = $summary |
         .last_exit_code = $exit_code |
         .last_classification = $classification |
+        .last_error = (if $error_snippet == "" then null else $error_snippet end) |
+        .last_reason = null |
         .last_finished_at = $finished_at |
         .next_attempt_at = null') || return 1
   else
     final_status_json=$(printf '%s\n' "$running_status" | jq -c \
       --arg status "$final_status" \
+      --arg summary "$final_summary" \
       --argjson exit_code "$exit_code" \
       --arg classification "$classification" \
+      --arg error_snippet "$error_snippet" \
       --arg finished_at "$finished_at" \
       --arg next_attempt_at "$next_attempt_at" \
       '.status = $status |
+        .summary = $summary |
         .last_exit_code = $exit_code |
         .last_classification = $classification |
+        .last_error = (if $error_snippet == "" then null else $error_snippet end) |
+        .last_reason = null |
         .last_finished_at = $finished_at |
         .next_attempt_at = $next_attempt_at') || return 1
   fi
 
   schedule_resume_write_status "$job_id" "$final_status_json" || return 1
+  schedule_resume_log_event "$job_id" "ATTEMPT_END" "Attempt #$attempt_count finished (exit $exit_code, classification: $classification)."
+  if [ "$final_status" = completed ]; then
+    schedule_resume_log_event "$job_id" "JOB_COMPLETED" "$final_summary"
+  elif [ "$final_status" = failed ]; then
+    schedule_resume_log_event "$job_id" "JOB_FAILED" "$final_summary"
+  fi
+  printf '[%s] [FINISH] Job %s: Attempt #%s finished with exit %s (%s). Status: %s\n' "$finished_at" "$job_id" "$attempt_count" "$exit_code" "$classification" "$final_status"
   attempt_finalized=1
 )
+

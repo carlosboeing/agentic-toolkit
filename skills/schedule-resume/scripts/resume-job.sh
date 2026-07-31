@@ -210,9 +210,17 @@ list_jobs() {
     candidate_state=$(schedule_resume_read_status "$candidate_id" 2>/dev/null) || continue
     candidate_status_path=$(schedule_resume_status_path "$candidate_id") || continue
     candidate_classification=$(jq -r '.last_classification // ""' "$candidate_status_path" 2>/dev/null) || candidate_classification=
+    candidate_summary=$(jq -r '.summary // ""' "$candidate_status_path" 2>/dev/null) || candidate_summary=
+    candidate_error=$(jq -r '.last_error // ""' "$candidate_status_path" 2>/dev/null) || candidate_error=
+    candidate_reason=$(jq -r '.last_reason // ""' "$candidate_status_path" 2>/dev/null) || candidate_reason=
+
     if [ "$candidate_state" = scheduled ] && [ "$candidate_classification" = deferred_session_active ]; then
       candidate_defer=$(jq -r '.defer_count // 0' "$candidate_status_path" 2>/dev/null) || candidate_defer=0
       printf '%s  [%s: holding on active target session, deferrals: %s]\n' "$candidate_id" "$candidate_state" "$candidate_defer"
+    elif [ "$candidate_state" = failed ] && [ -n "$candidate_error" ]; then
+      printf '%s  [%s: %s — "%s"]\n' "$candidate_id" "$candidate_state" "$candidate_classification" "$candidate_error"
+    elif [ -n "$candidate_summary" ]; then
+      printf '%s  [%s: %s]\n' "$candidate_id" "$candidate_state" "$candidate_summary"
     else
       printf '%s  [%s]\n' "$candidate_id" "$candidate_state"
     fi
@@ -220,13 +228,113 @@ list_jobs() {
 }
 
 status_job() {
-  job_id=$(schedule_resume_validate_job_id "${1-}") || return 2
-  [ "$#" -eq 1 ] || return 2
+  json_mode=0
+  job_id=
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --json) json_mode=1; shift ;;
+      *)
+        if [ -z "$job_id" ]; then
+          job_id=$1
+          shift
+        else
+          usage; exit 2
+        fi
+        ;;
+    esac
+  done
+  [ -n "$job_id" ] || { usage; exit 2; }
+  job_id=$(schedule_resume_validate_job_id "$job_id") || return 2
   manifest=$(schedule_resume_read_manifest "$job_id") || return 1
   status_path=$(schedule_resume_status_path "$job_id") || return 1
   status_json=$(jq -c . "$status_path") || return 1
   _schedule_resume_validate_status_json "$status_json" || return 1
-  jq '.' "$status_path"
+
+  if [ "$json_mode" -eq 1 ]; then
+    jq '.' "$status_path"
+    return 0
+  fi
+
+  target_harness=$(printf '%s\n' "$manifest" | jq -r '.target_harness')
+  session_id=$(printf '%s\n' "$manifest" | jq -r '.session_id')
+  project_dir=$(printf '%s\n' "$manifest" | jq -r '.project_dir')
+  created_at=$(printf '%s\n' "$manifest" | jq -r '.created_at')
+
+  status=$(printf '%s\n' "$status_json" | jq -r '.status')
+  summary=$(printf '%s\n' "$status_json" | jq -r '.summary // "No summary available"')
+  attempt_count=$(printf '%s\n' "$status_json" | jq -r '.attempt_count')
+  last_exit_code=$(printf '%s\n' "$status_json" | jq -r '.last_exit_code // "N/A"')
+  last_classification=$(printf '%s\n' "$status_json" | jq -r '.last_classification // "N/A"')
+  last_error=$(printf '%s\n' "$status_json" | jq -r '.last_error // ""')
+  last_reason=$(printf '%s\n' "$status_json" | jq -r '.last_reason // ""')
+  last_started_at=$(printf '%s\n' "$status_json" | jq -r '.last_started_at // "N/A"')
+  last_finished_at=$(printf '%s\n' "$status_json" | jq -r '.last_finished_at // "N/A"')
+  next_attempt_at=$(printf '%s\n' "$status_json" | jq -r '.next_attempt_at // "N/A"')
+  defer_count=$(printf '%s\n' "$status_json" | jq -r '.defer_count // 0')
+
+  job_dir=$(schedule_resume_job_dir "$job_id")
+  cron_log="$job_dir/cron.log"
+  events_log="$job_dir/events.log"
+
+  printf 'Job ID:           %s\n' "$job_id"
+  printf 'Status:           %s\n' "$status"
+  printf 'Summary:          %s\n' "$summary"
+  printf 'Target Harness:   %s\n' "$target_harness"
+  printf 'Session ID:       %s\n' "$session_id"
+  printf 'Project Dir:      %s\n' "$project_dir"
+  printf 'Created At:       %s\n' "$created_at"
+  printf 'Attempt Count:    %s\n' "$attempt_count"
+  printf 'Last Exit Code:   %s\n' "$last_exit_code"
+  printf 'Classification:   %s\n' "$last_classification"
+  [ -n "$last_error" ] && printf 'Last Error:       %s\n' "$last_error"
+  [ -n "$last_reason" ] && printf 'Last Reason:      %s\n' "$last_reason"
+  [ "$defer_count" -gt 0 ] && printf 'Deferral Count (defer_count): %s\n' "$defer_count"
+  printf 'Started At:       %s\n' "$last_started_at"
+  printf 'Finished At:      %s\n' "$last_finished_at"
+  printf 'Next Attempt:     %s\n' "$next_attempt_at"
+  printf 'Log Files:        %s\n' "$cron_log"
+  printf '                  %s\n' "$events_log"
+}
+
+logs_job() {
+  lines=50
+  job_id=
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --lines)
+        shift
+        lines=${1-}
+        [ -n "$lines" ] || { usage; exit 2; }
+        shift
+        ;;
+      *)
+        if [ -z "$job_id" ]; then
+          job_id=$1
+          shift
+        else
+          usage; exit 2
+        fi
+        ;;
+    esac
+  done
+  [ -n "$job_id" ] || { usage; exit 2; }
+  job_id=$(schedule_resume_validate_job_id "$job_id") || return 2
+  job_dir=$(schedule_resume_job_dir "$job_id") || return 1
+  events_log="$job_dir/events.log"
+  cron_log="$job_dir/cron.log"
+
+  printf '=== %s events.log (last %s lines) ===\n' "$job_id" "$lines"
+  if [ -f "$events_log" ] && [ -s "$events_log" ]; then
+    tail -n "$lines" "$events_log"
+  else
+    printf '(no events logged yet)\n'
+  fi
+  printf '\n=== %s cron.log (last %s lines) ===\n' "$job_id" "$lines"
+  if [ -f "$cron_log" ] && [ -s "$cron_log" ]; then
+    tail -n "$lines" "$cron_log"
+  else
+    printf '(no launcher output logged yet)\n'
+  fi
 }
 
 cancel_job() (
@@ -270,12 +378,15 @@ cancel_job() (
   current=$(jq -c . "$status_path") || return 1
   _schedule_resume_validate_status_json "$current" || return 1
   finished_at=$(_schedule_resume_timestamp_now) || return 1
-  cancelled=$(printf '%s\n' "$current" | jq -c --arg finished_at "$finished_at" \
+  cancelled_summary="Job cancelled by user at $finished_at"
+  cancelled=$(printf '%s\n' "$current" | jq -c --arg finished_at "$finished_at" --arg summary "$cancelled_summary" \
     '.status = "cancelled" |
+      .summary = $summary |
       .last_classification = (.last_classification // "cancelled") |
       .last_finished_at = (.last_finished_at // $finished_at) |
       .next_attempt_at = null') || return 1
   schedule_resume_write_status "$job_id" "$cancelled" || return 1
+  schedule_resume_log_event "$job_id" "JOB_CANCELLED" "$cancelled_summary"
   schedule_resume_release_lock "$job_dir" "$cancel_pid" || return 1
   cancel_lock_acquired=0
 )
@@ -435,6 +546,7 @@ case "$command" in
   create) create_job "$@" ;;
   list) [ "$#" -eq 0 ] || { usage; exit 2; }; list_jobs ;;
   status) status_job "$@" ;;
+  logs) logs_job "$@" ;;
   cancel) cancel_job "$@" ;;
   run) run_job "$@" ;;
   cleanup) cleanup_jobs "$@" ;;

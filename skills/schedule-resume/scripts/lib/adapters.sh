@@ -195,3 +195,28 @@ classify_result() (
     printf '%s\n' failure_terminal
   fi
 )
+
+extract_error_snippet() (
+  _schedule_resume_err_stdout=$1
+  _schedule_resume_err_stderr=$2
+
+  _schedule_resume_match=
+  if [ -f "$_schedule_resume_err_stderr" ] && [ -s "$_schedule_resume_err_stderr" ]; then
+    _schedule_resume_match=$(grep -E -m 1 'authenticat|not logged in|log in required|login required|unauthorized|invalid (api )?(key|token)|permission denied|operation not permitted|quota|rate limit|service unavailable|timed out|timeout|error' "$_schedule_resume_err_stderr" 2>/dev/null) || _schedule_resume_match=
+  fi
+
+  if [ -z "$_schedule_resume_match" ] && [ -f "$_schedule_resume_err_stdout" ] && [ -s "$_schedule_resume_err_stdout" ]; then
+    _schedule_resume_match=$(grep -E -m 1 'authenticat|not logged in|log in required|login required|unauthorized|invalid (api )?(key|token)|permission denied|operation not permitted|quota|rate limit|service unavailable|timed out|timeout|error' "$_schedule_resume_err_stdout" 2>/dev/null) || _schedule_resume_match=
+  fi
+
+  if [ -z "$_schedule_resume_match" ] && [ -f "$_schedule_resume_err_stderr" ] && [ -s "$_schedule_resume_err_stderr" ]; then
+    _schedule_resume_match=$(head -n 1 "$_schedule_resume_err_stderr" 2>/dev/null) || _schedule_resume_match=
+  fi
+
+  if [ -z "$_schedule_resume_match" ] && [ -f "$_schedule_resume_err_stdout" ] && [ -s "$_schedule_resume_err_stdout" ]; then
+    _schedule_resume_match=$(head -n 1 "$_schedule_resume_err_stdout" 2>/dev/null) || _schedule_resume_match=
+  fi
+
+  printf '%s' "$_schedule_resume_match" | tr '\r\n\t' '   ' | sed 's/[[:cntrl:]]//g' | cut -c 1-240
+)
+

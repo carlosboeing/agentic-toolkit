@@ -579,3 +579,24 @@ wait "$concurrent_live_pid" 2>/dev/null || :
 rm -f "$concurrent_job_dir/lock/pid" "$concurrent_job_dir/lock/started_at"
 rmdir "$concurrent_job_dir/lock"
 pass "concurrent attempt exits cleanly"
+
+obs_stdout="$execution_root/obs_stdout.log"
+obs_stderr="$execution_root/obs_stderr.log"
+printf '%s\n' 'Not logged in · Please run /login' >"$obs_stdout"
+printf '%s\n' 'Authentication failed' >"$obs_stderr"
+assert_equal 'Authentication failed' "$(extract_error_snippet "$obs_stdout" "$obs_stderr")" "extract error snippet from stderr"
+
+printf '%s\n' 'You hit your limit' >"$obs_stdout"
+rm -f "$obs_stderr"
+assert_equal 'You hit your limit' "$(extract_error_snippet "$obs_stdout" "$obs_stderr")" "extract error snippet from stdout"
+pass "error snippet extraction"
+
+obs_job_id=obs-test-job
+obs_manifest=$(printf '%s\n' "$attempt_manifest" | jq --arg job_id "$obs_job_id" '.job_id = $job_id')
+schedule_resume_create_job "$obs_manifest"
+obs_job_dir="$RESUME_JOB_STATE_ROOT/$obs_job_id"
+assert_file_exists "$obs_job_dir/events.log" "create events.log on job creation"
+grep -q '\[CREATED\]' "$obs_job_dir/events.log" || fail "events.log contains CREATED event"
+assert_equal "Scheduled for first attempt at 2026-07-22T12:30:00+10:00" "$(jq -r '.summary' "$obs_job_dir/status.json")" "status.json contains summary"
+pass "observability events logging and status summary"
+

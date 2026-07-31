@@ -120,10 +120,12 @@ Manual management:
 
 ```sh
 scripts/resume-job.sh list
-scripts/resume-job.sh status JOB_ID
+scripts/resume-job.sh status JOB_ID [--json]
+scripts/resume-job.sh logs JOB_ID [--lines N]
 scripts/resume-job.sh cancel JOB_ID
 scripts/resume-job.sh cleanup RETENTION_DAYS
 scripts/resume-job.sh doctor
 ```
+
 
 Do not edit manifests, state, crontab lines, or LaunchAgent plists manually. Use the helper so locking, the scheduler lifecycle, status, and retention rules remain consistent.

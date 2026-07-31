@@ -62,6 +62,9 @@ run_state_tests() {
   assert_json_equal "$manifest" "$job_dir/manifest.json" "preserve the manifest contract"
   initial_status='{
     "status": "scheduled",
+    "summary": "Scheduled for first attempt at 2026-07-22T12:30:00+10:00",
+    "last_error": null,
+    "last_reason": null,
     "attempt_count": 0,
     "last_exit_code": null,
     "last_classification": null,
@@ -172,7 +175,7 @@ run_state_tests() {
   assert_equal "cancelled" "$(schedule_resume_read_status "$job_id")" "preserve state after an incomplete update"
   pass "mutable execution field contract"
 
-  if find "$job_dir" -type f ! -name manifest.json ! -name status.json | grep -q .; then
+  if find "$job_dir" -type f ! -name manifest.json ! -name status.json ! -name events.log | grep -q .; then
     fail "atomic writes must not leave temporary files"
   fi
   pass "atomic file cleanup"
