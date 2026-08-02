@@ -1,78 +1,74 @@
 ---
 title: Antigravity model and quota selection
 type: guide
-scope: [antigravity, model-routing, quota]
-last_reviewed: 2026-06-14
+authors:
+  - "Carlos Boeing"
+  - "gpt-5.6-sol (codex)"
+scope: [antigravity, model-selection, quota, sessions]
+last_reviewed: 2026-08-02
 related:
+  - guide-ai-model-and-effort-routing.md
+  - ../reference/reference-cross-harness-models.md
   - guide-harness-plugin-parity.md
-  - reference/reference-harness-capability-map.md
-  - reference/reference-cross-harness-models.md
+  - ../reference/reference-harness-capability-map.md
 ---
 
 # Antigravity model and quota selection
 
-Practical defaults for `agy` when running long autonomous sessions. **Not** platform-enforced routing — apply manually or via project rules / orchestrator config.
+This is the Antigravity operating supplement. Use the [AI model and effort routing guide](guide-ai-model-and-effort-routing.md) to choose a model for a task and the [cross-harness reference](../reference/reference-cross-harness-models.md) for benchmarks, prices, and comparisons.
 
-For a **harness-agnostic** model comparison (Claude Code, Cursor, and Agy), see [reference-cross-harness-models.md](../reference/reference-cross-harness-models.md). This guide covers **Agy-only** quota pools and session tactics.
+## Current picker
 
-## Two independent quota pools
+Antigravity currently documents these models and effort choices. Check the live picker before a long session because availability can change. [Antigravity models](https://antigravity.google/docs/models)
 
-Antigravity tracks **separate** limits for:
+| Model | Effort | Use inside Antigravity |
+|---|---|---|
+| Gemini 3.6 Flash | low, medium, high | Fast research, docs, browser work, visual iteration, and light coding |
+| Gemini 3.5 Flash | low, medium, high | Compatibility or availability fallback |
+| Gemini 3.1 Pro | low, high | Harder reasoning, long-context synthesis, and consequential visual judgment |
+| Claude Sonnet 4.6 Thinking | Thinking | Implementation and review when the Claude/GPT pool has headroom |
+| Claude Opus 4.6 Thinking | Thinking | Difficult architecture or repair loops inside Agy |
+| GPT-OSS 120B | medium | Bounded open-weight work and behavioral comparison |
 
-1. **Gemini** (Flash, Pro, …)
-2. **Claude + GPT** (Sonnet, Opus, …)
+Antigravity's effort labels are not equivalent to Claude Code, Codex, or Kimi effort. Pick the lowest level that fits the task: low for extraction, medium for routine work, high/Thinking for ambiguity and multi-step reasoning.
 
-Weekly and 5-hour windows apply per pool. Exhausting Gemini does **not** block Claude/GPT, and vice versa.
+## Quota behavior
 
-Check before long runs: **Models & Quota** in the Agy UI (or equivalent in CLI session).
+Google AI Pro receives higher Antigravity quota, refreshed every five hours until the weekly quota is reached. Google does not publish a stable absolute turn count; model, workload, capacity, and account state affect consumption. AI credits may provide overage where the account supports them. [Antigravity plans](https://antigravity.google/docs/plans)
 
-## Model roles (2026-06-14)
+Do not assume that Google AI Pro storage or consumer Gemini entitlements mean unlimited Antigravity agent use.
 
-| Model | Pool | Use when |
-|-------|------|----------|
-| **Gemini 3 Flash (High)** | Gemini | Volume, exploration, docs, low-risk edits |
-| **Gemini 3 Pro (High)** | Gemini | Stuck on Gemini; need more reasoning in same pool |
-| **Claude Sonnet 4.6 (Thinking)** | Claude | Default **implementation** — code, tests, integration |
-| **Claude Opus 4.6 (Thinking High)** | Claude | Hard integration, cross-layer bugs, architecture |
-| **GPT 5.3 Codex (Medium / High)** | GPT | Optional; compare to Sonnet on your tasks |
+Check capacity with:
 
-**Thinking** variants: better for multi-step coding; **High** = more reasoning budget (slower, fewer turns left).
+- `/usage` for the current session's usage view;
+- `/quota` for quota status where available;
+- the Antigravity UI's Models and Quota view.
 
-## Session strategy
+The CLI commands are documented in [Antigravity usage commands](https://antigravity.google/docs/cli/commands/usage).
 
-1. **At session start:** read quota; if Gemini weekly is low (e.g. &lt;15%), plan Claude pool for serious work.
-2. **Default coding:** Sonnet (Claude pool) — especially when Gemini weekly quota is low (e.g. &lt;15% remaining).
-3. **Burn Gemini when healthy:** Flash for research, comments, doc passes.
-4. **Escalate:** Pro (Gemini) → still stuck → Sonnet → Opus for hard cross-layer integration.
-5. **Persist choice:** `/model` in Agy applies to the session until changed.
+## Session workflow
 
-## What Agy does not do
+1. Check quota before a long or autonomous run.
+2. Use Gemini 3.6 Flash medium for collection and ordinary browser work.
+3. Raise Flash to high for visual QA or moderately complex reasoning.
+4. Move to Gemini 3.1 Pro high when Flash misses relationships, the visual judgment is consequential, or long-context synthesis is the task.
+5. Use Sonnet 4.6 Thinking for implementation when its independent Agy capacity is more valuable than using native Claude Code.
+6. Reserve Opus 4.6 Thinking for hard Agy-native repair or architecture. Native Claude Code exposes newer Claude models, so prefer it when model generation matters more than Agy's browser/autonomy/quota.
+7. Start a fresh session when changing task class, when obsolete investigation dominates context, or when a completed phase no longer helps the next one.
 
-- Auto-switch model by file path or task type
-- Read your orchestrator’s `modelRouting` JSON
-- Share quota with Cursor Pro or Claude Code Max
+## Operational fallbacks
 
-For **rule-based** routing across harnesses, use **reference-workflow** (`modelRouting` + builder agents) or optional **llm-router** / **BrokeLLM** at the prompt layer.
+| Situation | Action |
+|---|---|
+| Gemini five-hour capacity is tight | Move bounded collection to Codex Luna, Kimi K3-256k/K2.7, or an open-weight worker. |
+| Weekly Agy capacity is tight | Keep Agy for work that needs its browser/visual/autonomous tools; move ordinary terminal coding to Codex, Claude Code, or Kimi. |
+| Flash gives a weak result | Improve scope and evidence, then raise effort. Move to Pro only when the task is genuinely harder. |
+| Agy's Claude model is too old for the task | Use native Claude Code with Sonnet 5 or Opus 5. |
+| A long session becomes noisy | Save a compact state/evidence packet and start a fresh session instead of increasing effort. |
+| The task needs a real logged-in browser | Use Kimi WebBridge and supervise any destructive or purchasing action. |
 
-## Optional project rule file
+## What Antigravity does not decide for you
 
-For soft hints in Agy (not enforced), add `.agents/rules/model-routing.md`:
+Antigravity does not know which of your other subscriptions has the cheapest adequate capacity. It also cannot infer business impact, privacy requirements, or whether a 1M context is actually necessary. Apply the cross-harness routing policy before choosing from this picker.
 
-```markdown
-# Model routing (session hints)
-
-- Default implementation: Claude Sonnet 4.6 (Thinking)
-- Escalate to Opus: cross-layer integration, repeated test failures after 2 fix cycles
-- Use Gemini Flash only when Gemini weekly quota > 20%
-- Before hard integration work: confirm Claude pool headroom
-```
-
-## Google AI Pro vs agent quota
-
-**Google AI Pro** (5TB storage, etc.) is a **consumer subscription** — not the same meter as **Models & Quota** inside Agy for agent turns. Do not assume “Pro = unlimited agents.”
-
-## See also
-
-- [Harness plugin parity](guide-harness-plugin-parity.md)
-- [Capability map](../reference/reference-harness-capability-map.md)
-- Discovery: [2026-06-14 harness parity research](../docs/1-discovery/2026-06-14-harness-parity-model-routing-research.md)
+Do not keep a duplicated cross-provider ranking here. When a model, price, or benchmark changes, update the [canonical reference](../reference/reference-cross-harness-models.md); change this supplement only when Antigravity's picker or quota/session behavior changes.
