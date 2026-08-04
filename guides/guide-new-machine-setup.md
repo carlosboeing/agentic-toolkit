@@ -9,14 +9,14 @@ Stand up your Claude Code environment on a fresh machine (or hand the recipe to 
 | Global config (`CLAUDE.md`, `docs/`) | `claude-config` repo → `~/.claude` | clone in place (step 3) |
 | Local config (`settings.json` — secrets + model/effort) | **not** in git (machine-local) | recreate by hand (step 3) |
 | Standalone skills (`briefing`, `learn`, …) | `claude-code-resources` repo → all harness skill dirs | `sync-skills.sh` (step 4) |
-| Tool integrations (rtk, Headroom, claude-mem) | external installs | the setup guides (step 5) |
+| Tool integrations (rtk, claude-mem) | external installs | the setup guides (step 5) |
 | Separately-managed wiring | see step 6 | not covered here |
 
 ```mermaid
 flowchart TD
     A["clone claude-code-resources"] --> B["clone claude-config into ~/.claude"]
     B --> C["run sync-skills.sh"]
-    C --> D["set up rtk / Headroom / claude-mem"]
+    C --> D["set up rtk / claude-mem"]
     D --> E["Claude Code ready"]
 ```
 
@@ -67,8 +67,9 @@ Symlinks every authored `skills/<name>/` from your clone straight into each inst
 Follow the per-tool guides in this directory:
 
 - [`guide-rtk-setup.md`](guide-rtk-setup.md) — RTK (shell-output token filter)
-- [`guide-headroom-setup.md`](guide-headroom-setup.md) — Headroom (API-layer compression proxy)
 - [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) — claude-mem (session memory)
+
+Headroom is **not** installed on new machines. It was removed on 2026-08-04 — see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md). Its [setup guide](guide-headroom-setup.md) is retained, marked retired, as a record of what the teardown reverted.
 
 ### 6. Separately-managed wiring (not covered here)
 
@@ -87,7 +88,7 @@ ls -l ~/.claude/skills | grep '\->'
 # config is tracked and clean
 git -C ~/.claude status --short
 # tools respond
-rtk --version && which headroom 2>/dev/null || true
+rtk --version
 ```
 
 Start a new Claude Code session; type `/` and confirm your skills appear.

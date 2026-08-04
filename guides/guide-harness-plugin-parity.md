@@ -50,7 +50,7 @@ Kimi reads the shared `~/.agents/` layer natively, so the authored-skill fan-out
 |-------|-------|
 | Authored skills (briefing, penmark-comments, schedule-resume, …) | Live via `~/.agents/skills/` symlinks (sync-skills.sh) — no Kimi-specific step |
 | `kimi-webbridge` skill | Vendor-installed copy at `~/.kimi-code/skills/kimi-webbridge` (v1.11.3, byte-identical to the Claude Code and Codex copies); agy covered by a symlink at `~/.gemini/config/skills/kimi-webbridge` → the Kimi copy |
-| MCP servers (context7, claude-mem, headroom, fathom, playwright) | Parity target: mirror the five entries from `~/.gemini/config/mcp_config.json` into `~/.kimi-code/mcp.json` |
+| MCP servers (context7, claude-mem, fathom, playwright) | Parity target: mirror the four entries from `~/.gemini/config/mcp_config.json` into `~/.kimi-code/mcp.json`. `headroom` was a fifth until 2026-08-04 — do not re-add it, see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md) |
 | Superpowers | Native plugin registration + canonical-clone content: `~/.kimi-code/plugins/managed/superpowers` is a whole-dir symlink to `plugins/superpowers` (v6.2.0), restored by `plugins/superpowers-relink.sh` after any `/plugins` update. `git pull` in the clone now propagates to all four harnesses |
 | RTK | Instructions mode (`rtk init --agent kimi`, needs rtk ≥ 0.44.0) — Kimi hooks can't rewrite tool input, so no transparent hook |
 
@@ -64,7 +64,7 @@ Configured in `~/.gemini/config/mcp_config.json`.
 |--------|------|-------|-------|
 | `claude-mem` | HTTP (lazy) | 19 | Memory/observations/corpus |
 | `context7` | HTTP (lazy) | 2 | `resolve-library-id`, `query-docs` |
-| `headroom` | stdio (lazy) | 3 | Context compression (compress/retrieve/stats) |
+| `headroom` | stdio (lazy) | 3 | Context compression (compress/retrieve/stats). **Removed 2026-08-04** — [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md); row kept because this table is a dated audit snapshot |
 | `fathom` | HTTP (lazy) | 4 | Fathom meeting capture (list/search meetings, get summary/transcript) |
 
 ### CLI Proxies & Token Optimizers
