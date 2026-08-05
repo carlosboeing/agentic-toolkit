@@ -42,14 +42,14 @@ Verify: `agy plugin list`, `/skills` in session, `ls ~/.agents/skills/`.
 | Hooks | `[[hooks]]` in `~/.kimi-code/config.toml` — only PreToolUse, Stop, and UserPromptSubmit can block, and no event can rewrite tool input |
 | Headless | `kimi --session session_<id> -p` (auto-approves; `-p` rejects `--yolo`/`--auto`) |
 
-Kimi reads the shared `~/.agents/` layer natively, so the authored-skill fan-out (`sync-skills.sh`) and the canonical instruction file already cover it with zero wiring. Verify: `ls ~/.agents/skills/`, `/plugins info <name>`, `kimi doctor`.
+Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology and the canonical instruction file already cover it with zero wiring — `~/.agents/skills` is a symlink to the hub. Verify: `ls ~/.agents/skills/`, `/plugins info <name>`, `kimi doctor`.
 
 ## Verified installed state — Kimi (audited 2026-07-28)
 
 | Piece | State |
 |-------|-------|
-| Authored skills (briefing, penmark-comments, schedule-resume, …) | Live via `~/.agents/skills/` symlinks (sync-skills.sh) — no Kimi-specific step |
-| `kimi-webbridge` skill | Vendor-installed copy at `~/.kimi-code/skills/kimi-webbridge` (v1.11.3, byte-identical to the Claude Code and Codex copies); agy covered by a symlink at `~/.gemini/config/skills/kimi-webbridge` → the Kimi copy |
+| Authored skills (briefing, penmark-comments, schedule-resume, …) | Reached through `~/.agents/skills`, a whole-dir symlink to the hub — no Kimi-specific step. **Changed 2026-08-06:** they are copies in the hub now, not live symlinks into the repo, so a repo edit needs `sync-skills.sh` before Kimi sees it |
+| `kimi-webbridge` skill | **Removed 2026-08-06** from all four locations, pending reinstall. `~/.kimi-code/skills` was deleted with it. Rebuild path in [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md) |
 | MCP servers (context7, claude-mem, fathom, playwright) | Parity target: mirror the four entries from `~/.gemini/config/mcp_config.json` into `~/.kimi-code/mcp.json`. `headroom` was a fifth until 2026-08-04 — do not re-add it, see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md) |
 | Superpowers | Native plugin registration + canonical-clone content: `~/.kimi-code/plugins/managed/superpowers` is a whole-dir symlink to `plugins/superpowers` (v6.2.0), restored by `plugins/superpowers-relink.sh` after any `/plugins` update. `git pull` in the clone now propagates to all four harnesses |
 | RTK | Instructions mode (`rtk init --agent kimi`, needs rtk ≥ 0.44.0) — Kimi hooks can't rewrite tool input, so no transparent hook |
@@ -94,25 +94,28 @@ Ship with Antigravity; always active.
 |-------|--------|
 | `graphify` | Installed directly (32 KB SKILL.md + references/) |
 
-### Agent skills (`~/.agents/skills/`)
+### Agent skills — the hub-and-spoke model (since 2026-08-06)
 
-Cross-harness skills available to any agent harness reading this directory.
+Every skill physically lives in **one** place: `~/.claude/skills`, the hub. It holds real directories and nothing else, so Claude Code — the primary harness — never resolves a symlink to find a skill. Every other harness reaches the same content through a whole-directory symlink.
 
-| Skill | Type | Source |
-|-------|------|--------|
-| `briefing` | Symlink | `~/.claude/skills/briefing` (added 2026-06-14) |
-| `capture-meeting` | Symlink | `~/.claude/skills/capture-meeting` (added 2026-06-18) |
-| `externalize-deliverable` | Symlink | `~/.claude/skills/externalize-deliverable` (added 2026-06-18) |
-| `penmark-comments` | Symlink | `~/.claude/skills/penmark-comments` → `~/Projects/agentic-toolkit/skills/penmark-comments` (canonical resource bundle) |
-| `ui-ux-pro-max` | Directory | Installed via `uipro` |
-| `impeccable` | Directory | Manual install |
-| `find-skills` | Directory | Manual install |
-| `web-design-guidelines` | Directory | Manual install |
-| `deploy-to-vercel` | Directory | Manual install |
-| `vercel-cli-with-tokens` | Directory | Manual install |
-| `vercel-composition-patterns` | Directory | Manual install |
-| `vercel-react-best-practices` | Directory | Manual install |
-| `vercel-react-native-skills` | Directory | Manual install |
+| Directory | Role | Serves |
+|---|---|---|
+| `~/.claude/skills` | **Hub** — 19 real directories, zero symlinks | Claude Code |
+| `~/.agents/skills` | Whole-dir symlink to the hub | Codex, Kimi Code |
+| `~/.gemini/config/skills` | Whole-dir symlink to the hub | Antigravity |
+| `~/.codex/skills` | **Not a spoke.** Holds `.system/`, Codex's own bundled skills | Codex internals — leave alone |
+| `~/.kimi-code/skills` | Removed 2026-08-06 — redundant with `~/.agents/skills` | — |
+
+One copy on disk means drift is structurally impossible. Before this, four skills existed as independent copies across harnesses and two had already diverged.
+
+Content reaches the hub two ways:
+
+- **Authored skills** stay canonical in `claude-code-resources/skills/` and are copied in by [`sync-skills.sh`](../skills/sync-skills.sh). They are no longer live-edited — an edit in the repo needs a sync run before any harness sees it.
+- **Third-party skills** are installed straight into the hub. Vendor CLIs that write to `~/.agents/skills` now write through the spoke symlink and land in the hub automatically. If one recreates the spoke as a real directory, `./skills/sync-skills.sh --adopt` folds it back in.
+
+Because the hub is derived state, `claude-config` gitignores it. Recovery comes from [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md), which records the rebuild command for every skill this repo does not author.
+
+Full rationale, risks, and the migration record: [the topology design](../docs/2-design/2026-08-06-skill-installation-topology-design.md).
 
 ## Minimum viable set (autonomous coding runs)
 

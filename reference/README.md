@@ -13,6 +13,7 @@ Snapshots, inventories, and lookups for coding agent configurations and historic
 | [`reference-headroom-savings.md`](reference-headroom-savings.md) | Installation layout and context compression metrics for Headroom context optimization proxy. |
 | [`reference-headroom-alternatives.md`](reference-headroom-alternatives.md) | Architectural comparison of Headroom alternatives including Kompact, LLMLingua-2, and Native Provider Caching. |
 | [`reference-claude-code-context-costs.md`](reference-claude-code-context-costs.md) | Per-bucket and per-server startup token costs from `/context`, with the control lever and lean replacement for each connector/plugin, plus the measure loop. |
+| [`reference-third-party-skills.md`](reference-third-party-skills.md) | Source and rebuild command for every skill in the `~/.claude/skills` hub this repo does not author. The recovery record for a tree that `claude-config` deliberately gitignores. |
 
 ## Conventions
 
