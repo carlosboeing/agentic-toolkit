@@ -179,9 +179,11 @@ Use when you want **dynamic** per-prompt routing; use **reference-workflow** `mo
 
 ## Symlink rules of thumb
 
-**Do symlink:** instruction files; stable personal skills (`~/.claude/skills/X` → `~/.agents/skills/X`). Automate the authored-skill fan-out with [`../skills/sync-skills.sh`](../skills/sync-skills.sh) — it symlinks every authored skill from this repo straight into each installed harness's skill dir (Claude `~/.claude/skills`, Codex `~/.agents/skills`, Agy `~/.gemini/config/skills`; Kimi reads the `~/.agents/skills` entry natively, so it is covered without a Kimi-specific target). Independent of the `find-skills` tool.
+**Skills are no longer symlinked per-skill.** Since 2026-08-06 the direction is the reverse of what this section used to say: `~/.claude/skills` is the hub holding real directories, and each harness's skill directory is a whole-directory symlink *into* it. Nothing links out of the hub. Run [`../skills/sync-skills.sh`](../skills/sync-skills.sh) to copy authored skills in and repair the spokes; it is independent of the `find-skills` tool.
 
-**Do not symlink:** full plugin directories from Cursor cache (hash paths break); MCP config; Superpowers twice; vendor-managed skill copies (e.g. `kimi-webbridge` — the vendor's installer fans out byte-identical copies and rewrites them on upgrade; `kimi-webbridge status` shows the per-agent version). The one sanctioned exception is filling a gap the vendor installer doesn't cover, like the `~/.gemini/config/skills/kimi-webbridge` symlink for agy.
+**Do symlink:** instruction files; whole harness skill directories pointing at the hub.
+
+**Do not symlink:** full plugin directories from Cursor cache (hash paths break); MCP config; Superpowers twice; anything *out of* the hub into another location, which reintroduces the drift the hub exists to prevent. Vendor installers that fan out byte-identical copies per harness (`kimi-webbridge` did this) now only need the hub copy, since every harness resolves there.
 
 For Agy **slash menu**, also link to `~/.gemini/antigravity-cli/skills/` if skills don't appear under `/skills`.
 
