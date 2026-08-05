@@ -36,7 +36,7 @@ Verify: `agy plugin list`, `/skills` in session, `ls ~/.agents/skills/`.
 | Channel | Command / path |
 |---------|----------------|
 | Native plugin | `/plugins` marketplace, or `/plugins install <github-url>` |
-| Skills | `~/.agents/skills/` (shared, read natively), `~/.kimi-code/skills/` (Kimi-specific), `.agents/skills/` + `.kimi-code/skills/` (project) |
+| Skills | `~/.agents/skills/` (shared, read natively — a whole-dir symlink to the hub since 2026-08-06), `.agents/skills/` + `.kimi-code/skills/` (project). `~/.kimi-code/skills/` was removed as redundant; recreate it only for a genuinely Kimi-specific skill |
 | Instructions | `~/.agents/AGENTS.md` + project `AGENTS.md` (read natively — no symlink needed); optional Kimi-specific `~/.kimi-code/AGENTS.md` |
 | MCP | `~/.kimi-code/mcp.json` (+ project `.kimi-code/mcp.json`); manage interactively with `/mcp-config` |
 | Hooks | `[[hooks]]` in `~/.kimi-code/config.toml` — only PreToolUse, Stop, and UserPromptSubmit can block, and no event can rewrite tool input |
@@ -132,7 +132,9 @@ Evidence from a long autonomous run (2026-06): Superpowers + shell gates do ~90%
 
 ## Claude Code plugins → Antigravity
 
-Legend: **Official** | **Substitute** | **MCP** | **Symlink skill** | **Skip**
+Legend: **Official** | **Substitute** | **MCP** | **In hub** | **Skip**
+
+> **Since 2026-08-06** there is no per-skill wiring for Agy. `~/.gemini/config/skills` is a whole-directory symlink to the hub, so anything in `~/.claude/skills` is already there. Rows marked **In hub** need no action.
 
 | Claude / Cursor plugin | Agy approach |
 |------------------------|--------------|
@@ -144,13 +146,10 @@ Legend: **Official** | **Substitute** | **MCP** | **Symlink skill** | **Skip**
 | superpowers-chrome | **Substitute** — chrome-devtools-plugin |
 | frontend-design | **Import** (`agy plugin import claude`) or **Bundled** at `~/.gemini/config/plugins/frontend-design` |
 | code-review, pr-review-toolkit, feature-dev | **Substitute** — Superpowers review / brainstorming / subagent skills |
-| elements-of-style | **Symlink skill** from `~/.claude/skills/` if desired; low priority |
-| graphify | **Installed** — `~/.gemini/config/skills/graphify` |
-| briefing | **Symlink skill** — `~/.agents/skills/briefing` → `~/.claude/skills/briefing` |
-| capture-meeting | **Symlink skill** — `~/.agents/skills/capture-meeting` → `~/.claude/skills/capture-meeting` |
-| externalize-deliverable | **Symlink skill** — `~/.agents/skills/externalize-deliverable` → `~/.claude/skills/externalize-deliverable` |
-| penmark-comments | **Symlink skill** — `~/.claude/skills/penmark-comments` and `~/.agents/skills/penmark-comments` directly target `~/Projects/agentic-toolkit/skills/penmark-comments`, the canonical resource bundle. [`sync-skills.sh`](../skills/sync-skills.sh) maintains this one-source model for Claude, Codex, and Agy. See the [integration guide](guide-penmark-agent-integration.md) for validation and the deferred cross-harness audit. |
-| learn | **Symlink skill** from `~/.claude/skills/learn` if desired |
+| elements-of-style | **Skip** — plugin-provided on Claude Code, not in the hub |
+| graphify | **In hub** — no longer a separate `~/.gemini/config/skills/graphify` copy |
+| briefing, capture-meeting, externalize-deliverable, learn, schedule-resume | **In hub** — copied in by [`sync-skills.sh`](../skills/sync-skills.sh) from `claude-code-resources/skills/`, reached through the spoke symlink |
+| penmark-comments | **In hub** — same path as the other authored skills. Canonical source is `claude-code-resources/skills/penmark-comments`; the hub copy is no longer a live symlink into the repo, so edits need a sync run. See the [integration guide](guide-penmark-agent-integration.md) for validation and the deferred cross-harness audit. |
 | octo | **Skip** — no port; multi-model review optional only |
 | financial-* (6 plugins) | **Skip** unless doing IB work in Agy |
 | continual-learning (Cursor) | **Skip** — Cursor-only hooks |
