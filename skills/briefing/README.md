@@ -22,7 +22,7 @@ Type `/briefing` in any Claude Code session and you get a structured briefing wh
 | **4 · Open questions** | Only if in-flight docs leave things undecided (waiting on work, not on you) |
 | **5 · In flight** | Only if any Strong signal (open PR, unpushed commits, stashes, ROADMAP `## In flight`, drafts, dirty working tree, …) |
 | **6 · Recently shipped** | Always — last 3–5 things as a commit table, synthesised not dumped |
-| **7 · Draft inventory** | Only if working memory was found — every unresolved doc, per repo, with its own status value |
+| **7 · Draft inventory** | Only if working memory was found — every unresolved doc, per repo, with its own status value. `active` counts as unresolved; lifecycle artifacts and evergreen docs are split on `type`, and any exclusion is stated with its count |
 | **8 · Housekeeping** | Only if there's something to flag (stale work, structural gaps, conventions worth a later decision) |
 | **`★ About this briefing`** | Only if a source failure, depth conflict, detached HEAD, or thin-input case applies — otherwise omitted entirely |
 
@@ -34,7 +34,7 @@ Five rules bind every section, and they're what make a briefing scannable rather
 2. **Every code gets decoded on first use.** "S7 needs a ruling" is a lookup; "the homepage strip repeats itself one screen apart (S7)" is information.
 3. **Every path is clickable** — written from the working directory, with `:line` when it points at one item in a long file. Never a bare basename.
 4. **One explicit `→` next action**, in section 1.
-5. **Brevity comes from cutting words, not items.** A short briefing still lists every draft, decision and stale branch.
+5. **Brevity comes from cutting words, not items.** A short briefing still lists every draft, decision and stale branch — and any filter it applies is stated with its count, because an unstated exclusion and an accidental omission look identical from the outside.
 
 ## Dials — how the briefing is shaped
 

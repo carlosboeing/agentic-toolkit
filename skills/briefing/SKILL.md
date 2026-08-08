@@ -281,25 +281,45 @@ For each "what's the project's structure?" question that Declared did not declar
 | Where's the roadmap? | Use `Roadmap` field | `docs/ROADMAP.md` (canonical) → `ROADMAP.md` (root) | Note in footer; skip roadmap section |
 | Where's the changelog? | Use `Changelog` field | `docs/CHANGELOG.md` (canonical) → `CHANGELOG.md` (root) | Note in footer; skip changelog references |
 | Where are lifecycle artifacts? | Use `Working memory` field | If `docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all exist → canonical layout (lifecycle dirs are `docs/[0-9]-*` plus `docs/adrs/`). Else if any `docs/*/*.md` has `status:` frontmatter → use those dirs as discovered working memory. | Note in footer; skip lifecycle drafts in output |
-| What `status:` values mean "in flight"? | (not declared) | If canonical layout detected: `draft`, `open`, `approved`. | Any `status:` not in `{shipped, superseded, abandoned, closed, done}` |
+| What `status:` values mean "in flight"? | (not declared) | If canonical layout detected: `draft`, `open`, `approved`. | Any `status:` not in `{shipped, superseded, abandoned, closed, done, resolved}` — including `active`, which reads terminal but isn't. Split those on `type:` per [Statuses that look terminal but aren't](#statuses-that-look-terminal-but-arent) |
 | Which ROADMAP section means "in flight"? | (not declared) | If canonical detected: `## In flight` (per §6.3 of the canonical guide). | Case-insensitive match for headings containing `in flight`, `in progress`, `now`, `doing`, `wip` |
 | Where are ADRs? | (not declared) | `docs/adrs/NNNN-*.md` (canonical) → `docs/6-adrs/`, `docs/architecture/decisions/`, `decisions/`, `adr/` | Not surfaced |
 
 When probing the lifecycle for-loop, prefer the canonical glob if detected; otherwise list what was actually found:
 
 ```bash
-# Canonical-conventions glob (used when Default paths detects the canonical layout)
+# Canonical-conventions glob (used when Default paths detects the canonical layout).
+# Emits "status|type|path" so the type-based split can happen in one pass —
+# reading status alone can't tell an open review from a current brand guide.
 for d in docs/[0-9]-* docs/adrs; do
   [ -d "$d" ] || continue
-  find "$d" -maxdepth 1 -name '*.md' -print0 2>/dev/null \
-    | xargs -0 grep -l '^status:' 2>/dev/null
-  ls -t "$d" 2>/dev/null | head -5
-done
+  find "$d" -maxdepth 1 -name '*.md' 2>/dev/null | while read -r f; do
+    st=$(awk 'NR<=15 && /^status:/ {sub(/^status:[[:space:]]*/,""); print; exit}' "$f")
+    ty=$(awk 'NR<=15 && /^type:/   {sub(/^type:[[:space:]]*/,"");   print; exit}' "$f")
+    [ -n "$st" ] && echo "$st|${ty:-untyped}|$f"
+  done
+done | sort
 ```
+
+In a multi-repo workspace, run this per repo — a workspace root that gitignores its subdirectories holds no working memory of its own, and the drafts all live one level down.
 
 The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`, `1-discovery`, `2-design`, `3-plans`, `4-reviews`) and any project-specific extensions (e.g. `5-guides`, `6-adrs` in some sister repos). `docs/adrs` is also probed because the canonical convention places ADRs there without a number prefix.
 
 **zsh portability note:** if you write a follow-up command that extracts the `status:` value into a shell variable, **do not name the variable `status`** — it's read-only in zsh (it holds the last command's exit code). Use `st`, `state`, or similar instead. The canonical block above is safe because it uses `grep -l '^status:'` (file listing only); the trap is in ad-hoc rewrites that read the value.
+
+#### Statuses that look terminal but aren't
+
+`active`, `current`, `living` and similar words read like "settled" but are not in the terminal set, so they count as unresolved. In practice projects use them for two different things, and the discriminator is the doc's `type`, not its status:
+
+- **Lifecycle artifacts** — `review`, `design`, `plan`, `brainstorm`, `handoff`, `note`, `research`. An `active` review is an open review. These belong in the inventory.
+- **Evergreen docs** — `guide`, `reference`, `policy`, `architecture`, `template`, or no `type` at all. `active` here means "current and in use", not "in progress". A brand guide is never going to be finished.
+
+Read both `status:` and `type:` in the same pass, and split on `type`. **Excluding the evergreen ones is correct; excluding them silently is not.** State the filter and its count in one line under the table — "5 evergreen prompts and guides excluded" — so the reader can audit the judgement instead of trusting it.
+
+Two contradictions worth flagging when you see them, because they mean a status is stale rather than meaningful:
+
+- A `resolution:`, `outcome:` or `superseded_by:` field present while the status is still non-terminal.
+- A doc whose subject was decided elsewhere — an A/B comparison whose winner is already locked in the project's instructions file.
 
 #### Prose-inference fallback
 
@@ -496,7 +516,11 @@ Close with the `→` next action: one line, imperative, the single thing to do f
 
 **6 · Recently shipped:** Always present. A commit table — SHA and a one-line description — rather than prose. Synthesised, not dumped: group by theme and stop at the last 3–5 meaningful things. Close with one line on how it was verified, when the project records that.
 
-**7 · Draft inventory:** Only if working memory was found. One sub-block per repo, headed with the repo name and the count. Table of every unresolved doc with its own status value — use the project's vocabulary (`draft`, `open`, `wip`, `ready-for-review`), never a normalised one. **This section is where completeness is non-negotiable**: list every unresolved doc, then add one line per item on which are worth acting on and what blocks each. Compressing the briefing never means dropping rows here.
+**7 · Draft inventory:** Only if working memory was found. One sub-block per repo, headed with the repo name and the count. Table of every unresolved doc with its own status value — use the project's vocabulary (`draft`, `open`, `wip`, `ready-for-review`, `active`), never a normalised one. **This section is where completeness is non-negotiable**: list every unresolved doc, then add one line per item on which are worth acting on and what blocks each. Compressing the briefing never means dropping rows here.
+
+Statuses like `active` count as unresolved — see [Statuses that look terminal but aren't](#statuses-that-look-terminal-but-arent) for the `type`-based split between lifecycle artifacts (which belong in the table) and evergreen docs (which don't), and for the rule that any filter you apply is stated with its count. Never let a doc leave the table on an unstated judgement call: a row you thought was noise is indistinguishable, from the reader's side, from a row you missed.
+
+Flag stale statuses inline in the follow-up lines rather than silently correcting them — a review carrying a `resolution:` field while still marked open is the project's bookkeeping to fix, not the briefing's.
 
 **8 · Housekeeping:** Only if there's something to say about the **project's state or work in progress**. Bullet list. Categories: stale work to triage (old PRs, ancient stashes, forgotten branches); structural gaps; recurring issues that suggest a project-convention change; risky operations needed (force push, release cut); conventions worth a decision later.
 
@@ -1102,3 +1126,5 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't cite a code, flag, ticket key, or task ID without saying what it means. `S7`, `D1`, `FF-204` and `BL#116` are lookups, not information. If you can't gloss it without opening the file, open the file.
 - Don't write a bare basename as a file reference. `2026-08-04-launch.md` doesn't open; `website/.docs/plans/2026-08-04-launch.md` does.
 - Don't drop rows to shorten the briefing. Cut words, merge sentences, tighten tables — but every unresolved doc, open decision and stale branch stays listed. A briefing that silently omits work is worse than a long one.
+- Don't filter silently. Excluding evergreen guides, reference docs or templates from the draft inventory is usually right; doing it without saying so is not. State the filter and its count — "5 evergreen prompts and guides excluded" — so the reader can overrule the judgement. An unstated exclusion and an accidental omission look identical from the outside.
+- Don't read `status:` without also reading `type:`. `active` on a review means an open review; `active` on a brand guide means a current one. The status alone can't tell them apart.
