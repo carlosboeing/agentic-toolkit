@@ -387,7 +387,7 @@ What triggers the briefing's adaptive output to lead with active work. Universal
 | Worktrees (count > 1) | Medium | from Always-on `git worktree list` |
 | Recent commits in last 24h | Weak | from Always-on `git log --since=1.day`; orientation only, never leads |
 
-**Detection rule:** if any signal labelled **Strong** in the table above is present, the output leads with the **What's in flight** section. Otherwise lead with **Recent activity** and **What's next**. Don't sum or score — any single Strong-labelled signal is enough to flip the lead. Medium-labelled signals never trigger the lead but are reported (under **What's in flight** when it runs, otherwise under **Recent activity**). Weak-labelled signals never lead and feed **Recent activity** only.
+**Detection rule:** if any signal labelled **Strong** in the table above is present, **Where you are** opens on the stopped work and the **In flight** section renders. Otherwise **Where you are** opens on what last shipped and what's next, and **In flight** omits. Don't sum or score — any single Strong-labelled signal is enough to flip the lead. Medium-labelled signals never trigger the lead but are reported (under **In flight** when it runs, otherwise under **Recently shipped**). Weak-labelled signals never lead and feed **Recently shipped** only.
 
 The table's row order is the order the resulting bullets should be reported in, not a priority ranking — Strong-labelled signals are equally sufficient to trigger the lead.
 
@@ -397,45 +397,76 @@ The table's row order is the order the resulting bullets should be reported in, 
 
 ## Output template
 
-In adaptive mode (the default), two sections always run and four are conditional on signal presence; sections with nothing to say are omitted entirely, not padded. Explicit depth keywords reshape this contract — `standard` forces all six, `quick` collapses, `deep` extends — and are codified under **Depth contract** below.
+In adaptive mode (the default), two sections always run and six are conditional on signal presence; sections with nothing to say are omitted entirely, not padded. Explicit depth keywords reshape this contract — `standard` forces all eight, `quick` collapses, `deep` extends — and are codified under **Depth contract** below.
+
+The briefing is a **navigation aid, not a report**. Someone returning after a week should be able to scan it in thirty seconds, find the one thing to do next, and click straight into any file it mentions. Five rules make that work, and they bind every section:
+
+1. **Scannable structure over prose.** Tables for anything enumerable — files, decisions, commits, drafts, repo states. One-line bullets otherwise. No paragraph over three lines, and never a wall of prose where a table would do.
+2. **Decode every identifier on first use.** A briefing that says "S7 needs a ruling" is useless — the reader has to go open a file to learn what S7 *is*. Say what it is in plain words, then cite the code: "the homepage strip repeats itself one screen apart (S7)". Same for flags, ticket keys, task IDs, and internal shorthand. If you can't say what it is without opening the file, open the file.
+3. **Every path is clickable.** Write file references as paths from the working directory — `website/.docs/plans/2026-08-04-launch.md`, never the bare basename `2026-08-04-launch.md`. Add `:line` when pointing at one specific item inside a long file. A reference the reader can't click is a chore, not a citation.
+4. **One explicit next action**, marked `→`, in the first section. Everything else is context for it.
+5. **Brevity comes from cutting words, not items.** A shorter briefing still lists every draft, every open decision, every stale branch. Compress the sentences around them; never silently drop a row to hit a length.
+
+Number the sections contiguously in render order (`# 1 · …`, `# 2 · …`). The numbers are navigation handles for the conversation that follows ("what's in section 3?"), not stable identities — a briefing that omits three sections still numbers what remains 1, 2, 3.
 
 > **Spec annotations:** the `←` comments in the template below (e.g. `← always`, `← only if any strong signal`) are *spec annotations* explaining when each section renders — they must NOT appear in the actual briefing the user sees.
 
 ```markdown
-## Briefing — <project name>
-<date> · <branch> · <ahead/behind summary>
+# Briefing — <project name>
+<date> · <branch> · <ahead/behind or clean> · <repo count if multi-repo>
 
-### TL;DR                                      ← always
-1–2 sentences. Leads with whatever matters most right now:
-- in-flight present  → "You stopped mid-X. Y is the next move."
-- clean state        → "Last shipped Z. Next priority is W."
+# 1 · Where you are                            ← always
+<One or two plain sentences: what you were doing, where you stopped.>
+<One line on what else is quiet — repos/branches that are clean and in sync.>
 
-### Snapshot                                   ← always
-- **Branch:** <current> (<N> ahead, <M> behind <upstream>)
-- **Roadmap:** X/Y items · next: <item>     ← only if a roadmap was found (declared or detected)
-- **Recent activity:** <last commit / last PR / last shipped lifecycle item>
-- **<Field name>:** <bullets from sources declared in `## Project Map`>     ← e.g. **Tracker:**, **Board:**
+**Uncommitted in `<repo>/` — <what these files have in common>:**   ← only if the working tree is dirty
+| File | Change |
+|---|---|
+| `<path/from/cwd.ext>` | <one line; note staged deletes won't open> |
 
-### What's in flight                           ← only if any strong signal
-- **Working tree:** <paths and one-line summary>
-- **Local-only:** <unpushed commits / stashes / no-upstream branches / worktrees if > 1>
-- **<roadmap section title>:** <items + state>     ← rendered with the project's actual ROADMAP section name (e.g. "## In flight", "## Now")
-- **Open PRs:** <your PRs + review status>
-- **Drafts:** <lifecycle artifacts with in-flight status>     ← rendered with the project's actual status vocabulary (e.g. "status: draft|open|approved")
-- **Tracker:** <items in progress>     ← only if a tracker was declared in `## Project Map`
+**→ <The single next action.>**
 
-### Recent activity                            ← always (last 3-5 things)
-Synthesised, not dumped. Group by theme. Reference SHA / PR# / file path.
+<Other local-only state as one-line bullets: other branches, stashes, worktrees.>
 
-### What's next                                ← always
-Recommended next action with reasoning.
-Reference roadmap priority (if found), dependency chain, newly unblocked items.
+# 2 · The blocker                              ← only if one thing gates everything else
+<What it is, in a sentence. A table if it has parts worth comparing.>
+- [x] <step already done>
+- [ ] <step outstanding> — <why it matters>
 
-### Decisions / attention                      ← only if there's something
-- Design calls AI shouldn't make alone
-- Recurring issues suggesting a convention change
-- Risky operations needed (force push? release cut?)
-- Stale work to triage (old PRs / ancient stashes / forgotten branches)
+# 3 · Decisions waiting on you                 ← only if there are open rulings
+| # | Where | What | The call |
+|---|---|---|---|
+| <code> | `<path.md>:<line>` | <plain-English description — never the bare code> | <the choice> |
+
+<Any non-tabular ruling as a short bolded bullet + one line of context.>
+
+# 4 · Open questions                           ← only if in-flight docs leave things undecided
+- **<Subject>** — <what's undecided, one line>
+
+**Path forward:** <the agreed sequence, as a short numbered list or arrow chain.>
+
+# 5 · In flight                                ← only if any strong signal
+**PR #<N>** — <age> · <commits> · <files> · <±lines> · <CI state> · <review state>
+**Plan progress:** <X> done, <Y> left. Remaining:
+1. <step>
+
+# 6 · Recently shipped                         ← always
+| Commit | Change |
+|---|---|
+| `<sha>` | <one line> |
+
+<How it was verified, one line.>
+
+# 7 · Draft inventory                          ← only if working memory was found
+**<Repo> — <N> unresolved**
+| Doc | Status |
+|---|---|
+| `<path/from/cwd.md>` | <the project's own status value> |
+
+<Which ones are worth acting on, and what blocks each — one line per item.>
+
+# 8 · Housekeeping                             ← only if there's something
+- <stale work to triage, structural gaps, conventions worth a decision later>
 
 [★ About this briefing — conditional, see About this briefing section below]
 [Optional: Saved to <path>]
@@ -443,29 +474,33 @@ Reference roadmap priority (if found), dependency chain, newly unblocked items.
 
 ### Output isolation
 
-The default-mode briefing's output is the template above plus the conditional `★ About this briefing` block — nothing else. **Don't append response-style wrappers** that the model would normally add in a general task: no separate `## Open decisions` block, no extra `★ Insight` block, no free-form "What's next" paragraph outside the briefing's `### What's next` section. The briefing's own structure (TL;DR / Snapshot / What's in flight / Recent activity / What's next / Decisions / attention / `★ About this briefing`) covers everything a wrapper would. The skill output IS the response.
+The default-mode briefing's output is the template above plus the conditional `★ About this briefing` block — nothing else. **Don't append response-style wrappers** that the model would normally add in a general task: no separate `## Open decisions` block, no extra `★ Insight` block, no free-form "what's next" paragraph outside the briefing's own `→` next-action line. The briefing's own structure (Where you are / The blocker / Decisions waiting on you / Open questions / In flight / Recently shipped / Draft inventory / Housekeeping / `★ About this briefing`) covers everything a wrapper would. The skill output IS the response.
 
 When the user's `<instructions-file>` or another global rule mandates a closing-block format (e.g. `## Open decisions` for blocking questions), that rule applies to general conversational replies — not to skill output. Skill specs override conversational defaults for their own scope.
 
 ### Section-by-section rules
 
-**TL;DR:** 1–2 sentences. Always present. Lead with the most important thing:
-- if in-flight present → "You stopped mid-X. Y is the next move."
-- if clean state      → "Last shipped Z. Next priority is W."
+**1 · Where you are:** Always present. This section replaces what used to be a TL;DR and a Snapshot, because a returning reader wants one answer, not two. Open with one or two plain sentences saying what was being worked on and where it stopped — if everything else got cut, these sentences alone should still be useful. Follow with one line naming what's quiet (repos, branches, or worktrees that are clean and in sync), so silence is stated rather than inferred.
 
-If everything else got cut, the TL;DR alone should still be useful.
+If the working tree is dirty, render the uncommitted files as a table with a lead-in that says **what they have in common** ("one logical change", "two unrelated fixes"). That framing is the value — a bare file list makes the reader reconstruct it. Note staged deletions inline, since those paths won't open. Don't dump diffs; summarise per the 200-line cap.
 
-**Snapshot:** Always present. One-line bullets only. Each bullet starts with a **bold state label** (`**Branch:**`, `**Roadmap:**`, `**Recent activity:**`, `**<Field>:**`) so the categorical labels are scannable at a glance. Branch line comes from `git rev-parse --abbrev-ref HEAD` plus the ahead/behind counts; roadmap line from the resolved roadmap path (whether declared in `## Project Map` or detected at a default location); recent-activity line from the most recent of `git log -1`, last merged PR, or last shipped lifecycle item. Add bullets for sources declared in `## Project Map` (tracker counts, board column health) only when those sources were declared and read — these get bold labels too (`**Tracker:**`, `**Board:**`).
+Close with the `→` next action: one line, imperative, the single thing to do first. Then any remaining local-only state (other branches, stashes, worktrees) as one-line bullets.
 
-**What's in flight:** Only if any Strong-strength signal from the In-flight detection table. Group bullets by what they describe (Working tree, Local-only, ROADMAP, Open PRs, Drafts, Tracker — see the output template above), **not** by Strong/Medium/Weak — those labels are internal classification and must never appear in the rendered briefing. Render the roadmap-section bullet using the project's actual ROADMAP heading (e.g. `ROADMAP "## In flight":` for canonical projects; `ROADMAP "## Now":` for a project using Now/Next/Later; omit entirely if no roadmap was found). Render the drafts bullet using the project's actual status vocabulary (e.g. `Drafts (status: draft|open|approved):` for canonical; `Drafts (status: wip):` for a project using a different vocabulary; omit if no working memory was found). Don't dump diffs — summarise per the 200-line cap.
+**2 · The blocker:** Only when one thing genuinely gates the rest of the work. Say what it is in a sentence; add a table if it has parts worth comparing side by side. When the blocker has a known cleanup sequence, render it as a checklist so done and outstanding steps are visible at a glance. Don't invent a blocker to fill the section — most briefings won't have one.
 
-**Recent activity:** Always present. Last 3–5 things, synthesised not dumped. Group by theme rather than listing commits chronologically. Cite SHA / PR# / file path so the human can drill in.
+**3 · Decisions waiting on you:** Only if there are open rulings. Table form: the code (if the project uses one), a clickable `path:line`, a **plain-English description**, and the actual choice. Rule 2 binds hardest here — this is the section where bare codes do the most damage, because a decision the reader can't understand is a decision they can't make. If a ruling doesn't fit the table (a rule that needs rewording, a policy call), render it as a bolded bullet with one line of context underneath.
 
-**What's next:** Always present. Recommended next action with reasoning. Reference roadmap priority (if found), dependency chain, newly-unblocked items. One paragraph or 2–3 bullets, not a wall of text.
+**4 · Open questions:** Only if in-flight design or planning docs leave things explicitly undecided. One bolded subject per bullet, one line on what's unresolved. Distinct from section 3: decisions are waiting on *the user*, open questions are waiting on *work* — a prototype, a measurement, a conversation. Close with the path forward when the docs record one.
 
-**Decisions / attention:** Only if there's something to say about the **project's state or work in progress**. Bullet list. Categories: design calls the AI shouldn't make alone; recurring issues that suggest a project-convention change; risky operations needed (force push, release cut); stale work to triage (old PRs, ancient stashes, forgotten branches).
+**5 · In flight:** Only if any Strong-strength signal from the In-flight detection table. Lead with the vehicle carrying the work — the PR, the branch, the tracker item — on one dense line: age, size, CI state, review state. Follow with plan progress as done/left counts plus the remaining sequence as a numbered list. Group by what things are, **not** by Strong/Medium/Weak — those labels are internal classification and must never appear in the rendered briefing. Use the project's own vocabulary for its roadmap sections and status values.
 
-**Not for:** suggestions about adopting `## Project Map`, canonical conventions, declaring additional fields, or anything else about how the user could enrich future briefings — that's setup content, not project content. It lives exclusively in `★ About this briefing` bullet 2 (the `/briefing sources` redirect) and the `/briefing sources` view itself. If the absence of `## Project Map` is the only "decision" you'd flag, render no `Decisions / attention` section at all — bullet 2 of `★ About this briefing` already prompts the user.
+**6 · Recently shipped:** Always present. A commit table — SHA and a one-line description — rather than prose. Synthesised, not dumped: group by theme and stop at the last 3–5 meaningful things. Close with one line on how it was verified, when the project records that.
+
+**7 · Draft inventory:** Only if working memory was found. One sub-block per repo, headed with the repo name and the count. Table of every unresolved doc with its own status value — use the project's vocabulary (`draft`, `open`, `wip`, `ready-for-review`), never a normalised one. **This section is where completeness is non-negotiable**: list every unresolved doc, then add one line per item on which are worth acting on and what blocks each. Compressing the briefing never means dropping rows here.
+
+**8 · Housekeeping:** Only if there's something to say about the **project's state or work in progress**. Bullet list. Categories: stale work to triage (old PRs, ancient stashes, forgotten branches); structural gaps; recurring issues that suggest a project-convention change; risky operations needed (force push, release cut); conventions worth a decision later.
+
+**Not for:** suggestions about adopting `## Project Map`, canonical conventions, declaring additional fields, or anything else about how the user could enrich future briefings — that's setup content, not project content. It lives exclusively in `★ About this briefing` bullet 2 (the `/briefing sources` redirect) and the `/briefing sources` view itself. If the absence of `## Project Map` is the only "decision" you'd flag, render no `Housekeeping` section at all — bullet 2 of `★ About this briefing` already prompts the user.
 
 The **`★ About this briefing` block** is conditional — it renders only when at least one bullet has content (see **About this briefing** below for the bullet inventory and trigger rules). When no bullet applies, the block omits entirely and the briefing ends with whatever section ran last. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser surface as bullet 6 inside `★ About this briefing` (text: `Depth received both '<X>' and '<Y>'; using '<Y>'`).
 
@@ -555,16 +590,18 @@ The depth dial scales three things together — output length, source breadth, a
 
 | Depth | Length | Sources read | Wall-clock | Use when |
 |---|---|---|---|---|
-| `quick` | < 300w | git/gh essentials only (status/log/diff, last PR, last commit) plus the resolved roadmap head if available — ~5–7 reads | < 5s | "Remind me where I am, fast" |
-| (adaptive) | content-driven | full git/gh + declared sources from `## Project Map` + canonical-conventions sniffing | 5–15s | Default |
-| `standard` | 600–1000w | All adaptive sources, no skipping | 10–20s | Forces full coverage |
-| `deep` | 1200–2000w | Standard + historical sources + cross-source synthesis + per-project memory files | 20–60s | "Real planning session, audit the lot" |
+| `quick` | Sections 1 and 5 only | git/gh essentials only (status/log/diff, last PR, last commit) plus the resolved roadmap head if available — ~5–7 reads | < 5s | "Remind me where I am, fast" |
+| (adaptive) | Whichever sections have content | full git/gh + declared sources from `## Project Map` + canonical-conventions sniffing | 5–15s | Default |
+| `standard` | All eight sections, empty ones stated as empty | All adaptive sources, no skipping | 10–20s | Forces full coverage |
+| `deep` | All eight, plus historical context inside 6 and 8 | Standard + historical sources + cross-source synthesis + per-project memory files | 20–60s | "Real planning session, audit the lot" |
+
+Length is governed by section count and the five structure rules, not a word budget — a table of twenty drafts is short to *read* however many words it contains. The one rule that never bends across tiers: `quick` may drop whole sections, but it may not drop rows from a section it renders.
 
 **Deep-mode-only sources** (extending the time window beyond "now"):
 
 | Source | Why it earns deep |
 |---|---|
-| Closed PRs in last 30 days (`gh pr list --state merged --search "merged:>=$(date -u -v-30d +%Y-%m-%d)" --limit 50`) | Trend in shipping cadence; what got merged the briefing's "recent activity" missed |
+| Closed PRs in last 30 days (`gh pr list --state merged --search "merged:>=$(date -u -v-30d +%Y-%m-%d)" --limit 50`) | Trend in shipping cadence; what got merged that **Recently shipped** missed |
 | Closed issues in last 30 days (`gh issue list --state closed --search "closed:>=$(date -u -v-30d +%Y-%m-%d)"`) | What got resolved — useful for "is this old issue still relevant?" |
 | Stale branches (`git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative) %(committerdate:short)' refs/heads/` — filter for `committerdate:short` older than 30 days) | Cleanup signal — branch graveyard surfaces |
 | Stale open PRs (open > 14 days) | Forgotten work; different from in-flight because not moving |
@@ -709,7 +746,7 @@ Section hints (one line under each heading) describe the section's *purpose*, no
 
 `/briefing sources` is a self-contained view. The output is *exactly* the template above (with the conditional `### Other Layouts Found` section rendered when artifacts are present, and the `### Canonical Structure` body omitted when no signal preconditions are met) — nothing else. Don't include:
 
-- **Default-mode briefing sections** — TL;DR, Snapshot, What's in flight, Recent activity, What's next, Decisions / attention. Those belong to `/briefing` (default mode), not sources mode. The user has explicitly asked for the self-documentation view; don't bolt the orientation view on top.
+- **Default-mode briefing sections** — Where you are, The blocker, Decisions waiting on you, Open questions, In flight, Recently shipped, Draft inventory, Housekeeping. Those belong to `/briefing` (default mode), not sources mode. The user has explicitly asked for the self-documentation view; don't bolt the orientation view on top.
 - **`★ About this briefing` bullets other than bullet 6 (depth conflict).** Bullet 2 ("Briefing relied on git/gh only — `/briefing sources` to see what else this skill can read") is *circular* when the user is already in sources mode — suppress it. Bullets 1, 3, 4, 5, 7 don't apply either: they describe the default-mode briefing's source coverage, not the sources view's own state. Only bullet 6 (depth conflict, e.g. `Depth ignored when 'sources' mode is active`) legitimately fires here.
 - **Response-style wrappers from outside the skill** — no `## Open decisions` block, no extra `★ Insight` block, no "What's next" framing the model would add in a general task. The skill output IS the response.
 
@@ -924,7 +961,7 @@ If `<instructions-file>` doesn't exist, no backup is needed; create the new file
 
 Setup mode's output is *exactly* the template above (proposal + confirmation prompt) plus, after user reply, a write-confirmation or manual-paste-fallback line. Same exclusions as `/briefing sources`:
 
-- No default-mode briefing sections (TL;DR / Snapshot / What's in flight / etc.).
+- No default-mode briefing sections (Where you are / In flight / Draft inventory / etc.).
 - No `/briefing sources` view layers.
 - No `★ About this briefing` bullets except bullet 6 (depth or save conflict).
 - No response-style wrappers (Claude's `## Open decisions`, `★ Insight`, free-form "What's next").
@@ -1024,8 +1061,10 @@ The save log is the only write this skill ever makes; everything else is read-on
 
 ## Tone
 
-- **Lead with the most important thing.** TL;DR carries the key message; if everything else got cut, TL;DR alone should be useful.
-- **Be specific.** File paths, SHAs, branch names, PR numbers, ROADMAP item names. Vague briefings are worse than no briefing.
+- **Lead with the most important thing.** The opening sentences of **Where you are** carry the key message; if everything else got cut, they alone should be useful.
+- **Be specific, then translate.** File paths, SHAs, branch names, PR numbers, ROADMAP item names — cite them exactly, and gloss every code or identifier in plain words on first use. Vague briefings are worse than no briefing; so are briefings written in a shorthand only the last session understood.
+- **Make it clickable.** Paths are written from the working directory, with `:line` when pointing at one item in a long file. A basename the reader has to go hunting for is not a citation.
+- **Structure over prose.** Tables for enumerable facts, one-line bullets otherwise, nothing longer than a three-line paragraph.
 - **Cite metrics, never compute them.** Read line counts, ahead/behind, dates from existing tooling. Don't aggregate token costs or estimate durations.
 - **No emojis, no hype.** "Last shipped X" not "Successfully shipped X! 🎉".
 - **Concise over comprehensive.** Bullets when structure helps scanning. No "It's worth noting that…"
@@ -1058,5 +1097,8 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't render the `★ About this briefing` block when no bullet has content — omit entirely.
 - Don't put audit/setup content in default-mode briefing output. That belongs in `/briefing sources`.
 - Don't presume canonical conventions are preferred over declared paths. Both are first-class in `/briefing sources`.
-- Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: any content about the briefing skill's *setup* (declaring `## Project Map`, adopting canonical conventions, enriching briefings) lives in `★ About this briefing` bullet 2 and `/briefing sources` only — never in `Decisions / attention`, `What's next`, or any other body section. If you find yourself writing a body bullet that ends with "…if you want richer briefings" or "…the briefing-readable fields", you've leaked setup content into orientation content; cut it.
-- Don't wrap skill output with general response-style blocks. Both `/briefing` and `/briefing sources` produce complete outputs per their templates — appending Claude's normal `## Open decisions` block, an extra `★ Insight` block, or a free-form "What's next" paragraph is wrapper-creep. Global response-style rules (e.g., from `<instructions-file>`) govern conversational replies; the skill spec overrides them for skill output. See **Output isolation** in both `## Output template` and `## /briefing sources mode`.
+- Don't lobby for convention adoption in default-mode output. The Tone rule "Suggest, don't impose" applies: any content about the briefing skill's *setup* (declaring `## Project Map`, adopting canonical conventions, enriching briefings) lives in `★ About this briefing` bullet 2 and `/briefing sources` only — never in `Housekeeping`, the `→` next action, or any other body section. If you find yourself writing a body bullet that ends with "…if you want richer briefings" or "…the briefing-readable fields", you've leaked setup content into orientation content; cut it.
+- Don't wrap skill output with general response-style blocks. Both `/briefing` and `/briefing sources` produce complete outputs per their templates — appending Claude's normal `## Open decisions` block, an extra `★ Insight` block, or a free-form "what's next" paragraph is wrapper-creep. Global response-style rules (e.g., from `<instructions-file>`) govern conversational replies; the skill spec overrides them for skill output. See **Output isolation** in both `## Output template` and `## /briefing sources mode`.
+- Don't cite a code, flag, ticket key, or task ID without saying what it means. `S7`, `D1`, `FF-204` and `BL#116` are lookups, not information. If you can't gloss it without opening the file, open the file.
+- Don't write a bare basename as a file reference. `2026-08-04-launch.md` doesn't open; `website/.docs/plans/2026-08-04-launch.md` does.
+- Don't drop rows to shorten the briefing. Cut words, merge sentences, tighten tables — but every unresolved doc, open decision and stale branch stays listed. A briefing that silently omits work is worse than a long one.

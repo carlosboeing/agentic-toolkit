@@ -16,15 +16,25 @@ Type `/briefing` in any Claude Code session and you get a structured briefing wh
 
 | Section | When it appears |
 |---|---|
-| **TL;DR** | Always — 1–2 sentences leading with the most important thing |
-| **Snapshot** | Always — branch, ahead/behind, roadmap state, recent activity |
-| **What's in flight** | Only if any Strong signal (open PR, unpushed commits, stashes, ROADMAP `## In flight`, drafts, dirty working tree, …) |
-| **Recent activity** | Always — last 3–5 things, synthesised not dumped |
-| **What's next** | Always — recommended action with reasoning |
-| **Decisions / attention** | Only if there's something to flag (design calls, stale work, risky operations) |
+| **1 · Where you are** | Always — what you were doing, where you stopped, the uncommitted files, and the one `→` next action |
+| **2 · The blocker** | Only if one thing gates everything else |
+| **3 · Decisions waiting on you** | Only if there are open rulings — each with a clickable `path:line` and a plain-English description |
+| **4 · Open questions** | Only if in-flight docs leave things undecided (waiting on work, not on you) |
+| **5 · In flight** | Only if any Strong signal (open PR, unpushed commits, stashes, ROADMAP `## In flight`, drafts, dirty working tree, …) |
+| **6 · Recently shipped** | Always — last 3–5 things as a commit table, synthesised not dumped |
+| **7 · Draft inventory** | Only if working memory was found — every unresolved doc, per repo, with its own status value |
+| **8 · Housekeeping** | Only if there's something to flag (stale work, structural gaps, conventions worth a later decision) |
 | **`★ About this briefing`** | Only if a source failure, depth conflict, detached HEAD, or thin-input case applies — otherwise omitted entirely |
 
-Sections with nothing to say are omitted entirely, not padded.
+Sections with nothing to say are omitted entirely, not padded, and the surviving ones renumber contiguously.
+
+Five rules bind every section, and they're what make a briefing scannable rather than merely complete:
+
+1. **Tables for anything enumerable**, one-line bullets otherwise, no paragraph over three lines.
+2. **Every code gets decoded on first use.** "S7 needs a ruling" is a lookup; "the homepage strip repeats itself one screen apart (S7)" is information.
+3. **Every path is clickable** — written from the working directory, with `:line` when it points at one item in a long file. Never a bare basename.
+4. **One explicit `→` next action**, in section 1.
+5. **Brevity comes from cutting words, not items.** A short briefing still lists every draft, decision and stale branch.
 
 ## Dials — how the briefing is shaped
 
@@ -33,7 +43,7 @@ Four knobs you can mix and match. Order doesn't matter.
 | Dial | Keywords | Default | Effect |
 |---|---|---|---|
 | **Mode** | `sources`, `setup` | briefing | `sources` switches to the self-documentation view (what this skill probes, what it found). `setup` adds or updates the `## Project Map` section in CLAUDE.md (with backup, after you confirm). Can't be combined with depth tiers or with each other — see the dedicated subsections below. |
-| **Depth** | `quick` (or `peek`), `standard`, `deep` (or `deep-dive`) | **adaptive (no override)** | Length × source breadth × wall-clock. `quick` < 300w, < 5s; `standard` 600–1000w, forces all six sections; `deep` 1200–2000w, adds historical sources, stale-branch sweep, ADR scan, per-project memory. Does not apply when `sources` mode is active. |
+| **Depth** | `quick` (or `peek`), `standard`, `deep` (or `deep-dive`) | **adaptive (no override)** | Section count × source breadth × wall-clock. `quick` renders sections 1 and 5 only, < 5s; `standard` forces all eight; `deep` adds historical sources, stale-branch sweep, ADR scan, per-project memory. `quick` may drop whole sections but never rows from a section it renders. Does not apply when `sources` mode is active. |
 | **Save** | `save` (or `--save`/`export`) | off | Write the output to `<repo>/.claude/briefing-log/` (or `~/.claude/briefing-log/` outside a git repo). Compatible with all modes. |
 | **Help** | `help` (or `?`/`usage`/`--help`/`-h`) | off | Render synopsis and stop |
 
@@ -99,7 +109,7 @@ See the [skills catalog README](../README.md#install-any-skill-in-this-directory
 /briefing                            # adaptive default
 /briefing quick                      # < 300w, ~5–7 reads, < 5s
 /briefing deep save                  # extended-window briefing, written to disk
-/briefing standard                   # forces all six sections at 600–1000w
+/briefing standard                   # forces all eight sections
 
 # ─── Sources mode (self-documentation) ─────────────
 /briefing sources                    # what this skill probes + what it found here
