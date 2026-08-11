@@ -12,57 +12,59 @@ related:
 
 # revloop credentials
 
-**This guide is about CI. Running revloop locally needs none of it.**
+**This guide covers CI. Running revloop from your terminal needs none of it.**
 
 | Mode | What it needs |
 |---|---|
-| **Local** — `revloop review --pr N` from your terminal | Your own `gh` login, and your harness already logged in. That's all |
+| **Local** — `revloop review --pr N` in your terminal | Your `gh` login and a logged-in harness. That is the whole list |
 | **CI** — the loop running unattended on GitHub Actions | Up to six credentials, of four kinds, across two repositories |
 
-The difference is not a design choice, it's the situation. On your laptop everything is already logged in. A CI runner is a fresh container that has never seen your code, your GitHub account or your Claude subscription, and every credential below exists to fix one part of that.
+The situation causes that difference, not a design choice. Your laptop is already logged in to everything. A CI runner is a fresh container that has never seen your code, your GitHub account or your Claude subscription. Every credential below fixes one part of that.
 
 ## Local mode
 
-Two things, both of which you probably already have:
+Two things, and you probably have both:
 
 - **`gh auth login`** — revloop makes every GitHub call through `gh`, so it acts as you. Your comments, your labels, your pushes.
-- **A logged-in harness** — `claude`, `codex` or `agy`, authenticated the ordinary way. revloop shells out to the CLI and the CLI uses its own credential on disk.
+- **A logged-in harness** — `claude`, `codex` or `agy`, authenticated the ordinary way. revloop shells out to the CLI, and the CLI uses its own credential on disk.
 
 `revloop doctor` checks both and names whichever is missing.
 
-One exception: if your config points a leg at an **endpoint** rather than a plain harness — Kimi through the claude adapter, say — that endpoint's token must be in your environment under the name its `token_env` gives. It's passed inline on the invocation, never exported.
+One exception. A leg pointed at an **endpoint** rather than a plain harness — Kimi through the claude adapter, say — needs that endpoint's token in your environment. The config's `token_env` gives the variable name. revloop passes the token inline on the invocation and never exports it.
 
-**The skills hold no credentials at all**, in either mode. `pr-review` and `pr-address` make no GitHub call by design — they decide, and the orchestrator acts. So a model never has a GitHub token in reach, whatever it reads in a diff.
+**The skills hold no credentials, in either mode.** `pr-review` and `pr-address` make no GitHub call by design: they decide, and the orchestrator acts. So whatever a model reads in a diff, no GitHub token sits within its reach.
 
-## CI, at a glance
+## CI
 
-A CI job is a stranger on a fresh machine. It needs four things:
-
-| # | Job | Credential | Needed when |
-|---|---|---|---|
-| 1 | Write on your pull request | `APP_ID` + `APP_PRIVATE_KEY` | Always |
-| 2 | Get a copy of revloop | `REVLOOP_SOURCE_KEY` | Always |
-| 3 | Be logged in to a paid AI | `CLAUDE_CODE_OAUTH_TOKEN`, `REVLOOP_CODEX_AUTH`, or an endpoint's own token | Hosted runner only |
-| 4 | Keep job 3 from expiring | `REVLOOP_REFRESH_APP_ID` + `REVLOOP_REFRESH_APP_PRIVATE_KEY` | Codex on a hosted runner only |
-
-`revloop init` derives the list from your config and tells you which are missing.
-
-### Read this first
+### First, the thing that confuses everyone
 
 **"Secret" is a storage location, not a kind of credential.** A GitHub Actions secret is an encrypted box that hands a value to a workflow. What goes in the box varies.
 
-So the secrets page holds four unrelated kinds of thing: an App's private key, an SSH deploy key, a vendor login, and a second App's private key. Knowing which is which is most of understanding this.
+So the secrets page holds four unrelated kinds of thing: an App's private key, an SSH deploy key, a vendor login, and a second App's private key. Tell them apart and the rest follows.
 
-## Which ones you need
+### The four jobs
 
-| Your setup | Credentials |
+A CI job is a stranger on a fresh machine. It needs four things:
+
+| # | Job | Credential |
+|---|---|---|
+| 1 | Write on your pull request | `APP_ID` + `APP_PRIVATE_KEY` |
+| 2 | Get a copy of revloop | `REVLOOP_SOURCE_KEY` |
+| 3 | Log in to a paid AI | `CLAUDE_CODE_OAUTH_TOKEN`, `REVLOOP_CODEX_AUTH`, or an endpoint's own token |
+| 4 | Keep job 3 from expiring | `REVLOOP_REFRESH_APP_ID` + `REVLOOP_REFRESH_APP_PRIVATE_KEY` |
+
+### Which your setup needs
+
+| Setup | Credentials |
 |---|---|
-| **Local, from your terminal** | **None of the below.** Your `gh` login and a logged-in harness |
-| Claude reviews and addresses, hosted runner | Jobs 1, 2, 3 — five secrets |
+| **Local, from your terminal** | **None of the above.** Your `gh` login and a logged-in harness |
+| Claude on both legs, hosted runner | Jobs 1, 2, 3 — five secrets |
 | Codex on either leg, hosted runner | Jobs 1, 2, 3, 4 — seven secrets |
-| Self-hosted runner | Jobs 1 and 2 only — the machine is already logged in |
+| Self-hosted runner | Jobs 1 and 2 — the machine is already logged in |
 
-A self-hosted runner skips job 3 for the same reason your laptop does: the harnesses are installed and logged in, and they refresh their own credentials the ordinary way. That is most of why self-hosted is simpler to operate.
+A self-hosted runner skips job 3 for the reason your laptop does: the harnesses are installed, logged in, and refresh themselves the ordinary way. That is most of what makes self-hosted simpler to operate.
+
+`revloop init` derives the list from your config and names what is missing. Add `--dry-run` and it prints the list without writing anything.
 
 ## Deep dive
 
@@ -70,11 +72,11 @@ A self-hosted runner skips job 3 for the same reason your laptop does: the harne
 
 `APP_ID` + `APP_PRIVATE_KEY`
 
-revloop comments, resolves threads, applies labels and pushes fixes. Something must be allowed to. It can't be you — you're asleep.
+revloop comments, resolves threads, applies labels and pushes fixes. Something has to be allowed to. It cannot be you, because you are asleep.
 
 A **GitHub App** is a robot account you own. The App ID is its username, the private key its password. Both are long-lived and live in secrets.
 
-Each run trades them for a **short-lived installation token** — one hour, revoked when the job ends rather than left to expire. That token does the writing. The private key never leaves the secret.
+Each run trades them for a **short-lived installation token** — one hour, and revoked when the job ends rather than left to expire. That token does the writing. The private key never leaves the secret.
 
 Permissions are three and no more:
 
@@ -84,7 +86,7 @@ Permissions are three and no more:
 | `pull_requests: write` | Comments, replies, resolving threads |
 | `issues: write` | Labels — GitHub files PR labels under the Issues API |
 
-**Why not `GITHUB_TOKEN`?** Every workflow gets one free. revloop never uses it, because GitHub refuses to fire workflows from anything `GITHUB_TOKEN` writes. That's the built-in infinite-loop guard, and it's correct in general. But revloop hands work between two jobs by pushing and labelling, so under `GITHUB_TOKEN` the loop stops dead after one leg. The App exists to get out from under a guard that's right everywhere else.
+**Why not `GITHUB_TOKEN`?** Every workflow gets one free. revloop never uses it, because GitHub refuses to fire workflows from anything `GITHUB_TOKEN` writes. That is the built-in infinite-loop guard, and it is correct in general. But revloop hands work between two jobs by pushing and labelling, so under `GITHUB_TOKEN` the loop stops dead after one leg. The App exists to get out from under a guard that is right everywhere else.
 
 ### Job 2 — The tool: the source deploy key
 
@@ -92,14 +94,14 @@ Permissions are three and no more:
 
 revloop's code lives in a different repository under a different account. The job must check it out to get the `revloop` command.
 
-Nothing it already holds can. The App token only works where the App is installed. `GITHUB_TOKEN` only works on the repo under review.
+Nothing it already holds can do that. The App token works only where the App is installed. `GITHUB_TOKEN` works only on the repository under review.
 
 A **deploy key** is an SSH key granting access to exactly one repository. It comes in halves:
 
 | Half | Goes on | Is |
 |---|---|---|
-| Public | The repo being **read** (`claude-code-resources`), marked read-only | The lock |
-| Private | The repo doing the **reading**, as `REVLOOP_SOURCE_KEY` | The key |
+| Public | The repository being **read** (`claude-code-resources`), marked read-only | The lock |
+| Private | The repository doing the **reading**, as `REVLOOP_SOURCE_KEY` | The key |
 
 The workflow uses both at once:
 
@@ -122,11 +124,11 @@ gh secret set REVLOOP_SOURCE_KEY --repo <consuming-repo> </tmp/revloop-source
 rm /tmp/revloop-source /tmp/revloop-source.pub
 ```
 
-Verify both halves of "read-only" rather than trusting the label. Reading `HEAD` over SSH with that key alone should succeed, and `git push --dry-run` through it should be refused with *"the key you are authenticating with has been marked as read only"*.
+Then test the read-only claim rather than trusting the label. Reading `HEAD` over SSH with that key alone should succeed, and `git push --dry-run` through it should be refused with *"the key you are authenticating with has been marked as read only"*.
 
 ### Job 3 — The brain: subscription credentials
 
-This is revloop's economic premise. It drives the `claude` and `codex` CLIs the way you do at a terminal, on subscriptions rather than per-token API keys. CI has to be logged in the way your laptop is.
+Job 3 is revloop's economic premise. It drives the `claude` and `codex` CLIs the way you do at a terminal, on subscriptions rather than per-token API keys. So CI has to be logged in the way your laptop is.
 
 | Secret | Holds | Lifetime |
 |---|---|---|
@@ -134,9 +136,9 @@ This is revloop's economic premise. It drives the `claude` and `codex` CLIs the 
 | `REVLOOP_CODEX_AUTH` | Your Codex `auth.json` | Access token ~10 days, refresh token **rotates** |
 | Whatever an endpoint names | e.g. `KIMI_API_KEY` | Vendor-dependent |
 
-The list is derived from your config, not fixed. Two Claude legs need one secret. A self-hosted runner needs none of these.
+revloop derives this list from your config rather than fixing it. Two Claude legs need one secret. A self-hosted runner needs none.
 
-Claude's is easy — a year is long and it doesn't change, so a secret is a good home. `revloop init` runs `claude setup-token`, captures the output without printing it, and records the expiry so `revloop auth status` can warn as the year closes.
+Claude's is easy. A year is long and the token does not change, so a secret is a good home. `revloop init` runs `claude setup-token`, captures the output without printing it, and records the expiry so `revloop auth status` can warn as the year closes.
 
 Codex's is the awkward one, and job 4 exists because of it.
 
@@ -144,26 +146,24 @@ Codex's is the awkward one, and job 4 exists because of it.
 
 `REVLOOP_REFRESH_APP_ID` + `REVLOOP_REFRESH_APP_PRIVATE_KEY`
 
-Codex's credential renews itself, and **using the refresh token consumes it**. You get a replacement back and the old one dies. So whatever refreshes it must write the replacement into the secret, or the chain snaps and CI is logged out until someone re-seeds by hand.
+Codex's credential renews itself, and **using the refresh token consumes it**. You get a replacement back and the old one dies. So whatever refreshes it must write the replacement into the secret, or the chain snaps and CI stays logged out until someone re-seeds it by hand.
 
-Writing a secret needs `Secrets: write`, which is dangerous here in a specific way. The review job reads a pull request diff and runs a model over it, so it's exposed to text a stranger wrote. A prompt injection reaching tool use in a job that holds `Secrets: write` could mint a token and overwrite your secrets.
+Writing a secret needs the `Secrets: write` permission, and that permission is dangerous here for a specific reason. The review job reads a pull request diff and runs a model over it, so a stranger's text reaches it. A prompt injection that got to tool use in a job holding `Secrets: write` could mint a token and overwrite your secrets.
 
-So it's a **second App**, with `Secrets: write` and nothing else, used by one scheduled workflow that never reads a diff. The review job can't reach it.
+So the permission lives on a **second App**, with `Secrets: write` and nothing else, used by one scheduled workflow that never reads a diff. The review job cannot reach it.
 
 Two rules follow, both load-bearing:
 
-- **Never store the refresher's private key as an org secret with `--visibility all`.** That hands it to every workflow in the org, including the one reading diffs — undoing the separation entirely.
-- **One credential, one repository, one writer.** Concurrency groups are repository-scoped, so an org-level rotating credential would have several writers and the first to refresh would invalidate the rest.
+- **Never store the refresher's private key as an org secret with `--visibility all`.** That hands it to every workflow in the organisation, including the one reading diffs, which undoes the separation entirely.
+- **One credential, one repository, one writer.** Concurrency groups are repository-scoped, so an org-level rotating credential would have several writers, and the first to refresh would invalidate the rest.
 
 ## Common confusions
 
-**"The consuming repo's Deploy keys page is empty."** Correct. The deploy key is registered on the repository being *read*. The consuming repo only holds the private half, and private halves live on the secrets page.
+**"The consuming repository's Deploy keys page is empty."** Correct. The deploy key is registered on the repository being *read*. The consuming repository holds only the private half, and private halves live on the secrets page.
 
-**"Why two GitHub Apps?"** Privilege separation. The loop App touches pull requests and is exposed to untrusted text. The refresher App can rewrite secrets and is not. Merging them would put `Secrets: write` in reach of a prompt injection.
+**"Why two GitHub Apps?"** Privilege separation. The loop App touches pull requests and meets untrusted text. The refresher App can rewrite secrets and never sees a diff. Merging them would put `Secrets: write` in reach of a prompt injection.
 
-**"Can I use org-level secrets?"** Only if the repository is public, or the organisation is on Team or Enterprise. GitHub serves org secrets to private repositories on paid plans only. On a free org with private repos, use repository secrets — narrower anyway. `revloop init` attempts org scope for an org owner and falls back to repository scope when that call fails.
-
-**"Which secrets do I actually need?"** Run `revloop init --dry-run`. It prints the derived list against what's already set, and writes nothing.
+**"Can I use org-level secrets?"** Only for a public repository, or on Team or Enterprise — GitHub serves org secrets to private repositories on paid plans alone. On a free organisation with private repositories, use repository secrets, which are narrower anyway. `revloop init` attempts org scope for an org owner and falls back to repository scope when that call fails.
 
 ## Runtime order
 
