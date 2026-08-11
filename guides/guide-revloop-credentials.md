@@ -50,19 +50,22 @@ A CI job is a stranger on a fresh machine. It needs four things:
 |---|---|---|
 | 1 | Write on your pull request | `APP_ID` + `APP_PRIVATE_KEY` |
 | 2 | Get a copy of revloop | `REVLOOP_SOURCE_KEY` |
-| 3 | Log in to a paid AI | `CLAUDE_CODE_OAUTH_TOKEN`, `REVLOOP_CODEX_AUTH`, or an endpoint's own token |
+| 3 | Log in to a paid AI | **One per distinct harness in your pairing** — `CLAUDE_CODE_OAUTH_TOKEN` for Claude, `REVLOOP_CODEX_AUTH` for Codex, or an endpoint's own token |
 | 4 | Keep job 3 from expiring | `REVLOOP_REFRESH_APP_ID` + `REVLOOP_REFRESH_APP_PRIVATE_KEY` |
+
+Job 3 is the only row that varies. It supplies one secret per **distinct** harness, so two Claude legs need one secret between them, and a Claude-plus-Codex pairing needs two. Job 4 appears only when Codex is one of them.
 
 ### Which your setup needs
 
-| Setup | Credentials |
+| Setup | Secrets |
 |---|---|
-| **Local, from your terminal** | **None of the above.** Your `gh` login and a logged-in harness |
-| Claude on both legs, hosted runner | Jobs 1, 2, 3 — five secrets |
-| Codex on either leg, hosted runner | Jobs 1, 2, 3, 4 — seven secrets |
-| Self-hosted runner | Jobs 1 and 2 — the machine is already logged in |
+| **Local, in your terminal** | **None.** Your `gh` login and a logged-in harness |
+| Claude on both legs, hosted runner | **4** — `APP_ID`, `APP_PRIVATE_KEY`, `REVLOOP_SOURCE_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` |
+| Claude and Codex, hosted runner | **7** — those four, plus `REVLOOP_CODEX_AUTH` and the refresher App's two |
+| Codex on both legs, hosted runner | **6** — the same seven without `CLAUDE_CODE_OAUTH_TOKEN` |
+| Self-hosted runner, any pairing | **3** — `APP_ID`, `APP_PRIVATE_KEY`, `REVLOOP_SOURCE_KEY` |
 
-A self-hosted runner skips job 3 for the reason your laptop does: the harnesses are installed, logged in, and refresh themselves the ordinary way. That is most of what makes self-hosted simpler to operate.
+A self-hosted runner skips jobs 3 and 4 for the reason your laptop does: the harnesses are installed, logged in, and refresh themselves the ordinary way. That is most of what makes self-hosted simpler to operate.
 
 `revloop init` derives the list from your config and names what is missing. Add `--dry-run` and it prints the list without writing anything.
 
@@ -136,7 +139,9 @@ Job 3 is revloop's economic premise. It drives the `claude` and `codex` CLIs the
 | `REVLOOP_CODEX_AUTH` | Your Codex `auth.json` | Access token ~10 days, refresh token **rotates** |
 | Whatever an endpoint names | e.g. `KIMI_API_KEY` | Vendor-dependent |
 
-revloop derives this list from your config rather than fixing it. Two Claude legs need one secret. A self-hosted runner needs none.
+revloop derives this list from your config rather than fixing it, and it deduplicates: two Claude legs need one secret between them, not two. A self-hosted runner needs none.
+
+**Only Claude and Codex appear here, and that is a runner constraint rather than a gap.** A subscription token has to survive between scheduled refreshes, and GitHub's scheduler has a five-minute floor that runs late under load. Claude's lasts a year and Codex's ten days, so both are comfortable. Antigravity's lasts about an hour, which would mean roughly 48 scheduled runs a day, and Kimi's lasts fifteen minutes, which no five-minute floor can stay ahead of. `revloop init` refuses a pairing its runner cannot serve and names the measured lifetime. Both run fine on a self-hosted runner, or locally.
 
 Claude's is easy. A year is long and the token does not change, so a secret is a good home. `revloop init` runs `claude setup-token`, captures the output without printing it, and records the expiry so `revloop auth status` can warn as the year closes.
 
