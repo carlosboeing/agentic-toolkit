@@ -12,7 +12,7 @@ A personal collection of Claude Code resources I've built up — skills, guides,
 
 Declares where project-tracking information lives so the [`/briefing`](skills/briefing/) skill (and other AI tools) can read it without guessing. Convention: [§5.8 of the conventions guide](guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd).
 
-- **Tracker**: none (ROADMAP.md is the single source of truth for "what's next" — no separate issue tracker)
+- **Tracker**: GitHub Issues — **for defects only.** A bug that is real, reproducible and not being fixed right now gets an issue with the `bug` label. Everything else about direction — what's next, what's parked, what shipped — stays in ROADMAP.md, which remains the single source of truth for it. The split is "something is broken" versus "something should happen": an issue describes a defect, a roadmap line describes intent. When a defect also needs to be visible in the forward view, the roadmap line links to the issue rather than restating it, so there is one record and two ways in.
 - **Board**: none
 - **Roadmap**: [docs/ROADMAP.md](docs/ROADMAP.md)
 - **Changelog**: [docs/CHANGELOG.md](docs/CHANGELOG.md)
@@ -21,6 +21,7 @@ Declares where project-tracking information lives so the [`/briefing`](skills/br
 - **Other**:
   - Repo is the source of truth for skills; the active harness loads from its user-level skills directory (e.g., `~/.claude/skills/` for Claude Code, `~/.gemini/config/skills/` for agy, `~/.codex/skills/` or `~/.agents/skills/` for Codex). Kimi Code reads `~/.agents/skills/` natively (plus its own `~/.kimi-code/skills/` for Kimi-specific entries), so the Codex target covers it. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. If the harness config directory is under source control (e.g., `carlosboeing/claude-config`), commit and push the synced files there too as a separate `chore(<scope>): sync from claude-code-resources` commit.
   - No CI configured; validation is manual / via `/ultrareview` on demand.
+  - `revloop` can file its own deferred findings as issues, but this repo has no `.github/revloop.yml`, so the default applies and nothing is persisted. A deferred finding therefore lives only in its pull request thread until someone files it by hand. Worth reconciling with the tracker line above if revloop starts reviewing here routinely.
 
 ## Layout
 
