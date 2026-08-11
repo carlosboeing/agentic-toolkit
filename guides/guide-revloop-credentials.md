@@ -12,9 +12,29 @@ related:
 
 # revloop credentials
 
-revloop runs an unattended review loop on your pull requests. To do that it needs up to six credentials, of four different kinds, spread across two repositories. This explains what each one is for.
+**This guide is about CI. Running revloop locally needs none of it.**
 
-## At a glance
+| Mode | What it needs |
+|---|---|
+| **Local** — `revloop review --pr N` from your terminal | Your own `gh` login, and your harness already logged in. That's all |
+| **CI** — the loop running unattended on GitHub Actions | Up to six credentials, of four kinds, across two repositories |
+
+The difference is not a design choice, it's the situation. On your laptop everything is already logged in. A CI runner is a fresh container that has never seen your code, your GitHub account or your Claude subscription, and every credential below exists to fix one part of that.
+
+## Local mode
+
+Two things, both of which you probably already have:
+
+- **`gh auth login`** — revloop makes every GitHub call through `gh`, so it acts as you. Your comments, your labels, your pushes.
+- **A logged-in harness** — `claude`, `codex` or `agy`, authenticated the ordinary way. revloop shells out to the CLI and the CLI uses its own credential on disk.
+
+`revloop doctor` checks both and names whichever is missing.
+
+One exception: if your config points a leg at an **endpoint** rather than a plain harness — Kimi through the claude adapter, say — that endpoint's token must be in your environment under the name its `token_env` gives. It's passed inline on the invocation, never exported.
+
+**The skills hold no credentials at all**, in either mode. `pr-review` and `pr-address` make no GitHub call by design — they decide, and the orchestrator acts. So a model never has a GitHub token in reach, whatever it reads in a diff.
+
+## CI, at a glance
 
 A CI job is a stranger on a fresh machine. It needs four things:
 
@@ -37,9 +57,12 @@ So the secrets page holds four unrelated kinds of thing: an App's private key, a
 
 | Your setup | Credentials |
 |---|---|
+| **Local, from your terminal** | **None of the below.** Your `gh` login and a logged-in harness |
 | Claude reviews and addresses, hosted runner | Jobs 1, 2, 3 — five secrets |
 | Codex on either leg, hosted runner | Jobs 1, 2, 3, 4 — seven secrets |
 | Self-hosted runner | Jobs 1 and 2 only — the machine is already logged in |
+
+A self-hosted runner skips job 3 for the same reason your laptop does: the harnesses are installed and logged in, and they refresh their own credentials the ordinary way. That is most of why self-hosted is simpler to operate.
 
 ## Deep dive
 
