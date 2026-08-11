@@ -5,7 +5,8 @@
 #
 # TOPOLOGY (see docs/2-design/2026-08-06-skill-installation-topology-design.md):
 #
-#   claude-code-resources/skills/  --copy-->  ~/.claude/skills   (the HUB)
+#   claude-code-resources/skills/            --copy-->  ~/.claude/skills  (the HUB)
+#   claude-code-resources/tools/*/skills/    --copy-->  ~/.claude/skills
 #                                                   ^
 #                                    whole-dir symlink from each SPOKE:
 #                                      ~/.agents/skills          (Codex, Kimi Code)
@@ -33,6 +34,7 @@
 set -euo pipefail
 
 SKILLS_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SKILLS_SRC/.." && pwd)"
 HUB="$HOME/.claude/skills"
 
 # Harness skill directories that point at the hub. Each is used only if its
@@ -74,10 +76,16 @@ run() {
 sync_authored() {
   local copied=0
   mkdir -p "$HUB"
-  for path in "$SKILLS_SRC"/*/; do
+  # Two sources, both authored here. Standalone skills live beside this script;
+  # skills that ship with a tool live under tools/<tool>/skills/ because they
+  # travel with it. A tool reproduces its own skill text at runtime and needs no
+  # install, but both are still invokable by hand in an ordinary session, so both
+  # belong in the hub. An unmatched glob stays literal, hence the -d guard.
+  for path in "$SKILLS_SRC"/*/ "$REPO_ROOT"/tools/*/skills/*/; do
     local name src dest
-    name="$(basename "$path")"
-    src="$SKILLS_SRC/$name"
+    [[ -d "$path" ]] || continue
+    src="${path%/}"
+    name="$(basename "$src")"
     [[ -f "$src/SKILL.md" ]] || continue          # only real skills
     dest="$HUB/$name"
 
