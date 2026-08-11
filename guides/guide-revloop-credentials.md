@@ -106,7 +106,7 @@ Local and self-hosted runs use each harness's normal login. For example, Codex r
 
 ## Understand why Codex needs a second App
 
-Codex refresh tokens rotate. A refresh can invalidate the copy another job holds, so review and address jobs never update the stored credential.
+Codex refresh tokens rotate. A refresh can invalidate the copy another job holds, so review and resolve jobs never update the stored credential.
 
 The refresher workflow is the only writer. It exchanges the refresher App ID and private key for a short-lived token with `secrets: write`. That workflow does not read pull request code, diffs or comments.
 
@@ -115,13 +115,13 @@ Keep both Codex-specific credentials at repository scope:
 - `REVLOOP_CODEX_AUTH` cannot be shared across repositories because GitHub concurrency groups are repository-scoped
 - `REVLOOP_REFRESH_APP_PRIVATE_KEY` must not be exposed to every workflow through an organisation secret
 
-Each repository needs its own `codex login` seed. A review or address job restores a temporary copy, runs Codex, then deletes the copy.
+Each repository needs its own `codex login` seed. A review or resolve job restores a temporary copy, runs Codex, then deletes the copy.
 
 ## Know what the skills can access
 
 Calling revloop through a harness skill does not change its credential model. The orchestrator still owns GitHub access.
 
-The `pr-review` and `pr-address` skills receive the diff and other context from the orchestrator. They receive no GitHub token and make no GitHub call. The adapters also remove `GH_TOKEN`, `GITHUB_TOKEN` and `GH_ENTERPRISE_TOKEN` before starting the model-facing process.
+The `pr-review` and `pr-resolve` skills receive the diff and other context from the orchestrator. They receive no GitHub token and make no GitHub call. The adapters also remove `GH_TOKEN`, `GITHUB_TOKEN` and `GH_ENTERPRISE_TOKEN` before starting the model-facing process.
 
 ## Set up the credentials
 
@@ -142,4 +142,4 @@ The remaining values depend on the pairing:
 Run `revloop init --dry-run` again after changing a runner, harness or endpoint. The required set changes with the pairing.
 
 > [!WARNING]
-> `revloop init` detects endpoint secret names, but the generated review and address workflows do not yet map arbitrary endpoint secrets into the leg environment. Automated endpoint use needs a manual workflow `env` mapping. Local endpoint use only needs the variable in your shell.
+> `revloop init` detects endpoint secret names, but the generated review and resolve workflows do not yet map arbitrary endpoint secrets into the leg environment. Automated endpoint use needs a manual workflow `env` mapping. Local endpoint use only needs the variable in your shell.
