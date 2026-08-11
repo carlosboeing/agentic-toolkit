@@ -16,25 +16,21 @@ Type `/briefing` in any Claude Code session and you get a structured briefing wh
 
 | Section | When it appears |
 |---|---|
-| **1 · Where you are** | Always — what you were doing, where you stopped, the uncommitted files, and the one `→` next action |
-| **2 · The blocker** | Only if one thing gates everything else |
-| **3 · Decisions waiting on you** | Only if there are open rulings — each with a clickable `path:line` and a plain-English description |
-| **4 · Open questions** | Only if in-flight docs leave things undecided (waiting on work, not on you) |
-| **5 · In flight** | Only if any Strong signal (open PR, unpushed commits, stashes, ROADMAP `## In flight`, drafts, dirty working tree, …) |
-| **6 · Recently shipped** | Always — last 3–5 things as a commit table, synthesised not dumped |
-| **7 · Draft inventory** | Only if working memory was found — every unresolved doc, per repo, with its own status value. `active` counts as unresolved; lifecycle artifacts and evergreen docs are split on `type`, and any exclusion is stated with its count |
-| **8 · Housekeeping** | Only if there's something to flag (stale work, structural gaps, conventions worth a later decision) |
+| **Summary** | Always — 2–3 sentences: what you were doing, where it stands, what's needed from you (or "nothing waiting on you") |
+| **Status** | When there's motion — in-flight threads on dense lines, plan progress as counts, the uncommitted-files table, last 3–5 shipped commits, the quiet line |
+| **Findings** | When there's something worth knowing — risks and blockers as facts, stale statuses, structural gaps, and the draft inventory: actionable rows only, parked/stale groups collapsed to stated counts (`deep` renders every row) |
+| **Recommendations and next steps** | Always — a short paragraph on the recommended direction, then priority-ordered action bullets with steering and clickable paths. The only place the ask lives |
 | **`★ About this briefing`** | Only if a source failure, depth conflict, detached HEAD, or thin-input case applies — otherwise omitted entirely |
 
-Sections with nothing to say are omitted entirely, not padded, and the surviving ones renumber contiguously.
+Sections with nothing to say are omitted entirely, not padded.
 
 Five rules bind every section, and they're what make a briefing scannable rather than merely complete:
 
 1. **Tables for anything enumerable**, one-line bullets otherwise, no paragraph over three lines.
 2. **Every code gets decoded on first use.** "S7 needs a ruling" is a lookup; "the homepage strip repeats itself one screen apart (S7)" is information.
 3. **Every path is clickable** — written from the working directory, with `:line` when it points at one item in a long file. Never a bare basename.
-4. **One explicit `→` next action**, in section 1.
-5. **Brevity comes from cutting words, not items.** A short briefing still lists every draft, decision and stale branch — and any filter it applies is stated with its count, because an unstated exclusion and an accidental omission look identical from the outside.
+4. **The funnel.** Actions live only in Summary's "what's needed" clause (as a pointer) and the closing section (as the ask). Status and Findings are read-only context.
+5. **No silent drops.** Collapsing a group — parked drafts, stale branches — is allowed when it's counted, named, and carries an escape hatch. An unstated exclusion and an accidental omission look identical from the outside.
 
 ## Dials — how the briefing is shaped
 
@@ -43,7 +39,7 @@ Four knobs you can mix and match. Order doesn't matter.
 | Dial | Keywords | Default | Effect |
 |---|---|---|---|
 | **Mode** | `sources`, `setup` | briefing | `sources` switches to the self-documentation view (what this skill probes, what it found). `setup` adds or updates the `## Project Map` section in CLAUDE.md (with backup, after you confirm). Can't be combined with depth tiers or with each other — see the dedicated subsections below. |
-| **Depth** | `quick` (or `peek`), `standard`, `deep` (or `deep-dive`) | **adaptive (no override)** | Section count × source breadth × wall-clock. `quick` renders sections 1 and 5 only, < 5s; `standard` forces all eight; `deep` adds historical sources, stale-branch sweep, ADR scan, per-project memory. `quick` may drop whole sections but never rows from a section it renders. Does not apply when `sources` mode is active. |
+| **Depth** | `quick` (or `peek`), `standard`, `deep` (or `deep-dive`) | **adaptive (no override)** | Section count × source breadth × wall-clock. `quick` renders Summary + Recommendations and next steps only, < 5s; `standard` forces all four; `deep` renders the full draft inventory (no collapse) plus historical sources, stale-branch sweep, ADR scan, per-project memory. `quick` may drop whole sections but never rows from a section it renders. Does not apply when `sources` mode is active. |
 | **Save** | `save` (or `--save`/`export`) | off | Write the output to `<repo>/.claude/briefing-log/` (or `~/.claude/briefing-log/` outside a git repo). Compatible with all modes. |
 | **Help** | `help` (or `?`/`usage`/`--help`/`-h`) | off | Render synopsis and stop |
 
@@ -107,9 +103,9 @@ See the [skills catalog README](../README.md#install-any-skill-in-this-directory
 ```
 # ─── Standard cases ────────────────────────────────
 /briefing                            # adaptive default
-/briefing quick                      # < 300w, ~5–7 reads, < 5s
+/briefing quick                      # Summary + next steps only, ~5–7 reads, < 5s
 /briefing deep save                  # extended-window briefing, written to disk
-/briefing standard                   # forces all eight sections
+/briefing standard                   # forces all four sections
 
 # ─── Sources mode (self-documentation) ─────────────
 /briefing sources                    # what this skill probes + what it found here
@@ -209,7 +205,8 @@ That's it. No package install, no plugin marketplace, no auth setup beyond the o
 ## See also
 
 - **[`SKILL.md`](SKILL.md)** — the skill itself, drop-in to `~/.claude/skills/briefing/`.
-- **[`docs/2-design/2026-05-03-briefing-footer-redesign-design.md`](../../docs/2-design/2026-05-03-briefing-footer-redesign-design.md)** — footer redesign (conditional `★ About this briefing` block + `/briefing sources` mode). Most recent design.
+- **[`docs/2-design/2026-08-11-briefing-decision-brief-format-design.md`](../../docs/2-design/2026-08-11-briefing-decision-brief-format-design.md)** — decision-brief output restructure (four sections, the funnel rule, collapse-with-counts inventory). Most recent design.
+- **[`docs/2-design/2026-05-03-briefing-footer-redesign-design.md`](../../docs/2-design/2026-05-03-briefing-footer-redesign-design.md)** — footer redesign (conditional `★ About this briefing` block + `/briefing sources` mode). Still governs the footer.
 - **[`docs/2-design/2026-05-03-briefing-skill-shareability-design.md`](../../docs/2-design/2026-05-03-briefing-skill-shareability-design.md)** — prior design (4-layer architecture). Background for the layered source model. Superseded for the footer behaviour by the redesign above.
 - **[`docs/2-design/2026-05-02-briefing-skill-design.md`](../../docs/2-design/2026-05-02-briefing-skill-design.md)** — original design (3-layer model). Historical reference; the layered-source-model rationale and the deferred Approach C (Stop-hook snapshot schema) live here.
 - **[`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd)** — the canonical `## Project Map` schema this skill consumes.
