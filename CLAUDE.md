@@ -12,7 +12,7 @@ A personal collection of Claude Code resources I've built up — skills, guides,
 
 Declares where project-tracking information lives so the [`/briefing`](skills/briefing/) skill (and other AI tools) can read it without guessing. Convention: [§5.8 of the conventions guide](guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd).
 
-- **Tracker**: GitHub Issues — **for defects only.** A bug that is real, reproducible and not being fixed right now gets an issue with the `bug` label. Everything else about direction — what's next, what's parked, what shipped — stays in ROADMAP.md, which remains the single source of truth for it. The split is "something is broken" versus "something should happen": an issue describes a defect, a roadmap line describes intent. When a defect also needs to be visible in the forward view, the roadmap line links to the issue rather than restating it, so there is one record and two ways in.
+- **Tracker**: GitHub Issues — defects (`bug`) and improvements (`enhancement`) alike. An issue is for work with a definite shape: something specific enough that someone could pick it up. ROADMAP.md stays the forward view — direction, sequencing, what's parked, what shipped — and is still the single source of truth for that. A roadmap line whose work has become concrete links to its issue rather than restating it, so there is one record and two ways in.
 - **Board**: none
 - **Roadmap**: [docs/ROADMAP.md](docs/ROADMAP.md)
 - **Changelog**: [docs/CHANGELOG.md](docs/CHANGELOG.md)
