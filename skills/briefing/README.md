@@ -19,7 +19,7 @@ Type `/briefing` in any Claude Code session and you get a structured briefing wh
 | **Summary** | Always — 2–3 sentences: what you were doing, where it stands, what's needed from you (or "nothing waiting on you") |
 | **Status** | When there's motion — in-flight threads on dense lines, plan progress as counts, the uncommitted-files table, last 3–5 shipped commits, the quiet line |
 | **Findings** | When there's something worth knowing — risks and blockers as facts, stale statuses, structural gaps, and the draft inventory: actionable rows only, parked/stale groups collapsed to stated counts (`deep` renders every row) |
-| **Recommendations and next steps** | Always — a short paragraph on the recommended direction, then priority-ordered action bullets with steering and clickable paths. The only place the ask lives |
+| **Recommendations and next steps** | Always — advisory, not a dump. A short paragraph on the recommended direction, then a numbered list of priority-ordered action items with steering and clickable paths (numbered so you can reply by number). Items can carry a bold signal tag — **Urgent**, **Quick win**, **Blocking** — and the order is derived from those signals. The only place the ask lives |
 | **`★ About this briefing`** | Only if a source failure, depth conflict, detached HEAD, or thin-input case applies — otherwise omitted entirely |
 
 Sections with nothing to say are omitted entirely, not padded.

@@ -471,13 +471,28 @@ facts, stale statuses, structural gaps, stale work to triage.>
 /briefing deep for the full list". State every filter with its count.>
 
 ## Recommendations and next steps                 ← always
-<A short paragraph: the recommended direction — what to do first and why. The
-judgement lives here, not in the bullets. When nothing waits, say so and point
-at the top of the roadmap.>
+<A short paragraph: the recommended direction — what to do first and why, and
+how the signals below shaped the order. The judgement lives here, not in the
+items. When nothing waits, say so and point at the top of the roadmap.>
 
-- <Action item, imperative> — <steering: why this priority, what to watch, a
-  suggestion where useful> · <clickable path>
-- Decide: <question> — <the options, with a lean where the evidence supports one>
+1. **<Signal>** — <Action item, imperative> — <steering: why this priority,
+   what to watch, a suggestion where useful> · <clickable path>
+2. Decide: <question> — <the options, with a lean where the evidence supports one>
+
+<The list is numbered (1., 2., 3., …), not bulleted: the reader replies by
+number ("do 1 and 3"), so the numbers must be stable within one briefing.
+Priority order — item 1 is the recommended first move, and the order is
+derived from the signals, not vibes.>
+
+<Signal tags — a closed set, bold, leading the item, at most one per item.
+Most items carry no tag; a tag is a claim the steering line must back up.
+- **Urgent** — time-sensitive: stale state going staler, a live PR or branch
+  at risk, a window that closes.
+- **Quick win** — minutes of effort, real value, nothing waits on it.
+  Quick wins go early only when they're nearly free — never ahead of an
+  urgent item.
+- **Blocking** — other queued work can't start until this lands; name what
+  it blocks in the steering line.>
 
 [★ About this briefing — conditional, see About this briefing section below]
 [Optional: Saved to <path>]
@@ -499,7 +514,7 @@ When the user's `<instructions-file>` or another global rule mandates a closing-
 
 **Findings — the draft inventory, and the collapse rule.** An unresolved doc is **actionable** when any of these hold: (1) it is referenced from the roadmap's in-flight or next-actions sections; (2) it was modified within the last 30 days; (3) it carries an explicit question or decision for the reader. Actionable docs render as table rows with the project's own status vocabulary (`draft`, `open`, `wip`, `ready-for-review`, `active`), never a normalised one, plus a one-line "waiting on". Everything else collapses into grouped count lines that name the groups and carry the escape hatch — "6 parked brainstorms, 3 June drafts — `/briefing deep` for the full list". Statuses like `active` count as unresolved, and evergreen docs (`guide`, `reference`, `policy`, `template`, or no type) stay excluded under the `type`-based split in [Statuses that look terminal but aren't](#statuses-that-look-terminal-but-arent), with the count stated. Every filter and every collapse states its count — an unstated exclusion and an accidental omission look identical from the reader's side. `/briefing deep` renders every unresolved row, no collapse.
 
-**Recommendations and next steps:** Always present. Open with a short paragraph stating the recommended direction — what to do first and why, with the reasoning compressed to what supports it. Then priority-ordered bullets: an imperative action, one line of steering (why this priority, what to watch, a suggestion where useful), and a clickable path. Decisions render as `Decide:` bullets naming the options, with a lean where the evidence supports one; rule 2 binds hardest here, because a decision the reader can't understand is a decision they can't make. This section is the only place the ask lives — when genuinely nothing waits, the paragraph says so and the single bullet points at the roadmap's top item. Don't pad it.
+**Recommendations and next steps:** Always present. This section is advisory, not a dump — it steers, it doesn't just list. Open with a short paragraph stating the recommended direction: what to do first, why, and how the signal tags shaped the order. Then a numbered list in priority order (`1.`, `2.`, `3.`, …): an imperative action, one line of steering (why this priority, what to watch, a suggestion where useful), and a clickable path. The list is numbered so the reader can reply by number ("do 1 and 3") — keep the numbers stable within one briefing. Items that earn it carry one bold signal tag up front — **Urgent** (time-sensitive, something going stale or a window closing), **Quick win** (minutes of effort, real value, nothing depends on it), **Blocking** (name what it unblocks) — and the priority order is derived from those signals: urgent first, then blocking, quick wins early when nearly free, everything else by judged value. Most items carry no tag; a tag is a claim the steering line must back up. Decisions render as `Decide:` items naming the options, with a lean where the evidence supports one; rule 2 binds hardest here, because a decision the reader can't understand is a decision they can't make. This section is the only place the ask lives — when genuinely nothing waits, the paragraph says so and the single numbered item points at the roadmap's top item. Don't pad it.
 
 The **`★ About this briefing` block** is conditional — it renders only when at least one bullet has content (see **About this briefing** below for the bullet inventory and trigger rules). When no bullet applies, the block omits entirely and the briefing ends with whatever section ran last. The `[Optional: Saved to <path>]` line appears only when `save` was passed; the actual save path and write semantics are defined under **Save behaviour** below. Depth-override notes from the parser surface as bullet 6 inside `★ About this briefing` (text: `Depth received both '<X>' and '<Y>'; using '<Y>'`).
 
@@ -1105,3 +1120,5 @@ The save log is the only write this skill ever makes; everything else is read-on
 - Don't drop rows to shorten the briefing without saying so. Collapse is allowed — counted, named, with the escape hatch stated (see the collapse rule under Findings). Silent omission is the defect, not collapse.
 - Don't filter silently. Excluding evergreen guides, reference docs or templates from the draft inventory is usually right; doing it without saying so is not. State the filter and its count — "5 evergreen prompts and guides excluded" — so the reader can overrule the judgement. An unstated exclusion and an accidental omission look identical from the outside.
 - Don't read `status:` without also reading `type:`. `active` on a review means an open review; `active` on a brand guide means a current one. The status alone can't tell them apart.
+- Don't tag every recommendation. **Urgent** / **Quick win** / **Blocking** are signal, not decoration — if more than about a third of the items carry a tag, the tags have stopped meaning anything. An item with no signal gets no tag, and a tag the steering line can't justify gets cut.
+- Don't order the recommendations by vibes. The priority follows the signals — urgent first, then blocking, quick wins early when nearly free — and the opening paragraph says why. If the order can't be explained from the tags and the judgement, rework it.
