@@ -6,11 +6,16 @@
 # TOPOLOGY (see docs/2-design/2026-08-06-skill-installation-topology-design.md):
 #
 #   claude-code-resources/skills/            --copy-->  ~/.claude/skills  (the HUB)
-#   claude-code-resources/tools/*/skills/    --copy-->  ~/.claude/skills
+#   crossrev/skills/                         --copy-->  ~/.claude/skills
 #                                                   ^
 #                                    whole-dir symlink from each SPOKE:
 #                                      ~/.agents/skills          (Codex, Kimi Code)
 #                                      ~/.gemini/config/skills   (Antigravity)
+#
+# The second source used to be a `tools/*/skills/*/` glob, when CrossRev lived in
+# this repo. It is now an external checkout, named explicitly on purpose: the glob
+# would have stopped matching the moment tools/ went away, and its failure mode is
+# silence — no error, just two skills that quietly stop syncing.
 #
 # The hub holds real directories only, so Claude Code -- the primary harness --
 # never resolves a symlink to find a skill. Every other harness reaches the same
@@ -34,8 +39,13 @@
 set -euo pipefail
 
 SKILLS_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SKILLS_SRC/.." && pwd)"
 HUB="$HOME/.claude/skills"
+
+# CrossRev lives in its own repository now. Named explicitly rather than globbed,
+# because the failure mode of the old tools/*/skills/*/ pattern was silence: the
+# two skills simply stopped being found. Override the path if the checkout is
+# somewhere else.
+CROSSREV_SKILLS="${CROSSREV_SKILLS:-$HOME/Projects/carlos/crossrev/skills}"
 
 # Harness skill directories that point at the hub. Each is used only if its
 # parent exists (i.e. the harness is installed).
@@ -75,13 +85,27 @@ run() {
 
 sync_authored() {
   local copied=0
+  local -a sources=("$SKILLS_SRC"/*/)
   mkdir -p "$HUB"
-  # Two sources, both authored here. Standalone skills live beside this script;
-  # skills that ship with a tool live under tools/<tool>/skills/ because they
-  # travel with it. A tool reproduces its own skill text at runtime and needs no
-  # install, but both are still invokable by hand in an ordinary session, so both
-  # belong in the hub. An unmatched glob stays literal, hence the -d guard.
-  for path in "$SKILLS_SRC"/*/ "$REPO_ROOT"/tools/*/skills/*/; do
+
+  # Two sources. Standalone skills live beside this script; CrossRev's two ship
+  # with the tool in its own repository, because they travel with it. CrossRev
+  # reproduces its skill text at runtime and needs no install, but both are still
+  # invokable by hand in an ordinary session, so both belong in the hub.
+  #
+  # A missing checkout says so rather than skipping quietly. Silence is exactly
+  # what made the old glob a bad mechanism, and a warning here costs nothing on a
+  # machine that legitimately has no CrossRev.
+  if [[ -d "$CROSSREV_SKILLS" ]]; then
+    sources+=("$CROSSREV_SKILLS"/*/)
+  else
+    echo "-- note: no CrossRev checkout at $CROSSREV_SKILLS"
+    echo "     pr-review and pr-resolve will not be synced. Clone"
+    echo "     carlosboeing/crossrev, or set CROSSREV_SKILLS to its skills/ dir."
+  fi
+
+  # An unmatched glob stays literal, hence the -d guard.
+  for path in "${sources[@]}"; do
     local name src dest
     [[ -d "$path" ]] || continue
     src="${path%/}"

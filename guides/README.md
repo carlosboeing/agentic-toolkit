@@ -15,7 +15,8 @@ How-to guides for using Claude Code productively. Each guide is a stable, evergr
 | [`guide-agy-model-and-quota-selection.md`](guide-agy-model-and-quota-selection.md) | Antigravity-only picker, quota checks, session behavior, and operational fallbacks; cross-harness task routing and comparisons live in the canonical routing guide and model reference. |
 | [`guide-trimming-claude-code-startup-context.md`](guide-trimming-claude-code-startup-context.md) | The durable recipe for cutting Claude Code startup context (~232k → ~74k measured): a global lean baseline (`disableClaudeAiConnectors` + finance plugins off), self-hosting the integrations you use in code (Fathom worked example) so they survive the connector flag, dropping redundant browser stacks, and the measure loop. Pairs with `reference/reference-claude-code-context-costs.md`. |
 | [`guide-penmark-agent-integration.md`](guide-penmark-agent-integration.md) | Global default behavior for validated Penmark inline comments on explicit local Markdown reviews: precedence, shared installation, validation, failure handling, upgrades, and an evidence audit. |
-| [`guide-revloop-credentials.md`](guide-revloop-credentials.md) | Which credentials local, GitHub-hosted and self-hosted revloop runs need, where each value lives, and why Codex requires a separate refresher App. |
+
+**Graduated out on 2026-08-13:** `guide-revloop-credentials.md` moved with its tool. CrossRev (formerly revloop) was extracted to [`carlosboeing/crossrev`](https://github.com/carlosboeing/crossrev), and the guide is now that repo's [`docs/credentials.md`](https://github.com/carlosboeing/crossrev/blob/main/docs/credentials.md), rewritten for composite-action delivery — the deploy key it documented no longer exists.
 
 ## Conventions
 

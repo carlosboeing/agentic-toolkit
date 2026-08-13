@@ -15,23 +15,24 @@
 
 (Add more rows as new skills land. Per-skill `README.md` carries the detail.)
 
-### Skills that ship with a tool
+### Skills that live in another repository
 
-Two more skills exist in this repo and deliberately do not live here. They belong to [`tools/revloop`](../tools/revloop/), so they travel with it — the same rule the repo already applies to plugin bundles, where a bundle keeps its own `skills/` intact rather than flattening into the per-type directory.
+Two skills that used to sit under `tools/revloop/` are no longer in this repo at all. **CrossRev was extracted to [`carlosboeing/crossrev`](https://github.com/carlosboeing/crossrev) on 2026-08-13** and its skills travelled with it, the same way a plugin bundle keeps its own `skills/` intact rather than flattening into the per-type directory.
 
 | Skill | Where | What it does |
 |---|---|---|
-| `pr-review` | [`tools/revloop/skills/pr-review`](../tools/revloop/skills/pr-review/) | Reviews a pull request as one leg of the revloop loop. Reads a diff and prior threads supplied in the prompt and returns findings as schema-constrained JSON anchored to file and line. Holds no GitHub credential by design |
-| `pr-resolve` | [`tools/revloop/skills/pr-resolve`](../tools/revloop/skills/pr-resolve/) | Verifies each finding against the codebase, fixes what is real, pushes back on what is wrong, and returns dispositions and reply text as intent for the orchestrator to act on |
+| `pr-review` | [`carlosboeing/crossrev`](https://github.com/carlosboeing/crossrev/tree/main/skills/pr-review) | Reviews a pull request as one leg of the CrossRev loop. Reads a diff and prior threads supplied in the prompt and returns findings as schema-constrained JSON anchored to file and line. Holds no GitHub credential by design |
+| `pr-resolve` | [`carlosboeing/crossrev`](https://github.com/carlosboeing/crossrev/tree/main/skills/pr-resolve) | Verifies each finding against the codebase, fixes what is real, pushes back on what is wrong, and returns dispositions and reply text as intent for the orchestrator to act on |
 
-Install them by pointing the `skills` CLI at the tool rather than the repo root, one name per flag:
+Install them from the public repo. No `--skill` filters: its `skills/` holds exactly these two, so naming them selects everything and can only go stale.
 
 ```bash
-npx skills@latest add carlosboeing/claude-code-resources/tools/revloop \
-  --skill pr-review --skill pr-resolve
+npx skills@latest add carlosboeing/crossrev
 ```
 
-revloop itself does not need them installed — it reproduces their text into each prompt. Install them if you want to invoke them by hand.
+CrossRev itself does not need them installed — it reproduces their text into each prompt from its own checkout. Install them if you want to invoke them by hand.
+
+`skills/sync-skills.sh` in this repo syncs them into the hub from a local CrossRev checkout, which it expects at `~/Projects/carlos/crossrev/skills` unless `CROSSREV_SKILLS` says otherwise.
 
 ## Install (any skill in this directory)
 
