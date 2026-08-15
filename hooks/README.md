@@ -2,6 +2,8 @@
 
 Claude Code lifecycle hooks — shell scripts wired into `settings.json` events (`PreToolUse`, `PostToolUse`, `Stop`, …) so the harness enforces behavior deterministically, instead of relying on the model remembering a convention. This directory mirrors `~/.claude/hooks/`.
 
+**Looking for git hooks?** They are in [`git-hooks/`](../git-hooks/). These intercept the agent's tool calls; those run in git, for anyone committing, and install into a target repository rather than into `~/.claude/`.
+
 ## Install (shared pattern)
 
 1. Copy the hook script into place and make it executable:

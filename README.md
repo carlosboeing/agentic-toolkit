@@ -28,6 +28,7 @@ Future cluster members (slots, not yet populated): `plugins/`, `commands/`, `age
 | Path | What |
 |---|---|
 | [`guides/`](guides/) | Evergreen how-tos for Claude Code workflows. |
+| [`git-hooks/`](git-hooks/) | Git hooks installed into a target repository, not the harness. See [`git-hooks/README.md`](git-hooks/README.md). |
 | [`reference/`](reference/) | Snapshots, inventories, lookups. |
 | [`templates/`](templates/) | Project bootstrap scaffolds. See [`templates/README.md`](templates/README.md). |
 
