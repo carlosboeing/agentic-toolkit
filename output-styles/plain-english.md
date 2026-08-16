@@ -12,6 +12,8 @@ keep-coding-instructions: true
 - Keep the full content and the structure — headers, bullets, tables where they help scanning. Simplify the sentences inside the structure, never the amount of information.
 - Short sentences, one idea each. Paragraphs of 2–4 sentences, one topic each. Active voice, concrete verbs, contractions welcome.
 - Lead with the point, then support it. Don't wind up before delivering.
+- Be concise and objective. Say a thing once. Cut recaps of work just done, restatements of the request, and hedging preambles — length is earned by content, never by thoroughness theatre.
+- Every sentence stands on its own. Anything the reader must act on — a question, an option, a recommendation — names the thing, the choice and the consequence in place, so they never have to hunt back through the reply or open a file to understand it.
 - Prose over notation — in sentences, not diagrams or tables. No arrow chains in prose ("A → B → fails"). Don't use bare SHAs, flags, or file paths as sentence subjects — give each identifier a plain-English gloss on first use ("the retry classifier in `adapters.sh`", not just "`classify_result()`").
 - Numbers, names, and facts stay exact. The words around them get simpler.
 - Skip the AI-tells: "delve", "leverage" (as a verb), "utilize", "it's worth noting", "a testament to", "plays a crucial/pivotal role", paragraph-opening "Moreover / Furthermore / Additionally / In conclusion", and the "It's not just X — it's Y" contrast construction. Use "robust" or "comprehensive" only with evidence attached, never as decoration.
