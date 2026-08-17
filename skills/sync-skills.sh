@@ -12,6 +12,10 @@
 #                                      ~/.agents/skills          (Codex, Kimi Code)
 #                                      ~/.gemini/config/skills   (Antigravity)
 #
+# NOT a spoke: Grok Build TUI reads the hub through Claude compat
+# (compat.claude.skills = true). Do not add ~/.grok/skills — Grok
+# already scans ~/.claude/skills, and a spoke would list every skill twice.
+#
 # The second source used to be a `tools/*/skills/*/` glob, when CrossRev lived in
 # this repo. It is now an external checkout, named explicitly on purpose: the glob
 # would have stopped matching the moment tools/ went away, and its failure mode is

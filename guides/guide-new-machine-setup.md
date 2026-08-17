@@ -79,6 +79,7 @@ These have their own mechanisms — the link script does not touch them:
 - **Plugins** (`enabledPlugins` in `settings.json`): installed from their marketplaces by Claude Code.
 - **Codex / Antigravity** plugin wiring: see [`../plugins/superpowers-relink.sh`](../plugins/superpowers-relink.sh).
 - **Kimi Code CLI**: install with the official script (`curl -fsSL https://code.kimi.com/kimi-code/install.sh | bash`), then `kimi` and `/login`. It reads `~/.agents/AGENTS.md` and `~/.agents/skills/` natively, so steps 3–4 already cover instructions and authored skills. `~/.kimi-code/` (config.toml, mcp.json, sessions) is machine-local and not in git — recreate MCP entries per [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md). Superpowers installs via its native plugin manager (`/plugins`), not the relink script.
+- **Grok Build TUI**: already reads `~/.claude/CLAUDE.md` and `~/.claude/skills` through Claude compat. Do not create `~/.grok/AGENTS.md` or `~/.grok/skills`. Recreate `~/.grok/config.toml` compat cells, `[plugins].disabled`, and the three MCP entries from [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md). Superpowers stays on the Claude plugin path.
 
 ## Verify
 

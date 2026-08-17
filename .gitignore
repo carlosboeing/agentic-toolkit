@@ -1,4 +1,10 @@
 .claude/
+# Grok /briefing save dest. The skill leaves briefing-log unignored by
+# default; this repo already ignores .claude/ and would otherwise pick
+# up the first Grok /briefing save as an untracked tree. Do not ignore
+# all of .grok/ — a later project-scoped .grok/config.toml is a
+# different artifact.
+.grok/briefing-log/
 .worktrees/
 .DS_Store
 

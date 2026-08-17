@@ -78,15 +78,15 @@ The depth default is **adaptive**: when no depth keyword is provided, the briefi
 
 When executing the instructions in this skill (reading files, executing commands, creating files, asking user questions), use the appropriate tool for your active runtime:
 
-| Action | Claude Code | Antigravity CLI (`agy`) | Cursor CLI | Codex | Kimi Code |
-|---|---|---|---|---|---|
-| **Read file** | `Read` | `view_file` | Native view / `cat` | `shell` (e.g. `cat`) | `Read` |
-| **Write/Create file** | `Write` | `write_to_file` | Native edit | `apply_patch` / `shell` | `Write` |
-| **Edit file** | `Edit` | `replace_file_content` | Native edit | `apply_patch` | `Edit` |
-| **Run command** | `Bash` | `run_command` | Native terminal | `shell` | `Bash` |
-| **Search files** | `Grep` | `grep_search` | Native search | `shell` (e.g. `grep`) | `Grep` |
-| **Ask user** | `AskUserQuestion` | `ask_question` | Native input | `request_user_input` | `AskUserQuestion` |
-| **Dispatch subagent** | `Agent` | `invoke_subagent` | Native agent | `spawn_agent` | `Agent` |
+| Action | Claude Code | Antigravity CLI (`agy`) | Cursor CLI | Codex | Kimi Code | Grok |
+|---|---|---|---|---|---|---|
+| **Read file** | `Read` | `view_file` | Native view / `cat` | `shell` (e.g. `cat`) | `Read` | `read_file` |
+| **Write/Create file** | `Write` | `write_to_file` | Native edit | `apply_patch` / `shell` | `Write` | `write` |
+| **Edit file** | `Edit` | `replace_file_content` | Native edit | `apply_patch` | `Edit` | `search_replace` |
+| **Run command** | `Bash` | `run_command` | Native terminal | `shell` | `Bash` | `run_terminal_command` |
+| **Search files** | `Grep` | `grep_search` | Native search | `shell` (e.g. `grep`) | `Grep` | `grep` |
+| **Ask user** | `AskUserQuestion` | `ask_question` | Native input | `request_user_input` | `AskUserQuestion` | `ask_user_question` |
+| **Dispatch subagent** | `Agent` | `invoke_subagent` | Native agent | `spawn_agent` | `Agent` | `spawn_subagent` |
 
 ## Instructions file resolution
 
@@ -94,7 +94,7 @@ To support multiple platforms and harnesses, the briefing skill abstracts the pr
 
 - **Active Runtime Defaults:**
   - On Claude Code, default to `CLAUDE.md`.
-  - On agy, Cursor, Codex, and Kimi, default to `AGENTS.md`.
+  - On agy, Cursor, Codex, Kimi, and Grok, default to `AGENTS.md`.
 - **Existing Files Check:**
   - If only one file exists, use it.
   - If both exist, use the active runtime's default.
@@ -224,6 +224,7 @@ ls -l "$HOME/.gemini/antigravity-cli/brain/projects/$slug/memory/MEMORY.md" 2>/d
 ls -l "$HOME/.codex/projects/$slug/memory/MEMORY.md" 2>/dev/null
 
 # Kimi Code has no per-project memory index — nothing to probe
+# Grok Build TUI has no per-project memory index — nothing to probe
 ```
 
 If the index file exists in the active runtime's path (some users maintain one via an auto-memory system), read it for cross-session continuity notes. If not, skip silently — many projects do not maintain one. This is a runtime-specific mechanic, not a project convention, so it lives in Always-on.
@@ -1014,6 +1015,7 @@ case "<active-runtime>" in
   agy|antigravity)    DEST="$ROOT/.gemini/briefing-log" ;;
   codex)              DEST="$ROOT/.codex/briefing-log" ;;
   cursor)             DEST="$ROOT/.cursor/briefing-log" ;;
+  grok)               DEST="$ROOT/.grok/briefing-log" ;;
   *)
     if [ -d "$ROOT/.claude" ] || [ -d "$HOME/.claude" ]; then
       DEST="$ROOT/.claude/briefing-log"

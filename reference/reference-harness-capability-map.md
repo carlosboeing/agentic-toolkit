@@ -1,10 +1,11 @@
 ---
 title: Harness capability map — deliberation, routing, plugins
 type: reference
-last_reviewed: 2026-07-28
+last_reviewed: 2026-08-17
 authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
+  - "grok-4.6 (grok)"
 related:
   - guides/guide-harness-plugin-parity.md
   - guides/guide-agy-model-and-quota-selection.md
@@ -58,6 +59,17 @@ Fourth harness, alongside Claude Code, Codex, and Agy. The load-bearing capabili
 - **Headless resume** — `kimi --session session_<id> -p` auto-approves; no session PID registry, and resuming an open session injects into it (schedule-resume warns at create).
 - **Native plugin system** — superpowers installs from the marketplace (`.kimi-plugin/plugin.json`), updated via `/plugins`, not the canonical-clone model.
 - **Models** — K3 (up to 1M context, T1–T2), K2.7 Coding (T1), Highspeed variants (T0–T1); membership-plan quota, independent pool.
+
+## Grok Build TUI (added 2026-08-17)
+
+Fifth daily harness, alongside Claude Code, Codex, Agy, and Kimi. Cursor is parked. Load-bearing facts from the [parity design](../docs/2-design/2026-08-17-grok-fifth-harness-parity-design.md):
+
+- **Instructions and skills for free** — Claude compat loads `~/.claude/CLAUDE.md` and the `~/.claude/skills` hub. No Grok spoke.
+- **Hooks: ingest off** — PreToolUse can deny and rewrite, Stop can block, but we do not ingest Claude hook scripts. PostToolUse is observe-only even if ingest returns.
+- **RTK is the prefix path** — no `rtk init --agent grok`. Same instruction class as Codex and Kimi.
+- **MCP** — inherit Fathom, `mcp-image`, chrome, `mcp-search`; declare `claude-mem`, Playwright, Context7 in `~/.grok/config.toml`.
+- **Superpowers** — Claude plugin path. Do not install a second tree.
+- **Not in this pass** — no CrossRev grok adapter, no `schedule-resume` grok target, no output styles, no briefing probe of Grok memory.
 
 ## Decision pointers
 

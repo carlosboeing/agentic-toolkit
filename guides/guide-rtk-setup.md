@@ -1,11 +1,12 @@
 ---
 title: RTK Token Killer Setup Guide
 type: guide
-scope: [harness-parity, rtk, token-savings, CLI-proxy, hooks, kimi-code]
+scope: [harness-parity, rtk, token-savings, CLI-proxy, hooks, kimi-code, grok]
 authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
-last_reviewed: 2026-07-28
+  - "grok-4.6 (grok)"
+last_reviewed: 2026-08-17
 related:
   - guide-harness-plugin-parity.md
   - guide-claude-mem-setup.md
@@ -14,7 +15,7 @@ related:
 
 # RTK Token Killer Setup Guide
 
-This guide documents the unified configuration and hook integrations of **RTK (Rust Token Killer)** across six AI coding harnesses: Claude Code, Antigravity (`agy`), Cursor, Codex, OpenCode, and Kimi Code.
+This guide documents the unified configuration and hook integrations of **RTK (Rust Token Killer)** across seven AI coding harnesses: Claude Code, Antigravity (`agy`), Cursor, Codex, OpenCode, Kimi Code, and Grok Build TUI.
 
 ---
 
@@ -111,6 +112,14 @@ Kimi's hook events can allow or deny a tool call but cannot rewrite `tool_input`
 *   **Setup**: `rtk init --agent kimi` (requires rtk ≥ 0.44.0 — earlier versions have no kimi target; upgrade with `brew upgrade rtk` and make sure the binary on your PATH is the new one)
 *   **Method**: project-scoped `AGENTS.md` instructions direct the agent to prefix commands with `rtk`. The global `~/.agents/AGENTS.md` RTK section (loaded natively by Kimi) reinforces the same "no trusted hook → explicitly prefix" rule.
 *   **Verify**: run a Kimi session, then `rtk gain` should show activity.
+
+### 7. Grok Build TUI (Instruction-based)
+
+Grok can deny and rewrite on PreToolUse, but Claude hook ingest is off, and the inherited `rtk hook claude` payload does not parse Grok's camelCase (`toolInput.command`). `rtk init --agent grok` does not exist. Do not run any other `rtk init` as a stand-in.
+
+*   **Setup**: none beyond the global `~/.claude/CLAUDE.md` RTK section (Grok already loads it). Explicitly prefix shell commands with `rtk`.
+*   **Method**: instruction-driven, the same class as Codex and Kimi.
+*   **Verify**: in a Grok session run `rtk git status`, then `rtk gain` should show the record. No project `AGENTS.md` RTK boilerplate should appear.
 
 ---
 

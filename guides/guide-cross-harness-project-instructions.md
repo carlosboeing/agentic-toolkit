@@ -1,12 +1,13 @@
 ---
 title: Cross-harness project instructions (CLAUDE / AGENTS / GEMINI)
 type: guide
-scope: [harness-parity, claude-code, cursor, antigravity, gemini-cli, kimi-code]
+scope: [harness-parity, claude-code, cursor, antigravity, gemini-cli, kimi-code, grok]
 authors:
   - "Carlos Boeing"
   - "gpt-5 (codex)"
   - "k3 (kimi-code)"
-last_reviewed: 2026-07-28
+  - "grok-4.6 (grok)"
+last_reviewed: 2026-08-17
 related:
   - guide-harness-plugin-parity.md
   - guide-agy-model-and-quota-selection.md
@@ -59,6 +60,7 @@ Keep this kind of global rule short and harness-neutral. Put workflow mechanics,
 | Antigravity CLI / IDE | `GEMINI.md` | Superpowers `contextFileName`; migration docs also mention `AGENTS.md` |
 | Codex | Project instructions vary | Copy or symlink per Codex project config |
 | Kimi Code | `AGENTS.md` | Reads project `AGENTS.md` and the shared `~/.agents/AGENTS.md` natively — no symlink or adapter file needed; optional Kimi-specific layer at `~/.kimi-code/AGENTS.md` |
+| Grok Build TUI | `AGENTS.md` (project, native) plus `~/.claude/CLAUDE.md` via Claude compat `agents` | No `~/.grok/AGENTS.md`. A spoke would duplicate the file Grok already loads |
 
 ## Continual-learning (Cursor only)
 

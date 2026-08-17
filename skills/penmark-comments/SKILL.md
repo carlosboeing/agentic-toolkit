@@ -53,7 +53,7 @@ Write the config file only for the "Yes, and stop asking" answer, creating the d
 
 ## Gate
 
-Print the full findings first, then ask using the harness question tool: `AskUserQuestion` on Claude Code, `ask_question` on Agy, `request_user_input` on Codex, native input on Cursor.
+Print the full findings first, then ask using the harness question tool: `AskUserQuestion` on Claude Code, `ask_question` on Agy, `request_user_input` on Codex, `ask_user_question` on Grok, native input on Cursor.
 
 Every one of these needs an interactive session. When the tool is unavailable for any reason — a headless run such as `claude -p` or `codex exec`, a subagent, or a harness that has none — use the text form below **verbatim**.
 

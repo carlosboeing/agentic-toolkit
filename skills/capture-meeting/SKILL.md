@@ -44,7 +44,7 @@ Turn an AI meeting recording (Fathom or other tool) plus the user's manual notes
 
 To support multiple platforms and harnesses, abstract the project instructions file (e.g., `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`) as `<instructions-file>`:
 - On Claude Code, default to `CLAUDE.md`.
-- On agy, Cursor, and Codex, default to `AGENTS.md` (which may be a symlink to `CLAUDE.md` or `GEMINI.md`).
+- On agy, Cursor, Codex, and Grok, default to `AGENTS.md` (which may be a symlink to `CLAUDE.md` or `GEMINI.md`).
 - If a symlink or pointer exists, resolve the target to write/edit directly to the resolved target file.
 
 ## Source adapters

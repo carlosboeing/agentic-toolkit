@@ -4,8 +4,9 @@ type: guide
 authors:
   - "Carlos Boeing"
   - "gpt-5.6-sol (codex)"
-scope: [model-routing, claude-code, codex, kimi-code, antigravity, quota, open-weight]
-last_reviewed: 2026-08-02
+  - "grok-4.6 (grok)"
+scope: [model-routing, claude-code, codex, kimi-code, antigravity, grok, quota, open-weight]
+last_reviewed: 2026-08-17
 related:
   - ../reference/reference-cross-harness-models.md
   - ../docs/2-design/2026-08-02-four-harness-model-routing-guide-design.md
@@ -22,6 +23,8 @@ The default policy is:
 > Start with the cheapest independent capacity pool that can finish the task reliably. Escalate when you observe complexity, not when the task merely sounds important.
 
 Current plan snapshot: Claude Max 5x, ChatGPT Plus, Kimi Allegretto, and Google AI Pro with Antigravity. This snapshot will change. The routing logic should survive those changes; prices, model rosters, quota structures, and benchmarks live in the dated [cross-harness reference](../reference/reference-cross-harness-models.md).
+
+Grok Build TUI is a fifth daily harness. Do not route work to it from this guide until the models reference has a live roster and quota snapshot.
 
 ## The short answer
 

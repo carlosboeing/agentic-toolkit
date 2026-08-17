@@ -1,12 +1,13 @@
 ---
-title: Harness plugin and skill parity (Claude Code, Codex, Antigravity, Kimi)
+title: Harness plugin and skill parity (Claude Code, Codex, Antigravity, Kimi, Grok)
 type: guide
-scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor, kimi-code]
-last_reviewed: 2026-07-28
+scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor, kimi-code, grok]
+last_reviewed: 2026-08-17
 last_audited: 2026-07-28
 authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
+  - "grok-4.6 (grok)"
 related:
   - guide-browser-automation-mcp-vs-cli.md
   - guide-cross-harness-project-instructions.md
@@ -16,7 +17,7 @@ related:
 
 # Harness plugin and skill parity
 
-How to get a similar **methodology and tooling** bar when switching between Claude Code, Cursor, and Antigravity (`agy`). Prefer **official installs**; use symlinks only for portable skills (see discovery doc).
+How to get a similar **methodology and tooling** bar when switching between Claude Code, Codex, Antigravity (`agy`), Kimi Code, and Grok Build TUI. Cursor is parked. Prefer **official installs**; use symlinks only for portable skills (see discovery doc).
 
 ## Install channels on Antigravity
 
@@ -44,6 +45,18 @@ Verify: `agy plugin list`, `/skills` in session, `ls ~/.agents/skills/`.
 
 Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology and the canonical instruction file already cover it with zero wiring — `~/.agents/skills` is a symlink to the hub. Verify: `ls ~/.agents/skills/`, `/plugins info <name>`, `kimi doctor`.
 
+## Install channels on Grok Build TUI
+
+| Channel | Command / path |
+|---------|----------------|
+| Skills | `~/.claude/skills` via `[compat.claude] skills = true`. No `~/.grok/skills` spoke |
+| Instructions | `~/.claude/CLAUDE.md` via `[compat.claude] agents = true`. Project `AGENTS.md` natively. No `~/.grok/AGENTS.md` |
+| MCP inherit | Claude MCP (`fathom`, `mcp-image`, claude-mem plugin `mcp-search`, chrome) |
+| MCP declared | `~/.grok/config.toml`: `claude-mem`, Playwright (`--isolated`), Context7 (`Authorization = Bearer ${CONTEXT7_API_KEY}`) |
+| Hooks | Claude hook ingest **off**. Do not register a Grok shim |
+| Plugins | Claude discovery on; `[plugins].disabled` mirrors Claude's off list |
+| Superpowers | Claude plugin path to the canonical clone. Do not `grok plugin install` a second tree |
+
 ## Verified installed state — Kimi (audited 2026-07-28)
 
 | Piece | State |
@@ -51,7 +64,7 @@ Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology
 | Authored skills (briefing, penmark-comments, schedule-resume, …) | Reached through `~/.agents/skills`, a whole-dir symlink to the hub — no Kimi-specific step. **Changed 2026-08-06:** they are copies in the hub now, not live symlinks into the repo, so a repo edit needs `sync-skills.sh` before Kimi sees it |
 | `kimi-webbridge` skill | **Removed 2026-08-06** from all four locations, pending reinstall. `~/.kimi-code/skills` was deleted with it. Rebuild path in [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md) |
 | MCP servers (context7, claude-mem, fathom, playwright) | Parity target: mirror the four entries from `~/.gemini/config/mcp_config.json` into `~/.kimi-code/mcp.json`. `headroom` was a fifth until 2026-08-04 — do not re-add it, see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md) |
-| Superpowers | Native plugin registration + canonical-clone content: `~/.kimi-code/plugins/managed/superpowers` is a whole-dir symlink to `plugins/superpowers` (v6.2.0), restored by `plugins/superpowers-relink.sh` after any `/plugins` update. `git pull` in the clone now propagates to all four harnesses |
+| Superpowers | Native plugin registration + canonical-clone content: `~/.kimi-code/plugins/managed/superpowers` is a whole-dir symlink to `plugins/superpowers` (v6.2.0), restored by `plugins/superpowers-relink.sh` after any `/plugins` update. `git pull` in the clone now propagates to all five daily harnesses |
 | RTK | Instructions mode (`rtk init --agent kimi`, needs rtk ≥ 0.44.0) — Kimi hooks can't rewrite tool input, so no transparent hook |
 
 ## Verified installed state — Antigravity (audited 2026-06-14)

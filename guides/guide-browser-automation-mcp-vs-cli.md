@@ -1,12 +1,13 @@
 ---
 title: Browser automation for agents — Playwright MCP vs CLI (and chrome-devtools, WebBridge)
 type: guide
-scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, claude-code, codex, cursor, kimi-code, webbridge]
+scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, claude-code, codex, cursor, kimi-code, grok, webbridge]
 authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
   - "claude-opus-5 (claude-code)"
-last_reviewed: 2026-07-29
+  - "grok-4.6 (grok)"
+last_reviewed: 2026-08-17
 related:
   - guide-harness-plugin-parity.md
   - guide-cross-harness-project-instructions.md
@@ -71,7 +72,7 @@ Net effect: more work ends up on the CLI than a strict category rule would send 
 
 ## Per-harness defaults
 
-All four run Playwright MCP with `--isolated` — see [why](#run-every-harness-with---isolated). Any harness left on the default persistent profile will contend with the others.
+All five daily harnesses run Playwright MCP with `--isolated` — see [why](#run-every-harness-with---isolated). Cursor stays the parked exception. Any harness left on the default persistent profile will contend with the others.
 
 | Harness | Exploratory / ad-hoc / aesthetics | Repeatable / goldens |
 |---|---|---|
@@ -79,6 +80,7 @@ All four run Playwright MCP with `--isolated` — see [why](#run-every-harness-w
 | **Codex** | Playwright MCP (`~/.codex/config.toml`) | Playwright CLI |
 | **Antigravity** | Playwright MCP for parity (`~/.gemini/config/mcp_config.json`); chrome-devtools-plugin (already bundled, no install) is an additional live-debug tool | Playwright CLI |
 | **Kimi Code** | Playwright MCP (`~/.kimi-code/mcp.json`) | Playwright CLI |
+| **Grok Build TUI** | Playwright MCP (`~/.grok/config.toml` → `[mcp_servers.playwright]`) | Playwright CLI |
 
 **Cursor** is not covered: it has no Playwright MCP registered and is no longer in active use. Gemini CLI likewise has none — it's being retired in favour of Antigravity CLI, and the two read different files (`~/.gemini/settings.json` vs `~/.gemini/config/mcp_config.json`). Don't confuse them.
 
@@ -132,6 +134,7 @@ Inspect before writing; never overwrite unrelated user-level configuration. Roll
 | Codex | `~/.codex/config.toml` → `[mcp_servers.playwright]` | `codex mcp list` |
 | Kimi Code | `~/.kimi-code/mcp.json` → `mcpServers.playwright` | read the file |
 | Antigravity | `~/.gemini/config/mcp_config.json` → `mcpServers.playwright` | read the file |
+| Grok Build TUI | `~/.grok/config.toml` → `[mcp_servers.playwright]` | `grok mcp list` / `grok mcp doctor` |
 
 The standard object, for any harness taking JSON:
 
@@ -251,7 +254,7 @@ npx playwright codegen <url>        # record a flow into a spec
 npx playwright screenshot <url> out.png  # one-shot screenshot
 npx playwright install              # install browsers
 
-# Playwright MCP (Claude Code / Codex / Kimi Code / Antigravity) — add to MCP config
+# Playwright MCP (Claude Code / Codex / Kimi Code / Antigravity / Grok Build TUI) — add to MCP config
 #   package: @playwright/mcp   (default: accessibility-tree snapshots; --caps=vision for screenshots)
 #   --isolated                        in-memory profile: no lock, no cross-harness contention
 #   --allow-unrestricted-file-access  permit file:// navigation (blocked by default)

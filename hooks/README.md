@@ -34,3 +34,5 @@ chmod +x ~/.claude/hooks/$HOOK.sh
 ## Other harnesses
 
 Kimi Code has a hooks system too (`[[hooks]]` in `~/.kimi-code/config.toml`), but its event semantics differ in two load-bearing ways: only `PreToolUse`, `Stop`, and `UserPromptSubmit` can block (its `PostToolUse` is observation-only), and no event can rewrite tool input. Blocking validators like `validate-mermaid` therefore stay Claude-only; interception hooks of the RTK command-rewriting kind are impossible on Kimi.
+
+Grok Build TUI can deny and rewrite on PreToolUse, and Stop can block, but Claude hook ingest is off and PostToolUse cannot block. Blocking validators stay Claude-only. Do not register a Grok shim in this pass.
