@@ -23,7 +23,7 @@ chmod +x ~/.claude/hooks/$HOOK.sh
 | Hook | Event | What it does |
 |---|---|---|
 | [`validate-mermaid/`](validate-mermaid/) | `PostToolUse` on `Write\|Edit` | Parse-validates every Mermaid block in a modified `.md` file; blocks with actionable feedback when a block won't render. |
-| [`plain-english/`](../tools/plain-english/) | `PreToolUse` on `Write\|Edit` | Ships inside the Plain English bundle. Reconstructs Markdown edits and blocks deterministic prose violations before a write. |
+| [`plain-english/`](../tools/plain-english/) | `PreToolUse` on `Write\|Edit` and `UserPromptSubmit` | Ships inside the Plain English bundle. Reconstructs Markdown edits, blocks prose violations before a write, and injects a 47-word chat reminder per turn. |
 
 ## Conventions for this type
 

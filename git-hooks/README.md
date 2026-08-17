@@ -25,6 +25,7 @@ git -C "$REPO" config core.hooksPath scripts/githooks
 | Hook | Event | What it does |
 |---|---|---|
 | [`private-workbench-guard/`](private-workbench-guard/) | `pre-commit` | For a public repository with an independent private clone nested inside it. Refuses a commit that stages the workbench as a gitlink, or that adds private-side vocabulary to a public file. |
+| [`plain-english/`](../tools/plain-english/git-hooks/) | `pre-commit` | Runs the Plain English test suite to ensure linter checks and canonical rules block sync do not regress. |
 
 ## Conventions for this type
 
