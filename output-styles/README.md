@@ -6,7 +6,7 @@
 
 | Style | File | What it does |
 |---|---|---|
-| Plain English | [`plain-english.md`](plain-english.md) | Structured but plain writing — full technical content, simpler sentences, no AI-isms. Keeps coding instructions. The rules block is kept in sync with the `### Writing style` section of `~/.claude/CLAUDE.md` (claude-config repo), which carries the same rules to other harnesses and subagents. |
+| Plain English | [`plain-english.md`](../tools/plain-english/output-styles/plain-english.md) | Structured but plain writing — full technical content, simpler sentences, no AI-isms. Keeps coding instructions. The rules block is kept in sync with the `### Writing style` section of `~/.claude/CLAUDE.md` (claude-config repo), which carries the same rules to other harnesses and subagents. |
 
 (Add more rows as new styles land.)
 
@@ -16,7 +16,7 @@ Symlink the style into the user-level output-styles directory (same authoring pa
 
 ```bash
 mkdir -p ~/.claude/output-styles
-ln -s "$(pwd)/output-styles/plain-english.md" ~/.claude/output-styles/plain-english.md
+ln -s "$(pwd)/tools/plain-english/output-styles/plain-english.md" ~/.claude/output-styles/plain-english.md
 ```
 
 Then activate it, either by running `/config` and selecting **Plain English** under **Output style**, or by setting it directly in a settings file (e.g. `~/.claude/settings.json`):

@@ -6,6 +6,7 @@
 # TOPOLOGY (see docs/2-design/2026-08-06-skill-installation-topology-design.md):
 #
 #   claude-code-resources/skills/            --copy-->  ~/.claude/skills  (the HUB)
+#   claude-code-resources/tools/*/skills/    --copy-->  ~/.claude/skills
 #   crossrev/skills/                         --copy-->  ~/.claude/skills
 #                                                   ^
 #                                    whole-dir symlink from each SPOKE:
@@ -16,10 +17,9 @@
 # (compat.claude.skills = true). Do not add ~/.grok/skills — Grok
 # already scans ~/.claude/skills, and a spoke would list every skill twice.
 #
-# The second source used to be a `tools/*/skills/*/` glob, when CrossRev lived in
-# this repo. It is now an external checkout, named explicitly on purpose: the glob
-# would have stopped matching the moment tools/ went away, and its failure mode is
-# silence — no error, just two skills that quietly stop syncing.
+# Tool bundles use a `tools/*/skills/*/` glob because their names are open-ended.
+# CrossRev remains an explicit external source. A bundle glob must never be
+# expected to find it, or its two skills would stop syncing without a warning.
 #
 # The hub holds real directories only, so Claude Code -- the primary harness --
 # never resolves a symlink to find a skill. Every other harness reaches the same
@@ -43,12 +43,11 @@
 set -euo pipefail
 
 SKILLS_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SKILLS_SRC/.." && pwd)"
 HUB="$HOME/.claude/skills"
 
-# CrossRev lives in its own repository now. Named explicitly rather than globbed,
-# because the failure mode of the old tools/*/skills/*/ pattern was silence: the
-# two skills simply stopped being found. Override the path if the checkout is
-# somewhere else.
+# CrossRev lives in its own repository now, outside the bundle glob. Override
+# the path if the checkout is somewhere else.
 CROSSREV_SKILLS="${CROSSREV_SKILLS:-$HOME/Projects/carlos/crossrev/skills}"
 
 # Harness skill directories that point at the hub. Each is used only if its
@@ -90,12 +89,23 @@ run() {
 sync_authored() {
   local copied=0
   local -a sources=("$SKILLS_SRC"/*/)
+  local bundle_skills
   mkdir -p "$HUB"
 
-  # Two sources. Standalone skills live beside this script; CrossRev's two ship
-  # with the tool in its own repository, because they travel with it. CrossRev
-  # reproduces its skill text at runtime and needs no install, but both are still
-  # invokable by hand in an ordinary session, so both belong in the hub.
+  # Three sources. Standalone skills live beside this script. Extraction-ready
+  # tool bundles carry their skills under tools/<name>/skills/. CrossRev's two
+  # ship with the tool in its own repository, because they travel with it.
+  # CrossRev reproduces its skill text at runtime and needs no install, but both
+  # are still invokable by hand in an ordinary session, so both belong in the hub.
+  #
+  # An unmatched bundle glob stays literal, hence the -d guard. This preserves
+  # the old explicit CrossRev source while letting every real tools/ bundle join
+  # the same copy loop.
+  for bundle_skills in "$REPO_ROOT"/tools/*/skills/; do
+    [[ -d "$bundle_skills" ]] || continue
+    sources+=("$bundle_skills"/*/)
+  done
+
   #
   # A missing checkout says so rather than skipping quietly. Silence is exactly
   # what made the old glob a bad mechanism, and a warning here costs nothing on a

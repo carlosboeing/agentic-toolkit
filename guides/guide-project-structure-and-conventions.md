@@ -366,6 +366,7 @@ Project-specific. Adapt to your needs:
 - `configs/` — versioned config files (Docker Compose, Kubernetes manifests, IaC templates, app configs).
 - `scripts/` — tested ops scripts. Half-finished work doesn't go here; use a `wip/` subfolder or keep it locally.
 - `skills/` — Claude Code skills (or similar agent definitions). May or may not apply to your project.
+- `tools/` — extraction-ready bundles for multi-part tools. Keep each tool's command, library, wrappers, skills, tests, and docs together so a later repository split stays mechanical.
 - `.claude/` — Claude Code workspace settings (typically `settings.local.json` is gitignored).
 
 ---
