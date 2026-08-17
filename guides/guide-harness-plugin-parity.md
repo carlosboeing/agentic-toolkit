@@ -53,7 +53,7 @@ Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology
 | Instructions | `~/.claude/CLAUDE.md` via `[compat.claude] agents = true`. Project `AGENTS.md` natively. No `~/.grok/AGENTS.md` |
 | MCP inherit | Claude MCP (`fathom`, `mcp-image`, claude-mem plugin `mcp-search`, chrome) |
 | MCP declared | `~/.grok/config.toml`: `claude-mem`, Playwright (`--isolated`), Context7 (`Authorization = Bearer ${CONTEXT7_API_KEY}`) |
-| Hooks | Claude hook ingest **off**. Do not register a Grok shim |
+| Hooks | Claude hook ingest **off**. Owned PreToolUse/Stop hooks register natively under `~/.grok/hooks/`. Do not shim inherited Claude plugin hooks. See [`hooks/README.md`](../hooks/README.md#grok-build-tui) |
 | Plugins | Claude discovery on; `[plugins].disabled` mirrors Claude's off list |
 | Superpowers | Claude plugin path to the canonical clone. Do not `grok plugin install` a second tree |
 

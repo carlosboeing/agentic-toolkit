@@ -35,4 +35,27 @@ chmod +x ~/.claude/hooks/$HOOK.sh
 
 Kimi Code has a hooks system too (`[[hooks]]` in `~/.kimi-code/config.toml`), but its event semantics differ in two load-bearing ways: only `PreToolUse`, `Stop`, and `UserPromptSubmit` can block (its `PostToolUse` is observation-only), and no event can rewrite tool input. Blocking validators like `validate-mermaid` therefore stay Claude-only; interception hooks of the RTK command-rewriting kind are impossible on Kimi.
 
-Grok Build TUI can deny and rewrite on PreToolUse, and Stop can block, but Claude hook ingest is off and PostToolUse cannot block. Blocking validators stay Claude-only. Do not register a Grok shim in this pass.
+### Grok Build TUI
+
+Two independent facts. Do not collapse them.
+
+1. **Grok's own hook system is on.** Register hooks in `~/.grok/hooks/*.json` or `[hooks]` in `~/.grok/config.toml`. PreToolUse can deny and rewrite. Stop can block and feed a reason back to the model. Stdin is camelCase (`toolInput`, not `tool_input`). Matcher aliases map some Claude tool names (`Bash` → `run_terminal_command`, `Edit`/`Write`/`MultiEdit` → `search_replace`). Confirm live names before relying on an alias — Grok's create-file tool is `write`, and that name is not in the published alias table.
+2. **Claude hook ingest is off.** `[compat.claude] hooks = false`. Grok does not load `~/.claude/settings.json` or plugin `hooks.json`. Inherited `rtk hook claude` and `validate-mermaid.sh` are not in the active list. Even if ingest came back, those scripts would fail-open: they read snake_case.
+
+**PostToolUse is not a soft gate.** Grok ignores PostToolUse stdout and exit code. The hook may log or annotate scrollback. The model never sees the result. Claude mermaid is already after the write — exit 2 does not roll the file back; it forces the error into the model's context. On Grok that loop does not exist. Instructions cannot act on a result that never entered the prompt. A sidecar file the model is told to read is a skippable ritual, not the same mechanism.
+
+Use Stop when the model must hear a after-the-fact check. Use PreToolUse when you can decide before the tool runs. Do not ask PostToolUse to grow a soft gate.
+
+**Authoring rule.** One policy script. Per-harness registration. At most one stdin remapper. Do not fork a Grok-native copy of the lint or rewrite logic.
+
+| Kind | Do this |
+|---|---|
+| Owned hook, PreToolUse or Stop | Keep one script. Register it under `~/.grok/hooks/` (or config.toml). If it still speaks Claude snake_case, remap stdin — do not rewrite the policy. |
+| Owned hook that is a PostToolUse gate today (`validate-mermaid`) | Do not port it as Grok PostToolUse. Move the decision to Stop, or keep the manual validator. |
+| Third-party Claude plugin hooks | Leave ingest off. Do not copy their hook trees into `~/.grok/`. They stay Claude-only until xAI dual-reads snake_case *and* honors `enabledPlugins: false`. |
+
+A universal transformer is the reuse story for **casing**. It is not a reason to turn Claude ingest back on for the whole plugin set. Ingest without enablement is how `explanatory-output-style` comes back.
+
+Do not register a shim in front of inherited Claude plugin hooks. That was the fifth-harness pass. Owned tools are the opposite: register them natively on Grok if you want them to run.
+
+**Worked example — `tools/plain-english` (other worktree).** The gate is PreToolUse on Markdown Write/Edit, so the *event* works on Grok. The linter reads `tool_name` in `{Write, Edit}` and `tool_input.file_path`. On Grok that payload is camelCase and the tools are `write` / `search_replace`. Without a remapper the hook fail-opens and never lints. Test by registering the same `gate.sh` under `~/.grok/hooks/` and dumping stdin once before changing the parser. Retry state today lives under `~/.claude/plain-english/`; a Grok session needs its own dest or it will share Claude's counter.
