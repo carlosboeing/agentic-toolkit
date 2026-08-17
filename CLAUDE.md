@@ -47,7 +47,7 @@ Three clusters at the top level. See [README.md](README.md) for the visitor-faci
 └── LICENSE                 — MIT
 ```
 
-Future harness mirrors (created when first content lands; never empty placeholders): `plugins/`, `commands/`, `agents/`, `hooks/`, `mcp-servers/`. Future other consumables: `prompts/`.
+Future harness mirrors (created when first content lands; never empty placeholders): `plugins/`, `commands/`, `agents/`, `mcp-servers/`. Future other consumables: `prompts/`.
 
 ## `docs/` — the project's working memory
 

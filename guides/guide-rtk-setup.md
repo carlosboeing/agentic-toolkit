@@ -57,8 +57,9 @@ Claude Code intercepts Bash executions and passes them to the RTK rewrite engine
 ### 2. Antigravity CLI & IDE (Instruction-based)
 Antigravity executes shell commands via the `run_command` tool. Transparent hook rewriting is pending upstream release ([rtk-ai/rtk#2093](https://github.com/rtk-ai/rtk/pull/2093)), so Antigravity operates in **instruction mode** (the same model as Codex and Kimi Code).
 
-*   **Global Rule File**: [~/.agents/rules/antigravity-rtk-rules.md](~/.agents/rules/antigravity-rtk-rules.md)
-*   **Setup**: `rtk init --agent antigravity` writes project/global instruction rules.
+*   **Authored Rule**: [`rules/antigravity-rtk-rules.md`](../rules/antigravity-rtk-rules.md) (in `claude-code-resources`)
+*   **Global Rule Path**: `~/.agents/rules/antigravity-rtk-rules.md` (symlinked from `~/.claude/rules/`)
+*   **Setup**: Installed globally at the user level so all projects inherit it without project-scoped `.agents/rules/` clutter. Requires `trigger: always_on` YAML frontmatter for Antigravity's rule discovery engine.
 *   **Method**: System rules direct the agent to prefix shell commands explicitly with `rtk` (e.g. `rtk git status`, `rtk grep`).
 *   **Verify**: Run commands in an `agy` session, then check `rtk gain`.
 
