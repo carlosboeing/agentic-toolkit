@@ -6,6 +6,7 @@ authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
   - "grok-4.6 (grok)"
+  - "gemini-3.7-flash (agy)"
 last_reviewed: 2026-08-17
 related:
   - guide-harness-plugin-parity.md
@@ -23,7 +24,7 @@ This guide documents the unified configuration and hook integrations of **RTK (R
 
 `rtk` is a high-performance CLI proxy written in Rust that intercepts common shell command outputs (like `git status`, `npm run build`, `eslint`, etc.) and compresses them to save 60–90%+ context tokens before the AI agent sees them.
 
-*   **Binary Location**: `~/.local/bin/rtk`
+*   **Binary Location**: `/opt/homebrew/bin/rtk` (managed via `brew install rtk` / `brew upgrade rtk`)
 *   **Startup Overhead**: <10ms
 *   **Configuration**: Statically compiled with intelligent rewrite rules. Output compression can be monitored via local telemetry checks.
 
@@ -31,7 +32,7 @@ This guide documents the unified configuration and hook integrations of **RTK (R
 
 ## Unified Integration Map
 
-RTK uses a combination of **native agent hooks** (to rewrite commands transparently before they run) and **instruction-based guides** (where hooks are not supported).
+RTK uses a combination of **native agent hooks** (to rewrite commands transparently before they run) and **instruction-based rules** (where transparent rewrite hooks are not yet supported).
 
 ### 1. Claude Code (PreToolUse Hook)
 Claude Code intercepts Bash executions and passes them to the RTK rewrite engine.
@@ -53,37 +54,13 @@ Claude Code intercepts Bash executions and passes them to the RTK rewrite engine
     }
     ```
 
-### 2. Antigravity CLI & IDE (BeforeTool Hook)
-Antigravity intercepts `run_shell_command` tool calls globally using a custom shell hook script. Both the Antigravity CLI and the Antigravity IDE load settings from their respective global user directories, ensuring a project-agnostic setup.
+### 2. Antigravity CLI & IDE (Instruction-based)
+Antigravity executes shell commands via the `run_command` tool. Transparent hook rewriting is pending upstream release ([rtk-ai/rtk#2093](https://github.com/rtk-ai/rtk/pull/2093)), so Antigravity operates in **instruction mode** (the same model as Codex and Kimi Code).
 
-*   **Hook Script**: [~/.gemini/hooks/rtk-hook-gemini.sh](~/.gemini/hooks/rtk-hook-gemini.sh)
-    ```bash
-    #!/bin/bash
-    exec rtk hook gemini
-    ```
-*   **Settings Files (Global Scope)**:
-    *   **Antigravity CLI (`agy`)**: [~/.gemini/antigravity-cli/settings.json](~/.gemini/antigravity-cli/settings.json)
-    *   **Antigravity IDE**: [~/.gemini/settings.json](~/.gemini/settings.json)
-*   **Wiring**:
-    Copy this block into the `"hooks"` object of **both** settings files:
-    ```json
-    "BeforeTool": [
-      {
-        "matcher": "run_shell_command",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.gemini/hooks/rtk-hook-gemini.sh"
-          }
-        ]
-      }
-    ]
-    ```
-
-> [!NOTE]
-> **Upstream Integration (PR 2093)**:
-> An open pull request [rtk-ai/rtk#2093](https://github.com/rtk-ai/rtk/pull/2093) introduces a native hook command `rtk hook antigravity` (alias `rtk hook agy`) and initialization support via `rtk init --agent antigravity`. Until this PR is merged and released, we use the backward-compatible `rtk hook gemini` (via `rtk-hook-gemini.sh`), which successfully intercepts and rewrites the identical `run_shell_command` tool payload globally.
-
+*   **Global Rule File**: [~/.agents/rules/antigravity-rtk-rules.md](~/.agents/rules/antigravity-rtk-rules.md)
+*   **Setup**: `rtk init --agent antigravity` writes project/global instruction rules.
+*   **Method**: System rules direct the agent to prefix shell commands explicitly with `rtk` (e.g. `rtk git status`, `rtk grep`).
+*   **Verify**: Run commands in an `agy` session, then check `rtk gain`.
 
 ### 3. Cursor (beforeShellExecution Hook)
 Cursor intercepts shell executions globally using a lifecycle event hook.
@@ -92,7 +69,7 @@ Cursor intercepts shell executions globally using a lifecycle event hook.
     ```json
     "beforeShellExecution": [
       {
-        "command": "~/.local/bin/rtk hook cursor"
+        "command": "rtk hook cursor"
       }
     ]
     ```
@@ -109,7 +86,7 @@ OpenCode also uses instruction-based prefixing.
 
 ### 6. Kimi Code (Instruction-based)
 Kimi's hook events can allow or deny a tool call but cannot rewrite `tool_input`, so the transparent rewrite hook RTK uses on Claude Code is impossible here. RTK runs instruction-driven, the same integration class as Codex.
-*   **Setup**: `rtk init --agent kimi` (requires rtk ≥ 0.44.0 — earlier versions have no kimi target; upgrade with `brew upgrade rtk` and make sure the binary on your PATH is the new one)
+*   **Setup**: `rtk init --agent kimi` (requires rtk ≥ 0.44.0)
 *   **Method**: project-scoped `AGENTS.md` instructions direct the agent to prefix commands with `rtk`. The global `~/.agents/AGENTS.md` RTK section (loaded natively by Kimi) reinforces the same "no trusted hook → explicitly prefix" rule.
 *   **Verify**: run a Kimi session, then `rtk gain` should show activity.
 

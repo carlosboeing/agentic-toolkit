@@ -8,6 +8,7 @@ authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
   - "grok-4.6 (grok)"
+  - "gemini-3.7-flash (agy)"
 related:
   - guide-browser-automation-mcp-vs-cli.md
   - guide-cross-harness-project-instructions.md
@@ -84,7 +85,7 @@ Configured in `~/.gemini/config/mcp_config.json`.
 
 | Tool | Hook Type | Mapped Harnesses | Notes |
 |------|-----------|------------------|-------|
-| `rtk` | Pre-execution hooks & instructions | Claude Code, Antigravity (`agy`), Cursor, Codex, OpenCode, Kimi (instructions mode) | CLI proxy that intercepts and compresses command outputs to save 60–90%+ context tokens. Kimi has no input-rewriting hook, so it runs instruction-driven like Codex (`rtk init --agent kimi`). |
+| `rtk` | Pre-execution hooks & instructions | Claude Code, Cursor (transparent hooks); Antigravity (`agy`), Codex, OpenCode, Kimi (instructions mode) | CLI proxy that intercepts and compresses command outputs to save 60–90%+ context tokens. Claude Code and Cursor rewrite transparently; Antigravity, Codex, and Kimi use explicit prefix instructions. |
 
 ### Bundled plugins (`~/.gemini/config/plugins/`)
 
