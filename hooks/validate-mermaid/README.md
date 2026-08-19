@@ -1,8 +1,8 @@
 # validate-mermaid
 
-`PostToolUse` hook on `Write|Edit` that parse-validates every fenced ` ```mermaid ` block in a modified Markdown file. When a block fails to parse, the hook exits `2` with the parser error plus the common causes, which Claude Code feeds back to the model — so a broken diagram gets fixed in the same turn it was written, instead of shipping as a red "Unable to render rich display" box on GitHub.
+`PostToolUse` hook on `Write|Edit` that parse-validates every fenced ` ```mermaid ` block in a modified Markdown file. When a block fails to parse, the hook exits `2` with the parser error plus the common causes. Claude Code feeds that back to the model, so a broken diagram gets fixed in the turn it was written. It never ships as a red "Unable to render rich display" box on GitHub.
 
-**Origin**: a sequence-diagram message containing `…regression; exit 1 + 180s timeout` shipped broken on 2026-06-12 — Mermaid treats `;` as a statement separator inside message text, so the line silently split and GitHub's renderer choked on the orphaned `+`. Conventions reduce the odds of writing that; this hook makes it impossible to ship.
+**Origin**: a sequence-diagram message containing `…regression; exit 1 + 180s timeout` shipped broken on 2026-06-12. Mermaid treats `;` as a statement separator inside message text, so the line silently split. GitHub's renderer then choked on the orphaned `+`. Conventions reduce the odds of writing that; this hook makes it impossible to ship.
 
 ## What it catches
 
@@ -42,6 +42,23 @@ Merge into `~/.claude/settings.json` (global) or `.claude/settings.json` (per-pr
   }
 }
 ```
+
+## OpenCode variant
+
+`opencode-validate-mermaid.ts` does the same job on OpenCode, and does it earlier. OpenCode has no shell hooks, so the check is a JavaScript plugin module hooking `tool.execute.before`.
+
+The difference is when it runs. On Claude Code the file already exists and the hook reports on it. On OpenCode the content arrives as tool arguments before the write, and throwing aborts the call, so a broken diagram never reaches the file.
+
+Install by copying the file into `~/.config/opencode/plugins/`. Loose files in that directory load without a config entry. Every export must be a function, which is why the module exports only the plugin.
+
+| Tool | What is validated |
+|---|---|
+| `write` | `args.content`, the full text about to be written |
+| `edit` | The file re-read from disk with `oldString` replaced by `newString`, honouring `replaceAll` |
+
+The `edit` path returns without validating when the file cannot be read, or when `oldString` is absent. A reconstruction it cannot verify would produce false refusals.
+
+Verified 2026-08-19 against OpenCode 1.18.18. Both plugins resolve in `opencode debug config`. `mmdc` rejects the 2026-06-12 `;` regression that prompted this hook, and accepts a valid flowchart.
 
 ## Behavior notes
 

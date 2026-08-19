@@ -1,11 +1,12 @@
 ---
 title: Harness capability map — deliberation, routing, plugins
 type: reference
-last_reviewed: 2026-08-17
+last_reviewed: 2026-08-19
 authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
   - "grok-4.6 (grok)"
+  - "claude-opus-5 (claude-code)"
 related:
   - guides/guide-harness-plugin-parity.md
   - guides/guide-agy-model-and-quota-selection.md
@@ -70,6 +71,19 @@ Fifth daily harness, alongside Claude Code, Codex, Agy, and Kimi. Cursor is park
 - **MCP** — inherit Fathom, `mcp-image`, chrome, `mcp-search`; declare `claude-mem`, Playwright, Context7 in `~/.grok/config.toml`.
 - **Superpowers** — Claude plugin path. Do not install a second tree.
 - **Not in this pass** — no CrossRev grok adapter, no `schedule-resume` grok target, no output styles, no briefing probe of Grok memory.
+
+## OpenCode (added 2026-08-19)
+
+Sixth daily harness, alongside Claude Code, Codex, Antigravity, Kimi, and Grok. Cursor stays parked. Facts from the [parity design](../docs/2-design/2026-08-19-opencode-sixth-harness-parity-design.md), measured against version 1.18.18:
+
+- **Instructions and skills for free** — reads `AGENTS.md` natively and auto-loads both `~/.claude/skills` and `~/.agents/skills`. No spoke, no symlink.
+- **Hooks are JavaScript** — plugin modules, not shell scripts. `tool.execute.before` refuses a call when the handler throws, so a bad write is stopped before it happens. `tool.execute.after` documents no blocking. Stronger than Kimi and Grok, which cannot refuse a write at all.
+- **RTK rewrites transparently** — `rtk init -g --opencode` installs a plugin. Same class as Claude Code and Cursor, not the instruction class.
+- **Superpowers installs natively** — one `plugin` entry pointing at the upstream git spec. Verified 2026-08-19: the skill count moved from 36 to 50 with all 14 Superpowers skills registered.
+- **Headless resume is the most complete of the six** — `opencode run` accepts `--session`, `--continue`, `--fork`, `--dir`, and `--auto`. It also takes `--format json` and `--variant`. `--fork` removes the live-session takeover hazard the Kimi target carries.
+- **Provider-agnostic** — 192 providers. Three subscriptions are reachable: ChatGPT Plus/Pro, SuperGrok, and Kimi For Coding. Claude Pro/Max is prohibited by Anthropic, and both Gemini OAuth routes are dead.
+- **Native worktrees sit outside the repository** — `~/.local/share/opencode/worktree/<project-id>/<branch>/`. Documented, not relocated, as with Grok.
+- **Not in this pass** — no CrossRev leg, no memory, no output styles, and no plugin-bundled Anthropic skills.
 
 ## Decision pointers
 

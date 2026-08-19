@@ -11,8 +11,6 @@
 # Playwright MCP scratch output (snapshots, screenshots) written into the cwd
 .playwright-mcp/
 
-# Nested canonical superpowers clone (its own git repo; managed via git pull)
-plugins/superpowers/
 
 # Python bytecode (e.g. from compile-checking doc assets)
 __pycache__/

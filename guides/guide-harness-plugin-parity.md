@@ -58,6 +58,21 @@ Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology
 | Plugins | Claude discovery on; `[plugins].disabled` mirrors Claude's off list |
 | Superpowers | Claude plugin path to the canonical clone. Do not `grok plugin install` a second tree |
 
+## Install channels on OpenCode
+
+| Channel | Command / path |
+|---------|----------------|
+| Skills | `~/.claude/skills` and `~/.agents/skills`, auto-loaded. No OpenCode spoke needed |
+| Instructions | `AGENTS.md` natively, at global and project scope |
+| Config | `~/.config/opencode/opencode.json`. Not `~/.opencode/`, which holds only the binary |
+| MCP | `mcp` block in `opencode.json`. `enabled: false` turns off a server inherited from a parent config |
+| Hooks | No shell hooks. JavaScript plugin modules, auto-loaded from `~/.config/opencode/plugins/` or declared in the `plugin` array. `tool.execute.before` refuses a call by throwing; `tool.execute.after` documents no blocking |
+| Plugins | `plugin` array accepts npm and git specs. Loose files in `plugins/` load without a config entry |
+| Superpowers | `"plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]`. Do not symlink — upstream deprecated that path |
+| RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts` |
+| Providers | `disabled_providers` switches off a registry provider that a stray environment variable enabled |
+| Agents and commands | `~/.config/opencode/agent/<name>.md` and `command/<name>.md`, Markdown with frontmatter |
+
 ## Verified installed state — Kimi (audited 2026-07-28)
 
 | Piece | State |
@@ -85,7 +100,7 @@ Configured in `~/.gemini/config/mcp_config.json`.
 
 | Tool | Hook Type | Mapped Harnesses | Notes |
 |------|-----------|------------------|-------|
-| `rtk` | Pre-execution hooks & instructions | Claude Code, Cursor (transparent hooks); Antigravity (`agy`), Codex, OpenCode, Kimi (instructions mode) | CLI proxy that intercepts and compresses command outputs to save 60–90%+ context tokens. Claude Code and Cursor rewrite transparently; Antigravity, Codex, and Kimi use explicit prefix instructions. |
+| `rtk` | Pre-execution hooks & instructions | Claude Code, Cursor, OpenCode (transparent hooks); Antigravity (`agy`), Codex, Kimi, Grok (instructions mode) | CLI proxy that intercepts and compresses command outputs to save 60–90%+ context tokens. Claude Code, Cursor and OpenCode rewrite transparently; the rest use explicit prefix instructions. OpenCode moved to the transparent group on 2026-08-19 when `rtk init -g --opencode` was verified to write `~/.config/opencode/plugins/rtk.ts`. |
 
 ### Bundled plugins (`~/.gemini/config/plugins/`)
 

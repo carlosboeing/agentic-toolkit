@@ -1,0 +1,25 @@
+# CrossRev policy for this repository.
+#
+# Written by hand rather than by `crossrev init`, which also registers GitHub Apps,
+# secrets, labels and workflows. Nothing here changes today's behaviour: the values
+# match what `crossrev config show` already merged from the built-in defaults. Pinning
+# them means the policy travels with the repository instead of following whatever the
+# installed CLI defaults to.
+version: 1
+
+policy:
+  # Findings at or above this severity keep the loop alive. Everything below is reported
+  # and commented but cannot prevent convergence.
+  min_fix_severity: medium
+  # Six passes were needed on pull request 30. The cap stays at 3 deliberately: it is
+  # what stops two models looping unattended, and it forces a person to decide whether
+  # a seventh pass is worth the quota.
+  max_passes_per_cycle: 3
+
+backlog:
+  # Deferred findings become issues rather than dying in a pull request thread. This is
+  # what `destination: auto` already resolved to here; naming it removes the guesswork.
+  destination: github_issues
+  github_issues:
+    tracking_label: crossrev-review
+    create_missing_labels: true
