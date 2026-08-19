@@ -16,5 +16,3 @@
 __pycache__/
 *.pyc
 
-# Plain English telemetry reports (contain local paths and excerpts)
-tools/plain-english/eval/telemetry/

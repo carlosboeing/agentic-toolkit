@@ -1,25 +1,24 @@
-# Output styles
+# Output styles (`output-styles/`)
 
-[Claude Code output styles](https://code.claude.com/docs/en/output-styles) are Markdown files that modify Claude Code's system prompt to change how it communicates — role, tone, and output format — without changing what it knows. A style with `keep-coding-instructions: true` keeps all of Claude Code's built-in software engineering instructions and only adds to them. Styles apply to the main conversation only (subagents run their own system prompt), and Claude Code injects periodic adherence reminders mid-session.
+Claude Code output styles that shape how the assistant writes.
 
-## Catalog
+No styles live here now. The one this directory held, **Plain English**, moved to [`carlosboeing/copydesk`](https://github.com/carlosboeing/copydesk) on 2026-08-19, when the tool that generates it was extracted.
 
-| Style | File | What it does |
-|---|---|---|
-| Plain English | [`plain-english.md`](../tools/plain-english/output-styles/plain-english.md) | Structured but plain writing — full technical content, simpler sentences, no AI-isms. Keeps coding instructions. The rules block is kept in sync with the `### Writing style` section of `~/.claude/CLAUDE.md` (claude-config repo), which carries the same rules to other harnesses and subagents. |
+## Plain English lives in CopyDesk now
 
-(Add more rows as new styles land.)
-
-## Install
-
-Symlink the style into the user-level output-styles directory (same authoring pattern as skills — edits in this repo are live immediately):
+The style is no longer hand-maintained. It is generated from CopyDesk's rule data by `scripts/generate-carriers.py`, so the style, the linter and the per-turn reminder cannot drift apart.
 
 ```bash
-mkdir -p ~/.claude/output-styles
-ln -s "$(pwd)/tools/plain-english/output-styles/plain-english.md" ~/.claude/output-styles/plain-english.md
+npm install -g copydesk
 ```
 
-Then activate it, either by running `/config` and selecting **Plain English** under **Output style**, or by setting it directly in a settings file (e.g. `~/.claude/settings.json`):
+Install the style by pointing at the generated file in a CopyDesk checkout:
+
+```bash
+ln -s "$(pwd)/output-styles/plain-english.md" ~/.claude/output-styles/plain-english.md
+```
+
+Then activate it with `/config`, selecting **Plain English** under **Output style**, or set it in a settings file:
 
 ```json
 {
@@ -27,24 +26,6 @@ Then activate it, either by running `/config` and selecting **Plain English** un
 }
 ```
 
-The `outputStyle` value must match the style's frontmatter `name` exactly, or Claude Code silently falls back to the Default style.
+Output styles are a Claude Code mechanism. Codex, Antigravity, Kimi Code and Grok Build TUI have no equivalent, and receive the same rules through their instructions files instead.
 
-Output styles are read once at session start — changes (including activation) take effect after `/clear` or the next new session.
-
-## Other harnesses
-
-Output styles are a Claude Code mechanism — Codex, Antigravity, Kimi Code, and Grok Build TUI have no equivalent. Codex, Antigravity, and Kimi receive the same plain-English rules through the `### Writing style` section of the shared `~/.agents/AGENTS.md` (a symlink to `~/.claude/CLAUDE.md`; Kimi reads that path natively). Grok receives the same section through `~/.claude/CLAUDE.md` via Claude compat `agents`. None of them get the system-prompt reinforcement layer.
-
-If a symlinked style file is ever not recognized, replace the symlink with a real copy and re-copy after edits:
-
-```bash
-cp output-styles/plain-english.md ~/.claude/output-styles/plain-english.md
-```
-
-## Uninstall
-
-```bash
-rm ~/.claude/output-styles/plain-english.md
-```
-
-Remove or change the `outputStyle` setting to switch back to the Default style.
+See [CopyDesk's README](https://github.com/carlosboeing/copydesk#readme) for the gate and the on-demand skill, which are the parts a style alone cannot provide.

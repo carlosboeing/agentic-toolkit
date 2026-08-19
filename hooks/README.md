@@ -23,7 +23,7 @@ chmod +x ~/.claude/hooks/$HOOK.sh
 | Hook | Event | What it does |
 |---|---|---|
 | [`validate-mermaid/`](validate-mermaid/) | `PostToolUse` on `Write\|Edit` | Parse-validates every Mermaid block in a modified `.md` file; blocks with actionable feedback when a block won't render. |
-| [`plain-english/`](../tools/plain-english/) | `PreToolUse` on `Write\|Edit` and `UserPromptSubmit` | Ships inside the Plain English bundle. Reconstructs Markdown edits, blocks prose violations before a write, and injects a 47-word chat reminder per turn. |
+| `copydesk` | `PreToolUse` on `Write\|Edit` and `UserPromptSubmit` | Extracted to [`carlosboeing/copydesk`](https://github.com/carlosboeing/copydesk) on 2026-08-19. Reconstructs Markdown edits, refuses a write carrying newly written errors, and injects a 49-word precis each turn. |
 
 ## Conventions for this type
 
@@ -59,4 +59,4 @@ A universal transformer is the reuse story for **casing**. It is not a reason to
 
 Do not register a shim in front of inherited Claude plugin hooks. That was the fifth-harness pass. Owned tools are the opposite: register them natively on Grok if you want them to run.
 
-**Worked example — `tools/plain-english` (other worktree).** The gate is PreToolUse on Markdown Write/Edit, so the *event* works on Grok. The linter reads `tool_name` in `{Write, Edit}` and `tool_input.file_path`. On Grok that payload is camelCase and the tools are `write` / `search_replace`. Without a remapper the hook fail-opens and never lints. Test by registering the same `gate.sh` under `~/.grok/hooks/` and dumping stdin once before changing the parser. Retry state today lives under `~/.claude/plain-english/`; a Grok session needs its own dest or it will share Claude's counter.
+**Worked example — CopyDesk's gate.** The gate is PreToolUse on Markdown Write/Edit, so the *event* works on Grok. The linter reads `tool_name` in `{Write, Edit}` and `tool_input.file_path`. On Grok that payload is camelCase and the tools are `write` / `search_replace`. Without a remapper the hook fail-opens and never lints. Test by registering the same `gate.sh` under `~/.grok/hooks/` and dumping stdin once before changing the parser. Retry state today lives under `~/.claude/plain-english/`; a Grok session needs its own dest or it will share Claude's counter.

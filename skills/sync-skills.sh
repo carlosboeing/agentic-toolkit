@@ -50,6 +50,9 @@ HUB="$HOME/.claude/skills"
 # the path if the checkout is somewhere else.
 CROSSREV_SKILLS="${CROSSREV_SKILLS:-$HOME/Projects/carlos/crossrev/skills}"
 
+# CopyDesk was extracted on 2026-08-19 for the same reason. Same override shape.
+COPYDESK_SKILLS="${COPYDESK_SKILLS:-$HOME/Projects/carlos/copydesk/skills}"
+
 # Harness skill directories that point at the hub. Each is used only if its
 # parent exists (i.e. the harness is installed).
 #   ~/.agents/skills        Codex reads $HOME/.agents/skills per OpenAI's docs
@@ -116,6 +119,14 @@ sync_authored() {
     echo "-- note: no CrossRev checkout at $CROSSREV_SKILLS"
     echo "     pr-review and pr-resolve will not be synced. Clone"
     echo "     carlosboeing/crossrev, or set CROSSREV_SKILLS to its skills/ dir."
+  fi
+
+  if [[ -d "$COPYDESK_SKILLS" ]]; then
+    sources+=("$COPYDESK_SKILLS"/*/)
+  else
+    echo "-- note: no CopyDesk checkout at $COPYDESK_SKILLS"
+    echo "     copydesk will not be synced. Clone carlosboeing/copydesk,"
+    echo "     or set COPYDESK_SKILLS to its skills/ dir."
   fi
 
   # An unmatched glob stays literal, hence the -d guard.

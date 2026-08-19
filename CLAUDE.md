@@ -36,10 +36,7 @@ Three clusters at the top level. See [README.md](README.md) for the visitor-faci
 │   └── learn/
 │
 ├── output-styles/          — HARNESS MIRROR: drop-in to ~/.claude/output-styles/
-│   └── plain-english.md
-│
-├── tools/                  — EXTRACTION-READY: multi-part tools that may split into repos
-│   └── plain-english/
+│                             (catalog only; Plain English moved to carlosboeing/copydesk)
 │
 ├── guides/                 — OTHER CONSUMABLE: evergreen how-tos
 ├── reference/              — OTHER CONSUMABLE: snapshots, inventories, lookups
