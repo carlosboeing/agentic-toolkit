@@ -94,6 +94,7 @@ Heuristic for spotting a ship: the staged diff touches `skills/`, `plugins/`, `a
 
 ## Working principles for agent sessions
 
+- **Branch and workspace isolation.** Verify the active branch and workspace state at the start of a session. Brainstorm, design and plan work happens in the main checkout — no branch, no worktree. At implementation, branch off `origin/main` and ask whether to use a worktree before the first branch command. More than one entry in `git worktree list` means another session is live, so a worktree is required rather than offered. Worktrees go at `.worktrees/<harness>/<branch>`, branch slashes preserved.
 - **The repo is small and read-easy.** Don't dispatch search agents for cross-file analysis — `grep`/`rg` and direct reads are faster.
 - **Don't add features the user didn't ask for.** No speculative scaffolding for future skill types, no auto-generated indexes, no CI configs unless requested.
 - **Skills are single-file by default.** When iterating on a skill, edit the existing `SKILL.md` rather than splitting into `references/` files unless the skill genuinely outgrows ~500 lines.
