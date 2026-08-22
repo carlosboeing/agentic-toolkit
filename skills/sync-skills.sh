@@ -17,6 +17,11 @@
 # (compat.claude.skills = true). Do not add ~/.grok/skills — Grok
 # already scans ~/.claude/skills, and a spoke would list every skill twice.
 #
+# NOT a spoke either: OpenCode reads the hub through Claude compat too.
+# What it lacks is per-skill slash entries — its TUI filters skill-sourced
+# commands out of the / picker. So after syncing, this script also writes
+# one thin command wrapper per hub skill in ~/.config/opencode/command/.
+#
 # Tool bundles use a `tools/*/skills/*/` glob because their names are open-ended.
 # CrossRev remains an explicit external source. A bundle glob must never be
 # expected to find it, or its two skills would stop syncing without a warning.
@@ -35,7 +40,8 @@
 # just installed.
 #
 # Usage:
-#   ./skills/sync-skills.sh              copy authored skills, repair spokes
+#   ./skills/sync-skills.sh              copy authored skills, repair spokes,
+#                                        regenerate OpenCode command wrappers
 #   ./skills/sync-skills.sh --dry-run    print the plan, change nothing
 #   ./skills/sync-skills.sh --adopt      fold a real spoke directory into the
 #                                        hub, then replace it with the symlink
@@ -71,7 +77,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
     --adopt)   ADOPT=1 ;;
-    -h|--help) sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,48p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown flag: $arg" >&2; exit 2 ;;
   esac
 done
@@ -207,6 +213,46 @@ sync_spoke() {
   run ln -s "$HUB" "$dir"
 }
 
+# ----------------------------------------------------- opencode wrappers ---
+# OpenCode is not a spoke -- it already reads the hub through Claude compat.
+# What it lacks is per-skill slash entries: its TUI filters skill-sourced
+# commands out of the / picker. Write one thin wrapper per hub skill so each
+# is reachable as /<name>. Only the directory name is read -- no frontmatter
+# parsing. Command files this loop did not write are never overwritten.
+
+sync_opencode_commands() {
+  local cfg="$HOME/.config/opencode"
+  if [[ ! -d "$cfg" ]]; then
+    echo "-- $cfg/command  (skipped: harness not installed)"
+    return
+  fi
+
+  local out="$cfg/command" src name dest written=0 kept=0
+  run mkdir -p "$out"
+
+  for src in "$HUB"/*/SKILL.md; do
+    [[ -f "$src" ]] || continue
+    name="$(basename "$(dirname "$src")")"
+    dest="$out/$name.md"
+
+    # Guard against clobbering hand-written commands: anything without the
+    # wrapper signature belongs to the user.
+    if [[ -f "$dest" ]] && ! grep -q 'skill using the skill tool' "$dest"; then
+      echo "     keeping user-owned command: $name.md"
+      kept=$((kept + 1))
+      continue
+    fi
+
+    if [[ $DRY_RUN -eq 1 ]]; then
+      echo "   would: write $dest"
+    else
+      printf -- '---\ndescription: "invoke the %s skill"\n---\n\nInvoke the `%s` skill using the skill tool, then apply it to the request below. If no request is given, invoke the skill with no arguments.\n\n$ARGUMENTS\n' "$name" "$name" > "$dest"
+    fi
+    written=$((written + 1))
+  done
+  echo "-- opencode wrappers -> $out  ($written written, $kept user-owned)"
+}
+
 # -------------------------------------------------------------------- main ---
 
 [[ $DRY_RUN -eq 1 ]] && echo "(dry run -- nothing will change)"
@@ -215,6 +261,7 @@ sync_authored
 for s in "${SPOKES[@]}"; do
   sync_spoke "$s"
 done
+sync_opencode_commands
 
 # The hub must contain no symlinks -- that is the whole point of the topology.
 if [[ $DRY_RUN -eq 0 ]]; then
