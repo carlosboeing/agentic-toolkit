@@ -49,7 +49,7 @@ Merge into `~/.claude/settings.json` (global) or `.claude/settings.json` (per-pr
 
 The difference is when it runs. On Claude Code the file already exists and the hook reports on it. On OpenCode the content arrives as tool arguments before the write, and throwing aborts the call, so a broken diagram never reaches the file.
 
-Install by copying the file into `~/.config/opencode/plugins/`. Loose files in that directory load without a config entry. Every export must be a function, which is why the module exports only the plugin.
+`./skills/sync-skills.sh` copies this file to `~/.config/opencode/plugins/validate-mermaid.ts`. Loose files in that directory load without a config entry. Every export must be a function, which is why the module exports only the plugin. Do not copy `plugins/rtk.ts` by hand — that file comes from `rtk init -g --opencode`.
 
 | Tool | What is validated |
 |---|---|
