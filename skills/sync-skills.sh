@@ -21,6 +21,9 @@
 # What it lacks is per-skill slash entries — its TUI filters skill-sourced
 # commands out of the / picker. So after syncing, this script also writes
 # one thin command wrapper per hub skill in ~/.config/opencode/command/.
+# The same run copies hooks/validate-mermaid/opencode-validate-mermaid.ts
+# to ~/.config/opencode/plugins/validate-mermaid.ts. It does not write
+# plugins/rtk.ts — that file comes from `rtk init -g --opencode`.
 #
 # Tool bundles use a `tools/*/skills/*/` glob because their names are open-ended.
 # CrossRev remains an explicit external source. A bundle glob must never be
@@ -41,7 +44,8 @@
 #
 # Usage:
 #   ./skills/sync-skills.sh              copy authored skills, repair spokes,
-#                                        regenerate OpenCode command wrappers
+#                                        regenerate OpenCode command wrappers,
+#                                        copy the OpenCode mermaid plugin
 #   ./skills/sync-skills.sh --dry-run    print the plan, change nothing
 #   ./skills/sync-skills.sh --adopt      fold a real spoke directory into the
 #                                        hub, then replace it with the symlink
@@ -77,7 +81,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
     --adopt)   ADOPT=1 ;;
-    -h|--help) sed -n '2,48p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,52p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown flag: $arg" >&2; exit 2 ;;
   esac
 done
@@ -253,6 +257,29 @@ sync_opencode_commands() {
   echo "-- opencode wrappers -> $out  ($written written, $kept user-owned)"
 }
 
+# ----------------------------------------------------- opencode mermaid ---
+# Repo is the source of the OpenCode mermaid plugin. Copy it on every sync.
+# Do not copy plugins/rtk.ts — `rtk init -g --opencode` owns that file.
+
+sync_opencode_mermaid() {
+  local cfg="$HOME/.config/opencode"
+  if [[ ! -d "$cfg" ]]; then
+    echo "-- $cfg/plugins  (skipped: harness not installed)"
+    return
+  fi
+
+  local src="$REPO_ROOT/hooks/validate-mermaid/opencode-validate-mermaid.ts"
+  local dest="$cfg/plugins/validate-mermaid.ts"
+  if [[ ! -f "$src" ]]; then
+    echo "-- $dest  (skipped: source missing)"
+    return
+  fi
+
+  run mkdir -p "$cfg/plugins"
+  run cp "$src" "$dest"
+  echo "-- opencode mermaid plugin -> $dest"
+}
+
 # -------------------------------------------------------------------- main ---
 
 [[ $DRY_RUN -eq 1 ]] && echo "(dry run -- nothing will change)"
@@ -262,6 +289,7 @@ for s in "${SPOKES[@]}"; do
   sync_spoke "$s"
 done
 sync_opencode_commands
+sync_opencode_mermaid
 
 # The hub must contain no symlinks -- that is the whole point of the topology.
 if [[ $DRY_RUN -eq 0 ]]; then

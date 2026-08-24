@@ -1,6 +1,6 @@
 # Guide: restore your Claude setup on a new machine
 
-Stand up your Claude Code environment on a fresh machine (or hand the recipe to a colleague) by cloning two repos and running one link script. Assumes macOS/Linux with `git` and SSH access to your GitHub repos.
+Stand up your Claude Code environment on a fresh machine (or hand the recipe to a colleague) by cloning two repos and running one link script. OpenCode steps sit at the end of the same recipe. Assumes macOS/Linux with `git` and SSH access to your GitHub repos.
 
 ## The pieces
 
@@ -11,6 +11,7 @@ Stand up your Claude Code environment on a fresh machine (or hand the recipe to 
 | Standalone skills (`briefing`, `learn`, …) | `claude-code-resources` repo → all harness skill dirs | `sync-skills.sh` (step 4) |
 | Tool integrations (rtk, claude-mem) | external installs | the setup guides (step 5) |
 | Separately-managed wiring | see step 6 | not covered here |
+| OpenCode config | `~/.config/opencode/` — not a git repository | step 7 |
 
 ```mermaid
 flowchart TD
@@ -81,6 +82,40 @@ These have their own mechanisms — the link script does not touch them:
 - **Kimi Code CLI**: install with the official script (`curl -fsSL https://code.kimi.com/kimi-code/install.sh | bash`), then `kimi` and `/login`. It reads `~/.agents/AGENTS.md` and `~/.agents/skills/` natively, so steps 3–4 already cover instructions and authored skills. `~/.kimi-code/` (config.toml, mcp.json, sessions) is machine-local and not in git — recreate MCP entries per [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md). Superpowers installs via its native plugin manager (`/plugins`), not the relink script.
 - **Grok Build TUI**: already reads `~/.claude/CLAUDE.md` and `~/.claude/skills` through Claude compat. Do not create `~/.grok/AGENTS.md` or `~/.grok/skills`. Recreate `~/.grok/config.toml` compat cells, `[plugins].disabled`, and the three MCP entries from [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md). Superpowers stays on the Claude plugin path.
 
+### 7. OpenCode
+
+Config lives in `~/.config/opencode/`. Do not turn that directory into a git repository. Do not copy `auth.json` or `service.json`. `auth.json` is created by `opencode auth login` under `~/.local/share/opencode/`. `service.json` in the config directory holds a password.
+
+1. Symlink the canonical instructions after step 3 has restored `~/.claude/CLAUDE.md`:
+
+```bash
+ln -sfn ~/.claude/CLAUDE.md ~/.config/opencode/AGENTS.md
+```
+
+2. Put `"lsp": true` in `opencode.json`. If that key is omitted, OpenCode disables every language server. Do not add `model` or `small_model` unless you want a pinned default.
+
+3. Add Superpowers as a plugin declaration, not a symlink:
+
+```json
+"plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+```
+
+`plugins/install-superpowers.sh` checks this line. It does not write the file.
+
+4. Install language servers (most of the active projects are TypeScript):
+
+```bash
+npm install -g typescript-language-server typescript bash-language-server yaml-language-server
+```
+
+5. Install the RTK plugin. Do not copy `plugins/rtk.ts` from another machine:
+
+```bash
+rtk init -g --opencode
+```
+
+6. Run `sync-skills.sh` (step 4). That run also copies command wrappers into `command/` and `hooks/validate-mermaid/opencode-validate-mermaid.ts` into `plugins/validate-mermaid.ts`. Local provider blocks such as an Ollama `baseURL` stay on this machine. Leave `opencode.json` untracked.
+
 ## Verify
 
 ```bash
@@ -93,3 +128,10 @@ rtk --version
 ```
 
 Start a new Claude Code session; type `/` and confirm your skills appear.
+
+```bash
+# OpenCode instructions spoke
+readlink ~/.config/opencode/AGENTS.md
+# OpenCode mermaid plugin present after sync
+test -f ~/.config/opencode/plugins/validate-mermaid.ts && echo mermaid-plugin-ok
+```

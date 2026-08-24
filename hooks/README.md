@@ -36,6 +36,10 @@ chmod +x ~/.claude/hooks/$HOOK.sh
 
 Kimi Code has a hooks system too (`[[hooks]]` in `~/.kimi-code/config.toml`), but its event semantics differ in two load-bearing ways: only `PreToolUse`, `Stop`, and `UserPromptSubmit` can block (its `PostToolUse` is observation-only), and no event can rewrite tool input. Blocking validators like `validate-mermaid` therefore stay Claude-only; interception hooks of the RTK command-rewriting kind are impossible on Kimi.
 
+### OpenCode
+
+OpenCode has no shell hooks. `validate-mermaid` ships as `hooks/validate-mermaid/opencode-validate-mermaid.ts`. `./skills/sync-skills.sh` copies it to `~/.config/opencode/plugins/validate-mermaid.ts`. The plugin hooks `tool.execute.before` and throws to stop the write. `plugins/rtk.ts` is not copied; run `rtk init -g --opencode`.
+
 ### Grok Build TUI
 
 Two independent facts. Do not collapse them.

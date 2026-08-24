@@ -2,7 +2,7 @@
 title: Harness plugin and skill parity (Claude Code, Codex, Antigravity, Kimi, Grok)
 type: guide
 scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor, kimi-code, grok]
-last_reviewed: 2026-08-17
+last_reviewed: 2026-08-25
 last_audited: 2026-07-28
 authors:
   - "Carlos Boeing"
@@ -67,6 +67,7 @@ Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology
 | Config | `~/.config/opencode/opencode.json`. Not `~/.opencode/`, which holds only the binary |
 | MCP | `mcp` block in `opencode.json`. `enabled: false` turns off a server inherited from a parent config |
 | Hooks | No shell hooks. JavaScript plugin modules, auto-loaded from `~/.config/opencode/plugins/` or declared in the `plugin` array. `tool.execute.before` refuses a call by throwing; `tool.execute.after` documents no blocking |
+| Mermaid | `sync-skills.sh` copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `plugins/validate-mermaid.ts` |
 | Plugins | `plugin` array accepts npm and git specs. Loose files in `plugins/` load without a config entry |
 | Superpowers | `"plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]`. Do not symlink — upstream deprecated that path |
 | RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts` |
