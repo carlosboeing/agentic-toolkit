@@ -94,6 +94,10 @@ Conventional Commits format: `<type>(<scope>): <description>`. Types: `feat`, `f
 - **Substantive audits or retros emerging from a conversation get saved** to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
 - **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did. If not, propose the missing writes inline.
 
+## OSS house standard
+
+Before creating or editing `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/*`, `.github/dependabot.yml`, `.github/workflows/*`, `.github/CODEOWNERS`, or branch protection, read `reference/reference-oss-standards.md` in `claude-code-resources` (or `https://github.com/carlosboeing/claude-code-resources/blob/main/reference/reference-oss-standards.md`) and follow it verbatim. Pin SHAs as listed, use `https://github.com/<owner>/<repo>/security/advisories/new` + `@<owner>` contacts, no personal email. The `required` job is the only `required_status_checks` entry.
+
 ## Where to look first
 
 - For visitor-facing intent and quick-start: [`README.md`](README.md).

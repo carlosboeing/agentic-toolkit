@@ -6,7 +6,7 @@ Project-bootstrap scaffolds for starting a new project that follows the conventi
 
 | Template | What |
 |---|---|
-| [`default-project/`](default-project/) | Generic single-project scaffold: `CLAUDE.md`, `README.md`, `docs/` skeleton (lifecycle + evergreen + standing indexes), `.gitignore`. |
+| [`default-project/`](default-project/) | Generic single-project scaffold: `CLAUDE.md`, `README.md`, `docs/` skeleton, `.gitignore`, plus OSS house-standard governance (`CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `LICENSE`, `.github/CODEOWNERS`, `.github/dependabot.yml`, `.github/ISSUE_TEMPLATE/*.yml`, `.github/PULL_REQUEST_TEMPLATE.md`). |
 | [`lean-claude-settings/`](lean-claude-settings/) | A lean `.claude/settings.json` (connectors off + finance plugins off) for running Claude Code with minimal startup context. See [`guide-trimming-claude-code-startup-context.md`](../guides/guide-trimming-claude-code-startup-context.md). |
 
 (More variants may land later — software-with-tests, docs-only, infrastructure, etc. Out of v1 scope.)
@@ -39,9 +39,22 @@ For applying these conventions to an *existing* project (not creating a new one)
 
 ```
 default-project/
-├── CLAUDE.md              — generic project brief (distinct from this repo's CLAUDE.md)
+├── CLAUDE.md              — generic project brief (now includes OSS house-standard pointer)
 ├── README.md              — minimal stub with <PROJECT_NAME> placeholder
 ├── .gitignore             — sensible defaults
+├── CODE_OF_CONDUCT.md     — Covenant v2.1, GitHub contacts, no email
+├── SECURITY.md            — Supported + private advisory via GitHub
+├── SUPPORT.md             — issue tracker + forms, no secrets
+├── CONTRIBUTING.md        — Conventional Commits + required gate
+├── LICENSE                — MIT placeholder
+├── .github/
+│   ├── CODEOWNERS         — * @<OWNER>
+│   ├── dependabot.yml     — github-actions + npm weekly
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   └── ISSUE_TEMPLATE/
+│       ├── bug_report.yml
+│       ├── feature_request.yml
+│       └── config.yml
 └── docs/
     ├── ROADMAP.md         — six-section template
     ├── CHANGELOG.md       — empty stub

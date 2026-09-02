@@ -11,6 +11,7 @@
 | [`capture-meeting`](capture-meeting/) | `/capture-meeting` | Turn an AI meeting recording (Fathom or other tool) plus manual notes/artifacts into an audited meeting doc, then propagate decisions/action items to working memory. |
 | [`externalize-deliverable`](externalize-deliverable/) | `/externalize-deliverable` | Derive clean, client-safe versions of internal documents by stripping sensitive company-side information (negotiations, margins, internal flags) under a human review gate. |
 | [`schedule-resume`](schedule-resume/) | `/schedule-resume` | Bundled skill with a shell helper for scheduling unattended, cross-harness Claude/Agy/Codex/Kimi session continuation through cron (one crontab line per job; macOS-tested). |
+| [`oss-standards`](oss-standards/) | `/oss-standards` | Apply the OSS house standard (`reference/reference-oss-standards.md`) - check, fix, or scaffold a repo to match pinned SHAs, health files, and `required` gate. |
 | [`penmark-comments`](penmark-comments/) | — | Reviews writable local Markdown, then asks once whether findings go in the file as validated Penmark v1 comments or stay in chat. Remembers the answer. |
 | [`start-planning`](start-planning/) | `/start-planning` | Starts implementation planning from a design in a fresh session. Path optional: resolves the design from the project when omitted. Holds the planning-phase boundary; discovers the project's planner, paths, and review rules instead of defining them. |
 
