@@ -1,0 +1,18 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Archives / build artifacts
+*.zip
+dist/
+build/
+out/
+
+# Environment / secrets — DO NOT commit
+.env
+*.local
+
+# Claude Code workspace settings (machine-specific)
+.claude/settings.local.json

@@ -1,0 +1,108 @@
+# <PROJECT_NAME> — instructions for Claude Code
+
+This file is auto-loaded on every session. It is the operator-facing brief; `README.md` is the visitor-facing one.
+
+> **Note:** this CLAUDE.md was generated from `templates/default-project/CLAUDE.md` in [carlosboeing/claude-code-resources](https://github.com/carlosboeing/claude-code-resources). Customise it for your project. The template's CLAUDE.md is *generic*; once you've adapted it here, do not re-sync from the template — your customisations are the source of truth.
+
+## What this project is
+
+<one paragraph: what the project is, who/what it's for, current stage. Replace this placeholder.>
+
+## Project Map
+
+<!--
+This section declares where project-tracking information lives so AI tools
+(notably the /briefing skill from claude-code-resources) can read it without
+guessing. Each line is `- **Field**: value`. Recognised fields:
+
+  - **Tracker**       — where work items live (GitHub Issues, Linear, Jira,
+                        Notion, GitHub Project N, file path, or `none`)
+  - **Board**         — URL of the active board / project view
+  - **Roadmap**       — file path or external URL of the forward view
+  - **Changelog**     — file path or external URL of recent shipped work
+  - **Architecture**  — file path or directory of architecture docs
+  - **Working memory** — directory holding the lifecycle artifacts
+                         (default: docs/ following the numbered-lifecycle convention)
+  - **Other**         — free-form bullet list for project-specific context
+
+Declared fields are authoritative. Absent fields fall back to convention
+sniffing — the briefing skill probes for canonical-conventions signatures
+(docs/ROADMAP.md, lifecycle dirs at docs/[0-9]-*, status frontmatter, etc.).
+If you don't use one of these (e.g., no formal tracker), set the value to
+`none` so the briefing knows the absence is intentional and skips probing.
+-->
+
+- **Tracker**: <your tracker, e.g. GitHub Issues / Linear team FOO / Jira project BAR / none>
+- **Board**: <URL or `none`>
+- **Roadmap**: docs/ROADMAP.md
+- **Changelog**: docs/CHANGELOG.md
+- **Architecture**: docs/architecture.md
+- **Working memory**: docs/ (numbered lifecycle convention)
+- **Other**:
+  - (free-form bullets for project-specific notes)
+
+## `docs/` — the project's working memory
+
+`docs/` records how this project evolves: the lifecycle of each piece of work (brainstorm → design → plan → retro), the ongoing indexes that orient new readers (ROADMAP, CHANGELOG), and the persistent decisions that outlive any single phase (ADRs). Authored by whoever's working on the project — human, AI, or both — and structured so anyone can answer "what did we decide and why?" without archaeology. AI assistants reading it on session start is a benefit, not the purpose.
+
+```
+docs/
+├── ROADMAP.md              — what's in flight / next / shipped
+├── CHANGELOG.md            — what shipped, when
+├── notes/                  — scratch, chat dumps, external research; loaded as session context
+├── 0-brainstorms/          — pre-design ideas (worth-elaborating; one-liners go in ROADMAP)
+├── 1-discovery/            — research, spikes, comparative analyses
+├── 2-design/               — specs + designs (conflated, by intent)
+├── 3-plans/                — phased implementation plans
+├── 4-reviews/              — retros, audits, reviews, analyses
+├── adrs/                   — single-decision records (NNNN-title.md)
+└── guides/                 — internal procedural how-tos
+```
+
+For the canonical conventions, see the source: [`guide-project-structure-and-conventions.md`](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md).
+
+## Conventions
+
+- **Single source of truth.** One canonical place per question. ROADMAP is "what's next"; ADRs are decisions; `docs/system/` or `docs/architecture.md` is current state.
+- **Self-describing filenames.** Lifecycle artifacts: `YYYY-MM-DD-<topic>-<suffix>.md` (`-design.md`, `-plan.md`, `-retro.md`, etc.). ADRs: `NNNN-<short-title>.md`. UPPERCASE.md for front-page meta files (`README.md`, `LICENSE`, `CHANGELOG.md`, `ROADMAP.md`); lowercase / kebab-case for content (`architecture.md`, `services.md`).
+- **Always-current vs frozen-in-time.** `docs/system/`, `docs/guides/`, `docs/architecture.md` are evergreen — updated, not appended. Lifecycle docs (numbered phases) freeze with `status:` field once shipped.
+- **Status flow:** `draft` → `approved` → `shipped` → optionally `superseded` (linked via `superseded_by:` frontmatter). ADRs use `draft` → `approved` → `superseded`. Brainstorms use `open` → `parked` / `superseded` / `abandoned`.
+- **Mandatory frontmatter.** Every doc under `docs/` (except `notes/`, `assets/`, `imports/`, bundle-internal files, and README/ROADMAP/CHANGELOG) starts at byte 0 with a fenced YAML block. Lifecycle docs: `date`, `title`, `type` (brainstorm | research | design | plan | review | retro | adr), `status`, `authors`; optional `scope`, `reviewed_by`, `supersedes`, `superseded_by`, `related`. Evergreen docs: `title`, `type` (guide | architecture | system | reference), `authors`; optional `scope`, `last_reviewed`. Exact field names — `date` not `created`, `scope` not `tags`. See [guide §5.4](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md).
+- **Authorship.** `authors` is ordered and append-only: the human operator first (from `git config user.name`), then each contributing agent as `"<model> (<harness>)"` — e.g. `"claude-fable-5 (claude-code)"`, `"gpt-5.5-codex (codex)"`. Review passes go in `reviewed_by` (same grammar), never in `authors`.
+- **Change discipline.** When a design ships, the same commit (or commit series) updates `system/` (or `architecture.md`), adds a CHANGELOG entry, moves the ROADMAP item from In flight to Recently shipped, and flips frontmatter to `status: shipped`.
+- **Brainstorm graduation.** Crystallised brainstorms go to `2-design/` directly (or via `1-discovery/` if substantial research came out of it first). Status `superseded`, `superseded_by:` linked.
+
+## Commits
+
+Conventional Commits format: `<type>(<scope>): <description>`. Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. Imperative mood. Subject under 72 chars. Body explains *why*, not *what*. Reference relevant design / plan / ADR paths in the body when scope-relevant.
+
+## Working principles for CC sessions
+
+- **Verify before answering.** When unsure about repo state (does file X exist? is convention Y followed?), check first via `ls`/`grep`/`rg`/`Read`. Don't guess.
+- **Don't add features the user didn't ask for.** No speculative scaffolding, no premature abstractions.
+- **Don't suppress errors.** Surface failure modes plainly; don't fabricate success.
+- **No emojis in files** unless the user explicitly asks.
+- **Docs are for humans: structure + illustrations.** Headers, bullets, tables, Mermaid diagrams — not walls of prose. Anything visual (UX mockups, hi-fi concepts, screenshot examples) gets images: self-contained single-file HTML mockup in the doc's assets folder (e.g. `docs/2-design/mockups/`), headless screenshots (light + dark when theming matters), HTML + PNGs committed together, PNGs embedded with relative links so they render on GitHub. See [guide §5.9](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md).
+
+## Working-memory discipline (required for AI sessions)
+
+`docs/` is maintained primarily by AI agents. The [conventions guide §6.5](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md) enumerates the event triggers that require writes during a session — read it. Summary of the rules that bite most often:
+
+- **When an initiative starts in conversation, write it down immediately.** Substantive new work creates `docs/0-brainstorms/<topic>.md` (`status: open`) AND a one-line pointer in ROADMAP `## Future considerations` or `## Next actions`. Don't wait for a commit prompt.
+- **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter (`status: shipped`), AND the relevant evergreen state docs (`docs/architecture.md`, or `docs/system/*` if used).
+- **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
+- **Substantive audits or retros emerging from a conversation get saved** to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
+- **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did. If not, propose the missing writes inline.
+
+## OSS house standard
+
+Before creating or editing `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/*`, `.github/dependabot.yml`, `.github/workflows/*`, `.github/CODEOWNERS`, or branch protection, read `reference/reference-oss-standards.md` in `claude-code-resources` (or `https://github.com/carlosboeing/claude-code-resources/blob/main/reference/reference-oss-standards.md`) and follow it verbatim. Pin SHAs as listed, use `https://github.com/<owner>/<repo>/security/advisories/new` + `@<owner>` contacts, no personal email. The `required` job is the only `required_status_checks` entry.
+
+## Where to look first
+
+- For visitor-facing intent and quick-start: [`README.md`](README.md).
+- For "what's the current state?": `docs/system/` or `docs/architecture.md` (when they exist) — for now, see README's `## Architecture` section.
+- For "what's next?": [`docs/ROADMAP.md`](docs/ROADMAP.md).
+- For "what was shipped?": [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+- For "what did we decide and why?": [`docs/adrs/`](docs/adrs/).
+- For working-memory style: [`guide-project-structure-and-conventions.md`](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md) (canonical reference).
