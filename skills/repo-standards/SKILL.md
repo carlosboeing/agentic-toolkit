@@ -60,6 +60,11 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
 2. Resolve `visibility` (flag or auto-detect). State inference: `Visibility: oss (public repo)` or `Visibility: private (auto-detected)`.
 3. For `path`:
    - Base (always): `grep -q 3d3c42e...` `8207627...` etc., `test -f` `CODEOWNERS`, `dependabot.yml`, `docs/` lifecycle; `required` gate present.
+   - Git hooks: for the repository and `.workbench` (when `.workbench/.git` exists):
+     1. `core.hooksPath` unset, or set to anything other than `scripts/githooks` (`git config --get core.hooksPath`).
+     2. `scripts/githooks/pre-push` missing or not executable (`test -x scripts/githooks/pre-push`).
+     3. `scripts/githooks/housekeep` missing or not executable (`test -x scripts/githooks/housekeep`).
+     Reason: `core.hooksPath` is per clone, and git will not set it on clone, deliberately. Verified 2026-09-04: quotacap, copydesk, and claude-code-resources all had it unset.
    - If `oss`: additionally `! grep -q gmail` `CODE_OF_CONDUCT.md` `SECURITY.md`, `test -f` `SUPPORT.md` `SECURITY.md` `CODE_OF_CONDUCT.md` etc., yml forms `blank_issues_enabled: false`.
 4. Render table: file | expected | found | status.
 
@@ -67,6 +72,10 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
 
 1. Run `check` first, keep gap table.
 2. For each gap, patch:
+   - Git hooks (`scripts/githooks`): for the outer repository and `.workbench` (when `.workbench/.git` exists):
+     - Copy `housekeep` and `pre-push` from `~/Projects/carlos/claude-code-resources/git-hooks/drift-guard/` to `scripts/githooks/`.
+     - `chmod +x scripts/githooks/housekeep scripts/githooks/pre-push`.
+     - `git config core.hooksPath scripts/githooks`.
    - Missing `SUPPORT.md` or yml forms -> copy `templates/default-project/.github/ISSUE_TEMPLATE/*` and `templates/default-project/SUPPORT.md`, fill `<OWNER>`/`<REPO>` via `gh repo view --json nameWithOwner`.
    - Missing health files (oss only) -> copy `templates/default-project/CODE_OF_CONDUCT.md` etc., replace `<PROJECT_NAME>`.
    - SHA drift -> `Edit` `replaceAll` to pinned SHAs from reference §2.

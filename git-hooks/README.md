@@ -25,6 +25,7 @@ git -C "$REPO" config core.hooksPath scripts/githooks
 | Hook | Event | What it does |
 |---|---|---|
 | [`private-workbench-guard/`](private-workbench-guard/) | `pre-commit` | For a public repository with an independent private clone nested inside it. Refuses a commit that stages the workbench as a gitlink, or that adds private-side vocabulary to a public file. |
+| [`drift-guard/`](drift-guard/) | `pre-push`, `post-merge` | Refuses a push when project records are stale (frontmatter, roadmap status, changelog pairing). Reports dead branches, worktrees, and stale issues after a merge. |
 | `copydesk` | `pre-commit` | Extracted to [`carlosboeing/copydesk`](https://github.com/carlosboeing/copydesk) on 2026-08-19, and lives in that repository's `git-hooks/`. It runs the CopyDesk suite before a commit. |
 
 ## Conventions for this type
