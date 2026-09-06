@@ -267,6 +267,13 @@ _assert "fix removes the worktree before the branch" 0 $?
 grep -q 'push origin --delete\|push --delete\|push .* :refs' "$HOOK_DIR/housekeep"
 _assert "fix contains no remote delete, anywhere in the script" 1 $?
 
+# --- check C judges only lines under Recently shipped ---
+printf -- '---\ndate: 2026-09-06\ntitle: N\ntype: design\nstatus: in-progress\nauthors:\n  - "C"\n---\nbody\n' > "$C/docs/2-design/n.md"
+printf '# Roadmap\n\n## Next actions\n\n- Still going [N](2-design/n.md)\n\n## Recently shipped\n\n- [D](2-design/d.md)\n' > "$C/docs/ROADMAP.md"
+git -C "$C" add -A && git -C "$C" commit -q -m "docs: add a Next line"
+( cd "$C" && "$HOOK_DIR/housekeep" check --push "main~1" "main" ) >/dev/null 2>&1
+_assert "a Next actions line linking an in-progress doc passes" 0 $?
+
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
 
