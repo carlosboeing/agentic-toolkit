@@ -20,6 +20,7 @@ Declares where project-tracking information lives so the [`/briefing`](skills/br
 - **Working memory**: `docs/` (numbered lifecycle convention)
 - **Other**:
   - Repo is the source of truth for skills; the active harness loads from its user-level skills directory (e.g., `~/.claude/skills/` for Claude Code, `~/.gemini/config/skills/` for agy, `~/.codex/skills/` or `~/.agents/skills/` for Codex). Kimi Code reads `~/.agents/skills/` natively (plus its own `~/.kimi-code/skills/` for Kimi-specific entries), so the Codex target covers it. Grok Build TUI reads the hub through Claude compat (`~/.claude/skills`); do not add a `~/.grok/skills` spoke. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. If the harness config directory is under source control (e.g., `carlosboeing/claude-config`), commit and push the synced files there too as a separate `chore(<scope>): sync from claude-code-resources` commit.
+  - `instructions/CLAUDE.md` is the global agent brief. `~/.claude/CLAUDE.md` symlinks to it, and five harness paths symlink to that. Editing it changes every harness, so measure `wc -c instructions/CLAUDE.md` against Antigravity's 24,023-character limit before committing an addition. This replaced `carlosboeing/claude-config`, retired 2026-09-08.
   - No CI configured; validation is manual / via `/ultrareview` on demand.
   - CrossRev (formerly `revloop`) was extracted to its own public repository on 2026-08-13 and is external now — see [`carlosboeing/crossrev`](https://github.com/carlosboeing/crossrev). It files its own deferred findings as issues, labelled `crossrev-review`. The policy lives in [`.github/crossrev.yml`](.github/crossrev.yml). Findings at `medium` and above keep the loop alive. A cycle stops after 3 passes, so a person decides whether another is worth the quota. Asking for a single pass by hand runs it past that cap: `crossrev review --pr <n>` then `crossrev resolve --pr <n>`.
   - `skills/sync-skills.sh` pulls `pr-review` and `pr-resolve` from a local CrossRev checkout, expected at `~/Projects/carlos/crossrev/skills` unless `CROSSREV_SKILLS` overrides it. It prints a note rather than skipping silently when that checkout is missing. The same run writes OpenCode's `/`-menu command wrappers (one per hub skill) into `~/.config/opencode/command/` and copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `~/.config/opencode/plugins/validate-mermaid.ts`. It does not write `plugins/rtk.ts`. OpenCode is not a spoke since it reads the hub through Claude compat; the wrappers only add slash entries its TUI otherwise withholds.
@@ -31,6 +32,10 @@ Three clusters at the top level. See [README.md](README.md) for the visitor-faci
 ```
 .
 ├── docs/                   — REPO INTERNAL: this repo's working memory (see below)
+│
+├── instructions/           — HARNESS MIRROR: ~/.claude/CLAUDE.md symlinks here
+│   ├── CLAUDE.md           — the global brief every harness reads
+│   └── STABILITY.md        — its regression test
 │
 ├── skills/                 — HARNESS MIRROR: drop-in to ~/.claude/skills/
 │   └── learn/

@@ -18,6 +18,7 @@ The repo splits into three clusters. The cluster headers below also organise [`C
 
 | Path | What | Install path |
 |---|---|---|
+| [`instructions/`](instructions/) | The canonical global agent instruction file, read by six harnesses. See [`instructions/README.md`](instructions/README.md). | `~/.claude/CLAUDE.md` (symlink) |
 | [`skills/`](skills/) | Claude Code skills (drop-in `SKILL.md` files). See [`skills/README.md`](skills/README.md). | `~/.claude/skills/<name>/` |
 | [`hooks/`](hooks/) | Lifecycle hooks (shell scripts + settings fragments). See [`hooks/README.md`](hooks/README.md). | `~/.claude/hooks/<name>.sh` |
 | [`output-styles/`](output-styles/) | Output style prompts. See [`output-styles/README.md`](output-styles/README.md). | `~/.claude/output-styles/<name>.md` |
