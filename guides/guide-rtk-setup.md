@@ -57,9 +57,8 @@ Claude Code intercepts Bash executions and passes them to the RTK rewrite engine
 ### 2. Antigravity CLI & IDE (Instruction-based)
 Antigravity executes shell commands via the `run_command` tool. Transparent hook rewriting is pending upstream release ([rtk-ai/rtk#2093](https://github.com/rtk-ai/rtk/pull/2093)), so Antigravity operates in **instruction mode** (the same model as Codex and Kimi Code).
 
-*   **Authored Rule**: [`rules/antigravity-rtk-rules.md`](../rules/antigravity-rtk-rules.md) (in `claude-code-resources`)
-*   **Global Rule Path**: `~/.agents/rules/antigravity-rtk-rules.md` (symlinked from `~/.claude/rules/`)
-*   **Setup**: Installed globally at the user level so all projects inherit it without project-scoped `.agents/rules/` clutter. Requires `trigger: always_on` YAML frontmatter for Antigravity's rule discovery engine.
+*   **Source of the instruction**: the RTK section of `~/.claude/CLAUDE.md`, which Antigravity reads through `~/.agents/AGENTS.md`. It names Antigravity, Codex, Kimi Code and Grok as the harnesses needing an explicit prefix.
+*   **Authored Rule, not installed**: [`rules/antigravity-rtk-rules.md`](../rules/antigravity-rtk-rules.md) (in `claude-code-resources`). The `~/.claude/rules/` and `~/.agents/rules/` symlinks were removed on 2026-09-07 to keep the instruction file under Antigravity's 24,023-character limit. Re-install it from [`rules/README.md`](../rules/README.md) if the `CLAUDE.md` wording ever stops working.
 *   **Method**: System rules direct the agent to prefix shell commands explicitly with `rtk` (e.g. `rtk git status`, `rtk grep`).
 *   **Verify**: Run commands in an `agy` session, then check `rtk gain`.
 

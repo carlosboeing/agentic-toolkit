@@ -21,7 +21,7 @@ The repo splits into three clusters. The cluster headers below also organise [`C
 | [`skills/`](skills/) | Claude Code skills (drop-in `SKILL.md` files). See [`skills/README.md`](skills/README.md). | `~/.claude/skills/<name>/` |
 | [`hooks/`](hooks/) | Lifecycle hooks (shell scripts + settings fragments). See [`hooks/README.md`](hooks/README.md). | `~/.claude/hooks/<name>.sh` |
 | [`output-styles/`](output-styles/) | Output style prompts. See [`output-styles/README.md`](output-styles/README.md). | `~/.claude/output-styles/<name>.md` |
-| [`rules/`](rules/) | Cross-harness and harness-specific rules. See [`rules/README.md`](rules/README.md). | `~/.claude/rules/<name>.md`, `~/.agents/rules/` |
+| [`rules/`](rules/) | Cross-harness and harness-specific rules. Nothing here is installed since 2026-09-07 — see [`rules/README.md`](rules/README.md) for where each rule's guidance went. | not installed |
 
 Future cluster members (slots, not yet populated): `plugins/`, `commands/`, `agents/`, `mcp-servers/`. Created when the first item of each type arrives.
 

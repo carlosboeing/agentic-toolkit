@@ -15,6 +15,7 @@
 | [`oss-standards`](oss-standards/) | `/oss-standards` | Alias for `/repo-standards oss` - deprecated, prefer `/repo-standards`. |
 | [`housekeeping`](housekeeping/) | `/housekeeping` | Reports what a merge left behind and removes it. `check` names the branch, worktree, roadmap line and stale document a merged pull request left. `fix` deletes the worktree and the local branch after confirming `MERGED` through `gh`. Never deletes a remote branch. |
 | [`penmark-comments`](penmark-comments/) | — | Reviews writable local Markdown, then asks once whether findings go in the file as validated Penmark v1 comments or stay in chat. Remembers the answer. |
+| [`git-worktrees`](git-worktrees/) | — | The cross-harness worktree path convention `<repo>/.worktrees/<harness>/<branch>`, when a worktree is required rather than offered, and the two corrections to `superpowers:using-git-worktrees`. Moved out of `~/.claude/CLAUDE.md`, where it reached every session to serve implementation sessions only. |
 | [`start-planning`](start-planning/) | `/start-planning` | Starts implementation planning from a design in a fresh session. Path optional: resolves the design from the project when omitted. Holds the planning-phase boundary; discovers the project's planner, paths, and review rules instead of defining them. |
 
 (Add more rows as new skills land. Per-skill `README.md` carries the detail.)
