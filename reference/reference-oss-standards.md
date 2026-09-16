@@ -10,6 +10,7 @@ related:
   - guides/guide-project-structure-and-conventions.md
   - guides/guide-cross-harness-project-instructions.md
   - templates/default-project/
+  - reference/reference-build-and-release-standards.md
 ---
 
 # OSS repository house standard

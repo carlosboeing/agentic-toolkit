@@ -15,6 +15,7 @@ Snapshots, inventories, and lookups for coding agent configurations and historic
 | [`reference-claude-code-context-costs.md`](reference-claude-code-context-costs.md) | Per-bucket and per-server startup token costs from `/context`, with the control lever and lean replacement for each connector/plugin, plus the measure loop. |
 | [`reference-third-party-skills.md`](reference-third-party-skills.md) | Source and rebuild command for every skill in the `~/.claude/skills` hub this repo does not author. The recovery record for a tree that `claude-config` deliberately gitignores. |
 | [`reference-oss-standards.md`](reference-oss-standards.md) | OSS house standard checklist for any `carlosboeing/*` public repo - health files, pinned workflows, `required` gate, `dependabot`, rulesets, no personal email. |
+| [`reference-build-and-release-standards.md`](reference-build-and-release-standards.md) | Build and release house standard for any `carlosboeing/*` repo that ships a binary - marked local versions, install entry points, one build script, the agreement gate. |
 
 ## Conventions
 
