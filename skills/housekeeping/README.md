@@ -4,8 +4,9 @@ Reports what a merge left behind, then removes it. The vendored script `scripts/
 
 ## What it does
 
-- `/housekeeping` runs `housekeep check` and prints the findings. It always exits 0.
-- `/housekeeping fix` removes the worktree and the local branch of a pull request GitHub reports as merged, then prunes stale remote refs.
+- `/housekeeping` (or `/housekeeping audit`) performs a full audit of every local branch and registered worktree against GitHub pull requests by commit identity, verifying destination history and worktree cleanliness. Always exits 0.
+- `/housekeeping check` runs a windowed check over the last pull (`ORIG_HEAD..HEAD`) plus stale remote refs.
+- `/housekeeping fix` refreshes origin, re-verifies each candidate against GitHub and local lineage, removes the worktree and local branch, and prunes stale remote refs.
 
 ## Why a script and not a skill
 
@@ -16,14 +17,23 @@ The script is vendored per repository at `scripts/githooks/housekeep`, because `
 ## What it will not do
 
 - Delete a remote branch. No code path issues one.
-- Delete anything without confirming `MERGED` through `gh` first.
-- Delete a branch when its worktree has uncommitted changes.
+- Force-remove a worktree (`--force`).
+- Delete a branch when its worktree has uncommitted changes or holds ignored files.
+- Delete a branch checked out in the main worktree or the active worktree running `fix`.
+- Delete without verifying the merge commit is an ancestor of the base branch (or default branch) in destination history.
+- Delete anything without confirming `MERGED` through `gh` first, both during inventory resolution and immediately before deletion.
+- Delete anything if origin fetch fails during the refresh step.
 - Run on a schedule, or from a hook. `post-merge` runs `check`, never `fix`.
 
 ## Design notes
 
-`git branch -d` refuses after a squash merge, because git cannot see the squash as a merge. That is why `fix` uses `-D`, and why the `gh` confirmation comes first rather than last.
+`git branch -d` refuses after a squash merge, because git cannot see the squash as a merge. That is why `fix` uses `-D`, and why the `gh` confirmation and destination history verification come first.
 
-The pull request numbers come from commit subjects in `ORIG_HEAD..HEAD`, matched on a trailing `(#N)`. A direct push to `main` produces no number, which is correct: there is no pull request to check.
+`git worktree remove` cleanly deletes worktrees containing ignored files (such as build artifacts or local configs) without warning. `housekeep` explicitly inspects ignored files via `git status --porcelain --ignored` during `audit` and refuses deletion during `fix`.
 
-Design: [`docs/2-design/2026-09-04-repo-housekeeping-and-instruction-weight.md`](../../docs/2-design/2026-09-04-repo-housekeeping-and-instruction-weight.md).
+A nested `.workbench` repository is an independent git repository. Run the skill or script separately for `.workbench` when present.
+
+Designs:
+- Full audit: [`docs/2-design/2026-09-16-housekeep-full-audit-design.md`](../../docs/2-design/2026-09-16-housekeep-full-audit-design.md).
+- Initial merge reporter and push gate: [`docs/2-design/2026-09-04-repo-housekeeping-and-instruction-weight.md`](../../docs/2-design/2026-09-04-repo-housekeeping-and-instruction-weight.md).
+
