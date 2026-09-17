@@ -13,6 +13,7 @@ The repo splits into three clusters. The cluster headers below also organise [`C
 | Path | What | Install? |
 |---|---|---|
 | [`docs/`](docs/) | This repo's working memory — brainstorms, designs, plans, retros, ADRs, ROADMAP, CHANGELOG. | — |
+| [`scripts/`](scripts/) | Synchronization tools and maintenance scripts ([`scripts/sync-toolkit.sh`](scripts/sync-toolkit.sh)). | — |
 
 ### Harness mirrors (drop-in to `~/.claude/<type>/`)
 
@@ -47,7 +48,13 @@ For the conventions that shape `docs/` (and that you can adopt in your own proje
 
 ## Quick start
 
-To install a skill from this repo:
+To audit and synchronize all skills, hooks, and plugins across your installed AI harnesses and project checkouts:
+
+```bash
+./scripts/sync-toolkit.sh
+```
+
+To install a single skill from this repo:
 
 ```bash
 SKILL=learn   # ← or whichever skill you want
