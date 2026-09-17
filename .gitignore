@@ -8,6 +8,10 @@
 .worktrees/
 .DS_Store
 
+# Local operator overrides for sync-toolkit (never committed)
+.sync.local
+
+
 # Playwright MCP scratch output (snapshots, screenshots) written into the cwd
 .playwright-mcp/
 

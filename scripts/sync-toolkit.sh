@@ -3,30 +3,28 @@
 # sync-toolkit — unified harness and git hook synchronization
 #
 # Synchronizes the agentic toolkit across both user harnesses ($HOME)
-# and local project repositories (~/Projects/carlos/*).
+# and local project repositories ($PROJECTS_DIR).
 #
 # Usage:
 #   ./scripts/sync-toolkit.sh              interactive wizard (if TTY) or full sync (if non-interactive)
-#   ./scripts/sync-toolkit.sh --all        full sync: harnesses (~/) + repositories (~/Projects/carlos/)
+#   ./scripts/sync-toolkit.sh --all        full sync: harnesses (~/) + repositories ($PROJECTS_DIR)
 #   ./scripts/sync-toolkit.sh --harness    sync only harness tools in $HOME (skills, hooks, plugins)
 #   ./scripts/sync-toolkit.sh --repos      sync only git hooks across project repositories
+#   ./scripts/sync-toolkit.sh --all-repos  sync all discovered repositories, bypassing fleet filter
 #   ./scripts/sync-toolkit.sh --dry-run    audit mode: report drift without modifying files
-#   ./scripts/sync-toolkit.sh --adopt      fold a real spoke directory into the hub
-#   ./scripts/sync-toolkit.sh -y|--yes     automated: non-interactive full sync
-#   ./scripts/sync-toolkit.sh [path]       target a single specific repository
-#   ./scripts/sync-toolkit.sh -h|--help    show this synopsis
+#   ./scripts/sync-toolkit.sh --adopt            fold a real spoke directory into the hub
+#   ./scripts/sync-toolkit.sh --projects-dir <d> override target projects directory
+#   ./scripts/sync-toolkit.sh --config <f>       load custom configuration file
+#   ./scripts/sync-toolkit.sh --no-config        bypass local and user configuration files
+#   ./scripts/sync-toolkit.sh -y|--yes           automated: non-interactive full sync
+#   ./scripts/sync-toolkit.sh [path]             target a single specific repository
+#   ./scripts/sync-toolkit.sh -h|--help          show this synopsis
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_SRC="$REPO_ROOT/skills"
-HUB="${HUB:-$HOME/.claude/skills}"
-PROJECTS_DIR="${PROJECTS_DIR:-$HOME/Projects/carlos}"
-
-# External skill sources
-CROSSREV_SKILLS="${CROSSREV_SKILLS:-$PROJECTS_DIR/crossrev/skills}"
-COPYDESK_SKILLS="${COPYDESK_SKILLS:-$PROJECTS_DIR/copydesk/skills}"
 
 # Canonical hook sources
 HOUSEKEEP_SRC="$REPO_ROOT/git-hooks/drift-guard/housekeep"
@@ -37,9 +35,6 @@ PRE_COMMIT_SRC="$REPO_ROOT/git-hooks/private-workbench-guard/pre-commit"
 # Canonical lifecycle hook sources
 MERMAID_HOOK_SRC="$REPO_ROOT/hooks/validate-mermaid/validate-mermaid.sh"
 OPENCODE_MERMAID_SRC="$REPO_ROOT/hooks/validate-mermaid/opencode-validate-mermaid.ts"
-
-# Default repositories in local project fleet
-DEFAULT_REPO_NAMES=("claude-code-resources" "crossrev" "copydesk" "penmark" "quotacap")
 
 # Spokes that point at the hub
 SPOKES=(
@@ -75,11 +70,30 @@ MODE="all"
 DRY_RUN=0
 ADOPT=0
 ASSUME_YES=0
+ALL_REPOS=0
+NO_CONFIG=0
+CONFIG_FILE=""
 TARGET_PATH=""
 ORIG_ARG_COUNT=$#
+SELECTED_REPOS=()
+
+# Built-in generic fallbacks
+DEFAULT_PROJECTS_DIR=""
+if [[ -d "$(dirname "$REPO_ROOT")" ]]; then
+  DEFAULT_PROJECTS_DIR="$(dirname "$REPO_ROOT")"
+elif [[ -d "$HOME/Projects" ]]; then
+  DEFAULT_PROJECTS_DIR="$HOME/Projects"
+fi
+
+# Environment defaults (Precedence levels 4 & 5)
+HUB="${HUB:-$HOME/.claude/skills}"
+PROJECTS_DIR="${PROJECTS_DIR:-$DEFAULT_PROJECTS_DIR}"
+FLEET_REPOS=()
+IGNORE_DIRS=("temp" "archive" "node_modules" ".worktrees")
+EXTRA_SKILL_SOURCES=()
 
 print_usage() {
-  sed -n '3,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '3,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 run() {
@@ -87,6 +101,101 @@ run() {
     echo -e "   ${C_DIM}would:${C_RESET} $*"
   else
     "$@"
+  fi
+}
+
+# ----------------------------------------------------------- Config Loader ---
+
+# Pre-scan arguments for --config and --no-config
+for ((i=1; i<=$#; i++)); do
+  val="${!i}"
+  if [[ "$val" == "--no-config" ]]; then
+    NO_CONFIG=1
+  elif [[ "$val" == "--config" ]]; then
+    j=$((i+1))
+    CONFIG_FILE="${!j:-}"
+  elif [[ "$val" == --config=* ]]; then
+    CONFIG_FILE="${val#*=}"
+  fi
+done
+
+load_config() {
+  [[ $NO_CONFIG -eq 1 ]] && return 0
+  [[ -n "${SYNC_TOOLKIT_NO_CONFIG:-}" && -z "$CONFIG_FILE" ]] && return 0
+
+  if [[ -n "$CONFIG_FILE" ]]; then
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+      echo "error: specified config file does not exist: $CONFIG_FILE" >&2
+      exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "$CONFIG_FILE"
+  elif [[ -n "${SYNC_TOOLKIT_CONF:-}" ]]; then
+    if [[ ! -f "$SYNC_TOOLKIT_CONF" ]]; then
+      echo "error: specified config file does not exist: $SYNC_TOOLKIT_CONF" >&2
+      exit 1
+    fi
+    # shellcheck source=/dev/null
+    source "$SYNC_TOOLKIT_CONF"
+  else
+    # Layer 1: User-level configuration (~/.config/agentic-toolkit/sync.conf)
+    local user_conf=""
+    if [[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/agentic-toolkit/sync.conf" ]]; then
+      user_conf="${XDG_CONFIG_HOME:-$HOME/.config}/agentic-toolkit/sync.conf"
+    elif [[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/toolkit/sync.conf" ]]; then
+      user_conf="${XDG_CONFIG_HOME:-$HOME/.config}/toolkit/sync.conf"
+    fi
+    if [[ -n "$user_conf" ]]; then
+      # shellcheck source=/dev/null
+      source "$user_conf"
+    fi
+
+    # Layer 2: Repository-local configuration ($REPO_ROOT/.sync.local)
+    if [[ -f "$REPO_ROOT/.sync.local" ]]; then
+      # shellcheck source=/dev/null
+      source "$REPO_ROOT/.sync.local"
+    fi
+  fi
+}
+
+load_config
+
+# ---------------------------------------------------- Dynamic Discovery ---
+
+discover_repos() {
+  local dir="$1"
+  local -a found=()
+  [[ ! -d "$dir" ]] && return 0
+
+  local entry
+  for entry in "$dir"/*; do
+    [[ -d "$entry" ]] || continue
+    local bname
+    bname="$(basename "$entry")"
+
+    # Skip hidden directories
+    [[ "$bname" == .* ]] && continue
+
+    # Skip ignored directories
+    local ignored=0
+    if [[ ${#IGNORE_DIRS[@]} -gt 0 ]]; then
+      for ign in "${IGNORE_DIRS[@]}"; do
+        if [[ "$bname" == "$ign" ]]; then
+          ignored=1
+          break
+        fi
+      done
+    fi
+    [[ $ignored -eq 1 ]] && continue
+
+    # Check if entry is a git checkout (directory or worktree pointer file)
+    if [[ -d "$entry/.git" || -f "$entry/.git" ]]; then
+      found+=("$bname")
+    fi
+  done
+
+  if [[ ${#found[@]} -gt 0 ]]; then
+    printf '%s\n' "${found[@]}" | sort
   fi
 }
 
@@ -106,12 +215,35 @@ while [[ $# -gt 0 ]]; do
       MODE="repos"
       shift
       ;;
+    --all-repos|--discover)
+      ALL_REPOS=1
+      shift
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
       ;;
     --adopt)
       ADOPT=1
+      shift
+      ;;
+    --config)
+      # Handled in pre-scan
+      shift 2
+      ;;
+    --config=*)
+      # Handled in pre-scan
+      shift
+      ;;
+    --no-config)
+      shift
+      ;;
+    --projects-dir)
+      PROJECTS_DIR="$2"
+      shift 2
+      ;;
+    --projects-dir=*)
+      PROJECTS_DIR="${1#*=}"
       shift
       ;;
     -y|--yes)
@@ -141,6 +273,53 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ---------------------------------------------------- Interactive Wizard ---
+
+select_repos_interactive() {
+  local -a repos=("$@")
+  if [[ ${#repos[@]} -eq 0 ]]; then
+    echo "No repositories available to select."
+    return
+  fi
+
+  local display_dir="$PROJECTS_DIR"
+  [[ "$display_dir" == "$HOME"* ]] && display_dir="~${display_dir#"$HOME"}"
+
+  echo ""
+  echo "Available repositories in $display_dir:"
+  local idx=1
+  for rname in "${repos[@]}"; do
+    printf "  %2d) %s\n" "$idx" "$rname"
+    idx=$((idx + 1))
+  done
+
+  echo ""
+  local input=""
+  if [[ -r /dev/tty ]]; then
+    read -r -p "Enter numbers to sync (comma-separated, e.g. 1, 3, 5) or 'all': " input </dev/tty || input="all"
+  else
+    read -r -p "Enter numbers to sync (comma-separated, e.g. 1, 3, 5) or 'all': " input || input="all"
+  fi
+
+  if [[ "$input" == "all" || -z "$input" ]]; then
+    ALL_REPOS=1
+    return
+  fi
+
+  SELECTED_REPOS=()
+  local IFS=','
+  for token in $input; do
+    token="$(echo "$token" | tr -d ' ')"
+    if [[ "$token" =~ ^[0-9]+$ ]] && [[ "$token" -ge 1 && "$token" -le ${#repos[@]} ]]; then
+      local picked_repo="${repos[$((token - 1))]}"
+      SELECTED_REPOS+=("$PROJECTS_DIR/$picked_repo")
+    fi
+  done
+
+  if [[ ${#SELECTED_REPOS[@]} -eq 0 ]]; then
+    echo "No valid repositories selected. Aborted."
+    exit 0
+  fi
+}
 
 run_wizard() {
   echo -e "${C_BOLD}${C_BLUE}sync-toolkit — agentic toolkit installer & synchronization wizard${C_RESET}\n"
@@ -195,50 +374,115 @@ run_wizard() {
 
   echo ""
   # [3/3] Local Project Repositories
-  echo -e "${C_BOLD}${C_CYAN}=== [3/3] Local Project Repositories (~/Projects/carlos/) ===${C_RESET}"
-  for rname in "${DEFAULT_REPO_NAMES[@]}"; do
-    local rpath="$PROJECTS_DIR/$rname"
-    if [[ -d "$rpath/.git" || -f "$rpath/.git" ]]; then
-      local sidecar_note=""
-      [[ -d "$rpath/.workbench/.git" ]] && sidecar_note=" (+ .workbench sidecar)"
-      printf "  • %-45s %b[TARGET]%b\n" "$rname$sidecar_note" "$C_BLUE" "$C_RESET"
-    fi
-  done
+  local display_dir="$PROJECTS_DIR"
+  [[ "$display_dir" == "$HOME"* ]] && display_dir="~${display_dir#"$HOME"}"
+  echo -e "${C_BOLD}${C_CYAN}=== [3/3] Local Project Repositories ($display_dir) ===${C_RESET}"
 
-  echo ""
-  local reply=""
-  if [[ -r /dev/tty ]]; then
-    read -r -p "Synchronize all detected harnesses and repository targets? [Y/n] " reply </dev/tty || reply="y"
-  else
-    read -r -p "Synchronize all detected harnesses and repository targets? [Y/n] " reply || reply="y"
-  fi
+  local -a discovered=()
+  while IFS= read -r rname; do
+    [[ -n "$rname" ]] && discovered+=("$rname")
+  done < <(discover_repos "$PROJECTS_DIR")
 
-  case "${reply:-y}" in
-    y|Y|yes|YES)
-      MODE="all"
-      ;;
-    n|N|no|NO)
-      echo ""
-      echo "Select synchronization scope:"
-      echo "  1) Harness environment only (\$HOME)"
-      echo "  2) Project repositories only (~/Projects/carlos/)"
-      echo "  3) Cancel"
-      local choice=""
-      if [[ -r /dev/tty ]]; then
-        read -r -p "Enter choice [1-3]: " choice </dev/tty || choice="3"
-      else
-        read -r -p "Enter choice [1-3]: " choice || choice="3"
+  if [[ ${#FLEET_REPOS[@]} -gt 0 ]]; then
+    for rname in "${FLEET_REPOS[@]}"; do
+      local rpath="$PROJECTS_DIR/$rname"
+      if [[ -d "$rpath/.git" || -f "$rpath/.git" ]]; then
+        local sidecar_note=""
+        [[ -d "$rpath/.workbench/.git" || -f "$rpath/.workbench/.git" ]] && sidecar_note=" (+ .workbench sidecar)"
+        printf "  • %-45s %b[TARGET]%b\n" "$rname$sidecar_note" "$C_BLUE" "$C_RESET"
       fi
-      case "$choice" in
-        1) MODE="harness" ;;
-        2) MODE="repos" ;;
-        *) echo "Aborted."; exit 0 ;;
-      esac
-      ;;
-    *)
-      MODE="all"
-      ;;
-  esac
+    done
+    local extra_count=$((${#discovered[@]} - ${#FLEET_REPOS[@]}))
+    if [[ $extra_count -gt 0 ]]; then
+      printf "  • %-45s %b[%d DISCOVERED]%b\n" "$extra_count additional git repositories" "$C_DIM" "$extra_count" "$C_RESET"
+    fi
+
+    echo ""
+    echo "Select synchronization action:"
+    echo "  1) Synchronize curated fleet (${#FLEET_REPOS[@]} repositories + harnesses) [default]"
+    echo "  2) Synchronize all discovered repositories (${#discovered[@]} repositories + harnesses)"
+    echo "  3) Select specific repositories to sync (interactive checklist)"
+    echo "  4) Harness environment only (\$HOME)"
+    echo "  5) Audit drift only (--dry-run)"
+    echo "  6) Cancel"
+    local choice=""
+    if [[ -r /dev/tty ]]; then
+      read -r -p "Choice [1-6]: " choice </dev/tty || choice="1"
+    else
+      read -r -p "Choice [1-6]: " choice || choice="1"
+    fi
+
+    case "${choice:-1}" in
+      1)
+        MODE="all"
+        ;;
+      2)
+        MODE="all"
+        ALL_REPOS=1
+        ;;
+      3)
+        select_repos_interactive "${discovered[@]}"
+        MODE="all"
+        ;;
+      4)
+        MODE="harness"
+        ;;
+      5)
+        MODE="all"
+        DRY_RUN=1
+        ;;
+      *)
+        echo "Aborted."
+        exit 0
+        ;;
+    esac
+  else
+    for rname in "${discovered[@]}"; do
+      local rpath="$PROJECTS_DIR/$rname"
+      local sidecar_note=""
+      [[ -d "$rpath/.workbench/.git" || -f "$rpath/.workbench/.git" ]] && sidecar_note=" (+ .workbench sidecar)"
+      printf "  • %-45s %b[TARGET]%b\n" "$rname$sidecar_note" "$C_BLUE" "$C_RESET"
+    done
+    if [[ ${#discovered[@]} -eq 0 ]]; then
+      echo -e "  ${C_DIM}(no git repositories discovered in $display_dir)${C_RESET}"
+    fi
+
+    echo ""
+    echo "Select synchronization action:"
+    echo "  1) Synchronize all discovered repositories (${#discovered[@]} repositories + harnesses) [default]"
+    echo "  2) Select specific repositories to sync (interactive checklist)"
+    echo "  3) Harness environment only (\$HOME)"
+    echo "  4) Audit drift only (--dry-run)"
+    echo "  5) Cancel"
+    local choice=""
+    if [[ -r /dev/tty ]]; then
+      read -r -p "Choice [1-5]: " choice </dev/tty || choice="1"
+    else
+      read -r -p "Choice [1-5]: " choice || choice="1"
+    fi
+
+    case "${choice:-1}" in
+      1)
+        MODE="all"
+        ALL_REPOS=1
+        ;;
+      2)
+        select_repos_interactive "${discovered[@]}"
+        MODE="all"
+        ;;
+      3)
+        MODE="harness"
+        ;;
+      4)
+        MODE="all"
+        DRY_RUN=1
+        ;;
+      *)
+        echo "Aborted."
+        exit 0
+        ;;
+    esac
+  fi
   echo ""
 }
 
@@ -246,6 +490,7 @@ run_wizard() {
 if [[ $ORIG_ARG_COUNT -eq 0 && -t 0 && -t 1 && $ASSUME_YES -eq 0 ]]; then
   run_wizard
 fi
+
 
 # ---------------------------------------------------- Tier 1: Harness ---
 
@@ -260,16 +505,14 @@ sync_authored() {
     sources+=("$bundle_skills"/*/)
   done
 
-  if [[ -d "$CROSSREV_SKILLS" ]]; then
-    sources+=("$CROSSREV_SKILLS"/*/)
-  else
-    echo -e "   ${C_DIM}note: no CrossRev checkout at $CROSSREV_SKILLS; skipping pr-review/pr-resolve${C_RESET}"
-  fi
-
-  if [[ -d "$COPYDESK_SKILLS" ]]; then
-    sources+=("$COPYDESK_SKILLS"/*/)
-  else
-    echo -e "   ${C_DIM}note: no CopyDesk checkout at $COPYDESK_SKILLS; skipping copydesk${C_RESET}"
+  if [[ ${#EXTRA_SKILL_SOURCES[@]} -gt 0 ]]; then
+    for extra_src in "${EXTRA_SKILL_SOURCES[@]}"; do
+      if [[ -d "$extra_src" ]]; then
+        sources+=("$extra_src"/*/)
+      else
+        echo -e "   ${C_DIM}note: external skill source missing at $extra_src; skipping${C_RESET}"
+      fi
+    done
   fi
 
   for path in "${sources[@]}"; do
@@ -411,6 +654,7 @@ sync_opencode() {
     fi
 
     local content
+    # shellcheck disable=SC2016
     content=$(printf -- '---\ndescription: "invoke the %s skill"\n---\n\nInvoke the `%s` skill using the skill tool, then apply it to the request below. If no request is given, invoke the skill with no arguments.\n\n$ARGUMENTS\n' "$name" "$name")
 
     if [[ ! -f "$dest" ]] || [[ "$(<"$dest")" != "$content" ]]; then
@@ -511,8 +755,6 @@ sync_single_repo_hook() {
 
 sync_repo_target() {
   local target="$1"
-  local target_name
-  target_name="$(basename "$target")"
   TOTAL_REPOS_CHECKED=$((TOTAL_REPOS_CHECKED + 1))
 
   echo -e "  • ${C_BOLD}$target${C_RESET}"
@@ -555,7 +797,9 @@ sync_repo_target() {
 }
 
 sync_repos() {
-  echo -e "${C_BOLD}${C_CYAN}=== Tier 2: Local Project Repositories ===${C_RESET}"
+  local display_dir="$PROJECTS_DIR"
+  [[ "$display_dir" == "$HOME"* ]] && display_dir="~${display_dir#"$HOME"}"
+  echo -e "${C_BOLD}${C_CYAN}=== Tier 2: Local Project Repositories ($display_dir) ===${C_RESET}"
   local targets=()
 
   if [[ -n "$TARGET_PATH" ]]; then
@@ -569,8 +813,14 @@ sync_repos() {
       exit 1
     fi
     targets+=("$repo_root")
+  elif [[ ${#SELECTED_REPOS[@]} -gt 0 ]]; then
+    targets=("${SELECTED_REPOS[@]}")
+  elif [[ $ALL_REPOS -eq 1 || ${#FLEET_REPOS[@]} -eq 0 ]]; then
+    while IFS= read -r rname; do
+      [[ -n "$rname" ]] && targets+=("$PROJECTS_DIR/$rname")
+    done < <(discover_repos "$PROJECTS_DIR")
   else
-    for rname in "${DEFAULT_REPO_NAMES[@]}"; do
+    for rname in "${FLEET_REPOS[@]}"; do
       local rpath="$PROJECTS_DIR/$rname"
       if [[ -d "$rpath" && (-d "$rpath/.git" || -f "$rpath/.git") ]]; then
         targets+=("$rpath")

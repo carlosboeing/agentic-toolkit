@@ -1,0 +1,29 @@
+# sync-toolkit.conf.example
+#
+# Configuration template for sync-toolkit.
+#
+# Copy this file to:
+#   .sync.local                            (for repository-local override, git-ignored)
+#   or ~/.config/agentic-toolkit/sync.conf (for user-global preference)
+#
+# -----------------------------------------------------------------------------
+
+# Directory containing local project checkouts
+# Default fallback: sibling directory of this toolkit ($(dirname "$REPO_ROOT")) or ~/Projects
+# PROJECTS_DIR="$HOME/Projects"
+
+# Curated fleet of active repositories to target during daily synchronization.
+# If omitted or empty, sync-toolkit dynamically discovers all git repositories
+# within PROJECTS_DIR.
+# FLEET_REPOS=(
+#   "my-project-1"
+#   "my-project-2"
+# )
+
+# Directory names to ignore during dynamic auto-discovery
+# IGNORE_DIRS=("temp" "archive" "node_modules" ".worktrees")
+
+# External product checkouts that vend additional harness skills into the Hub (~/.claude/skills)
+# EXTRA_SKILL_SOURCES=(
+#   "$PROJECTS_DIR/my-product/skills"
+# )
