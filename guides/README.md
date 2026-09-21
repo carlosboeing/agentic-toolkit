@@ -1,29 +1,35 @@
 # Guides
 
-How-to guides for using Claude Code productively. Each guide is a stable, evergreen markdown file — not a snapshot, not a tutorial, but a contract that captures *how to do a thing well*.
+These guides document repeatable operating procedures for AI coding harnesses and the repositories they modify. A guide describes the current method. Dated inventories and measurements belong in [`reference/`](../reference/).
 
 ## Catalog
 
-| Guide | What it covers |
+| Guide | Use it for |
 |---|---|
-| [`guide-project-structure-and-conventions.md`](guide-project-structure-and-conventions.md) | A portable documentation structure for long-running projects: brainstorms → designs → plans → reviews → ADRs, with always-current state docs and a single ROADMAP. Originally developed for an infrastructure project; the conventions generalise. |
-| [`guide-creating-claude-code-skills.md`](guide-creating-claude-code-skills.md) | A practitioner's guide to writing Claude Code skills — when to write a skill vs a hook/plugin/CLAUDE.md, how to design the command surface (arguments, dials, help mode, dispatchers), how to write the body (anti-fabrication, standing instructions), single-file vs multi-file tradeoffs, and a list of pitfalls. Drawn from shipping the `/learn` skill in this repo. |
-| [`guide-cross-harness-project-instructions.md`](guide-cross-harness-project-instructions.md) | One canonical `CLAUDE.md` with `AGENTS.md` / `GEMINI.md` symlinks so Cursor, Claude Code, Antigravity, and Kimi (natively) read the same project brief. |
-| [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md) | Official vs substitute vs skip mapping for plugins, skills, and MCP across Claude Code, Codex, Antigravity (`agy`), Kimi Code, and Grok Build TUI. Cursor is parked. |
-| [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | When to use Playwright MCP vs the Playwright CLI vs chrome-devtools-plugin for agentic (non-CI) browser work — exploratory browsing and aesthetics vs repeatable flows and goldens, per-harness defaults, the harness-dependent token-cost truth, and corrected myths. |
-| [`guide-ai-model-and-effort-routing.md`](guide-ai-model-and-effort-routing.md) | A 60-second chooser for routing research, coding, architecture, writing, visual work, and long runs across Claude Code, Codex, Kimi Code, Antigravity, Grok Build TUI, and open-weight workers, with effort, quota, escalation, and project-specific playbooks. |
-| [`guide-agy-model-and-quota-selection.md`](guide-agy-model-and-quota-selection.md) | Antigravity-only picker, quota checks, session behavior, and operational fallbacks; cross-harness task routing and comparisons live in the canonical routing guide and model reference. |
-| [`guide-trimming-claude-code-startup-context.md`](guide-trimming-claude-code-startup-context.md) | The durable recipe for cutting Claude Code startup context (~232k → ~74k measured): a global lean baseline (`disableClaudeAiConnectors` + finance plugins off), self-hosting the integrations you use in code (Fathom worked example) so they survive the connector flag, dropping redundant browser stacks, and the measure loop. Pairs with `reference/reference-claude-code-context-costs.md`. |
-| [`guide-penmark-agent-integration.md`](guide-penmark-agent-integration.md) | Global default behavior for validated Penmark inline comments on explicit local Markdown reviews: precedence, shared installation, validation, failure handling, upgrades, and an evidence audit. |
+| [`guide-new-machine-setup.md`](guide-new-machine-setup.md) | Restoring the shared instructions, skill hub, hooks, plugins, and OpenCode configuration on a new machine |
+| [`guide-project-structure-and-conventions.md`](guide-project-structure-and-conventions.md) | Structuring project documentation, lifecycle records, frontmatter, roadmaps, and private working-memory sidecars |
+| [`guide-cross-harness-project-instructions.md`](guide-cross-harness-project-instructions.md) | Sharing one project brief through `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md` |
+| [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md) | Mapping plugins, skills, Model Context Protocol (MCP) servers, hooks, and browser tools across harnesses |
+| [`guide-ai-model-and-effort-routing.md`](guide-ai-model-and-effort-routing.md) | Selecting models and effort levels by task shape, cost, quota, and escalation signals |
+| [`guide-agy-model-and-quota-selection.md`](guide-agy-model-and-quota-selection.md) | Choosing Antigravity models and handling its quota and session behavior |
+| [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | Choosing Playwright MCP, the Playwright command-line interface, or a live browser tool for agent-driven browser work |
+| [`guide-creating-claude-code-skills.md`](guide-creating-claude-code-skills.md) | Designing a skill's activation boundary, command surface, instructions, file layout, and failure behavior |
+| [`guide-penmark-agent-integration.md`](guide-penmark-agent-integration.md) | Installing and validating the Penmark inline-comment workflow |
+| [`guide-rtk-setup.md`](guide-rtk-setup.md) | Installing RTK and selecting transparent-hook or explicit-prefix operation per harness |
+| [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) | Installing and verifying claude-mem session memory |
+| [`guide-trimming-claude-code-startup-context.md`](guide-trimming-claude-code-startup-context.md) | Measuring and reducing Claude Code startup context without removing required integrations |
+| [`guide-headroom-setup.md`](guide-headroom-setup.md) | Understanding the retired Headroom setup and the steps needed to remove it safely |
 
-**Graduated out on 2026-08-13:** `guide-revloop-credentials.md` moved with its tool. CrossRev (formerly revloop) was extracted to [`carlosboeing/crossrev`](https://github.com/carlosboeing/crossrev), and the guide is now that repo's [`docs/credentials.md`](https://github.com/carlosboeing/crossrev/blob/main/docs/credentials.md), rewritten for composite-action delivery — the deploy key it documented no longer exists.
+The CrossRev credentials guide moved to the public [CrossRev repository](https://github.com/carlosboeing/crossrev/blob/main/docs/credentials.md) with the tool on 2026-08-13.
 
 ## Conventions
 
-- Filenames are `guide-<topic>.md`. The prefix is redundant with the directory name on purpose — the file is self-describing if it gets emailed, gisted, or copied into another project.
-- Each guide has YAML frontmatter (`title`, `type: guide`, `scope`, `last_reviewed`, optional `related`). The `last_reviewed` date is bumped only when the content has been verified end-to-end, not on every editorial edit.
-- Guides are **evergreen** — they describe how things should be done, not how they were done at a point in time. For point-in-time material (a snapshot, an inventory, a one-off retrospective), use `reference/` or write it inside a project's own docs structure instead.
+- Name files `guide-<topic>.md` so a copied file remains identifiable outside this repository.
+- Start each guide with YAML frontmatter containing `title`, `type: guide`, `scope`, `last_reviewed`, `authors`, and relevant `related` links.
+- Update `last_reviewed` only after verifying the procedure from start to finish.
+- Keep paragraphs on one source line and use tables or lists where readers need to compare repeated fields.
+- Move point-in-time measurements, inventories, and product snapshots to [`reference/`](../reference/).
 
-## Sharing one guide
+## Share a guide
 
-Each guide is a self-contained markdown file. To share it, copy the file or paste a public GitHub link to it. References to other files in this repo are kept relative and minimal so guides travel cleanly.
+Copy the Markdown file or link to its public GitHub path. Relative links are kept narrow so a guide can travel without bringing the entire repository.

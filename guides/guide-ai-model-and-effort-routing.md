@@ -9,7 +9,6 @@ scope: [model-routing, claude-code, codex, kimi-code, antigravity, grok, quota, 
 last_reviewed: 2026-08-17
 related:
   - ../reference/reference-cross-harness-models.md
-  - ../docs/2-design/2026-08-02-four-harness-model-routing-guide-design.md
   - guide-agy-model-and-quota-selection.md
   - ../reference/reference-harness-capability-map.md
 ---

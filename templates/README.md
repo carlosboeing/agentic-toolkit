@@ -10,27 +10,27 @@ Project-bootstrap scaffolds for starting a new project that follows the conventi
 | [`default-project-oss/`](default-project-oss/) | Public OSS superset: `default-project` + `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `LICENSE`, `.github/ISSUE_TEMPLATE/*.yml` (private -> public via `/repo-standards fix oss`). |
 | [`lean-claude-settings/`](lean-claude-settings/) | A lean `.claude/settings.json` (connectors off + finance plugins off) for running Claude Code with minimal startup context. See [`guide-trimming-claude-code-startup-context.md`](../guides/guide-trimming-claude-code-startup-context.md). |
 
-(More variants may land later — software-with-tests, docs-only, infrastructure, etc. Out of v1 scope.)
+Additional variants remain out of scope until a real project needs them.
 
 ## Use
 
 Two paths to bootstrap a new project from `default-project/`:
 
 ```bash
-# Option A — without cloning (recommended; uses degit to fetch the subdirectory):
-npx degit github:carlosboeing/agentic-toolkit/templates/default-project <new-project-path>
+# Fetch only the template directory without cloning the full repository
+npx degit github:carlosboeing/agentic-toolkit/templates/default-project ./new-project
 
-# Option B — from an existing local clone (replace <path-to-repo> with your clone path):
-cp -r <path-to-repo>/templates/default-project <new-project-path>
+# Or copy it from an existing agentic-toolkit clone
+cp -R ./templates/default-project ./new-project
 
-cd <new-project-path>
+cd ./new-project
 # Substitute <PROJECT_NAME> placeholders via editor or sed:
 #   grep -rl '<PROJECT_NAME>' . | xargs sed -i '' 's/<PROJECT_NAME>/your-project-name/g'   # macOS
 #   grep -rl '<PROJECT_NAME>' . | xargs sed -i 's/<PROJECT_NAME>/your-project-name/g'      # Linux
 git init && git add . && git commit -m "chore: bootstrap repo with project structure conventions"
 ```
 
-Option A pulls the subdirectory directly from GitHub (no manual clone, no path assumptions); Option B is for operators who already have the repo cloned and prefer not to depend on `npx`/`degit`.
+The first command downloads the subdirectory from GitHub. The second uses the current local clone and does not require `npx` or `degit`.
 
 ## Retrofitting an existing project
 
@@ -74,4 +74,4 @@ default-project-oss/
     └── config.yml
 ```
 
-`system/` and `architecture.md` are NOT scaffolded — they're created on demand when README's `## Architecture` section overflows. See the conventions guide for the promotion path.
+The templates do not create `system/` or `architecture.md`. Add them only when the README's architecture section no longer holds the required detail. See the conventions guide for that promotion path.
