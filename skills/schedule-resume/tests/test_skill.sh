@@ -118,7 +118,7 @@ assert_contains "$SKILL_FILE" 'Cancel' "cover cancellation"
 assert_contains "$SKILL_FILE" 'exactly one active job' "allow the sole safe cancel inference"
 assert_contains "$SKILL_FILE" 'Cleanup' "cover cleanup"
 assert_contains "$SKILL_FILE" 'retention days' "require cleanup retention"
-assert_contains "$SKILL_FILE" 'Read-only list/status require no confirmation' "keep read-only management non-interactive"
+assert_contains "$SKILL_FILE" 'Read-only list/status/logs require no confirmation' "keep read-only management non-interactive"
 pass "management interaction contract"
 
 for dependency in macOS jq cron crontab caffeinate lockf; do

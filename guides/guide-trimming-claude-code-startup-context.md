@@ -6,7 +6,6 @@ updated: 2026-07-08
 related:
   - reference/reference-claude-code-context-costs.md
   - templates/lean-claude-settings/README.md
-  - docs/1-discovery/2026-07-08-startup-context-token-breakdown-analysis.md
 ---
 
 # Trimming Claude Code startup context

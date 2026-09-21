@@ -542,7 +542,7 @@ assert_foreign_survives "create rollback"
 pass "create rollback scope"
 
 "$RESUME_JOB_CLI" list >"$scheduler_root/list-output"
-grep -Eq "^$cleanup_active[[:space:]]" "$scheduler_root/list-output" || fail "list must include active job state"
+grep -Eq "^${cleanup_active}[[:space:]]" "$scheduler_root/list-output" || fail "list must include active job state"
 
 crontab_append_raw '* * * * * /nonexistent/run.sh # schedule-resume:doctor-orphan'
 "$RESUME_JOB_CLI" doctor >"$scheduler_root/doctor.stdout" 2>"$scheduler_root/doctor.stderr"
@@ -610,7 +610,7 @@ kill "$gate_active_pid" 2>/dev/null || :
 wait "$gate_active_pid" 2>/dev/null || :
 
 "$RESUME_JOB_CLI" list >"$scheduler_root/gate-list.out"
-grep -Eq "^$gate_active_job[[:space:]]" "$scheduler_root/gate-list.out" || fail "list includes the deferring job"
+grep -Eq "^${gate_active_job}[[:space:]]" "$scheduler_root/gate-list.out" || fail "list includes the deferring job"
 grep -Fq 'holding on active target session' "$scheduler_root/gate-list.out" || fail "list surfaces the holding-on-active-session state"
 "$RESUME_JOB_CLI" status "$gate_active_job" >"$scheduler_root/gate-status.out"
 grep -Fq deferred_session_active "$scheduler_root/gate-status.out" || fail "status surfaces the deferral classification"

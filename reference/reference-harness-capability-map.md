@@ -9,14 +9,12 @@ authors:
   - "claude-opus-5 (claude-code)"
 related:
   - guides/guide-harness-plugin-parity.md
-  - guides/guide-agy-model-and-quota-selection.md
-  - docs/2-design/2026-06-04-agent-delegation-layer-design.md
-  - docs/2-design/2026-07-28-kimi-fourth-harness-parity-design.md
+  - guides/guide-ai-model-and-effort-routing.md
 ---
 
 # Harness capability map
 
-Quick comparison for the five concerns in [agent delegation layer design](../docs/2-design/2026-06-04-agent-delegation-layer-design.md).
+Quick comparison for the five core concerns across agent delegation and task routing.
 
 ## Concern matrix
 
@@ -24,7 +22,7 @@ Quick comparison for the five concerns in [agent delegation layer design](../doc
 |---------|---------------|----------------|-------|
 | **1 — Multi-POV deliberation** | Council/debate on design docs | Superpowers brainstorming + optional native review | Octo timed out in production trial; **no Agy port** |
 | **2 — RTK / token optimization** | Smaller context | RTK hooks (independent of this doc) | Install regardless of delegation build |
-| **3 — Difficulty / task routing** | easy→cheap, hard→opus | **reference-workflow** `modelRouting` | Extend with harness-specific model names |
+| **3 — Difficulty / task routing** | easy→cheap, hard→opus | SDLC orchestrator `modelRouting` | Extend with harness-specific model names |
 | **4 — Capability MCP** | Vision, PDF, … | Per-server MCP in each harness | Same servers, different config files |
 | **5 — Harness portability** | Same skills/instructions | Symlinks + official Agy installs | This repo’s guides |
 
@@ -34,7 +32,7 @@ Quick comparison for the five concerns in [agent delegation layer design](../doc
 |------|-------------|--------------------|---------------------|-----|
 | **Superpowers** | Process discipline (TDD, plans, verify) | Via skills, not external CLIs | No | Official plugin |
 | **Claude Octopus** | Multi-CLI workflows + review panel | Yes (Codex/Gemini CLI) | No (workflow-level) | **No** |
-| **reference-workflow** | SDLC orchestrator + builders | Rule-based review skip/tier | **Yes** (`modelRouting`) | Manual model in Agy |
+| **SDLC orchestrator** | SDLC orchestrator + builders | Rule-based review skip/tier | **Yes** (`modelRouting`) | Manual model in Agy |
 | **llm-router** | Classify prompt → route CLI | No | **Yes** (prompt-level) | Unverified |
 | **BrokeLLM** | Quota-aware proxy + lanes | No | **Yes** (slot/lane) | CLI-agnostic |
 | **lite-harness** | One API, multiple harnesses | No | Harness default | No Agy harness |
@@ -53,7 +51,7 @@ Quick comparison for the five concerns in [agent delegation layer design](../doc
 
 ## Kimi Code (added 2026-07-28)
 
-Fourth harness, alongside Claude Code, Codex, and Agy. The load-bearing capabilities, verified against the official docs and live probes ([design](../docs/2-design/2026-07-28-kimi-fourth-harness-parity-design.md)):
+Fourth harness, alongside Claude Code, Codex, and Agy. The load-bearing capabilities, verified against the official docs and live probes during Kimi parity integration:
 
 - **Instructions and skills for free** — reads `~/.agents/AGENTS.md`, project `AGENTS.md`, and `~/.agents/skills/` natively; no symlinks or fan-out needed.
 - **Hooks gate but don't rewrite** — PreToolUse/Stop/UserPromptSubmit can block; PostToolUse is observation-only; no `tool_input` mutation, so RTK-style transparent command rewriting is impossible (RTK runs in instructions mode, like Codex).
@@ -63,7 +61,7 @@ Fourth harness, alongside Claude Code, Codex, and Agy. The load-bearing capabili
 
 ## Grok Build TUI (added 2026-08-17)
 
-Fifth daily harness, alongside Claude Code, Codex, Agy, and Kimi. Cursor is parked. Load-bearing facts from the [parity design](../docs/2-design/2026-08-17-grok-fifth-harness-parity-design.md):
+Fifth daily harness, alongside Claude Code, Codex, Agy, and Kimi. Cursor is parked. Load-bearing facts verified during Grok parity integration:
 
 - **Instructions and skills for free** — Claude compat loads `~/.claude/CLAUDE.md` and the `~/.claude/skills` hub. No Grok spoke.
 - **Hooks: ingest off** — PreToolUse can deny and rewrite, Stop can block, but we do not ingest Claude hook scripts. PostToolUse is observe-only even if ingest returns.
@@ -74,7 +72,7 @@ Fifth daily harness, alongside Claude Code, Codex, Agy, and Kimi. Cursor is park
 
 ## OpenCode (added 2026-08-19)
 
-Sixth daily harness, alongside Claude Code, Codex, Antigravity, Kimi, and Grok. Cursor stays parked. Facts from the [parity design](../docs/2-design/2026-08-19-opencode-sixth-harness-parity-design.md), measured against version 1.18.18:
+Sixth daily harness, alongside Claude Code, Codex, Antigravity, Kimi, and Grok. Cursor stays parked. Facts verified during OpenCode parity integration, measured against version 1.18.18:
 
 - **Instructions and skills for free** — reads `AGENTS.md` natively and auto-loads both `~/.claude/skills` and `~/.agents/skills`. No spoke, no symlink.
 - **Skills are model-invoked, not slash-invoked** (verified against v1.18.21 source, 2026-08-22) — the TUI `/` picker deliberately filters out skill-sourced commands (`footer.prompt.tsx`: `item.source !== "skill"`); the native entry points are a `/skills` browser dialog and Ctrl+P → Skills. Workaround for per-skill `/name` access: one thin command file per skill in `~/.config/opencode/command/` whose body invokes the skill via the skill tool with `$ARGUMENTS` (also dodges the upstream bug where slash-invoked skills swallow trailing arguments); generated by `skills/sync-skills.sh` on every sync. The v2 desktop app shows skills in `/` natively with a badge; the classic TUI keeps the filter even on the `dev` branch. Skill discovery paths and the `SKILL.md` format are unchanged in v2 — no migration.
@@ -96,5 +94,4 @@ Sixth daily harness, alongside Claude Code, Codex, Antigravity, Kimi, and Grok. 
 ## Links
 
 - [Cross-harness model comparison](reference-cross-harness-models.md)
-- [Discovery: 2026-06-14 research](../docs/1-discovery/2026-06-14-harness-parity-model-routing-research.md)
 - [Claude Code plugins snapshot](reference-claude-code-plugins.md)

@@ -191,7 +191,7 @@ Use the split when collection is large but mechanical, the handoff is small, and
 
 These are starting points by task difficulty. No repository gets one permanent model.
 
-### `example-org/website`
+### Production web application
 
 | Task | Start | Escalate / fallback |
 |---|---|---|
@@ -199,7 +199,7 @@ These are starting points by task difficulty. No repository gets one permanent m
 | Visual polish, responsive QA, browser defect | Gemini 3.6 Flash high in Agy | Gemini 3.1 Pro high for design judgment; Sol high for cross-layer code root cause |
 | Design system architecture or major redesign | Opus 5 high plus screenshots | Sol high as implementation planner; K3 high as independent reviewer |
 
-### `example-org/handbook`
+### Technical documentation and handbook
 
 | Task | Start | Escalate / fallback |
 |---|---|---|
@@ -207,7 +207,7 @@ These are starting points by task difficulty. No repository gets one permanent m
 | New guide or brand-aligned section | K3-256k high or Sonnet 5 high | Opus 5 high for final editorial judgment |
 | Brand system, positioning, or conflicting policy review | Opus 5 high | K3 high independent review; Gemini Pro high when visual identity is central |
 
-### `example-org/client-project`
+### Client delivery and research synthesis
 
 | Task | Start | Escalate / fallback |
 |---|---|---|
@@ -215,15 +215,15 @@ These are starting points by task difficulty. No repository gets one permanent m
 | Investigation synthesis and option analysis | K3 high or Opus 5 high | Sol high for technical feasibility; second frontier judge for disputed claims |
 | Client proposal or consequential recommendation | Opus 5 high over a sourced packet | K3 high draft/review; never let a cheap worker make the final claim |
 
-### `life-admin`
+### Personal administration and automation
 
 | Task | Start | Escalate / fallback |
 |---|---|---|
-| `/shop` collection, product specs, current price research | Gemini 3.6 Flash medium with browser | Kimi WebBridge for logged-in/local availability; require official sources |
-| Purchase comparison and recommendation | K3 high or Opus 5 high over the worker packet | Gemini 3.1 Pro high when visual fit matters |
+| Product specs and current price research | Gemini 3.6 Flash medium with browser | Kimi WebBridge for logged-in/local availability; require official sources |
+| Comparison and recommendation | K3 high or Opus 5 high over the worker packet | Gemini 3.1 Pro high when visual fit matters |
 | Scheduled monitoring, summaries, routine documents | Gemini Flash low/medium or Luna low | Ollama Cloud/local worker after a successful trial; human approval for purchases |
 
-### `penmark`
+### Developer tools and desktop extensions
 
 | Task | Start | Escalate / fallback |
 |---|---|---|
@@ -231,7 +231,7 @@ These are starting points by task difficulty. No repository gets one permanent m
 | VS Code/webview integration or flaky behavior | Sol high | Opus 5 high when extension architecture or UX contract is the issue |
 | Release/code review, persistence, concurrency, compatibility | Sol high | Opus 5 high as independent reviewer for data loss or architectural risk |
 
-### `penmark/.workbench`
+### Working memory and design sidecars
 
 | Task | Start | Escalate / fallback |
 |---|---|---|
@@ -239,7 +239,7 @@ These are starting points by task difficulty. No repository gets one permanent m
 | Brainstorm, design, or ADR | Opus 5 high | K3 high independent challenge; Gemini Pro high for visual designs |
 | Approved implementation plan or cross-document review | Sol high or Opus 5 high | Use the other as reviewer; do not plan while architecture remains unsettled |
 
-### `reference-workflow`
+### Multi-agent workflow and orchestration
 
 | Task | Start | Escalate / fallback |
 |---|---|---|
@@ -247,13 +247,13 @@ These are starting points by task difficulty. No repository gets one permanent m
 | Router, orchestration, retry, or context architecture | Opus 5 high for design; Sol high for implementation | K3 high as independent long-context reviewer |
 | Long autonomous workflow validation | Agy or Kimi on a bounded scenario | Sol/Opus review the trace; never infer reliability from one happy path |
 
-### `example-project`
+### Host server and local infrastructure
 
 | Task | Start | Escalate / fallback |
 |---|---|---|
 | Current hardware/model/provider research | Gemini 3.6 Flash medium worker | Opus/K3 judge when it affects a purchase |
 | Docker, LiteLLM, Ollama, or driver implementation | Terra medium | Sol high for ROCm/CUDA/container debugging |
-| GPU purchase, privacy architecture, or buy-versus-rent decision | Opus 5 high with refreshed prices and measurements | Sol high technical review; rent the target VRAM class before buying |
+| Hardware purchase, privacy architecture, or buy-versus-rent decision | Opus 5 high with refreshed prices and measurements | Sol high technical review; rent the target VRAM class before buying |
 
 ## Quota pacing
 

@@ -28,7 +28,7 @@ See the [skills catalog README](../README.md#install-any-skill-in-this-directory
 ## Usage examples
 
 ```
-/externalize-deliverable docs/notes/2026-06-18-equity-sync.md
+/externalize-deliverable path/to/internal-notes.md
 /externalize-deliverable "meeting notes from today"
 ```
 

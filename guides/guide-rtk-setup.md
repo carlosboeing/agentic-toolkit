@@ -36,7 +36,7 @@ RTK uses a combination of **native agent hooks** (to rewrite commands transparen
 
 ### 1. Claude Code (PreToolUse Hook)
 Claude Code intercepts Bash executions and passes them to the RTK rewrite engine.
-*   **Config File**: [~/.claude/settings.json](~/.claude/settings.json)
+*   **Config File**: `~/.claude/settings.json`
 *   **Wiring**:
     ```json
     "hooks": {
@@ -58,13 +58,13 @@ Claude Code intercepts Bash executions and passes them to the RTK rewrite engine
 Antigravity executes shell commands via the `run_command` tool. Transparent hook rewriting is pending upstream release ([rtk-ai/rtk#2093](https://github.com/rtk-ai/rtk/pull/2093)), so Antigravity operates in **instruction mode** (the same model as Codex and Kimi Code).
 
 *   **Source of the instruction**: the RTK section of `~/.claude/CLAUDE.md`, which Antigravity reads through `~/.agents/AGENTS.md`. It names Antigravity, Codex, Kimi Code and Grok as the harnesses needing an explicit prefix.
-*   **Authored Rule, not installed**: [`rules/antigravity-rtk-rules.md`](../rules/antigravity-rtk-rules.md) (in `claude-code-resources`). The `~/.claude/rules/` and `~/.agents/rules/` symlinks were removed on 2026-09-07 to keep the instruction file under Antigravity's 24,023-character limit. Re-install it from [`rules/README.md`](../rules/README.md) if the `CLAUDE.md` wording ever stops working.
+*   **Authored Rule, not installed**: [`rules/antigravity-rtk-rules.md`](../rules/antigravity-rtk-rules.md) (in `agentic-toolkit`). The `~/.claude/rules/` and `~/.agents/rules/` symlinks were removed on 2026-09-07 to keep the instruction file under Antigravity's 24,023-character limit. Re-install it from [`rules/README.md`](../rules/README.md) if the `CLAUDE.md` wording ever stops working.
 *   **Method**: System rules direct the agent to prefix shell commands explicitly with `rtk` (e.g. `rtk git status`, `rtk grep`).
 *   **Verify**: Run commands in an `agy` session, then check `rtk gain`.
 
 ### 3. Cursor (beforeShellExecution Hook)
 Cursor intercepts shell executions globally using a lifecycle event hook.
-*   **Config File**: [~/.cursor/hooks.json](~/.cursor/hooks.json)
+*   **Config File**: `~/.cursor/hooks.json`
 *   **Wiring**:
     ```json
     "beforeShellExecution": [
@@ -76,12 +76,12 @@ Cursor intercepts shell executions globally using a lifecycle event hook.
 
 ### 4. Codex (Instruction-based)
 Codex does not support pre-shell-execution hooks. Instead, it relies on instructions loaded from the user's configuration.
-*   **Config File**: [~/.codex/RTK.md](~/.codex/RTK.md)
+*   **Config File**: `~/.codex/RTK.md`
 *   **Method**: System prompt instruction forcing the agent to prefix commands (e.g. `rtk git status`).
 
 ### 5. OpenCode (Instruction-based)
 OpenCode also uses instruction-based prefixing.
-*   **Config File**: [CLAUDE.md](~/Projects/agentic-toolkit/CLAUDE.md)
+*   **Config File**: `~/.config/opencode/opencode.json` (or global `CLAUDE.md`)
 *   **Method**: Global `CLAUDE.md` instructions dictate prefixing shell commands with `rtk` (shared via root symlinks: `AGENTS.md` and `GEMINI.md`).
 
 ### 6. Kimi Code (Instruction-based)
@@ -127,4 +127,4 @@ rtk hook check "git status"
 
 ## References
 *   **Upstream Repository**: [rtk-ai/rtk](https://github.com/rtk-ai/rtk)
-*   **Harness Parity Guide**: [guide-harness-plugin-parity.md](~/Projects/agentic-toolkit/guides/guide-harness-plugin-parity.md)
+*   **Harness Parity Guide**: [guide-harness-plugin-parity.md](guide-harness-plugin-parity.md)

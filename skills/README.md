@@ -56,7 +56,7 @@ Or pull a single skill straight from GitHub without cloning:
 SKILL=learn
 mkdir -p ~/.claude/skills/$SKILL
 curl -fsSL -o ~/.claude/skills/$SKILL/SKILL.md \
-  https://raw.githubusercontent.com/carlosboeing/claude-code-resources/main/skills/$SKILL/SKILL.md
+  https://raw.githubusercontent.com/carlosboeing/agentic-toolkit/main/skills/$SKILL/SKILL.md
 ```
 
 Restart Claude Code (or start a new session). Type `/` and the skill should appear in the slash-command menu.

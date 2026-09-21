@@ -3,7 +3,7 @@
 # Reads the hook JSON payload on stdin; exits 2 with stderr feedback when any block fails to parse,
 # which Claude Code feeds back to the model so it fixes the diagram before moving on.
 # Fast path: non-.md files and .md files without mermaid fences exit 0 in milliseconds.
-# Canonical source: carlosboeing/claude-code-resources (hooks/validate-mermaid.sh).
+# Canonical source: carlosboeing/agentic-toolkit (hooks/validate-mermaid.sh).
 
 set -u
 

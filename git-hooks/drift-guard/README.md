@@ -125,8 +125,8 @@ Across all repositories, every open branch, working branch without a pull reques
 ## Install
 
 ```bash
-HOOK_SRC=~/Projects/carlos/claude-code-resources/git-hooks/drift-guard
-TARGET=~/Projects/carlos/<repo>
+HOOK_SRC=<path-to-toolkit>/git-hooks/drift-guard
+TARGET=<path-to-repo>
 
 mkdir -p "$TARGET/scripts/githooks"
 cp "$HOOK_SRC/housekeep" "$HOOK_SRC/pre-push" "$TARGET/scripts/githooks/"

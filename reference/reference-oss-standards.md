@@ -19,7 +19,7 @@ Checklist for any `carlosboeing/*` public repository. Derived from `copydesk` `2
 
 ## How to use
 
-- **New repo**: `npx degit carlosboeing/claude-code-resources/templates/default-project <name>` - already contains this checklist's files.
+- **New repo**: `npx degit carlosboeing/agentic-toolkit/templates/default-project <name>` - already contains this checklist's files.
 - **Existing repo**: `skill oss-standards` or read this file and run `check` -> `fix`. CI fails if checklist is not met (see `required` gate).
 
 No personal email anywhere. Contact is `https://github.com/carlosboeing` + private advisory `https://github.com/<owner>/<repo>/security/advisories/new`.

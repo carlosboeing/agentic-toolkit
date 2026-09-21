@@ -2,9 +2,9 @@
 
 Bias toward caution over speed. For trivial tasks, use judgment.
 
-## About me
+## Scope
 
-
+Polyglot — do not pin recommendations to a specific language unless requested.
 
 Tooling setup (harnesses, plugins, skills, MCP configuration, workflows) is GLOBAL and project-agnostic by default. Only scope to a specific project when explicitly directed.
 
@@ -25,7 +25,7 @@ Inspect available skills and agent capabilities for PR or code-review support be
 
 ## OSS house standard
 
-Before creating or editing any public repo's governance files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/*`, `.github/dependabot.yml`, `.github/workflows/*`, `.github/CODEOWNERS`) or branch protection, read the canonical checklist at `~/Projects/carlos/claude-code-resources/reference/reference-oss-standards.md` (or `https://github.com/carlosboeing/claude-code-resources/blob/main/reference/reference-oss-standards.md`) and follow it verbatim. Pin SHAs as listed there, use `https://github.com/<owner>/<repo>/security/advisories/new` + `@<owner>` contacts, no personal email. The `required` job is the only `required_status_checks` entry.
+Before creating or editing any public repo's governance files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/*`, `.github/dependabot.yml`, `.github/workflows/*`, `.github/CODEOWNERS`) or branch protection, read the canonical checklist at `~/Projects/carlos/agentic-toolkit/reference/reference-oss-standards.md` (or `https://github.com/carlosboeing/agentic-toolkit/blob/main/reference/reference-oss-standards.md`) and follow it verbatim. Pin SHAs as listed there, use `https://github.com/<owner>/<repo>/security/advisories/new` + `@<owner>` contacts, no personal email. The `required` job is the only `required_status_checks` entry.
 
 ## Principles
 
@@ -79,7 +79,7 @@ Ask only for these: an action you cannot undo (delete, publish, merge, money, cr
 
 ### Documentation frontmatter (working-memory docs)
 
-Every Markdown document inside a working-memory tree starts at byte 0 with a YAML frontmatter block. The pre-push gate fails the push when one is wrong. `authors` is append-only: the human operator first, then each contributing agent as `"<model> (<harness>)"`. For the two field schemas, the closed status vocabulary and the exemptions, read sections 5.4 and 6.3 of `claude-code-resources/guides/guide-project-structure-and-conventions.md`.
+Every Markdown document inside a working-memory tree starts at byte 0 with a YAML frontmatter block. The pre-push gate fails the push when one is wrong. `authors` is append-only: the human operator first, then each contributing agent as `"<model> (<harness>)"`. For the two field schemas, the closed status vocabulary and the exemptions, read sections 5.4 and 6.3 of `agentic-toolkit/guides/guide-project-structure-and-conventions.md`.
 
 ### SDLC phase checkpoints
 
@@ -144,7 +144,7 @@ Scale gate and task counts to artifact blast radius rather than skill defaults.
 
 ## Browser automation (agentic, not CI)
 
-Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CLI once the remaining steps are known. The full decision rule, the ejection triggers, the Kimi WebBridge path for real logins and the required `--isolated` flag are in `claude-code-resources/guides/guide-browser-automation-mcp-vs-cli.md`.
+Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CLI once the remaining steps are known. The full decision rule, the ejection triggers, the Kimi WebBridge path for real logins and the required `--isolated` flag are in `agentic-toolkit/guides/guide-browser-automation-mcp-vs-cli.md`.
 
 ## RTK - Rust Token Killer
 

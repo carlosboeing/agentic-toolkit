@@ -1,4 +1,4 @@
-# claude-code-resources — instructions for AI agents
+# agentic-toolkit — instructions for AI agents
 
 This file is auto-loaded on every session. It's the agent-facing brief; `README.md` is the human-facing one. `AGENTS.md` symlinks to this file for harnesses that expect that filename.
 
@@ -6,7 +6,7 @@ This file is auto-loaded on every session. It's the agent-facing brief; `README.
 
 ## What this repo is
 
-A personal collection of Claude Code resources I've built up — skills, guides, references — designed to be portable and shareable. Public-ish (currently a private GitHub repo, may go public later). Not a polished product; opinionated to one workflow.
+A modular collection of harness-agnostic skills, configurations, hooks, guides, and conventions for AI-assisted engineering across Claude Code, Codex, Antigravity, Kimi Code, Grok Build TUI, and OpenCode. Opinionated to one workflow; portable across harnesses. Public repository under the MIT License.
 
 ## Project Map
 
@@ -16,14 +16,60 @@ Declares where project-tracking information lives so the [`/briefing`](skills/br
 - **Board**: none
 - **Roadmap**: [docs/ROADMAP.md](docs/ROADMAP.md)
 - **Changelog**: [docs/CHANGELOG.md](docs/CHANGELOG.md)
-- **Architecture**: none (per-type catalog READMEs serve the always-current-state role — see [README.md](README.md) and [skills/README.md](skills/README.md); this is documented in the `docs/` framing below)
-- **Working memory**: `docs/` (numbered lifecycle convention)
+- **Architecture**: none (per-type catalog READMEs serve the always-current-state role — see [README.md](README.md) and [skills/README.md](skills/README.md))
+- **Working memory**: `.workbench/` — a **separate private repository**, nested here as an independent clone when present. When absent, see Contributor route below.
 - **Other**:
-  - Repo is the source of truth for skills; the active harness loads from its user-level skills directory (e.g., `~/.claude/skills/` for Claude Code, `~/.gemini/config/skills/` for agy, `~/.codex/skills/` or `~/.agents/skills/` for Codex). Kimi Code reads `~/.agents/skills/` natively (plus its own `~/.kimi-code/skills/` for Kimi-specific entries), so the Codex target covers it. Grok Build TUI reads the hub through Claude compat (`~/.claude/skills`); do not add a `~/.grok/skills` spoke. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. `~/.claude/` is no longer under source control of its own: `carlosboeing/claude-config` was retired on 2026-09-08, and the skill hub is derived state rebuilt by `sync-skills.sh`. Nothing there needs a second commit.
-  - `instructions/CLAUDE.md` is the global agent brief. `~/.claude/CLAUDE.md` symlinks to it, and five harness paths symlink to that. Editing it changes every harness, so measure `wc -c instructions/CLAUDE.md` against Antigravity's 24,023-character limit before committing an addition. This replaced `carlosboeing/claude-config`, retired 2026-09-08.
-  - No CI configured; validation is manual / via `/ultrareview` on demand.
+  - Repo is the source of truth for skills; the active harness loads from its user-level skills directory (e.g., `~/.claude/skills/` for Claude Code, `~/.gemini/config/skills/` for agy, `~/.codex/skills/` or `~/.agents/skills/` for Codex). Kimi Code reads `~/.agents/skills/` natively (plus its own `~/.kimi-code/skills/` for Kimi-specific entries), so the Codex target covers it. Grok Build TUI reads the hub through Claude compat (`~/.claude/skills`); do not add a `~/.grok/skills` spoke. After edits to `skills/<name>/`, the install needs syncing — offer the sync explicitly. `~/.claude/` is no longer under source control of its own: `carlosboeing/claude-config` was retired on 2026-09-08, and the skill hub is derived state rebuilt by `sync-toolkit.sh`. Nothing there needs a second commit.
+  - `instructions/CLAUDE.md` is the global agent brief. `~/.claude/CLAUDE.md` symlinks to it, and five harness paths symlink to that. Editing it changes every harness, so measure `wc -c instructions/CLAUDE.md` against Antigravity's 24,023-character limit before committing an addition.
+  - CI runs on push and pull request via `.github/workflows/ci.yml`.
   - CrossRev (formerly `revloop`) was extracted to its own public repository on 2026-08-13 and is external now — see [`carlosboeing/crossrev`](https://github.com/carlosboeing/crossrev). It files its own deferred findings as issues, labelled `crossrev-review`. The policy lives in [`.github/crossrev.yml`](.github/crossrev.yml). Findings at `medium` and above keep the loop alive. A cycle stops after 3 passes, so a person decides whether another is worth the quota. Asking for a single pass by hand runs it past that cap: `crossrev review --pr <n>` then `crossrev resolve --pr <n>`.
-  - `skills/sync-skills.sh` pulls `pr-review` and `pr-resolve` from a local CrossRev checkout, expected at `~/Projects/carlos/crossrev/skills` unless `CROSSREV_SKILLS` overrides it. It prints a note rather than skipping silently when that checkout is missing. The same run writes OpenCode's `/`-menu command wrappers (one per hub skill) into `~/.config/opencode/command/` and copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `~/.config/opencode/plugins/validate-mermaid.ts`. It does not write `plugins/rtk.ts`. OpenCode is not a spoke since it reads the hub through Claude compat; the wrappers only add slash entries its TUI otherwise withholds.
+  - `scripts/sync-toolkit.sh` pulls `pr-review` and `pr-resolve` from a local CrossRev checkout, expected at `~/Projects/carlos/crossrev/skills` unless `CROSSREV_SKILLS` overrides it. It prints a note rather than skipping silently when that checkout is missing. The same run writes OpenCode's `/`-menu command wrappers (one per hub skill) into `~/.config/opencode/command/` and copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `~/.config/opencode/plugins/validate-mermaid.ts`. It does not write `plugins/rtk.ts`. OpenCode is not a spoke since it reads the hub through Claude compat; the wrappers only add slash entries its TUI otherwise withholds.
+
+## The public/private gate
+
+**This repository is public. `.workbench/` is a different, private repository.** Three layers keep them apart, and only the first needs no vigilance.
+
+### 1. Structural
+
+`.workbench/` is an independent clone nested at this root and named in `.gitignore`, so `git add -A` here can never sweep a workbench file into a public commit.
+
+**Never cross-commit.** In this working tree, plain `git …` targets **whichever repository the shell is currently inside** — the public one at the root, the private one from anywhere under `.workbench/`. From the root, `git -C .workbench …` names the private one explicitly. Nothing in git's output says which repo it resolved, so when you are not certain where the shell is, name the target with `-C` rather than assuming. There is no command that legitimately stages both.
+
+### 2. The routing table
+
+| Goes to `.workbench/` (private) | Goes here (public) |
+|---|---|
+| Lifecycle working memory: `0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/`, `notes/`, internal procedural guides | Code, tests, templates, skills, hooks, rules |
+| Working memory docs, retros, scratch notes, spikes, evaluation logs | Public documentation, reference catalogs, evergreen guides under `guides/` |
+| Anything about brand, company, naming strategy, or commercial direction | ADRs (`docs/adrs/`), `docs/ROADMAP.md`, `docs/CHANGELOG.md` |
+
+The line is sharper than lifecycle-versus-product. **Anything about brand, company, naming strategy, or commercial direction — a hosted service, monetisation, pricing, company naming — is workbench-only even when it is a settled decision.** The public record covers the *what* of the toolkit: features, bug fixes, user-facing guides, and public architectural decisions. It never covers the *why* of private business or commercial strategy.
+
+### 3. Contributor route (when `.workbench/` is absent)
+
+If `.workbench/` is absent, you are an outside contributor. Use issues, pull requests and, for a substantial architectural decision, an ADR under `docs/adrs/`. Do not create lifecycle directories under `docs/` or at the repository root, and do not create or nest a workbench repository. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+
+### 4. What a public artifact may say
+
+Commit messages, pull request and issue titles and bodies, review comments, and release notes are public and permanent.
+
+**Never name a private or local source in one.** Not `.workbench`, not the workbench repository, not the bare phrase "the workbench", not a path to a document held there, not `/Users/...`, not a client name or an internal cost figure.
+
+The damage is a citation the reader cannot follow. "See the plan in the workbench" says something exists and withholds it, which is worse than saying nothing. **Restate the fact instead:** put the reasoning in the body in its own words, or in an ADR under `docs/adrs/` that the artifact then links.
+
+### 5. Pre-commit privacy guard
+
+`scripts/githooks/pre-commit` enforces privacy rules automatically on staged changes. It refuses:
+- Staged `.workbench` gitlinks (mode 160000)
+- `.workbench` paths or references to workbench files
+- `/Users/` absolute paths
+- Commercial-strategy terms (`hosted service`, `hosted tier`, `monetiz`, `monetis`)
+
+Vendor price tables (such as API token rates in reference docs) are legitimate and supported.
+
+### Working Memory Location override
+
+Any generic agent skill — `brainstorming`, `writing-plans`, or an equivalent — that instructs you to save specs, plans or brainstorms under `docs/` **must be overridden** when `.workbench/` is present. Save them under `.workbench/` instead. When `.workbench/` is absent, use issues, pull requests, and public ADRs under `docs/adrs/`. **Never write lifecycle directories (`docs/0-brainstorms/`, etc.) into this repo's `docs/`.**
 
 ## Layout
 
@@ -31,7 +77,7 @@ Three clusters at the top level. See [README.md](README.md) for the visitor-faci
 
 ```
 .
-├── docs/                   — REPO INTERNAL: this repo's working memory (see below)
+├── docs/                   — PUBLIC TRACKING & DECISIONS: ROADMAP, CHANGELOG, adrs/
 │
 ├── instructions/           — HARNESS MIRROR: ~/.claude/CLAUDE.md symlinks here
 │   ├── CLAUDE.md           — the global brief every harness reads
@@ -54,25 +100,18 @@ Three clusters at the top level. See [README.md](README.md) for the visitor-faci
 
 Future harness mirrors (created when first content lands; never empty placeholders): `plugins/`, `commands/`, `agents/`, `mcp-servers/`. Future other consumables: `prompts/`.
 
-## `docs/` — the project's working memory
+## `docs/` — public tracking and decisions
 
-`docs/` is durable, human-readable artifacts that record how this repo evolves: the lifecycle of each piece of work (brainstorm → design → plan → retro), the ongoing indexes that orient new readers (ROADMAP, CHANGELOG), and the persistent decisions that outlive any single phase (ADRs). Authored by whoever's working on the project — human, AI, or both — and structured so anyone can answer "what did we decide and why?" without archaeology. AI assistants reading it on session start is a benefit, not the purpose.
+`docs/` holds public tracking and architectural decision records:
 
 ```
 docs/
 ├── ROADMAP.md              — what's in flight / next / shipped
 ├── CHANGELOG.md            — what shipped, when
-├── notes/                  — scratch, chat dumps, external research
-├── 0-brainstorms/          — pre-design ideas (worth-elaborating; one-liners go in ROADMAP)
-├── 1-discovery/            — research, spikes, comparative analyses
-├── 2-design/               — specs + designs (conflated, by intent)
-├── 3-plans/                — phased implementation plans
-├── 4-reviews/              — retros, audits, reviews, analyses
-├── adrs/                   — single-decision records (NNNN-title.md)
-└── guides/                 — internal procedural how-tos
+└── adrs/                   — single-decision records (NNNN-title.md)
 ```
 
-For the canonical conventions and project-level template, see [guides/guide-project-structure-and-conventions.md](guides/guide-project-structure-and-conventions.md). Note: this repo's `docs/` is a *subset* — `system/` and `architecture.md` are skipped because the per-type catalog READMEs already serve the always-current-state role.
+Working memory across the lifecycle directories lives in `.workbench/` (when present) or GitHub issues/PRs (for external contributors).
 
 ## Conventions
 
@@ -96,7 +135,7 @@ Heuristic for spotting a ship: the staged diff touches `skills/`, `plugins/`, `a
 
 ## Working principles for agent sessions
 
-- **Branch and workspace isolation.** Verify the active branch and workspace state at the start of a session. Brainstorm, design and plan work happens in the main checkout — no branch, no worktree. At implementation, branch off `origin/main` and ask whether to use a worktree before the first branch command. More than one entry in `git worktree list` means another session is live, so a worktree is required rather than offered. Worktrees go at `.worktrees/<harness>/<branch>`, branch slashes preserved.
+- **Branch and workspace isolation.** Verify the active branch and workspace state at the start of a session. Brainstorm, design and plan work happens in the main checkout or `.workbench/` — no branch, no worktree. At implementation, branch off `origin/main` and ask whether to use a worktree before the first branch command. More than one entry in `git worktree list` means another session is live, so a worktree is required rather than offered. Worktrees go at `.worktrees/<harness>/<branch>`, branch slashes preserved.
 - **The repo is small and read-easy.** Don't dispatch search agents for cross-file analysis — `grep`/`rg` and direct reads are faster.
 - **Don't add features the user didn't ask for.** No speculative scaffolding for future skill types, no auto-generated indexes, no CI configs unless requested.
 - **Skills are single-file by default.** When iterating on a skill, edit the existing `SKILL.md` rather than splitting into `references/` files unless the skill genuinely outgrows ~500 lines.
@@ -105,18 +144,24 @@ Heuristic for spotting a ship: the staged diff touches `skills/`, `plugins/`, `a
 
 ## Working-memory discipline (required for AI sessions)
 
-This repo's `docs/` is maintained primarily by AI agents. Conventions guide §6.5 enumerates the event triggers that require writes during a session — read it. Summary of the rules that bite most often:
+Summary of the rules that bite most often:
 
-- **When an initiative starts in conversation, write it down immediately.** Substantive new work creates `docs/0-brainstorms/<topic>.md` (`status: open`) AND a one-line pointer in ROADMAP `## Future considerations` or `## Next actions`. Don't wait for a commit prompt.
-- **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter (`status: shipped`), AND the relevant evergreen state docs (per §6.2 change discipline).
-- **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
-- **Substantive audits or retros emerging from a conversation get saved** to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
-- **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did — that includes flipping each touched lifecycle doc's own frontmatter `status` (design *and* plan move to `shipped` when they ship), not just the tracking files. If not, propose the missing writes inline.
-- **Plan checkboxes are the durable execution record.** When implementing a `docs/3-plans/` plan, mark its `- [ ]` steps `- [x]` as they land instead of tracking only in the session's todo tool — a fresh session resumes from the file, not from your todos. The session-end check includes reconciling any in-flight plan's checkboxes with reality.
+- **When `.workbench/` is present:**
+  - **When an initiative starts in conversation, write it down immediately.** Substantive new work creates `.workbench/0-brainstorms/<topic>.md` (`status: open`) AND a one-line pointer in ROADMAP `## Future considerations` or `## Next actions`. Don't wait for a commit prompt.
+  - **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter in `.workbench/2-design/` (`status: shipped`), AND the relevant evergreen state docs (per conventions guide §6.2 change discipline).
+  - **Run `git` at repository root for public commits; run `git -C .workbench` for private commits.** Never cross-commit.
+  - **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
+  - **Substantive audits or retros emerging from a conversation get saved** to `.workbench/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
+  - **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did — that includes flipping each touched lifecycle doc's own frontmatter `status` (design *and* plan move to `shipped` when they ship), not just the tracking files. If not, propose the missing writes inline.
+  - **Plan checkboxes are the durable execution record.** When implementing a plan, mark its `- [ ]` steps `- [x]` as they land instead of tracking only in the session's todo tool — a fresh session resumes from the file, not from your todos.
+- **When `.workbench/` is absent (outside contributor):**
+  - Work directly in GitHub issues and PRs.
+  - For architectural decisions, propose an ADR in `docs/adrs/NNNN-title.md` (`status: open`, moving to `status: approved` on merge).
+  - Do not create lifecycle directories (`0-brainstorms/`, etc.) in the public repository.
 
 ## Where to look first
 
 - For visitor-facing intent and quick-start: `README.md`.
 - For the skill catalog and shared install snippet: `skills/README.md`.
 - For per-skill detail: `skills/<name>/README.md`.
-- For the conventions this repo's own docs follow: `guides/guide-project-structure-and-conventions.md` (it's about *project* docs, but the same principles inform this repo's structure).
+- For the conventions this repo's own docs follow: `guides/guide-project-structure-and-conventions.md`.

@@ -4,7 +4,7 @@ A [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that p
 
 It auto-discovers what's in flight from git, GitHub, your project's CLAUDE.md `## Project Map` section (when present), and whatever working-memory layout it can detect. The output reshapes by what it finds — leads with active work if there is any, leads with what's next if everything is calm.
 
-The skill is **convention-aware but not convention-coupled**. It works generically in any repo and lights up with richer behaviour when a project follows the [canonical conventions in this repo](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md). Default-mode output stays focused on orientation; if you want to know what the skill probes and what it found in your project, run `/briefing sources` for a separate self-documentation view.
+The skill is **convention-aware but not convention-coupled**. It works generically in any repo and lights up with richer behaviour when a project follows the [canonical conventions in this repo](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md). Default-mode output stays focused on orientation; if you want to know what the skill probes and what it found in your project, run `/briefing sources` for a separate self-documentation view.
 
 Designed for engineers using Claude Code who want substantive orientation, not the one-line summary the built-in `/recap` produces.
 
@@ -81,11 +81,11 @@ Add a `## Project Map` section to your project's CLAUDE.md to enrich the briefin
 
 Recognised trackers: `GitHub Issues`, `GitHub Project N`, `Linear …`, `Jira …`, `Notion <ID or URL>`, file paths, URLs, `none`. Each kind has its own integration recipe (the skill knows which CLI or MCP tool to invoke). Declarations are authoritative — they override anything the default-path sniffer would have caught.
 
-For the canonical schema, see [`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd).
+For the canonical schema, see [`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd).
 
 ### Default paths — convention sniffing
 
-For any field you didn't declare in `## Project Map`, the skill probes for canonical-conventions signatures (the structure documented in [the canonical guide](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md)). If they match — `docs/ROADMAP.md`, lifecycle dirs at `docs/[0-9]-*`, status frontmatter, ROADMAP sections like `## In flight` — the skill applies the canonical interpretation. If they don't match, it falls back to generic file discovery and names the gap.
+For any field you didn't declare in `## Project Map`, the skill probes for canonical-conventions signatures (the structure documented in [the canonical guide](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md)). If they match — `docs/ROADMAP.md`, lifecycle dirs at `docs/[0-9]-*`, status frontmatter, ROADMAP sections like `## In flight` — the skill applies the canonical interpretation. If they don't match, it falls back to generic file discovery and names the gap.
 
 This is the "lights up with conventions" tier. A project that follows the canonical layout gets richer briefings (in-flight detection wired to your ROADMAP sections, status frontmatter recognised, ADRs surfaced) for free. A project that uses different conventions just gets always-on + declared output, which still works — no broken behaviour.
 
@@ -139,7 +139,7 @@ Output is organised by four user-facing layers (the same source model the skill 
 
 ## `/briefing setup` — add or update `## Project Map`
 
-The `setup` mode adds (or updates) the [`## Project Map` block](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd) in your CLAUDE.md. Useful when you want richer briefings on a project that hasn't declared its tracker / roadmap / working-memory locations yet.
+The `setup` mode adds (or updates) the [`## Project Map` block](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd) in your CLAUDE.md. Useful when you want richer briefings on a project that hasn't declared its tracker / roadmap / working-memory locations yet.
 
 What it does:
 
@@ -211,11 +211,11 @@ That's it. No package install, no plugin marketplace, no auth setup beyond the o
 ## See also
 
 - **[`SKILL.md`](SKILL.md)** — the skill itself, drop-in to `~/.claude/skills/briefing/`.
-- **[`docs/2-design/2026-08-11-briefing-decision-brief-format-design.md`](../../docs/2-design/2026-08-11-briefing-decision-brief-format-design.md)** — decision-brief output restructure (four sections, the funnel rule, collapse-with-counts inventory). Most recent design.
-- **[`docs/2-design/2026-05-03-briefing-footer-redesign-design.md`](../../docs/2-design/2026-05-03-briefing-footer-redesign-design.md)** — footer redesign (conditional `★ About this briefing` block + `/briefing sources` mode). Still governs the footer.
-- **[`docs/2-design/2026-05-03-briefing-skill-shareability-design.md`](../../docs/2-design/2026-05-03-briefing-skill-shareability-design.md)** — prior design (4-layer architecture). Background for the layered source model. Superseded for the footer behaviour by the redesign above.
-- **[`docs/2-design/2026-05-02-briefing-skill-design.md`](../../docs/2-design/2026-05-02-briefing-skill-design.md)** — original design (3-layer model). Historical reference; the layered-source-model rationale and the deferred Approach C (Stop-hook snapshot schema) live here.
-- **[`guide-project-structure-and-conventions.md` §5.8](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd)** — the canonical `## Project Map` schema this skill consumes.
+- **Decision-brief format design (2026-08-11)** — decision-brief output restructure (four sections, the funnel rule, collapse-with-counts inventory).
+- **Footer redesign (2026-05-03)** — footer redesign (conditional `★ About this briefing` block + `/briefing sources` mode).
+- **Shareability design (2026-05-03)** — prior 4-layer architecture. Background for the layered source model.
+- **Initial skill design (2026-05-02)** — original 3-layer model.
+- **[`guide-project-structure-and-conventions.md` §5.8](../../guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd)** — the canonical `## Project Map` schema this skill consumes.
 - **[`templates/default-project/CLAUDE.md`](../../templates/default-project/CLAUDE.md)** — generic CLAUDE.md scaffold that ships with the section pre-populated.
 - **[`/learn`](../learn/)** — sibling skill in this repo. Same single-file shape, same closed-keyword parser pattern, same canonical depth vocabulary (`quick`/`standard`/`deep`) — different default behaviour and different problem domain (lessons, not orientation).
 

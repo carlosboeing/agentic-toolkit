@@ -31,7 +31,7 @@ When architecture.md itself outgrows one file, promote to docs/architecture/over
 
 ## Conventions
 
-This project follows [`guide-project-structure-and-conventions.md`](https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md). Key points:
+This project follows [`guide-project-structure-and-conventions.md`](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md). Key points:
 
 - One canonical place per question (ROADMAP for "what's next", ADRs for decisions, etc.).
 - Conventional Commits for git (`<type>(<scope>): <description>`).

@@ -27,7 +27,7 @@ It will not reconstruct requirements from the previous design chat, reopen settl
 In this repository:
 
 ```
-/start-planning docs/2-design/2026-08-20-start-planning-skill-design.md
+/start-planning path/to/design.md
 ```
 
 Or, with one clearly current design:

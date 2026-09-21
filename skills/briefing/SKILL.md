@@ -25,7 +25,7 @@ The skill is **convention-aware but not convention-coupled**. It works generical
 A single absolute URL, defined once and reused throughout the skill. If this is renamed or moved upstream, this is the single line to update.
 
 ```
-<CANONICAL_CONVENTIONS_URL> = https://github.com/carlosboeing/claude-code-resources/blob/main/guides/guide-project-structure-and-conventions.md
+<CANONICAL_CONVENTIONS_URL> = https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md
 ```
 
 When the skill needs to point users at the conventions guide (e.g. in the convention-maturity footer block, or when explaining what `## Project Map` is), it renders this URL — optionally with a section anchor like `#58--project-map-section-in-claudemd` for §5.8 or `#65-ai-agent-update-triggers-working-memory-discipline` for §6.5.
@@ -886,7 +886,7 @@ Per-question shape:
 
 The user can also pick the auto-included `Other` to paste a custom value (path, URL, free-form text). Treat the `Other` text as the override value verbatim.
 
-**Worked example** — the Tracker/Board conflict from the personal-finance project:
+**Worked example** — a Tracker/Board conflict in an unconfigured project:
 
 ```
 question: "Tracker and Board URLs don't match `gh issue list` (returned empty) and contradict your 'no tracker in use' Other bullet — how to resolve?"

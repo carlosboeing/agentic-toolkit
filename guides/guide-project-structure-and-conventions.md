@@ -166,6 +166,16 @@ Exploratory thinking isn't scratch — it's a first-class artifact in `docs/0-br
 
 Adapt the inner structure of `configs/`, `scripts/`, `skills/` to your project. The `docs/` structure stays consistent.
 
+### 3.1 Private working-memory variant (`.workbench/`)
+
+In open-source or public projects where the code and public documentation are shared, but active brainstorms, designs, plans, reviews, and internal notes are kept private, a dual-repository structure provides clean isolation:
+
+- **Public repository (`<repo>/`):** Holds code, public documentation, architecture decision records (`docs/adrs/`), and public tracking (`ROADMAP.md`, `CHANGELOG.md`).
+- **Private working memory (`.workbench/`):** A separate, private Git repository cloned directly into `<repo>/.workbench/` and added to `<repo>/.gitignore`. Its root mirrors the lifecycle structure (`0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/`, `notes/`, `guides/`).
+- **Project Map routing:** The project brief (`CLAUDE.md` / `AGENTS.md`) sets `Working memory: .workbench/` so AI assistants route working-memory artifacts to the private repository automatically.
+- **Contributor route:** Outside contributors who do not have access to `.workbench/` use standard public mechanisms: issues, pull requests, and public ADRs (`docs/adrs/`), without creating lifecycle folders under `docs/`.
+- **Commit boundaries:** Local pre-commit hooks prevent accidentally committing `.workbench` gitlinks, internal paths, or private material into the public repository. Commits inside `.workbench/` are made with `git -C .workbench` and never touch public history.
+
 ---
 
 ## 4. What each folder is for
@@ -718,7 +728,7 @@ This keeps the always-current docs honest and the ROADMAP synchronised.
 | **Declined:** | Decided against after consideration | We thought about it and chose not to pursue; brief reasoning attached |
 | **Superseded:** | Replaced by another approach | A different design covers the same need; link to the replacement |
 
-This is the three-way semantic split PEP, KEP, and most mature proposal-tracking systems converge on (see industry research in `docs/4-reviews/2026-05-02-roadmap-conventions-audit.md` if it exists). Each parked entry should link to the underlying brainstorm or design file with frontmatter `status: parked` (for `Deferred`), `status: abandoned` (for `Declined`), or `status: superseded` (for `Superseded`).
+This is the three-way semantic split PEP, KEP, and most mature proposal-tracking systems converge on (see industry research across PEP, KEP, and RFC proposal systems). Each parked entry should link to the underlying brainstorm or design file with frontmatter `status: parked` (for `Deferred`), `status: abandoned` (for `Declined`), or `status: superseded` (for `Superseded`).
 
 **Truncation rule for Recently shipped.** Keep the last 10 entries OR the last 90 days, whichever is shorter. Older shipped items live only in `CHANGELOG.md` (the long-term record). The ROADMAP's purpose is forward-leaning navigation, not historical archive.
 
@@ -873,11 +883,11 @@ That covers the core moves: brainstorm → plan → execute → ship → maintai
 
 ### Step 1: Bootstrap from the template
 
-The canonical scaffold lives at `templates/default-project/` in [carlosboeing/claude-code-resources](https://github.com/carlosboeing/claude-code-resources). Two paths:
+The canonical scaffold lives at `templates/default-project/` in [carlosboeing/agentic-toolkit](https://github.com/carlosboeing/agentic-toolkit). Two paths:
 
 ```bash
 # Option A — without cloning (recommended; uses degit to fetch the subdirectory):
-npx degit github:carlosboeing/claude-code-resources/templates/default-project <new-project-path>
+npx degit github:carlosboeing/agentic-toolkit/templates/default-project <new-project-path>
 
 # Option B — from an existing local clone (replace <path-to-repo> with your clone path):
 cp -r <path-to-repo>/templates/default-project <new-project-path>

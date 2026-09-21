@@ -18,7 +18,7 @@ related:
 
 # Harness plugin and skill parity
 
-How to get a similar **methodology and tooling** bar when switching between Claude Code, Codex, Antigravity (`agy`), Kimi Code, and Grok Build TUI. Cursor is parked. Prefer **official installs**; use symlinks only for portable skills (see discovery doc).
+How to get a similar **methodology and tooling** bar when switching between Claude Code, Codex, Antigravity (`agy`), Kimi Code, and Grok Build TUI. Cursor is parked. Prefer **official installs**; use symlinks only for portable skills (see the topology and parity guides).
 
 ## Install channels on Antigravity
 
@@ -140,12 +140,12 @@ One copy on disk means drift is structurally impossible. Before this, four skill
 
 Content reaches the hub two ways:
 
-- **Authored skills** stay canonical in `claude-code-resources/skills/` and are copied in by [`sync-skills.sh`](../skills/sync-skills.sh). They are no longer live-edited — an edit in the repo needs a sync run before any harness sees it.
+- **Authored skills** stay canonical in `agentic-toolkit/skills/` and are copied in by [`sync-skills.sh`](../skills/sync-skills.sh). They are no longer live-edited — an edit in the repo needs a sync run before any harness sees it.
 - **Third-party skills** are installed straight into the hub. Vendor CLIs that write to `~/.agents/skills` now write through the spoke symlink and land in the hub automatically. If one recreates the spoke as a real directory, `./skills/sync-skills.sh --adopt` folds it back in.
 
-Because the hub is derived state, `claude-config` gitignores it. Recovery comes from [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md), which records the rebuild command for every skill this repo does not author.
+Because the hub is derived state, `~/.claude` gitignores it. Recovery comes from [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md), which records the rebuild command for every skill this repo does not author.
 
-Full rationale, risks, and the migration record: [the topology design](../docs/2-design/2026-08-06-skill-installation-topology-design.md).
+Full rationale, risks, and the migration record: the skill installation topology established in August 2026.
 
 ## Minimum viable set (autonomous coding runs)
 
@@ -178,8 +178,8 @@ Legend: **Official** | **Substitute** | **MCP** | **In hub** | **Skip**
 | code-review, pr-review-toolkit, feature-dev | **Substitute** — Superpowers review / brainstorming / subagent skills |
 | elements-of-style | **Skip** — plugin-provided on Claude Code, not in the hub |
 | graphify | **In hub** — no longer a separate `~/.gemini/config/skills/graphify` copy |
-| briefing, capture-meeting, externalize-deliverable, learn, schedule-resume | **In hub** — copied in by [`sync-skills.sh`](../skills/sync-skills.sh) from `claude-code-resources/skills/`, reached through the spoke symlink |
-| penmark-comments | **In hub** — same path as the other authored skills. Canonical source is `claude-code-resources/skills/penmark-comments`; the hub copy is no longer a live symlink into the repo, so edits need a sync run. See the [integration guide](guide-penmark-agent-integration.md) for validation and the deferred cross-harness audit. |
+| briefing, capture-meeting, externalize-deliverable, learn, schedule-resume | **In hub** — copied in by [`sync-skills.sh`](../skills/sync-skills.sh) from `agentic-toolkit/skills/`, reached through the spoke symlink |
+| penmark-comments | **In hub** — same path as the other authored skills. Canonical source is `agentic-toolkit/skills/penmark-comments`; the hub copy is no longer a live symlink into the repo, so edits need a sync run. See the [integration guide](guide-penmark-agent-integration.md) for validation and the deferred cross-harness audit. |
 | octo | **Skip** — no port; multi-model review optional only |
 | financial-* (6 plugins) | **Skip** unless doing IB work in Agy |
 | continual-learning (Cursor) | **Skip** — Cursor-only hooks |

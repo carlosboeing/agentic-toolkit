@@ -289,6 +289,34 @@ else
   printf '  FAIL custom pre-commit was overwritten in sidecar target\n'
 fi
 
+# Repo WITH .workbench: actual toolkit pre-commit hook (diverged without marker) must be preserved
+REAL_HOOK_REPO="$TMP/real-hook-repo"
+git init -q -b main "$REAL_HOOK_REPO"
+git -C "$REAL_HOOK_REPO" commit -q --allow-empty -m "init"
+mkdir -p "$REAL_HOOK_REPO/.workbench"
+git init -q -b main "$REAL_HOOK_REPO/.workbench"
+git -C "$REAL_HOOK_REPO/.workbench" commit -q --allow-empty -m "init"
+mkdir -p "$REAL_HOOK_REPO/scripts/githooks"
+cp "$REPO_ROOT/scripts/githooks/pre-commit" "$REAL_HOOK_REPO/scripts/githooks/pre-commit"
+chmod +x "$REAL_HOOK_REPO/scripts/githooks/pre-commit"
+
+hash_before="$(shasum -a 256 "$REAL_HOOK_REPO/scripts/githooks/pre-commit" | awk '{print $1}')"
+
+real_hook_out="$(HOME="$MOCK_HOME" HUB="$MOCK_HUB" PROJECTS_DIR="$MOCK_PROJECTS" \
+  "$SCRIPT" "$REAL_HOOK_REPO" -y 2>&1)"
+
+hash_after="$(shasum -a 256 "$REAL_HOOK_REPO/scripts/githooks/pre-commit" | awk '{print $1}')"
+
+_assert_eq "actual toolkit pre-commit hash unchanged after sync" "$hash_before" "$hash_after"
+
+if echo "$real_hook_out" | grep -q "\[PRESERVED\]"; then
+  pass=$((pass + 1))
+  printf '  ok   sync output contains [PRESERVED] for actual toolkit pre-commit\n'
+else
+  fail=$((fail + 1))
+  printf '  FAIL sync output did not contain [PRESERVED] for actual toolkit pre-commit\n'
+fi
+
 # --- 8. --dry-run audit mode ---
 # Tamper with repo3's hook
 echo "# modified" > "$REPO3/scripts/githooks/housekeep"

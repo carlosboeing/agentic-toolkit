@@ -32,7 +32,7 @@ Each harness is wired to invoke the exact same `mcp-server.cjs` entrypoint and a
 
 ### 1. Claude Code (Native Plugin)
 Claude Code manages the plugin lifecycle natively.
-*   **Config File**: [~/.claude/settings.json](~/.claude/settings.json)
+*   **Config File**: `~/.claude/settings.json`
 *   **Registration**:
     ```json
     "enabledPlugins": {
@@ -42,33 +42,33 @@ Claude Code manages the plugin lifecycle natively.
 
 ### 2. Antigravity (MCP Server)
 Antigravity integrates `claude-mem` as an external Model Context Protocol server.
-*   **Config File**: [~/.gemini/config/mcp_config.json](~/.gemini/config/mcp_config.json)
+*   **Config File**: `~/.gemini/config/mcp_config.json`
 *   **Registration**:
     ```json
     "claude-mem": {
-      "command": "/opt/homebrew/Cellar/node/24.1.0/bin/node",
+      "command": "node",
       "args": [
-        "~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs"
+        "<path-to-home>/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs"
       ]
     }
     ```
 
 ### 3. Cursor (MCP Server)
 Cursor integrates `claude-mem` as a global stdio MCP server.
-*   **Config File**: [~/.cursor/mcp.json](~/.cursor/mcp.json)
+*   **Config File**: `~/.cursor/mcp.json`
 *   **Registration**:
     ```json
     "claude-mem": {
       "command": "node",
       "args": [
-        "~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs"
+        "<path-to-home>/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs"
       ]
     }
     ```
 
 ### 4. Codex (Plugin)
 Codex integrates `claude-mem` natively as a runtime plugin.
-*   **Config File**: [~/.codex/config.toml](~/.codex/config.toml)
+*   **Config File**: `~/.codex/config.toml`
 *   **Registration**:
     ```toml
     [plugins."claude-mem@claude-mem-local"]
@@ -77,7 +77,7 @@ Codex integrates `claude-mem` natively as a runtime plugin.
 
 ### 5. OpenCode (Plugin)
 OpenCode integrates `claude-mem` as a local Javascript plugin.
-*   **Config File**: [~/.config/opencode/opencode.json](~/.config/opencode/opencode.json)
+*   **Config File**: `~/.config/opencode/opencode.json`
 *   **Registration**:
     ```json
     "plugin": [
@@ -105,4 +105,4 @@ cat ~/.claude-mem/supervisor.json
 
 ## References
 *   **Upstream Repository**: [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem)
-*   **Harness Parity Guide**: [guide-harness-plugin-parity.md](~/Projects/agentic-toolkit/guides/guide-harness-plugin-parity.md)
+*   **Harness Parity Guide**: [guide-harness-plugin-parity.md](guide-harness-plugin-parity.md)

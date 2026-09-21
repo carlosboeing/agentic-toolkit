@@ -18,7 +18,7 @@ Two paths to bootstrap a new project from `default-project/`:
 
 ```bash
 # Option A — without cloning (recommended; uses degit to fetch the subdirectory):
-npx degit github:carlosboeing/claude-code-resources/templates/default-project <new-project-path>
+npx degit github:carlosboeing/agentic-toolkit/templates/default-project <new-project-path>
 
 # Option B — from an existing local clone (replace <path-to-repo> with your clone path):
 cp -r <path-to-repo>/templates/default-project <new-project-path>

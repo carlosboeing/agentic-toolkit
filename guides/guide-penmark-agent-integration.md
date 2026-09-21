@@ -106,17 +106,17 @@ The forward-test is intentionally incomplete. The results below distinguish comp
 | Codex CLI | 0.145.0 | `~/.agents/skills/penmark-comments` | Two positive runs validated by bundled validator and Penmark parser; read-only target byte-identical; multi-source changed only primary and validated | Summary run left the target byte-identical but stalled before a final response; remaining matrix deferred |
 | Antigravity (`agy`) | 1.1.5 | `~/.agents/skills/penmark-comments` shared with Codex in this audit | Correct noninteractive invocation form verified | Positive, negative, and multi-source runs stalled during file search; no behavioral pass recorded |
 
-See the [evaluation report](../docs/4-reviews/2026-07-22-penmark-skill-evaluation.md) for commands, hashes, parser assertions, and rerun requirements.
+See the evaluation report (2026-07-22) for commands, hashes, parser assertions, and rerun requirements.
 
 ## Activation-guard evidence — 2026-07-26
 
-The [activation-guard evaluation](../docs/4-reviews/2026-07-26-penmark-read-only-activation-evaluation.md) completed Codex 0.145.0's five-boundary matrix, including a Markdown-containing general code review; Claude Code 2.1.220 and Agy 1.1.7 completed read-only activation cases. Cursor's global instruction loading is structurally verified through its `AGENTS.md` symlink, while Cursor Penmark skill discovery and runtime behavior remain unverified. The durable negative Codex event streams are retained with that evaluation.
+The activation-guard evaluation (2026-07-26) completed Codex 0.145.0's five-boundary matrix, including a Markdown-containing general code review; Claude Code 2.1.220 and Agy 1.1.7 completed read-only activation cases. Cursor's global instruction loading is structurally verified through its `AGENTS.md` symlink, while Cursor Penmark skill discovery and runtime behavior remain unverified. The durable negative Codex event streams are retained with that evaluation.
 
 ## Manual cross-harness verification runbook
 
-> **Superseded as the default (2026-07-27).** This full matrix documents the 2026-07-26 activation-guard exercise and remains valid as reference. It is no longer the standard for routine changes: per the [consent gate design](../docs/2-design/2026-07-27-penmark-comment-consent-gate-design.md), routine changes verify activation only — four probes on one harness — because the gate and the disclosure summary make every other failure mode visible on first use. Run this full matrix only for high-risk changes, or when focused probes reveal harness-specific differences.
+> **Superseded as the default (2026-07-27).** This full matrix documents the 2026-07-26 activation-guard exercise and remains valid as reference. It is no longer the standard for routine changes: per the consent gate design (2026-07-27), routine changes verify activation only — four probes on one harness — because the gate and the disclosure summary make every other failure mode visible on first use. Run this full matrix only for high-risk changes, or when focused probes reveal harness-specific differences.
 
-The 2026-07-23 release is shipped with the remaining Task 6 cross-harness evidence explicitly deferred. Completing the outstanding rows below and recording the results in the [evaluation report](../docs/4-reviews/2026-07-22-penmark-skill-evaluation.md) completes that deferred Task 6 evidence; it is not a prerequisite for using the released skill.
+The 2026-07-23 release is shipped with the remaining Task 6 cross-harness evidence explicitly deferred. Completing the outstanding rows below and recording the results in the evaluation report completes that deferred Task 6 evidence; it is not a prerequisite for using the released skill.
 
 The existing evidence already covers two Codex positive runs, its read-only override, and its multi-source run. Preserve those historical behavioral facts, but do not infer the newly required trace evidence from them. Run the full matrix below in fresh sessions and record direct activation or non-activation evidence for every row.
 
@@ -563,7 +563,7 @@ diff -u "$run_dir/pristine.md" "$run_dir/primary.md"
 When the pinned local Penmark checkout is available, run its production parser for every mutated primary file. Substitute the tested file path for `"$run_dir/review-target.md"` as needed:
 
 ```bash
-(cd ~/Projects/penmark && PENMARK_TEST_FILE="$run_dir/review-target.md" npx tsx -e 'import { readFileSync } from "node:fs"; import { parseDoc } from "./src/core/comments/parser.ts"; const doc = parseDoc(readFileSync(process.env.PENMARK_TEST_FILE, "utf8")); const ok = doc.corruption.length === 0 && doc.reviewCount <= 1 && doc.review?.atEof === true && doc.entries.length > 0 && doc.anchors.size === doc.entries.length; console.log(JSON.stringify({ anchors: doc.anchors.size, entries: doc.entries.length, reviewCount: doc.reviewCount, atEof: doc.review?.atEof, corruption: doc.corruption.length })); if (!ok) process.exit(1);')
+(cd <path-to-penmark> && PENMARK_TEST_FILE="$run_dir/review-target.md" npx tsx -e 'import { readFileSync } from "node:fs"; import { parseDoc } from "./src/core/comments/parser.ts"; const doc = parseDoc(readFileSync(process.env.PENMARK_TEST_FILE, "utf8")); const ok = doc.corruption.length === 0 && doc.reviewCount <= 1 && doc.review?.atEof === true && doc.entries.length > 0 && doc.anchors.size === doc.entries.length; console.log(JSON.stringify({ anchors: doc.anchors.size, entries: doc.entries.length, reviewCount: doc.reviewCount, atEof: doc.review?.atEof, corruption: doc.corruption.length })); if (!ok) process.exit(1);')
 ```
 
 For a writable or multi-source positive, the assertion must report zero corruption, at most one review block at EOF, more than zero entries, and a 1:1 anchor/entry count. If the production parser cannot be run, record that as incomplete evidence rather than a pass.

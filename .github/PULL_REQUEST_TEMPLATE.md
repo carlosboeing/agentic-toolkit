@@ -1,0 +1,24 @@
+## Summary
+
+<!-- Brief 1-3 sentence summary explaining what this PR changes and why. -->
+
+## Changes
+
+<!-- Bullet list of specific public changes. -->
+- 
+
+## Verification
+
+<!-- Exact commands executed locally and their outcomes. -->
+- `bash tests/test-githooks.sh`
+- `bash tests/test-sync-toolkit.sh`
+- `sh skills/schedule-resume/tests/run-tests.sh`
+- `python3 scripts/check-relative-links.py`
+
+## Governance Checklist
+
+- [ ] Commit conforms to Conventional Commits
+- [ ] Staged in one clean atomic commit
+- [ ] No secrets, credentials, or private paths included
+- [ ] Documentation updated where applicable
+- [ ] `required` aggregate check is green

@@ -34,6 +34,6 @@ The script is vendored per repository at `scripts/githooks/housekeep`, because `
 A nested `.workbench` repository is an independent git repository. Run the skill or script separately for `.workbench` when present.
 
 Designs:
-- Full audit: [`docs/2-design/2026-09-16-housekeep-full-audit-design.md`](../../docs/2-design/2026-09-16-housekeep-full-audit-design.md).
-- Initial merge reporter and push gate: [`docs/2-design/2026-09-04-repo-housekeeping-and-instruction-weight.md`](../../docs/2-design/2026-09-04-repo-housekeeping-and-instruction-weight.md).
+- Full audit (2026-09-16).
+- Initial merge reporter and push gate (2026-09-04).
 

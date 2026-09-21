@@ -12,7 +12,7 @@ Claude Code lifecycle hooks — shell scripts wired into `settings.json` events 
 HOOK=validate-mermaid   # ← or whichever hook you want
 mkdir -p ~/.claude/hooks
 curl -fsSL -o ~/.claude/hooks/$HOOK.sh \
-  https://raw.githubusercontent.com/carlosboeing/claude-code-resources/main/hooks/$HOOK/$HOOK.sh
+  https://raw.githubusercontent.com/carlosboeing/agentic-toolkit/main/hooks/$HOOK/$HOOK.sh
 chmod +x ~/.claude/hooks/$HOOK.sh
 ```
 

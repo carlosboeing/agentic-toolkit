@@ -12,7 +12,7 @@ import { join } from "path"
 // content before it is written, and throwing aborts the call, so a broken diagram
 // never reaches the file.
 //
-// Canonical source: carlosboeing/claude-code-resources (hooks/validate-mermaid/).
+// Canonical source: carlosboeing/agentic-toolkit (hooks/validate-mermaid/).
 
 const FENCE_OPEN = /^[ \t]*```mermaid[ \t]*$/
 const FENCE_CLOSE = /^[ \t]*```[ \t]*$/

@@ -27,7 +27,7 @@ Applies `reference/reference-oss-standards.md` to a repository. One skill for pr
 Single absolute URL, the one line to update if the reference moves:
 
 ```
-<REPO_STANDARD_URL> = https://github.com/carlosboeing/claude-code-resources/blob/main/reference/reference-oss-standards.md
+<REPO_STANDARD_URL> = https://github.com/carlosboeing/agentic-toolkit/blob/main/reference/reference-oss-standards.md
 ```
 
 ## Platform tool mappings
@@ -64,7 +64,7 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
      1. `core.hooksPath` unset, or set to anything other than `scripts/githooks` (`git config --get core.hooksPath`).
      2. `scripts/githooks/pre-push` missing or not executable (`test -x scripts/githooks/pre-push`).
      3. `scripts/githooks/housekeep` missing or not executable (`test -x scripts/githooks/housekeep`).
-     Reason: `core.hooksPath` is per clone, and git will not set it on clone, deliberately. Verified 2026-09-04: quotacap, copydesk, and claude-code-resources all had it unset.
+     Reason: `core.hooksPath` is per clone, and git will not set it on clone, deliberately. Verified 2026-09-04: multiple local repositories had it unset.
    - If `oss`: additionally `! grep -q gmail` `CODE_OF_CONDUCT.md` `SECURITY.md`, `test -f` `SUPPORT.md` `SECURITY.md` `CODE_OF_CONDUCT.md` etc., yml forms `blank_issues_enabled: false`.
 4. Render table: file | expected | found | status.
 
@@ -73,7 +73,7 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
 1. Run `check` first, keep gap table.
 2. For each gap, patch:
    - Git hooks (`scripts/githooks`): for the outer repository and `.workbench` (when `.workbench/.git` exists):
-     - Copy `housekeep` and `pre-push` from `~/Projects/carlos/claude-code-resources/git-hooks/drift-guard/` to `scripts/githooks/`.
+     - Copy `housekeep` and `pre-push` from `<toolkit-path>/git-hooks/drift-guard/` to `scripts/githooks/`.
      - `chmod +x scripts/githooks/housekeep scripts/githooks/pre-push`.
      - `git config core.hooksPath scripts/githooks`.
    - Missing `SUPPORT.md` or yml forms -> copy `templates/default-project/.github/ISSUE_TEMPLATE/*` and `templates/default-project/SUPPORT.md`, fill `<OWNER>`/`<REPO>` via `gh repo view --json nameWithOwner`.
@@ -87,7 +87,7 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
 ### scaffold
 
 ```
-npx degit carlosboeing/claude-code-resources/templates/default-project <name>
+npx degit carlosboeing/agentic-toolkit/templates/default-project <name>
 # if oss: cp templates/default-project-oss extra files or run fix oss on new dir
 # replace <PROJECT_NAME>, <OWNER>/<REPO> via sed, git init, first commit
 ```

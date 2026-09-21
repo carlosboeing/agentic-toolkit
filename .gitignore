@@ -20,3 +20,8 @@
 __pycache__/
 *.pyc
 
+# Private working memory sidecar (cloned separately)
+.workbench/
+
+# Local CodeGraph index cache
+.codegraph/

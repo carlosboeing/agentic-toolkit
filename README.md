@@ -1,103 +1,101 @@
-# claude-code-resources
+# agentic-toolkit
 
-A personal collection of [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, guides, and references I've built up while using the tool day-to-day. Public-ish — designed to be shareable with colleagues and portable across projects, but slightly opinionated to my workflow.
+Cross-harness toolkit for AI coding agents: shared instructions, skills, hooks, and sync tooling for Claude Code, Codex, Antigravity, Kimi Code, Grok, and OpenCode, plus the SDLC conventions they run under.
 
-> If you've stumbled across this and find something useful, take what works. Nothing here is a polished product; it's working notes.
+## 1. Purpose
 
-## Contents
+AI coding agents are most effective when guided by structured workflows, verifiable quality gates, and portable tooling. `agentic-toolkit` provides a shared foundation across six daily harnesses:
+- **Harness-neutral instructions**: A single instruction brief and workflow rules shared across multiple harnesses.
+- **Portable skills**: Reusable capabilities for planning, review, browser automation, and scheduled task continuation.
+- **Workflow & quality gates**: Git hooks for drift guard and privacy boundaries that run uniformly across local environments.
+- **Synchronization tooling**: Automated discovery and setup across user-level configuration directories.
 
-The repo splits into three clusters. The cluster headers below also organise [`CLAUDE.md`](CLAUDE.md).
+## 2. Contents
 
-### Repo internals
+The toolkit is organized into installable resources and adoptable methodology.
 
-| Path | What | Install? |
+### Installable resources
+
+| Directory | What it contains | Install target |
 |---|---|---|
-| [`docs/`](docs/) | This repo's working memory — brainstorms, designs, plans, retros, ADRs, ROADMAP, CHANGELOG. | — |
-| [`scripts/`](scripts/) | Synchronization tools and maintenance scripts ([`scripts/sync-toolkit.sh`](scripts/sync-toolkit.sh)). | — |
+| [`instructions/`](instructions/) | Canonical global agent instruction brief. See [`instructions/README.md`](instructions/README.md). | `~/.claude/CLAUDE.md` (and symlinked harnesses) |
+| [`skills/`](skills/) | Multi-file and single-file agent skills. See [`skills/README.md`](skills/README.md). | `~/.claude/skills/<name>/` (the hub) |
+| [`hooks/`](hooks/) | Lifecycle hooks (prompt validation, tool filters). See [`hooks/README.md`](hooks/README.md). | `~/.claude/hooks/` |
+| [`git-hooks/`](git-hooks/) | Repository git hooks (drift guard, workbench privacy). See [`git-hooks/README.md`](git-hooks/README.md). | Target repo `.git/hooks/` or `scripts/githooks/` |
+| [`output-styles/`](output-styles/) | Output style definitions. See [`output-styles/README.md`](output-styles/README.md). | `~/.claude/output-styles/` |
+| [`rules/`](rules/) | Cross-harness rule definitions. See [`rules/README.md`](rules/README.md). | Target harnesses |
+| [`plugins/`](plugins/) | Installers and wrappers for plugins such as Superpowers. See [`plugins/README.md`](plugins/README.md). | Target harnesses |
 
-### Harness mirrors (drop-in to `~/.claude/<type>/`)
+### Adoptable methodology
 
-| Path | What | Install path |
-|---|---|---|
-| [`instructions/`](instructions/) | The canonical global agent instruction file, read by six harnesses. See [`instructions/README.md`](instructions/README.md). | `~/.claude/CLAUDE.md` (symlink) |
-| [`skills/`](skills/) | Claude Code skills (drop-in `SKILL.md` files). See [`skills/README.md`](skills/README.md). | `~/.claude/skills/<name>/` |
-| [`hooks/`](hooks/) | Lifecycle hooks (shell scripts + settings fragments). See [`hooks/README.md`](hooks/README.md). | `~/.claude/hooks/<name>.sh` |
-| [`output-styles/`](output-styles/) | Output style prompts. See [`output-styles/README.md`](output-styles/README.md). | `~/.claude/output-styles/<name>.md` |
-| [`rules/`](rules/) | Cross-harness and harness-specific rules. Nothing here is installed since 2026-09-07 — see [`rules/README.md`](rules/README.md) for where each rule's guidance went. | not installed |
-
-Future cluster members (slots, not yet populated): `plugins/`, `commands/`, `agents/`, `mcp-servers/`. Created when the first item of each type arrives.
-
-### Other consumables (read or copy-paste)
-
-| Path | What |
+| Directory | What it contains |
 |---|---|
-| [`guides/`](guides/) | Evergreen how-tos for Claude Code workflows. |
-| [`git-hooks/`](git-hooks/) | Git hooks installed into a target repository, not the harness. See [`git-hooks/README.md`](git-hooks/README.md). |
-| [`reference/`](reference/) | Snapshots, inventories, lookups. |
-| [`templates/`](templates/) | Project bootstrap scaffolds. See [`templates/README.md`](templates/README.md). |
+| [`guides/`](guides/) | Evergreen operational how-tos for browser automation, new machine setup, model and effort routing, and conventions. |
+| [`reference/`](reference/) | Cross-harness model comparisons, capability maps, and OSS house standards. |
+| [`templates/`](templates/) | Project bootstrap scaffolds for internal and open-source repositories. See [`templates/README.md`](templates/README.md). |
+| [`docs/adrs/`](docs/adrs/) | Architectural Decision Records documenting persistent design choices. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Forward view and progress tracking. |
+| [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Historical record of changes and releases. |
 
-Future cluster members: `prompts/` (when first prompt lands).
+## 3. Skill installation
 
-Each top-level directory has its own `README.md` acting as a catalog with install / usage details for the items inside.
+Several skills in this repository (such as `schedule-resume`, `penmark-comments`, and `briefing`) are multi-file packages containing helper scripts, schemas, or reference assets. To install a skill, copy its complete directory rather than a single file:
 
-## `docs/` — the project's working memory
+```bash
+# 1. Clone the toolkit into a temporary directory
+TMP_DIR=$(mktemp -d)
+git clone https://github.com/carlosboeing/agentic-toolkit.git "$TMP_DIR/agentic-toolkit"
 
-`docs/` records how this repo evolves: the lifecycle of each piece of work (brainstorm → design → plan → retro), the ongoing indexes that orient new readers (ROADMAP, CHANGELOG), and the persistent decisions that outlive any single phase (ADRs). Authored by whoever's working on the project — human, AI, or both — and structured so anyone can answer "what did we decide and why?" without archaeology.
+# 2. Copy the desired skill directory to your harness skills directory
+# Example for Claude Code (or the shared hub):
+SKILL=schedule-resume
+mkdir -p ~/.claude/skills/$SKILL
+cp -R "$TMP_DIR/agentic-toolkit/skills/$SKILL/"* ~/.claude/skills/$SKILL/
 
-For the conventions that shape `docs/` (and that you can adopt in your own projects via [`templates/default-project/`](templates/default-project/)), see [`guides/guide-project-structure-and-conventions.md`](guides/guide-project-structure-and-conventions.md).
+# 3. Clean up the temporary clone
+rm -rf "$TMP_DIR"
+```
 
-## Quick start
+For harness-specific skill discovery and hub-and-spoke setup, see [`skills/README.md`](skills/README.md).
 
-To audit and synchronize all skills, hooks, and plugins across your installed AI harnesses and project checkouts:
+## 4. Synchronization tooling
+
+The toolkit includes [`scripts/sync-toolkit.sh`](scripts/sync-toolkit.sh) to automate discovery and installation across all detected harnesses.
+
+> [!NOTE]
+> In non-interactive mode, `sync-toolkit.sh` writes into `$HOME` directories (such as `~/.claude/skills/`, `~/.agents/skills/`, `~/.gemini/config/skills/`) and installs git hooks into repository checkouts located beside this clone.
+
+Always run with `--dry-run` first to preview changes:
+
+```bash
+./scripts/sync-toolkit.sh --dry-run
+```
+
+To apply the synchronization:
 
 ```bash
 ./scripts/sync-toolkit.sh
 ```
 
-To install a single skill from this repo:
+## 5. Methodology and conventions
 
-```bash
-SKILL=learn   # ← or whichever skill you want
-mkdir -p ~/.claude/skills/$SKILL
-curl -fsSL -o ~/.claude/skills/$SKILL/SKILL.md \
-  https://raw.githubusercontent.com/carlosboeing/claude-code-resources/main/skills/$SKILL/SKILL.md
-```
+The methodology behind this toolkit is documented in portable guides:
+- [Project structure and conventions](guides/guide-project-structure-and-conventions.md): Numbered lifecycle phases, working-memory conventions, and frontmatter standards.
+- [AI model and effort routing](guides/guide-ai-model-and-effort-routing.md): Task difficulty ladders and multi-model allocation.
+- [Cross-harness model comparison](reference/reference-cross-harness-models.md): Benchmark metrics, token pricing cards, and quota dynamics.
+- [Browser automation](guides/guide-browser-automation-mcp-vs-cli.md): Decision matrix for Playwright MCP versus CLI execution.
+- [Project templates](templates/README.md): Bootstrap scaffolds for new repositories.
 
-See [`skills/README.md`](skills/README.md) for the full skill catalog and project-level install instructions.
+## 6. Contribution, support, and license
 
-**Setting up on a new machine (or handing this to a colleague)?** See [`guides/guide-new-machine-setup.md`](guides/guide-new-machine-setup.md) — clone the two repos, run the skill link script, wire up the tools.
+### Contributing
 
-## Conventions (in this repo)
+Contributions are welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) for local verification checks, coding conventions, and PR expectations.
 
-- **Filenames** carry their type as a prefix: `guide-*.md`, `reference-*.md`. Slightly redundant with the directory name, but means a file is self-describing if it gets emailed, gisted, or pasted somewhere on its own.
-- **Skills** live one-per-directory under `skills/<name>/SKILL.md` to match the harness layout — drop-in compatible with `~/.claude/skills/`.
-- **Guides** are stable how-tos. **Reference** docs are snapshots / inventories / lookups (status at a point in time, not a process).
+### Security and support
 
-## Adding a new artifact type
+To report security issues, please use the [GitHub Security Advisory](https://github.com/carlosboeing/agentic-toolkit/security/advisories/new). For general inquiries or defects, open an issue on the repository.
 
-The repo scales by adding top-level directories within the **Harness mirrors** cluster — one per Claude Code artifact type, each mirroring the layout under `~/.claude/` so installs are obvious. Likely future additions: `plugins/`, `hooks/`, `commands/`, `agents/`, `mcp-servers/`, `output-styles/`. The **Other consumables** cluster grows similarly — `prompts/` is the most likely next addition.
+### License
 
-When you add the *first* item of a new type, three rules:
-
-1. **Create the directory only when you have the first real item.** No empty placeholders.
-2. **Write `<type>/README.md` at the same time as the first item.** It's the catalog: a one-line description of the type, a shared install snippet, a table of items, and any conventions specific to that type. Use [`skills/README.md`](skills/README.md) as the template.
-3. **One subdirectory per non-trivial item** (multi-file, has its own README, scripts, references). Single-file artifacts with no docs can live flat in the type directory, but realistically each item earns its own subdir + `README.md` once you want it shareable.
-
-Notes on the awkward cases:
-
-- **Plugins** are bundles — they contain their own skills, hooks, commands. Keep `plugins/<name>/` intact rather than flattening into the per-type dirs. The plugin's internal layout matches the marketplace install structure.
-- **MCP servers** can be polyglot. `mcp-servers/<name>/` holds source in whatever language; the README documents how to wire it into `claude_desktop_config.json` or project `.mcp.json`.
-- **Skills inside plugins** vs **standalone skills**: separate. A standalone skill at `skills/foo/` can be later bundled into `plugins/bar/skills/foo/` if it earns promotion. Don't symlink — install paths differ.
-
-## Sharing individual files
-
-Most files in this repo are designed to stand alone:
-
-- A skill's `SKILL.md` is the entire skill — paste, install, done.
-- Guides and references are self-contained markdown — gist them, slack them, copy into another project.
-
-If something here references the wider repo (table of contents, sibling links), it's a bug — file an issue or send a PR.
-
-## License
-
-MIT. Take, fork, modify, attribute or don't.
+This project is licensed under the MIT License. The copyright notice and permission notice must be retained in all copies or substantial portions of the software. See [`LICENSE`](LICENSE) for the full text.

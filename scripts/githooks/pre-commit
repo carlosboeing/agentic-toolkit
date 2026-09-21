@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+#
+# pre-commit — keep private working-memory content out of a public commit.
+#
+# Derived from git-hooks/private-workbench-guard/pre-commit.
+#
+# DIVERGENCE & MAINTENANCE NOTICE:
+# This local pre-commit hook intentionally diverges from the catalog template:
+# 1. It omits the catalog managed marker string so that sync-toolkit.sh
+#    recognizes it as a custom hook and preserves it ([PRESERVED]) rather
+#    than overwriting it with the catalog hook.
+# 2. It does not deny 'pricing', 'per month', or dollar amounts, because this
+#    toolkit contains legitimate public vendor rate tables (token costs, etc.)
+#    and does not require the catalog's SAFE filtering.
+# 3. The gitlink check (blocking staged .workbench mode 160000) and the _skip()
+#    exemption function are copied from the catalog hook and must be maintained
+#    manually if the catalog hook changes.
+# 4. Actual private business and client names are never embedded in this public
+#    file; they are covered by the naming rule and pre-publication audits.
+#
+# Deliberate override, for a commit that is genuinely fine:
+#   git commit --no-verify
+
+set -uo pipefail
+
+# Denied patterns: .workbench paths, workbench repo name, local /Users/ paths,
+# and commercial strategy terms.
+PATTERN='\.workbench|agentic-toolkit-workbench|/Users/|hosted (service|tier)|monetiz|monetis'
+
+# Files that state or test the rules and therefore legitimately mention denied terms.
+_skip() {
+  case "$1" in
+    CLAUDE.md|AGENTS.md|.gitignore) return 0 ;;
+    */githooks/pre-commit|githooks/pre-commit) return 0 ;;
+    */tests/test-githooks.sh|tests/test-githooks.sh) return 0 ;;
+    */private-workbench-guard/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+fail=0
+
+# --- 1. The workbench staged as a gitlink -----------------------------------
+#
+# The trailing `(/|$)` matters. `git add -f .workbench` stages the path with no
+# slash, which is exactly the case worth catching; requiring a slash misses it.
+
+inside="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^\.workbench(/|$)' || true)"
+if [ -n "$inside" ]; then
+  printf '\npre-commit: refusing — the private workbench is staged.\n\n' >&2
+  printf '%s\n' "$inside" | sed 's/^/    /' >&2
+  printf '\n  Committing this records a submodule reference to the private repository.\n' >&2
+  printf '  Unstage it here: git reset .workbench\n' >&2
+  printf '  Workbench content is committed with: git -C .workbench commit\n' >&2
+  fail=1
+fi
+
+# --- 2. Workbench vocabulary in added lines ---------------------------------
+
+reported=0
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  _skip "$f" && continue
+  hits="$(git diff --cached --unified=0 -- "$f" \
+            | grep -E '^\+' | grep -v '^+++' \
+            | grep -inE "$PATTERN" || true)"
+  [ -n "$hits" ] || continue
+  if [ "$reported" -eq 0 ]; then
+    printf '\npre-commit: refusing — added lines carry workbench vocabulary.\n\n' >&2
+    reported=1
+  fi
+  printf '  %s\n' "$f" >&2
+  printf '%s\n' "$hits" | sed 's/^/      /' >&2
+  fail=1
+done < <(git diff --cached --name-only --diff-filter=ACMR)
+
+if [ "$reported" -eq 1 ]; then
+  printf '\n  Read the hits rather than counting them. Product direction is fine here;\n' >&2
+  printf '  brand, company and commercial reasoning is workbench-only.\n' >&2
+  printf '  If this commit is genuinely fine: git commit --no-verify\n\n' >&2
+fi
+
+exit "$fail"

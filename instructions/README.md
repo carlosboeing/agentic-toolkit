@@ -14,7 +14,7 @@ The canonical global agent instruction file, and the regression test that guards
 One real file, six readers, no copies.
 
 ```
-claude-code-resources/instructions/CLAUDE.md
+agentic-toolkit/instructions/CLAUDE.md
   <- ~/.claude/CLAUDE.md                 (symlink)
        <- ~/.agents/AGENTS.md            (symlink, Kimi Code)
        <- ~/.codex/AGENTS.md             (symlink)
@@ -23,7 +23,7 @@ claude-code-resources/instructions/CLAUDE.md
        <- Grok Build, through compat.claude.agents in ~/.grok/config.toml
 ```
 
-A symlink chain was chosen over a generated file. Per-harness generation was specified as Part 6 of the [housekeeping design](../docs/2-design/2026-09-04-repo-housekeeping-and-instruction-weight.md) and declined on 2026-09-07: it would save about 727 words per Claude Code session, and it would add the first artifact in this setup that can drift. A symlink cannot drift.
+A symlink chain was chosen over a generated file. Per-harness generation was evaluated and declined on 2026-09-07: it would save about 727 words per Claude Code session, and it would add the first artifact in this setup that can drift. A symlink cannot drift.
 
 The cost of that choice is recorded, not hidden. Claude Code receives the CopyDesk writing rules twice, once here and once in `~/.claude/output-styles/copydesk.md`. `copydesk doctor` reports it without being asked.
 
