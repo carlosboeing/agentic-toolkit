@@ -1,6 +1,6 @@
 # `/briefing` — Adaptive project orientation skill for Claude Code
 
-A single-file [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that produces a structured briefing of project state on demand — built for the moment you return to a project after a session, a day, a week, or a vacation, and want to know **where you are, what you were doing, and what to pick up** without re-reading every file.
+A [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that produces a structured briefing of project state on demand — built for the moment you return to a project after a session, a day, a week, or a vacation, and want to know **where you are, what you were doing, and what to pick up** without re-reading every file.
 
 It auto-discovers what's in flight from git, GitHub, your project's CLAUDE.md `## Project Map` section (when present), and whatever working-memory layout it can detect. The output reshapes by what it finds — leads with active work if there is any, leads with what's next if everything is calm.
 
@@ -31,6 +31,12 @@ Five rules bind every section, and they're what make a briefing scannable rather
 3. **Every path is clickable** — written from the working directory, with `:line` when it points at one item in a long file. Never a bare basename.
 4. **The funnel.** Actions live only in Summary's "what's needed" clause (as a pointer) and the closing section (as the ask). Status and Findings are read-only context.
 5. **No silent drops.** Collapsing a group — parked drafts, stale branches — is allowed when it's counted, named, and carries an escape hatch. An unstated exclusion and an accidental omission look identical from the outside.
+
+## Manual invocation only
+
+Run `/briefing` yourself, or `$briefing` in Codex. Ordinary follow-ups such as "What's next?" do not request this workflow. Explicitly asking the agent to run the briefing skill also expresses that intent; command support depends on the harness.
+
+`disable-model-invocation: true` makes the skill user-invocable-only in [Muse](https://meta-models.github.io/muse-code-sdk/next/guides/extend/skills/) and prevents automatic invocation in [Claude Code](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill). Codex uses `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. Other harnesses receive the same boundary in the description and opening instructions, but native enforcement depends on their support.
 
 ## Dials — how the briefing is shaped
 
@@ -173,7 +179,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Anti-fabrication.** Every data point comes from a source read this invocation. No invented PR numbers, file paths, SHAs, or URLs. Stale data labelled stale beats stale data presented as fresh.
 - **Honest about gaps.** Source unreachable, declared tracker missing, no `## Project Map` section, network down — orientation-affecting gaps name themselves in the conditional `★ About this briefing` block. Setup-affecting gaps surface in `/briefing sources` if you ask for them. Never papered over.
 - **No transcripts.** The skill never reads raw conversation transcripts on disk, even at `deep`. That would undermine the working-memory discipline (`docs/` artifacts become optional if briefings can recover from transcripts), and the on-disk format is undocumented Anthropic internals.
-- **Single file.** All ~530 lines live in one `SKILL.md`. Easy to share, easy to extend, easy to grep.
+- **Packaging.** The workflow lives in `SKILL.md`; `agents/openai.yaml` carries the Codex invocation policy.
 
 ## Limitations
 
@@ -192,10 +198,10 @@ A few load-bearing rules — read these if you want to understand why the skill 
 
 ## Sharing
 
-This whole thing is one `SKILL.md` file. To share with someone:
+Share the `briefing/` directory so the Codex invocation policy travels with the skill:
 
-1. Send them the GitHub link, or paste `SKILL.md` directly.
-2. They put it at `~/.claude/skills/briefing/SKILL.md`.
+1. Send them the GitHub link, or send the skill directory.
+2. They put the directory at `~/.claude/skills/briefing/`, or their harness's skills location.
 3. Restart Claude Code.
 
 For the briefing to be richer than Always-on in a colleague's repo, they also add a `## Project Map` section to that repo's CLAUDE.md. The `templates/default-project/CLAUDE.md` in this repo includes the section as scaffolding.

@@ -1,17 +1,18 @@
 ---
 name: briefing
 description: |
-  Adaptive project orientation. Auto-discovers project state from git, GitHub,
-  the <instructions-file>'s ## Project Map section (when present), and any working-memory
-  layout it can sniff. Reshapes output based on what's in flight — leads with
-  active work if there is any, leads with what's next if not. Use whenever you
-  start a session and need to catch up: "where am I, what was I doing, what's
-  next?", "what changed while I was away?", "where did I stop?", or just
-  /briefing.
+  Use only when the user explicitly invokes /briefing, $briefing, or asks to run
+  the briefing skill. Do not invoke automatically for "what's next?", session
+  starts, resumes, or ordinary task follow-ups.
+disable-model-invocation: true
 argument-hint: "[depth] [save] [help]"
 ---
 
 # `/briefing` — Adaptive project orientation
+
+## Invocation boundary
+
+This skill is manual-only. Run it only when the user explicitly invokes `/briefing`, `$briefing`, or asks to run the briefing skill. A mention while discussing or editing the skill is not an invocation. If a reminder or automatic skill selector loads it without that request, stop before source discovery and answer the user's actual question within the active task.
 
 This skill produces a structured briefing of project state on demand. It auto-discovers what's in flight from git, GitHub, the project's `<instructions-file>` `## Project Map` section (when present), and whatever working-memory layout it can detect. The output reshapes based on what it finds — leads with active work if there is any, leads with what's next if everything is calm.
 
