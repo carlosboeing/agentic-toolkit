@@ -72,6 +72,24 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/):
 - The `required` status check must pass before merging.
 - For a user-facing change, add a line to `docs/CHANGELOG.md` in the same pull request.
 
+## Adding a new kind of component
+
+Directories that install into a harness mirror the harness's own layout under `~/.claude/`, one directory per component type, so every item has an obvious install location. Likely future types include `commands/`, `agents/` and `mcp-servers/`, and `prompts/` for material people copy rather than install.
+
+When you add the first item of a new type:
+
+1. **Create the directory only with its first real item.** Do not add empty placeholders.
+2. **Write `<type>/README.md` at the same time.** It is the catalog: a one-line description of the type, a shared install snippet, a table of items and any conventions specific to the type. Use [`skills/README.md`](skills/README.md) as the model.
+3. **Give each non-trivial item its own subdirectory** with its own `README.md`. A single file with no documentation can sit directly in the type directory, but most items earn a subdirectory once they are worth sharing.
+
+Some types need care:
+
+- **Plugins are bundles** of skills, hooks and commands. Keep `plugins/<name>/` whole, in the layout its marketplace installs, rather than splitting it across the type directories.
+- **MCP servers** can be written in any language. Put the source in `mcp-servers/<name>/`, and document in its README how to register it in each harness.
+- **A standalone skill and a plugin's skill are separate.** A skill in `skills/foo/` can later move into `plugins/bar/skills/foo/`. Do not link the two, because their install paths differ.
+
+Name files so their type is clear on their own, for example `guide-*.md` and `reference-*.md`. A file copied out of the repository should still be recognizable.
+
 ## Continuous integration
 
 Workflows in `.github/workflows/` pin every action to a full commit SHA, with the version in a comment. Keep the SHA when updating an action, and do not replace it with a tag. The `required` job collects the results of the other jobs and is the only required status check.

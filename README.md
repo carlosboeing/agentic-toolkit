@@ -2,7 +2,7 @@
 
 A portable library of skills, hooks, instructions, templates and conventions for AI coding agents. It works with Claude Code, OpenAI Codex, Google Antigravity, Kimi Code, Grok Build TUI and OpenCode.
 
-Use it if you work in more than one AI coding harness and want the same skills, rules and delivery process in each, without keeping separate copies in sync by hand.
+Use it if you work in more than one AI coding harness and want the same skills, rules and delivery process in each, without keeping separate copies in sync by hand. The repository is both installable tooling and a working example of the method behind it. It is opinionated toward one way of working, so take what fits and leave the rest.
 
 ## What it solves
 
@@ -16,11 +16,16 @@ Use it if you work in more than one AI coding harness and want the same skills, 
 
 ## How it fits together
 
-The repository is the source. `scripts/sync-toolkit.sh` copies its skills into a hub at `~/.claude/skills`, then links each harness's skill directory to that hub.
+The repository is the source. `scripts/sync-toolkit.sh` copies its skills into a hub at `~/.claude/skills`, then links each harness's skill directory to that hub. Working notes such as brainstorms and plans live in a separate private repository, so they never enter public history.
 
 ```mermaid
 flowchart TB
-    Repo["agentic-toolkit repository"] --> Sync["scripts/sync-toolkit.sh"]
+    subgraph Source["Where things are written"]
+        Repo["agentic-toolkit: skills, hooks, guides, templates"]
+        Notes["Private companion repository: brainstorms, designs, plans, reviews"]
+        Notes -. "decisions restated in public ADRs, never copied" .-> Repo
+    end
+    Repo --> Sync["scripts/sync-toolkit.sh"]
     Sync --> Hub["Skill hub: ~/.claude/skills"]
     Hub --> Claude["Claude Code reads the hub directly"]
     Hub --> Agents["~/.agents/skills link"]
@@ -32,19 +37,22 @@ flowchart TB
     Hub --> Grok["Grok Build TUI reads the hub through Claude compatibility"]
 ```
 
-Because every harness reads the same files, a skill updated in the repository reaches all of them after one sync.
+Because every harness reads the same files, a skill updated in the repository reaches all of them after one sync. You do not need the private repository to use or contribute to the toolkit. Contributors use issues, pull requests and public architecture decision records (ADRs).
 
 ## Delivery workflow
 
-The toolkit's skills and conventions follow one delivery process. Each phase ends with a review, and implementation starts only after the plan is approved.
+The toolkit's skills and conventions follow one delivery process. Each authoring phase ends with a review, and implementation starts only after the plan is approved.
 
 ```mermaid
 flowchart TB
-    Brainstorm["Brainstorm"] --> Design["Design"]
-    Design --> Plan["Implementation plan"]
-    Plan --> Build["Build in an isolated worktree"]
-    Build --> Verify["Tests and checks"]
-    Verify --> Review["Review and CI"]
+    Brainstorm["Brainstorm"] --> BrainstormGate{"Direction approved?"}
+    BrainstormGate -- "Yes" --> Design["Design"]
+    Design --> DesignGate{"Design reviewed?"}
+    DesignGate -- "Yes" --> Plan["Implementation plan"]
+    Plan --> PlanGate{"Plan approved?"}
+    PlanGate -- "Yes" --> Build["Build in an isolated worktree"]
+    Build --> Verify["Tests, privacy checks and link checks"]
+    Verify --> Review["Review and the required CI check"]
     Review --> Ship["Merge"]
 ```
 
@@ -79,7 +87,16 @@ mkdir -p "$HOME/.claude/skills/$skill_name"
 cp -R "skills/$skill_name/." "$HOME/.claude/skills/$skill_name/"
 ```
 
-Claude Code reads `~/.claude/skills`. Codex and Kimi Code read `~/.agents/skills`, and Antigravity reads `~/.gemini/config/skills`. The [skills catalog](skills/README.md) explains how to link those directories to the hub.
+For a skill that is a single `SKILL.md`, such as `learn`, you can download it without cloning:
+
+```bash
+skill_name=learn
+mkdir -p "$HOME/.claude/skills/$skill_name"
+curl -fsSL -o "$HOME/.claude/skills/$skill_name/SKILL.md" \
+  "https://raw.githubusercontent.com/carlosboeing/agentic-toolkit/main/skills/$skill_name/SKILL.md"
+```
+
+Claude Code reads `~/.claude/skills`. Codex and Kimi Code read `~/.agents/skills`, and Antigravity reads `~/.gemini/config/skills`. The [skills catalog](skills/README.md) explains how to link those directories to the hub, and each skill's README says whether it needs more than `SKILL.md`.
 
 ### Use the shared instruction file
 
@@ -90,13 +107,41 @@ mkdir -p "$HOME/.claude"
 ln -s "$PWD/instructions/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ```
 
-Back up any existing `~/.claude/CLAUDE.md` first. The [new-machine setup guide](guides/guide-new-machine-setup.md) covers the links for the other harnesses.
+Back up any existing `~/.claude/CLAUDE.md` first. The [new-machine setup guide](guides/guide-new-machine-setup.md) covers the links for the other harnesses, and is the place to start when setting up a new machine or handing the toolkit to a colleague.
 
 ### Start a new project from the template
 
 ```bash
 npx degit github:carlosboeing/agentic-toolkit/templates/default-project new-project
 ```
+
+## Repository layout
+
+Each top-level directory has its own `README.md`, which lists its contents with install and usage details.
+
+### Installs into a harness
+
+These directories mirror the harness's own layout under `~/.claude/`, so each item has an obvious install location.
+
+| Directory | Contents | Installs to |
+|---|---|---|
+| [`skills/`](skills/) | Agent skills, one directory each | `~/.claude/skills/<name>/` |
+| [`hooks/`](hooks/) | Harness hooks: scripts and their settings fragments | `~/.claude/hooks/<name>.sh` |
+| [`instructions/`](instructions/) | The global instruction file shared by every harness | `~/.claude/CLAUDE.md`, as a link |
+| [`output-styles/`](output-styles/) | Output styles. Empty for now, because Plain English ships with CopyDesk. | `~/.claude/output-styles/<name>.md` |
+| [`rules/`](rules/) | Rule files a harness can load on every session. Not installed by default. | `~/.claude/rules/` |
+| [`plugins/`](plugins/) | An installer for the Superpowers plugin across harnesses | Each harness's own plugin system |
+
+### Read, copy or install into a project
+
+| Directory | Contents |
+|---|---|
+| [`guides/`](guides/) | Step-by-step guides for setting up and working with AI coding harnesses |
+| [`reference/`](reference/) | Dated facts and repository standards |
+| [`templates/`](templates/) | Project scaffolds for private and open-source repositories, and a lean Claude Code settings file |
+| [`git-hooks/`](git-hooks/) | Git hooks that install into a target repository rather than a harness |
+| [`scripts/`](scripts/) | The synchronizer and repository checks |
+| [`docs/`](docs/) | The roadmap, the changelog and architecture decision records |
 
 ## Components
 
@@ -120,11 +165,11 @@ The [skills catalog](skills/README.md) lists each skill's commands, dependencies
 
 ### Hooks
 
-| Hook | When it runs | What it does |
+| Hook | Runs on | What it does |
 |---|---|---|
-| [Drift guard](git-hooks/drift-guard/) | Before push, after merge, or on demand | Blocks a push when tracking records are out of date, and reports branches left behind by merges |
-| [Private workbench guard](git-hooks/private-workbench-guard/) | Before commit | Refuses commits that stage private paths or a nested private repository |
-| [Mermaid validator](hooks/validate-mermaid/) | After an agent edits a Markdown file | Parses each Mermaid diagram and reports syntax errors |
+| [Drift guard](git-hooks/drift-guard/) | `pre-push`, `post-merge`, and the `housekeep` command | Blocks a push when tracking records are out of date, and reports branches left behind by merges |
+| [Private workbench guard](git-hooks/private-workbench-guard/) | `pre-commit` | Refuses commits that stage private paths, private vocabulary or a nested private repository |
+| [Mermaid validator](hooks/validate-mermaid/) | Claude Code `PostToolUse`, an OpenCode plugin, or by hand | Parses each Mermaid diagram in an edited file and reports syntax errors to the agent |
 
 ### Guides and references
 
@@ -138,17 +183,14 @@ The [skills catalog](skills/README.md) lists each skill's commands, dependencies
 
 See [`guides/`](guides/) and [`reference/`](reference/) for the full lists.
 
-### Other directories
+## Sharing individual files
 
-| Directory | Contents |
-|---|---|
-| [`templates/`](templates/) | Project scaffolds for private and open-source repositories, and a lean Claude Code settings file |
-| [`instructions/`](instructions/) | The global instruction file shared by every harness |
-| [`plugins/`](plugins/) | An installer for the Superpowers plugin across harnesses |
-| [`rules/`](rules/) | Rule files that a harness can load on every session |
-| [`docs/adrs/`](docs/adrs/) | Architecture decision records |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | What is planned and what has shipped |
-| [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Release history |
+Most files are written to stand on their own:
+
+- A single-file skill's `SKILL.md` is the whole skill. Copy it into a skills directory and it works.
+- Guides and references are self-contained Markdown. Send them, paste them into another project, or link to them on GitHub.
+
+Filenames carry their type, such as `guide-*.md` and `reference-*.md`, so a file still makes sense when it travels on its own. If a file only works inside this repository, please open an issue.
 
 ## Limitations
 
@@ -160,10 +202,10 @@ See [`guides/`](guides/) and [`reference/`](reference/) for the full lists.
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. It covers the local checks, the commit message format and the required CI check.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. It covers the local checks, the commit message format, the required CI check, the documentation standard, and how to add a new kind of component.
 
 Report security issues privately through [GitHub Security Advisories](https://github.com/carlosboeing/agentic-toolkit/security/advisories/new). The project follows the [Contributor Covenant](CODE_OF_CONDUCT.md), and [SUPPORT.md](SUPPORT.md) explains where to ask for help.
 
 ## License
 
-The code and documentation are under the [MIT License](LICENSE). [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) lists material from other projects and its licenses.
+The code and documentation are under the [MIT License](LICENSE). You are free to use, fork and adapt them. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) lists material from other projects and its licenses, which copies must keep.
