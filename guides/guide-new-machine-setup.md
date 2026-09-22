@@ -1,53 +1,70 @@
-# Guide: restore your agentic coding setup on a new machine
+---
+title: New machine setup
+type: guide
+scope: [setup, harness-parity, skills, instructions, opencode]
+last_reviewed: 2026-09-22
+authors:
+  - "Carlos Boeing"
+  - "claude-opus-5 (claude-code)"
+related:
+  - guide-rtk-setup.md
+  - guide-claude-mem-setup.md
+  - guide-harness-plugin-parity.md
+---
 
-Stand up your agentic coding environment on a fresh machine (or hand the recipe to a colleague) by cloning the toolkit and running the synchronization tool. Assumes macOS/Linux with `git` and SSH access to your GitHub repos.
+# New machine setup
 
-## The pieces
+How to set up the toolkit on a new macOS or Linux machine: the shared instructions, the skill hub, hooks, plugins and the OpenCode configuration. You need `git`, and SSH access to GitHub if you clone over SSH.
 
-| Piece | Lives in | Restored by |
+## What gets set up
+
+| Piece | Source | Set up in |
 |---|---|---|
-| Global brief (`instructions/CLAUDE.md`) | `agentic-toolkit` repo → `~/.claude/CLAUDE.md` | symlink (step 3) |
-| Local config (`settings.json` — secrets + model/effort) | **not** in git (machine-local) | recreate by hand (step 3) |
-| Standalone skills & hooks | `agentic-toolkit` repo → all harness dirs | `./scripts/sync-toolkit.sh` (step 4) |
-| Tool integrations (rtk, claude-mem) | external installs | the setup guides (step 5) |
-| Plugins (Superpowers) | plugin marketplaces / installers | `plugins/install-superpowers.sh` (step 6) |
-| OpenCode config | `~/.config/opencode/` — not a git repository | step 7 |
+| Global instructions | `instructions/CLAUDE.md` in this repository, linked to `~/.claude/CLAUDE.md` | Step 3 |
+| Local settings, such as `settings.json` | Not in Git, because they are specific to the machine | Step 3 |
+| Skills and hooks | This repository, copied into each harness by `scripts/sync-toolkit.sh` | Step 4 |
+| RTK and claude-mem | Installed separately | Step 5 |
+| Superpowers | Plugin marketplaces, driven by `plugins/install-superpowers.sh` | Step 6 |
+| OpenCode configuration | `~/.config/opencode/` | Step 7 |
 
 ```mermaid
-flowchart TD
-    A["clone agentic-toolkit"] --> B["symlink instructions/CLAUDE.md to ~/.claude/CLAUDE.md"]
-    B --> C["run sync-toolkit.sh --dry-run, then live"]
-    C --> D["set up rtk / claude-mem"]
-    D --> E["Harnesses ready"]
+flowchart TB
+    Clone["1-2. Clone the toolkit"] --> Instructions["3. Link the global instructions"]
+    Instructions --> Sync["4. Preview, then run sync-toolkit.sh"]
+    Sync --> Tools["5. Install RTK and claude-mem"]
+    Tools --> Plugins["6. Install Superpowers and other tools"]
+    Plugins --> OpenCode["7. Configure OpenCode"]
+    OpenCode --> Verify["Verify"]
 ```
 
-## Steps
+## 1. GitHub access
 
-### 1. GitHub access
-
-Ensure your SSH key is on the new machine and authorized (`ssh -T git@github.com` succeeds).
-
-### 2. Clone agentic-toolkit
+If you clone over SSH, check that your key works:
 
 ```bash
-git clone git@github.com:carlosboeing/agentic-toolkit.git ~/Projects/agentic-toolkit
+ssh -T git@github.com
+```
+
+## 2. Clone the toolkit
+
+```bash
+git clone https://github.com/carlosboeing/agentic-toolkit.git ~/Projects/agentic-toolkit
 cd ~/Projects/agentic-toolkit
 ```
 
-The scripts and paths are portable — they work from wherever you clone this repository.
+Any location works. The scripts find their files relative to the clone.
 
-### 3. Wire global instructions
+## 3. Link the global instructions
 
-The global instruction brief lives at `instructions/CLAUDE.md`. Link it to your user-level Claude directory (creating `~/.claude` if needed):
+Link the shared instruction file to Claude Code's user directory, backing up any existing file first:
 
 ```bash
 mkdir -p ~/.claude
-# Back up any pre-existing CLAUDE.md if present:
 [ -f ~/.claude/CLAUDE.md ] && mv ~/.claude/CLAUDE.md ~/.claude/CLAUDE.md.bak
-ln -sfn ~/Projects/agentic-toolkit/instructions/CLAUDE.md ~/.claude/CLAUDE.md
+ln -sfn "$PWD/instructions/CLAUDE.md" ~/.claude/CLAUDE.md
 ```
 
-Create the instruction links for the harnesses you use. Inspect existing files first and keep backups; `ln -s` below refuses to overwrite them.
+Then link it for the other harnesses you use. Check for existing files first. `ln -s` will not overwrite them.
 
 ```bash
 mkdir -p ~/.agents ~/.codex ~/.gemini ~/.config/opencode
@@ -57,83 +74,84 @@ ln -s ~/.claude/CLAUDE.md ~/.gemini/GEMINI.md
 ln -s ~/.claude/CLAUDE.md ~/.config/opencode/AGENTS.md
 ```
 
-These parent directories also allow the synchronizer to create the shared skill spokes. Synchronization does not create instruction links itself.
+Creating these directories also lets the synchronizer link each harness's skill directory in step 4. The synchronizer does not create the instruction links itself.
 
-Note: `carlosboeing/claude-config` was retired on 2026-09-08; global instructions now live directly in `agentic-toolkit/instructions/CLAUDE.md`.
+`~/.claude/settings.json` is not in Git, because it holds machine-specific preferences, model and effort choices, and hook environment variables. Restore it from your own backup, and never commit it. Then set the model and effort with `/model` and `/effort`.
 
-**`settings.json` is machine-local** — it is not tracked in git because it holds local preferences, model/effort levels, and any local hook environment variables. Recreate it on the new machine by copying it from your secure backup (never commit it), then adjust model and effort with `/model` and `/effort`.
+## 4. Sync skills and hooks
 
-### 4. Sync skills, hooks, and plugins across harnesses
+[`scripts/sync-toolkit.sh`](../scripts/sync-toolkit.sh) copies the skills into `~/.claude/skills`, links `~/.agents/skills` and `~/.gemini/config/skills` to it, writes OpenCode command wrappers, and copies the Mermaid validation hook.
 
-The toolkit provides [`scripts/sync-toolkit.sh`](../scripts/sync-toolkit.sh) to copy authored skills and hooks into all detected harness directories (`~/.claude/skills/`, `~/.agents/skills/`, `~/.gemini/config/skills/`, OpenCode command wrappers).
-
-> [!WARNING]
-> In non-interactive mode, `./scripts/sync-toolkit.sh` writes into your `$HOME` harness configuration directories and configures git hooks (drift-guard, housekeep) in sibling project repositories found beside this clone.
-
-Always run with `--dry-run` first to preview the planned changes:
+Preview first:
 
 ```bash
 ./scripts/sync-toolkit.sh --dry-run --harness
 ```
 
-Once the planned actions are verified, run the live synchronization:
+Then apply:
 
 ```bash
 ./scripts/sync-toolkit.sh --harness
 ```
 
-### 5. Tool integrations
+`--harness` only writes under your home directory. Without it, in non-interactive mode, the script also installs Git hooks into repositories it finds in your projects directory. Preview that with `--dry-run --all` before running it.
 
-Follow the per-tool guides in this directory:
+## 5. Tool integrations
 
-- [`guide-rtk-setup.md`](guide-rtk-setup.md) — RTK (shell-output token filter)
-- [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) — claude-mem (session memory)
+- [RTK setup](guide-rtk-setup.md) shortens shell output before the agent reads it.
+- [claude-mem setup](guide-claude-mem-setup.md) adds memory across sessions.
 
-Headroom is **not** installed on new machines. It was removed on 2026-08-04 — see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md).
+The Headroom compression proxy is no longer used. See [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md).
 
-### 6. Plugins and external tools
+## 6. Plugins and other harnesses
 
-- **Superpowers**: Run [`plugins/install-superpowers.sh`](../plugins/install-superpowers.sh) to report installed versions; use its `install` argument to install or upgrade the Superpowers plugin across supported harnesses.
-- **Kimi Code CLI**: Install with the official script (`curl -fsSL https://code.kimi.com/kimi-code/install.sh | bash`), then `kimi` and `/login`. It reads `~/.agents/AGENTS.md` and `~/.agents/skills/` natively, so steps 3–4 already cover instructions and authored skills.
-- **Grok Build TUI**: Reads `~/.claude/CLAUDE.md` and `~/.claude/skills` through Claude compat. Recreate `~/.grok/config.toml` compat cells, `[plugins].disabled`, and the MCP entries per [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md).
+- **Superpowers.** Run [`plugins/install-superpowers.sh`](../plugins/install-superpowers.sh) to see the installed version in each harness, and `plugins/install-superpowers.sh install` to install or upgrade it.
+- **Kimi Code.** Install it with the official script, then run `kimi` and `/login`:
 
-### 7. OpenCode
+  ```bash
+  curl -fsSL https://code.kimi.com/kimi-code/install.sh | bash
+  ```
 
-Config lives in `~/.config/opencode/`. Do not turn that directory into a git repository. Do not copy `auth.json` or `service.json`. `auth.json` is created by `opencode auth login` under `~/.local/share/opencode/`.
+  Kimi reads `~/.agents/AGENTS.md` and `~/.agents/skills` natively, so steps 3 and 4 already cover its instructions and skills.
+- **Grok Build TUI.** Grok reads `~/.claude/CLAUDE.md` and `~/.claude/skills` through its Claude compatibility setting. Set up `~/.grok/config.toml` (the compatibility settings, `[plugins].disabled` and MCP servers) as described in the [plugin parity guide](guide-harness-plugin-parity.md).
 
-1. Verify the OpenCode instruction link created in step 3 with `readlink ~/.config/opencode/AGENTS.md`.
+## 7. OpenCode
 
-2. Put `"lsp": true` in `opencode.json`. If that key is omitted, OpenCode disables every language server.
+OpenCode's configuration lives in `~/.config/opencode/`. Do not make that directory a Git repository, and do not copy `auth.json` or `service.json` between machines. `opencode auth login` creates `auth.json` under `~/.local/share/opencode/`.
 
-3. Add Superpowers as a plugin declaration:
+1. Check the instruction link from step 3:
 
-```json
-"plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
-```
+   ```bash
+   readlink ~/.config/opencode/AGENTS.md
+   ```
 
-4. Install language servers (for TypeScript, Bash, YAML):
+2. Set `"lsp": true` in `opencode.json`. Without it, OpenCode turns off every language server. See the [OpenCode LSP documentation](https://opencode.ai/docs/lsp/), checked 2026-09-22.
+3. Add Superpowers as a plugin:
 
-```bash
-npm install -g typescript-language-server typescript bash-language-server yaml-language-server
-```
+   ```json
+   "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+   ```
 
-5. Install the RTK plugin:
+4. Install language servers for TypeScript, Bash and YAML:
 
-```bash
-rtk init -g --opencode
-```
+   ```bash
+   npm install -g typescript-language-server typescript bash-language-server yaml-language-server
+   ```
 
-6. Run `./scripts/sync-toolkit.sh` (step 4). That run writes command wrappers into `command/` and copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` into `plugins/validate-mermaid.ts`.
+5. Install RTK's OpenCode plugin:
+
+   ```bash
+   rtk init -g --opencode
+   ```
+
+6. Run `./scripts/sync-toolkit.sh --harness` again if you skipped OpenCode in step 4. It writes the command wrappers into `command/` and copies the Mermaid plugin to `plugins/validate-mermaid.ts`.
 
 ## Verify
 
 ```bash
-# verify skills resolve in hub
-ls -l ~/.claude/skills
-# verify global instructions symlink
-readlink ~/.claude/CLAUDE.md
-# tools respond
-rtk --version
+ls -l ~/.claude/skills          # the skills are in the hub
+readlink ~/.claude/CLAUDE.md    # the instructions link points at this repository
+rtk --version                   # RTK is installed
 ```
 
-Start a new session and confirm skills appear through the harness's skill browser or skill tool. OpenCode's TUI may need the generated command wrappers for individual `/name` entries. See [official OpenCode LSP documentation](https://opencode.ai/docs/lsp/) for the `lsp: true` setting, checked 2026-09-22.
+Start a new session in each harness and check that the skills appear in its skill list. OpenCode's terminal interface shows individual skills in the `/` menu only through the generated command wrappers.

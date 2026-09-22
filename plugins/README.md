@@ -1,24 +1,18 @@
-# Plugins (`plugins/`)
+# Plugins
 
-Plugin bundles and the tooling that distributes them across harnesses.
-
-Unlike the per-type directories, a plugin carries its own skills, hooks and commands. Keep each bundle intact here rather than flattening it into `skills/` or `hooks/`.
-
----
+Plugin bundles and the tools that install them across harnesses. A plugin carries its own skills, hooks and commands, so keep each bundle whole here rather than splitting it into `skills/` or `hooks/`.
 
 ## Catalog
 
 | Entry | Purpose |
 |---|---|
-| [`install-superpowers.sh`](install-superpowers.sh) | Install, upgrade, and report [Superpowers](https://github.com/obra/superpowers) across every harness in the rotation |
-
----
+| [`install-superpowers.sh`](install-superpowers.sh) | Installs, upgrades and reports the version of [Superpowers](https://github.com/obra/superpowers) in every supported harness |
 
 ## `install-superpowers.sh`
 
-Superpowers is installed once per harness, and the copies drift. On 2026-08-19 six copies existed on one machine spanning three versions, and no failure had announced itself.
+Each harness installs its own copy of Superpowers, and the copies drift apart without any error. One machine ended up with six copies across three versions.
 
-Upstream is canonical. The script drives each harness's official install path, always pointing at the public repository, and reports the resolved version against the latest upstream tag. Nothing installs from a local checkout.
+The script uses each harness's official install command, always pointing at the public upstream repository, and compares each installed version with the latest upstream release. Nothing is installed from a local checkout.
 
 ```
 ./plugins/install-superpowers.sh            # report the version per harness
@@ -47,11 +41,9 @@ A harness ahead of the latest upstream tag is a different problem from one behin
 
 Two version schemes need care. Claude Code installs through `obra/superpowers-marketplace`, a separate repository that versions independently. Its cache directory is named for the marketplace version, while the package inside carries the plugin's own. Only the package number compares with an upstream tag, so that is what the report reads.
 
-### Replaces `superpowers-relink.sh`
+### Why not links to a local clone
 
-The retired script maintained symlinks from a local clone into each harness's cache, and documented in its own header that harness commands clobber them. It reported no versions, so broken installs went unnoticed until someone looked by hand.
-
-The clone it depended on was deleted on 2026-08-19. Every harness now installs from upstream releases.
+An earlier script linked a local Superpowers clone into each harness's plugin cache. Harness commands overwrote those links, and the script reported no versions, so broken installs went unnoticed. Every harness now installs from upstream releases instead.
 
 ### Two traps this script exists to avoid
 

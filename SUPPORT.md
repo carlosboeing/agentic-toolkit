@@ -1,11 +1,10 @@
 # Support
 
-Use the [issue tracker](https://github.com/carlosboeing/agentic-toolkit/issues) for usage questions, bug reports, and feature requests.
+Ask questions, report bugs and request features in the [issue tracker](https://github.com/carlosboeing/agentic-toolkit/issues).
 
 - Search existing issues before opening a new one.
-- Use the bug-report form for a reproducible problem.
-- Use the feature-request form for a proposed change.
-- Include the relevant harness (e.g. Claude Code, Codex, Antigravity, Kimi Code), operating system, and minimal reproduction steps when reporting a problem.
-- Do not include credentials, private data, or vulnerability details in a public issue. See [SECURITY.md](SECURITY.md) for private reports.
+- Use the bug report form for a problem you can reproduce, and the feature request form for a proposed change.
+- When reporting a problem, include the harness you use (for example Claude Code, Codex, Antigravity or Kimi Code), your operating system, and the smallest set of steps that reproduces it.
+- Do not post credentials, private data or details of a vulnerability in a public issue. Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
-Contribution instructions are in [CONTRIBUTING.md](CONTRIBUTING.md).
+To contribute a change, see [CONTRIBUTING.md](CONTRIBUTING.md).

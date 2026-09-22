@@ -1,5 +1,5 @@
 ---
-title: Browser automation for agents — Playwright MCP vs CLI (and chrome-devtools, WebBridge)
+title: Browser automation for agents, Playwright MCP or CLI
 type: guide
 scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, claude-code, codex, cursor, kimi-code, grok, webbridge]
 authors:
@@ -13,9 +13,9 @@ related:
   - guide-cross-harness-project-instructions.md
 ---
 
-# Browser automation for agents — Playwright MCP vs CLI
+# Browser automation for agents: Playwright MCP or CLI
 
-For **agentic** browser work — not CI/CD — there is no single winner. Keep both Playwright MCP and the Playwright CLI and **choose per job**. They are different interaction paradigms, not two implementations of the same thing.
+When an AI agent works in a browser, outside of CI, neither Playwright MCP nor the Playwright CLI is always the right choice. Keep both and choose for each job. They work in different ways, not as two versions of the same tool.
 
 > **One-line rule:** if you already know every step, write a **CLI** script. If you don't, start in **MCP** — and eject to the CLI the moment one of the [ejection triggers](#ejection-triggers--the-rule-that-actually-fires) fires.
 
@@ -72,7 +72,7 @@ Net effect: more work ends up on the CLI than a strict category rule would send 
 
 ## Per-harness defaults
 
-All five daily harnesses run Playwright MCP with `--isolated` — see [why](#run-every-harness-with---isolated). Cursor stays the parked exception. Any harness left on the default persistent profile will contend with the others.
+Run Playwright MCP with `--isolated` in every harness. See [why](#run-every-harness-with---isolated). A harness left on the default persistent profile will conflict with the others.
 
 | Harness | Exploratory / ad-hoc / aesthetics | Repeatable / goldens |
 |---|---|---|
@@ -82,7 +82,7 @@ All five daily harnesses run Playwright MCP with `--isolated` — see [why](#run
 | **Kimi Code** | Playwright MCP (`~/.kimi-code/mcp.json`) | Playwright CLI |
 | **Grok Build TUI** | Playwright MCP (`~/.grok/config.toml` → `[mcp_servers.playwright]`) | Playwright CLI |
 
-**Cursor** is not covered: it has no Playwright MCP registered and is no longer in active use. Gemini CLI likewise has none — it's being retired in favour of Antigravity CLI, and the two read different files (`~/.gemini/settings.json` vs `~/.gemini/config/mcp_config.json`). Don't confuse them.
+Cursor and Gemini CLI are not covered here. Note that Gemini CLI and the Antigravity CLI read different files, `~/.gemini/settings.json` and `~/.gemini/config/mcp_config.json`, so do not confuse them.
 
 In Claude Code there is also **superpowers-chrome** (CDP) for the narrow case of attaching to an existing, *authenticated* browser session — neither a fresh MCP nor a CLI run shares your logged-in cookies. In Antigravity, the bundled chrome-devtools-plugin remains the live-debug tool, but Playwright MCP is also required for the cross-harness parity baseline below.
 
@@ -97,8 +97,6 @@ In Claude Code there is also **superpowers-chrome** (CDP) for the narrow case of
 **The risk is the point.** WebBridge acts inside your real, authenticated profile: an agent can submit, purchase, or delete, not just read. Prefer it over a sandboxed tool only when the login state is exactly what you need, and supervise destructive-looking steps.
 
 **Tool surface** (curl-JSON against the daemon, documented in the installed `kimi-webbridge` skill): navigate, accessibility-tree snapshot, click, fill (incl. contenteditable), `evaluate` (arbitrary JS), raw CDP passthrough, screenshot-to-file, network capture, file upload, save-as-PDF, tab/session management.
-
-**Installed state (2026-07-28):** daemon v1.11.3 running with the extension connected; the vendor installer wrote byte-identical skill copies into the Kimi, Claude Code, and Codex skill dirs (plus OpenClaw); Antigravity is covered by a symlink at `~/.gemini/config/skills/kimi-webbridge`. Verified: extension connect, navigate → snapshot → close loop. Not yet verified: a real authenticated flow and screenshot fidelity for vision review — treat those as open smoke items before relying on it for either.
 
 ## Cross-harness Playwright baseline
 
@@ -192,7 +190,7 @@ The one case where a lock genuinely blocks: the **hostname changed** since the l
 1. MCP: open `https://example.com`, obtain the page title or heading, and capture a screenshot to a disposable local path.
 2. CLI: run `npx playwright screenshot https://example.com <disposable-path>/example.png`; verify the PNG is non-empty.
 3. Record harness, command/interface, date, browser result, and any failure. Delete disposable artifacts after recording the result.
-4. A config listing alone is not a pass. A public-page pass does not authorize bypassing a gated quote.
+4. A server appearing in the configuration list is not a pass. Only a completed browser action counts.
 
 ## Token cost — the honest version
 

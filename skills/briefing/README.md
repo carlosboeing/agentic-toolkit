@@ -1,18 +1,16 @@
-# `/briefing` — Adaptive project orientation skill for Claude Code
+# briefing
 
-A [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that produces a structured briefing of project state on demand — built for the moment you return to a project after a session, a day, a week, or a vacation, and want to know **where you are, what you were doing, and what to pick up** without re-reading every file.
+An [agent skill](https://code.claude.com/docs/en/skills) that tells you where a project stands. Run it when you come back to a project after a break and want to know **where you are, what you were doing and what to pick up next**, without rereading every file.
 
-It auto-discovers what's in flight from git, GitHub, your project's CLAUDE.md `## Project Map` section (when present), and whatever working-memory layout it can detect. The output reshapes by what it finds — leads with active work if there is any, leads with what's next if everything is calm.
+It finds what is in progress from Git, GitHub, the `## Project Map` section of the project's `CLAUDE.md` if there is one, and any tracking files it can detect. The output adapts to what it finds: it leads with active work if there is any, and with what comes next if nothing is in progress.
 
-The skill is **convention-aware but not convention-coupled**. It works generically in any repo and lights up with richer behaviour when a project follows the [canonical conventions in this repo](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md). Default-mode output stays focused on orientation; if you want to know what the skill probes and what it found in your project, run `/briefing sources` for a separate self-documentation view.
+It works in any repository, and gives richer results when a project follows the [project structure conventions](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md). To see what the skill looked for and what it found, run `/briefing sources`.
 
-Designed for engineers using Claude Code who want substantive orientation, not the one-line summary the built-in `/recap` produces.
-
----
+It is meant as a fuller orientation than the one-line summary from Claude Code's built-in `/recap`.
 
 ## What it does
 
-Type `/briefing` in any Claude Code session and you get a structured briefing whose shape adapts to project state:
+Run `/briefing` to get a briefing whose sections depend on the project's state:
 
 | Section | When it appears |
 |---|---|
@@ -51,9 +49,18 @@ Four knobs you can mix and match. Order doesn't matter.
 
 The depth default is genuinely adaptive — when no depth keyword is provided, the output's length is content-driven (sections appear or disappear based on what the project state contains). `quick`/`standard`/`deep` are explicit overrides for fixed-length tiers; "no dial" is its own behaviour, not a synonym for `standard`. (`/learn`'s depth dial defaults to `standard`; `/briefing`'s defaults to adaptive — same canonical keyword vocabulary, different defaults that fit each skill's job.)
 
-## Layered source model
+## Where the information comes from
 
-The skill reads from four layers — each with a clear failure mode. **Always-on** mechanics run everywhere; **Declared** and **Default paths** are conditional on the project's setup; **Fallbacks** catches every gap.
+The skill reads from four layers. **Always-on** sources work in every project. **Declared** and **Default paths** depend on how the project is set up. **Fallbacks** cover anything that fails.
+
+```mermaid
+flowchart TB
+    Always["Always-on: Git, GitHub, README, CLAUDE.md"] --> Brief["Briefing"]
+    Declared["Declared: ## Project Map in CLAUDE.md"] --> Brief
+    Defaults["Default paths: docs/ROADMAP.md, lifecycle folders, frontmatter"] --> Brief
+    Declared -. "overrides" .-> Defaults
+    Fallbacks["Fallbacks: name each missing or failed source"] --> Brief
+```
 
 ### Always-on — universal mechanics
 
@@ -99,10 +106,7 @@ Standing instructions for every failure mode (no git repo, no remote, `gh` missi
 
 ## Install
 
-See the [skills catalog README](../README.md#install-one-skill) for the full options and platform notes. In short:
-
-- **Consume just this skill** — copy the entire `briefing/` directory, including `agents/openai.yaml`, into your harness's skills directory.
-- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to copy authored skill directories into the hub and repair whole-directory spokes. Re-run it after source edits.
+See [Install one skill](../README.md#install-one-skill) in the skills catalog, or run `scripts/sync-toolkit.sh --harness` to sync every skill. Copy the whole `briefing/` directory, including `agents/openai.yaml`, which holds the Codex invocation policy.
 
 ## Usage examples
 
@@ -185,7 +189,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 
 - **Single project only.** No cross-project briefings. If you have a portfolio question ("what's in flight across all five repos I'm working on?"), open each one in turn or build a wrapper.
 - **No computed metrics.** The skill cites raw counts from existing tooling — number of PRs, number of unpushed commits, ROADMAP item counts. It does not aggregate token costs, estimate effort, predict ship dates, or otherwise produce numbers that aren't already in a tool somewhere.
-- **No transcript reading.** As above — by design, not by oversight. The principled equivalent is a Stop hook with an explicit snapshot schema (Approach C in the design doc), deferred for a future version.
+- **No transcript reading.** As above — by design, not by oversight. A future version may add a `Stop` hook that saves an explicit end-of-session snapshot instead.
 - **Tracker integrations are best-effort.** The skill knows the CLI/MCP path for `GitHub Issues`, `GitHub Project N`, `Linear`, `Jira`, `Notion`, file paths, and URLs. If a declared tracker has no CLI installed and no MCP configured, the briefing names the gap and continues — it doesn't try to scrape.
 - **No `quick`/`standard`/`deep` learning.** The dial doesn't remember what you've asked for; every invocation is from-scratch.
 
@@ -206,19 +210,15 @@ Share the `briefing/` directory so the Codex invocation policy travels with the 
 
 For the briefing to be richer than Always-on in a colleague's repo, they also add a `## Project Map` section to that repo's CLAUDE.md. The `templates/default-project/CLAUDE.md` in this repo includes the section as scaffolding.
 
-That's it. No package install, no plugin marketplace, no auth setup beyond the optional `gh` CLI.
+No package, marketplace or sign-in is needed, apart from the optional `gh` CLI.
 
 ## See also
 
 - **[`SKILL.md`](SKILL.md)** — the skill itself, drop-in to `~/.claude/skills/briefing/`.
-- **Decision-brief format design (2026-08-11)** — decision-brief output restructure (four sections, the funnel rule, collapse-with-counts inventory).
-- **Footer redesign (2026-05-03)** — footer redesign (conditional `★ About this briefing` block + `/briefing sources` mode).
-- **Shareability design (2026-05-03)** — prior 4-layer architecture. Background for the layered source model.
-- **Initial skill design (2026-05-02)** — original 3-layer model.
 - **[`guide-project-structure-and-conventions.md` §5.8](../../guides/guide-project-structure-and-conventions.md#58--project-map-section-in-claudemd)** — the canonical `## Project Map` schema this skill consumes.
 - **[`templates/default-project/CLAUDE.md`](../../templates/default-project/CLAUDE.md)** — generic CLAUDE.md scaffold that ships with the section pre-populated.
 - **[`/learn`](../learn/)** — sibling skill in this repo. Same single-file shape, same closed-keyword parser pattern, same canonical depth vocabulary (`quick`/`standard`/`deep`) — different default behaviour and different problem domain (lessons, not orientation).
 
 ## License
 
-MIT — share freely, modify freely.
+MIT, like the rest of the repository.

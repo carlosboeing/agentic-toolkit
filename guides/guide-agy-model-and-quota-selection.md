@@ -14,62 +14,71 @@ related:
 
 # Antigravity model and quota selection
 
-Model choices below record the 2026-08-02 comparison. On 2026-09-22, [Google's model list](https://antigravity.google/docs/models) includes Gemini 3.8 Flash and 3.7 Flash as well as 3.6 Flash. The table is not the complete current picker. Verify availability and quota in your account before applying the historical routing examples.
+How to choose a model and effort level inside Google Antigravity (`agy`), and how to manage its quota. For choosing between harnesses, start with the [AI model and effort routing guide](guide-ai-model-and-effort-routing.md). This guide covers only what is specific to Antigravity.
 
-This is the Antigravity operating supplement. Use the [AI model and effort routing guide](guide-ai-model-and-effort-routing.md) to choose a model for a task, and the vendors' own pages for current benchmarks and prices.
+The model list below was recorded on 2026-08-02. On 2026-09-22, [Google's model list](https://antigravity.google/docs/models) also included Gemini 3.8 Flash and 3.7 Flash, so treat the table as an example and check the picker in your own account.
 
-## Recorded picker
+## Models recorded in the picker
 
-The August comparison used these models and effort choices. Check the live picker before a long session because availability can change. [Antigravity models](https://antigravity.google/docs/models)
-
-| Model | Effort | Use inside Antigravity |
+| Model | Effort levels | Good for |
 |---|---|---|
-| Gemini 3.6 Flash | low, medium, high | Fast research, docs, browser work, visual iteration, and light coding |
-| Gemini 3.5 Flash | low, medium, high | Compatibility or availability fallback |
-| Gemini 3.1 Pro | low, high | Harder reasoning, long-context synthesis, and consequential visual judgment |
-| Claude Sonnet 4.6 Thinking | Thinking | Implementation and review when the Claude/GPT pool has headroom |
-| Claude Opus 4.6 Thinking | Thinking | Difficult architecture or repair loops inside Agy |
-| GPT-OSS 120B | medium | Bounded open-weight work and behavioral comparison |
+| Gemini 3.6 Flash | low, medium, high | Fast research, documentation, browser work, visual iteration and light coding |
+| Gemini 3.5 Flash | low, medium, high | A fallback when 3.6 Flash is unavailable |
+| Gemini 3.1 Pro | low, high | Harder reasoning, long-context synthesis and visual judgments that matter |
+| Claude Sonnet 4.6 Thinking | Thinking | Implementation and review, when that model pool has capacity |
+| Claude Opus 4.6 Thinking | Thinking | Difficult architecture or repair work inside Antigravity |
+| GPT-OSS 120B | medium | Bounded open-weight work and comparing model behavior |
 
-Antigravity's effort labels are not equivalent to Claude Code, Codex, or Kimi effort. Pick the lowest level that fits the task: low for extraction, medium for routine work, high/Thinking for ambiguity and multi-step reasoning.
+Antigravity's effort levels do not map directly to those in Claude Code, Codex or Kimi Code. Choose the lowest level that fits: low for extraction, medium for routine work, and high or Thinking for ambiguous, multi-step reasoning.
 
-## Quota behavior
+## Choosing a model
 
-Google AI Pro receives higher Antigravity quota, refreshed every five hours until the weekly quota is reached. Google does not publish a stable absolute turn count; model, workload, capacity, and account state affect consumption. AI credits may provide overage where the account supports them. [Antigravity plans](https://antigravity.google/docs/plans)
+```mermaid
+flowchart TB
+    Start["Check quota before a long run"] --> Flash["Gemini Flash, medium effort"]
+    Flash --> Weak{"Result weak?"}
+    Weak -- "No" --> Done["Continue"]
+    Weak -- "Yes" --> Scope["Tighten the scope and evidence"]
+    Scope --> High["Raise Flash to high"]
+    High --> Harder{"Task genuinely harder?"}
+    Harder -- "No" --> Done
+    Harder -- "Yes" --> Pro["Gemini Pro, high effort"]
+```
 
-Do not assume that Google AI Pro storage or consumer Gemini entitlements mean unlimited Antigravity agent use.
+1. Check your quota before a long or unattended run.
+2. Use Gemini Flash at medium effort for gathering information and ordinary browser work.
+3. Raise Flash to high for visual checks or moderately complex reasoning.
+4. Move to Gemini Pro at high effort when Flash misses relationships, when a visual judgment matters, or when the task is long-context synthesis.
+5. Use the Claude Sonnet Thinking model for implementation when its separate capacity inside Antigravity is more useful than running Claude Code itself.
+6. Keep the Claude Opus Thinking model for hard repair or architecture work that needs Antigravity's tools. Claude Code offers newer Claude models, so prefer it when model generation matters more than Antigravity's browser, autonomy or quota.
+7. Start a new session when you change the kind of task, when old investigation fills the context, or when a finished phase no longer helps the next one.
 
-Check capacity with:
+## Quota
 
-- `/usage` for the current session's usage view;
-- `/quota` for quota status where available;
-- the Antigravity UI's Models and Quota view.
+A Google AI Pro subscription gets a higher Antigravity quota, refreshed every five hours until the weekly limit is reached. Google does not publish a fixed number of turns. Use depends on the model, the workload, available capacity and your account. Where your account supports it, AI credits can cover usage beyond the quota. See [Antigravity plans](https://antigravity.google/docs/plans).
 
-The CLI commands are documented in [Antigravity usage commands](https://antigravity.google/docs/cli/commands/usage).
+Storage or consumer Gemini benefits on the same plan do not mean unlimited agent use.
 
-## Session workflow
+Check your capacity with:
 
-1. Check quota before a long or autonomous run.
-2. Use Gemini 3.6 Flash medium for collection and ordinary browser work.
-3. Raise Flash to high for visual QA or moderately complex reasoning.
-4. Move to Gemini 3.1 Pro high when Flash misses relationships, the visual judgment is consequential, or long-context synthesis is the task.
-5. Use Sonnet 4.6 Thinking for implementation when its independent Agy capacity is more valuable than using native Claude Code.
-6. Reserve Opus 4.6 Thinking for hard Agy-native repair or architecture. Native Claude Code exposes newer Claude models, so prefer it when model generation matters more than Agy's browser/autonomy/quota.
-7. Start a fresh session when changing task class, when obsolete investigation dominates context, or when a completed phase no longer helps the next one.
-
-## Operational fallbacks
-
-| Situation | Action |
+| Where | Command |
 |---|---|
-| Gemini five-hour capacity is tight | Move bounded collection to Codex Luna, Kimi K3-256k/K2.7, or an open-weight worker. |
-| Weekly Agy capacity is tight | Keep Agy for work that needs its browser/visual/autonomous tools; move ordinary terminal coding to Codex, Claude Code, or Kimi. |
-| Flash gives a weak result | Improve scope and evidence, then raise effort. Move to Pro only when the task is genuinely harder. |
-| Agy's Claude model is too old for the task | Use native Claude Code with Sonnet 5 or Opus 5. |
-| A long session becomes noisy | Save a compact state/evidence packet and start a fresh session instead of increasing effort. |
-| The task needs a real logged-in browser | Use Kimi WebBridge and supervise any destructive or purchasing action. |
+| Command-line tool | `/usage` for the current session, and `/quota` where available. See [Antigravity usage commands](https://antigravity.google/docs/cli/commands/usage). |
+| IDE | The Models and Quota view |
 
-## What Antigravity does not decide for you
+## When capacity runs short
 
-Antigravity does not know which of your other subscriptions has the cheapest adequate capacity. It also cannot infer business impact, privacy requirements, or whether a 1M context is actually necessary. Apply the cross-harness routing policy before choosing from this picker.
+| Situation | What to do |
+|---|---|
+| The five-hour Gemini quota is nearly used | Move bounded information gathering to another harness's fast model, or to an open-weight model |
+| The weekly quota is nearly used | Keep Antigravity for work that needs its browser, visual or autonomous tools. Do ordinary terminal coding in another harness. |
+| Flash gives a weak result | Improve the scope and evidence first, then raise the effort. Move to Pro only if the task really is harder. |
+| Antigravity's Claude model is older than the task needs | Use Claude Code directly with a current Claude model |
+| A long session gets noisy | Save a short summary of the state and evidence, and start a new session rather than raising effort |
+| The task needs a browser that is logged in to your accounts | Use a browser tool that drives your own browser, and supervise any destructive action or purchase |
 
-Do not keep a duplicated cross-provider ranking here. Cross-provider comparisons belong in the routing guide. Change this supplement only when Antigravity's picker or quota/session behavior changes.
+## What Antigravity cannot decide for you
+
+Antigravity does not know which of your other subscriptions has spare capacity. It cannot judge business impact or privacy requirements, or whether a task really needs a 1M-token context. Apply the [routing guide](guide-ai-model-and-effort-routing.md) before choosing from this picker.
+
+Cross-provider comparisons belong in the routing guide. Update this guide only when Antigravity's picker, quota or session behavior changes.

@@ -1,65 +1,51 @@
-# Instructions (`instructions/`)
+# Instructions
 
-The canonical global agent instruction file, and the regression test that guards it. Moved here on 2026-09-08 from `carlosboeing/claude-config`, which this directory retires.
+This directory holds [`CLAUDE.md`](CLAUDE.md), one global instruction file that every supported harness reads. Keeping a single file means a rule changed once takes effect in every harness.
 
-| File | What it is |
-|---|---|
-| [`CLAUDE.md`](CLAUDE.md) | The instruction file every harness reads. `~/.claude/CLAUDE.md` is a symlink to it. |
-| [`STABILITY.md`](STABILITY.md) | Observable success criteria, change discipline and a symptom log for the setup. The falsifiable test for any edit to `CLAUDE.md`. |
+## How each harness reads it
 
----
+There is one real file. Every harness reaches it through a symbolic link, so there are no copies to fall out of date.
 
-## How it reaches each harness
-
-One real file, six readers, no copies.
-
-```
-agentic-toolkit/instructions/CLAUDE.md
-  <- ~/.claude/CLAUDE.md                 (symlink)
-       <- ~/.agents/AGENTS.md            (symlink, Kimi Code)
-       <- ~/.codex/AGENTS.md             (symlink)
-       <- ~/.gemini/GEMINI.md            (symlink, Antigravity)
-       <- ~/.config/opencode/AGENTS.md   (symlink)
-       <- Grok Build, through compat.claude.agents in ~/.grok/config.toml
+```mermaid
+flowchart RL
+    Claude["~/.claude/CLAUDE.md"] --> Source["instructions/CLAUDE.md"]
+    Agents["~/.agents/AGENTS.md, Kimi Code"] --> Claude
+    Codex["~/.codex/AGENTS.md"] --> Claude
+    Gemini["~/.gemini/GEMINI.md, Antigravity"] --> Claude
+    OpenCode["~/.config/opencode/AGENTS.md"] --> Claude
+    Grok["Grok Build TUI, through its Claude compatibility setting"] --> Claude
 ```
 
-A symlink chain was chosen over a generated file. Per-harness generation was evaluated and declined on 2026-09-07: it would save about 727 words per Claude Code session, and it would add the first artifact in this setup that can drift. A symlink cannot drift.
+Links were chosen over generating one file per harness. Generated files could be trimmed for each harness, but they are one more thing that can drift. A link cannot.
 
-The cost of that choice is recorded, not hidden. Claude Code receives the CopyDesk writing rules twice, once here and once in `~/.claude/output-styles/copydesk.md`. `copydesk doctor` reports it without being asked.
+Create the first link from a local clone:
 
----
+```bash
+mkdir -p "$HOME/.claude"
+ln -s "$PWD/instructions/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+```
 
-## Rules for editing `CLAUDE.md`
+The [new-machine setup guide](../guides/guide-new-machine-setup.md) covers the other harness links.
 
-- A change applies to every harness. Scope it to one only when the instruction is harness-specific, and label that section.
-- Prefer harness-neutral wording.
-- Do not add per-harness installer boilerplate.
-- Antigravity stops reading at 24,023 characters. Measure before you commit a large addition: `wc -c instructions/CLAUDE.md`. It measured 16,275 on 2026-09-07.
-- Ask the Anthropic question of every line: would removing this cause a mistake? If not, cut it.
-
----
-
-## Rules for editing `STABILITY.md`
-
-Append to the symptom log. Never rewrite an entry, because the log is the baseline a later regression is measured against.
-
-Each entry names three things: the behaviour observed, the issue identified with a file or rule reference, and the action taken with a commit reference.
-
----
-
-## What CopyDesk writes here
-
-`copydesk setup` splices its block between `<!-- copydesk:start -->` and `<!-- copydesk:end -->` in `CLAUDE.md`. It resolves symlinks first (`wizard.py:458`), so it writes into this file rather than into `~/.claude/`.
-
-Do not hand-edit that region. Run `copydesk setup --repair` instead.
-
----
-
-## Verify the chain
+## Check the links
 
 ```bash
 ls -l ~/.claude/CLAUDE.md ~/.agents/AGENTS.md ~/.codex/AGENTS.md \
       ~/.gemini/GEMINI.md ~/.config/opencode/AGENTS.md
 ```
 
-Every path must resolve to `instructions/CLAUDE.md` in this repository. A broken link means a harness runs with no instructions and says nothing about it.
+Each path must resolve to `instructions/CLAUDE.md`. A broken link leaves a harness running with no instructions, and the harness does not warn you.
+
+## Editing `CLAUDE.md`
+
+- **A change applies to every harness.** Limit a rule to one harness only when it is specific to that harness, and label the section.
+- **Use wording that is not specific to one harness.**
+- **Leave out installer steps for individual harnesses.**
+- **Watch the size.** Antigravity stops reading at 24,023 characters. Check with `wc -c instructions/CLAUDE.md` before committing a large addition.
+- **Keep only lines that prevent mistakes.** For every line, ask whether removing it would cause the agent to make a mistake. If not, remove it.
+
+## CopyDesk's block
+
+If you use [CopyDesk](https://github.com/carlosboeing/copydesk), `copydesk setup` writes its rules between `<!-- copydesk:start -->` and `<!-- copydesk:end -->` in this file. It follows the link, so it writes here rather than into `~/.claude/`. Do not edit that block by hand. Run `copydesk setup --repair` instead.
+
+On Claude Code, CopyDesk's rules then arrive twice, once from this file and once from its output style. `copydesk doctor` reports this.

@@ -1,5 +1,5 @@
 ---
-title: RTK Token Killer Setup Guide
+title: RTK setup across harnesses
 type: guide
 scope: [harness-parity, rtk, token-savings, CLI-proxy, hooks, kimi-code, grok]
 authors:
@@ -7,121 +7,121 @@ authors:
   - "k3 (kimi-code)"
   - "grok-4.6 (grok)"
   - "gemini-3.7-flash (agy)"
-last_reviewed: 2026-08-17
+last_reviewed: 2026-09-22
 related:
   - guide-harness-plugin-parity.md
   - guide-claude-mem-setup.md
 ---
 
-# RTK Token Killer Setup Guide
+# RTK setup across harnesses
 
-This guide documents the unified configuration and hook integrations of **RTK (Rust Token Killer)** across seven AI coding harnesses: Claude Code, Antigravity (`agy`), Cursor, Codex, OpenCode, Kimi Code, and Grok Build TUI.
+[RTK](https://github.com/rtk-ai/rtk) is a command-line proxy that shortens the output of common shell commands, such as `git status`, test runners and linters, before an AI agent reads it. Upstream describes it as cutting "up to 90% of the bash output your agent reads", and notes that this is not the same as cutting your bill by 90% (checked 2026-09-22).
 
----
+This guide shows how to connect RTK to each supported harness.
 
-## Architecture Overview
+## Two ways to connect it
 
-`rtk` is a high-performance CLI proxy written in Rust that intercepts common shell command outputs (like `git status`, `npm run build`, `eslint`, etc.) and compresses them to save 60–90%+ context tokens before the AI agent sees them.
+| Mode | How it works | Harnesses |
+|---|---|---|
+| Automatic rewrite | A hook or plugin rewrites each shell command, for example `git status` to `rtk git status`, before it runs. The agent needs no instructions. | Claude Code, Cursor, OpenCode |
+| Instruction prefix | The agent's instructions tell it to put `rtk` in front of shell commands itself | Codex, Antigravity, Kimi Code, Grok Build TUI |
 
-*   **Binary Location**: `/opt/homebrew/bin/rtk` (managed via `brew install rtk` / `brew upgrade rtk`)
-*   **Startup Overhead**: <10ms
-*   **Configuration**: Statically compiled with intelligent rewrite rules. Output compression can be monitored via local telemetry checks.
+```mermaid
+flowchart LR
+    Agent["Agent runs git status"] --> Hook{"Harness can rewrite the command?"}
+    Hook -- "Yes" --> Rewrite["Hook runs rtk git status"]
+    Hook -- "No" --> Prefix["Instructions tell the agent to type rtk git status"]
+    Rewrite --> Short["Agent reads shortened output"]
+    Prefix --> Short
+```
 
----
+Automatic rewriting covers shell commands only. Claude Code's built-in `Read`, `Grep` and `Glob` tools do not go through the shell, so their output is not shortened.
 
-## Unified Integration Map
+## Install RTK
 
-RTK uses a combination of **native agent hooks** (to rewrite commands transparently before they run) and **instruction-based rules** (where transparent rewrite hooks are not yet supported).
+Use one of the upstream install methods:
 
-### 1. Claude Code (PreToolUse Hook)
-Claude Code intercepts Bash executions and passes them to the RTK rewrite engine.
-*   **Config File**: `~/.claude/settings.json`
-*   **Wiring**:
-    ```json
-    "hooks": {
-      "PreToolUse": [
+```bash
+brew install rtk
+```
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
+```
+
+```bash
+cargo install --git https://github.com/rtk-ai/rtk
+```
+
+Check the install with `rtk gain`. A different crate named `rtk` exists on crates.io. If `rtk gain` fails, you probably installed that one, so use the `cargo install --git` command above.
+
+## Connect each harness
+
+### Claude Code
+
+Run `rtk init -g`, or add the hook to `~/.claude/settings.json` yourself:
+
+```json
+"hooks": {
+  "PreToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
         {
-          "matcher": "Bash",
-          "hooks": [
-            {
-              "type": "command",
-              "command": "rtk hook claude"
-            }
-          ]
+          "type": "command",
+          "command": "rtk hook claude"
         }
       ]
     }
-    ```
+  ]
+}
+```
 
-### 2. Antigravity CLI & IDE (Instruction-based)
-Antigravity executes shell commands via the `run_command` tool. Transparent hook rewriting is pending upstream release ([rtk-ai/rtk#2093](https://github.com/rtk-ai/rtk/pull/2093)), so Antigravity operates in **instruction mode** (the same model as Codex and Kimi Code).
+### Cursor
 
-*   **Source of the instruction**: the RTK section of `~/.claude/CLAUDE.md`, which Antigravity reads through `~/.agents/AGENTS.md`. It names Antigravity, Codex, Kimi Code and Grok as the harnesses needing an explicit prefix.
-*   **Authored Rule, not installed**: [`rules/antigravity-rtk-rules.md`](../rules/antigravity-rtk-rules.md) (in `agentic-toolkit`). The `~/.claude/rules/` and `~/.agents/rules/` symlinks were removed on 2026-09-07 to keep the instruction file under Antigravity's 24,023-character limit. Re-install it from [`rules/README.md`](../rules/README.md) if the `CLAUDE.md` wording ever stops working.
-*   **Method**: System rules direct the agent to prefix shell commands explicitly with `rtk` (e.g. `rtk git status`, `rtk grep`).
-*   **Verify**: Run commands in an `agy` session, then check `rtk gain`.
+Run `rtk init -g --agent cursor`, or add the hook to `~/.cursor/hooks.json`:
 
-### 3. Cursor (beforeShellExecution Hook)
-Cursor intercepts shell executions globally using a lifecycle event hook.
-*   **Config File**: `~/.cursor/hooks.json`
-*   **Wiring**:
-    ```json
-    "beforeShellExecution": [
-      {
-        "command": "rtk hook cursor"
-      }
-    ]
-    ```
+```json
+"beforeShellExecution": [
+  {
+    "command": "rtk hook cursor"
+  }
+]
+```
 
-### 4. Codex (Instruction-based)
-This toolkit uses explicit RTK prefixes in Codex. Upstream now documents `rtk init -g --codex` with a PreToolUse rewrite hook, checked 2026-09-22; that is an optional external integration, not installed by this toolkit. Verify support in the active Codex version before relying on it.
-*   **Instruction file**: the shared brief linked to `~/.codex/AGENTS.md`. Do not assume a standalone `RTK.md` is discovered unless your configuration explicitly loads it.
-*   **Method**: System prompt instruction forcing the agent to prefix commands (e.g. `rtk git status`).
+### OpenCode
 
-### 5. OpenCode (plugin rewrite)
-Run `rtk init -g --opencode` to install RTK's OpenCode plugin. The toolkit synchronizer does not install this plugin. Verify that rewriting works before relying on it; otherwise prefix commands explicitly. See the [RTK source and installation documentation](https://github.com/rtk-ai/rtk).
+Run `rtk init -g --opencode` to install RTK's plugin, which rewrites commands before they run. The toolkit's synchronizer does not install this plugin.
 
-### 6. Kimi Code (Instruction-based)
-Kimi's hook events can allow or deny a tool call but cannot rewrite `tool_input`, so the transparent rewrite hook RTK uses on Claude Code is impossible here. RTK runs instruction-driven, the same integration class as Codex.
-*   **Setup**: `rtk init --agent kimi` (requires rtk ≥ 0.44.0)
-*   **Method**: project-scoped `AGENTS.md` instructions direct the agent to prefix commands with `rtk`. The global `~/.agents/AGENTS.md` RTK section (loaded natively by Kimi) reinforces the same "no trusted hook → explicitly prefix" rule.
-*   **Verify**: run a Kimi session, then `rtk gain` should show activity.
+### Codex
 
-### 7. Grok Build TUI (Instruction-based)
+This toolkit uses the instruction prefix for Codex. The shared instruction file, linked to `~/.codex/AGENTS.md`, tells the agent to prefix shell commands with `rtk`. Upstream also offers `rtk init -g --codex`, which installs a rewrite hook. Check that your Codex version supports it before switching.
 
-Grok can deny and rewrite on PreToolUse, but Claude hook ingest is off, and the inherited `rtk hook claude` payload does not parse Grok's camelCase (`toolInput.command`). `rtk init --agent grok` does not exist. Do not run any other `rtk init` as a stand-in.
+### Antigravity
 
-*   **Setup**: none beyond the global `~/.claude/CLAUDE.md` RTK section (Grok already loads it). Explicitly prefix shell commands with `rtk`.
-*   **Method**: instruction-driven, the same class as Codex and Kimi.
-*   **Verify**: in a Grok session run `rtk git status`, then `rtk gain` should show the record. No project `AGENTS.md` RTK boilerplate should appear.
+Antigravity uses the instruction prefix. The RTK section of the shared instruction file covers it. Upstream's `rtk init --agent antigravity` writes a project rule file at `.agents/rules/antigravity-rtk-rules.md` instead. This repository keeps an [equivalent rule](../rules/antigravity-rtk-rules.md) that is not installed by default. See the [rules README](../rules/README.md) to install it.
 
----
+### Kimi Code
 
-## Verification & Management
+Kimi Code's hooks can allow or deny a tool call but cannot change it, so automatic rewriting is not possible. Run `rtk init --agent kimi` (RTK 0.44.0 or later) to add project instructions that tell the agent to prefix commands. The RTK section of the shared instruction file, which Kimi reads from `~/.agents/AGENTS.md`, says the same.
 
-### Basic Command Checks
-To verify that the binary is in your path and working correctly:
+### Grok Build TUI
+
+Grok's own `PreToolUse` hooks could rewrite commands, but Grok does not load Claude hooks, and RTK's Claude hook cannot read Grok's camelCase payload. There is no `rtk init` option for Grok, so do not run another agent's option in its place. Grok reads the shared instruction file through its Claude compatibility setting, and that file tells it to prefix commands with `rtk`.
+
+## Check that it works
+
 ```bash
 which rtk
 rtk --version
+rtk gain              # savings so far
+rtk gain --history    # savings over time
+rtk hook check "git status"   # shows how RTK would rewrite a command
 ```
 
-### Viewing Savings
-To see token-saving stats globally:
-```bash
-rtk gain
-rtk gain --history
-```
+After a session in any harness, `rtk gain` should show new activity.
 
-### Dry-run Command Rewrites
-To inspect how the RTK engine rewrites a command:
-```bash
-rtk hook check "git status"
-```
-*(Should output the rewritten target command if supported).*
+## See also
 
----
-
-## References
-*   **Upstream Repository**: [rtk-ai/rtk](https://github.com/rtk-ai/rtk)
-*   **Harness Parity Guide**: [guide-harness-plugin-parity.md](guide-harness-plugin-parity.md)
+- [RTK repository](https://github.com/rtk-ai/rtk)
+- [Harness plugin parity guide](guide-harness-plugin-parity.md)

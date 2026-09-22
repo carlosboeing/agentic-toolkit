@@ -1,39 +1,41 @@
-# `/externalize-deliverable` — Prep internal documents for client-facing sharing
+# externalize-deliverable
 
-A drop-in skill that derives a clean, client-safe version of an internal document by stripping company-side private details (negotiation stances, pricing, competitive audits, internal flags) and writing the sendable copy to the project's client-facing directory.
+Makes a client-safe copy of an internal document. The skill removes company-side details such as negotiating positions, pricing, margins, competitor notes and internal flags, and writes the result to the project's client-facing folder. The original document is never changed.
 
----
+## How it works
 
-## What it does
+```mermaid
+flowchart TB
+    Read["Read the internal document"] --> Boundary["Find the client-facing folder from the project's instructions"]
+    Boundary --> Classify["Sort each part: strip, soften or keep"]
+    Classify --> Header["Add a client-ready header"]
+    Header --> Write["Write a new file to the client-facing folder"]
+    Write --> Review["Summarize every change for your review"]
+```
 
-When you run `/externalize-deliverable` on a file (or request a client-safe draft):
+Each part of the document gets one of three treatments:
 
-1. **Locate & Read**: Ingests the target internal document.
-2. **Project Boundary Identification**: Resolves directory structures (e.g. `docs/` vs `deliverables/`) defined in the `<instructions-file>`.
-3. **Classify (Strip / Soften / Keep)**:
-   - **Strip**: Completely removes internal-only content (equity strategies, margins, transcript links, uncommitted remarks).
-   - **Soften**: Reframes over-committal language to match real contractual progress without distorting facts.
-   - **Keep**: Retains the shared record of decisions, actions, and open contexts.
-4. **Header Generation**: Formats a professional, client-friendly heading (title, date, attendees organized by firm).
-5. **Write**: Saves the new file to the client-facing directory (e.g., `deliverables/`).
-6. **Review Gate**: Summarizes the strips, softens, and defensive decisions for human verification before sharing.
+| Treatment | Applies to | Examples |
+|---|---|---|
+| Strip | Internal-only content | Equity or pricing strategy, margins, transcript links, off-the-record remarks, internal questions |
+| Soften | Wording that promises more than was agreed | "Agreed to proceed" becomes "agreed to pursue, subject to the proposal", when that is the real state |
+| Keep | The shared record | Decisions, actions and context both sides already know |
 
-## Install
+For meeting notes and reports, the skill adds a header with the title, date, and attendees grouped by organization.
 
-See the [skills catalog README](../README.md#install-one-skill) for the full options and platform notes. In short:
-
-- **Consume just this skill** — copy (or `curl`) its `SKILL.md` into your harness's skills directory. Best for sharing a single skill.
-- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to copy authored skill directories into the hub and repair whole-directory spokes. Re-run it after source edits.
-
-## Usage examples
+## Usage
 
 ```
 /externalize-deliverable path/to/internal-notes.md
 /externalize-deliverable "meeting notes from today"
 ```
 
-## Design philosophy
+## Install
 
-- **Firewall**: Never scrub the internal source document. Always create a new derivative to prevent accidental loss of internal context.
-- **Human Verification**: The agent is a redaction helper, not a deterministic guarantee. It always halts at the review gate for the user to verify.
-- **Substance Preservation**: Focuses on removing sensitive company-side metadata while preserving the usefulness and readability of the record.
+See [Install one skill](../README.md#install-one-skill) in the skills catalog, or run `scripts/sync-toolkit.sh --harness` to sync every skill.
+
+## Design decisions
+
+- **The source stays untouched.** The skill always writes a new file, so no internal context is lost.
+- **A person checks every copy.** The skill helps with redaction but cannot guarantee it. It always stops for your review before anything is shared.
+- **Keep the record useful.** It removes sensitive details but keeps the document readable and complete for the client.

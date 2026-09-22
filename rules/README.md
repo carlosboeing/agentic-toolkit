@@ -1,48 +1,31 @@
-# Rules (`rules/`)
+# Rules
 
-Harness-specific and cross-harness rule files. A rule is a targeted instruction injected into an AI harness's system prompt, to guide tool usage or configure agent behavior without editing the base instructions file.
+A rule is a short instruction file that a harness adds to the agent's system prompt, to guide tool use without editing the main instruction file.
 
-**Nothing in this directory loads today.** The global install was removed on 2026-09-07, because every file here reached every session on six harnesses and the total pushed past Antigravity's 24,023-character instruction limit. The directory stays as the authoring source for the day a rule genuinely needs to load on every session.
+Nothing in this directory is installed by default. Every rule loaded globally reaches every session in every harness, and together they pushed the combined instructions past Antigravity's 24,023-character limit. The files stay here so a rule can be installed again if one ever needs to load on every session.
 
----
+## Catalog
 
-## Where the guidance went
+| Rule | Harnesses | What it tells the agent | Where the guidance lives now |
+|---|---|---|---|
+| [`context7.md`](context7.md) | Claude Code, Codex, Antigravity | Fetch current library documentation with the `ctx7` CLI | The `find-docs` and `context7-mcp` skills, which load their procedure only when a library question comes up |
+| [`antigravity-rtk-rules.md`](antigravity-rtk-rules.md) | Antigravity | Prefix shell commands with `rtk`, for example `rtk git status`, to reduce output tokens | The RTK section of the global instruction file |
 
-| Rule file | Where it reaches an agent now |
+## Where each harness looks for rules
+
+| Harness | Location |
 |---|---|
-| [`context7.md`](context7.md) | The `find-docs` and `context7-mcp` skills. Both descriptions load every session, and the procedure loads only when a library question arrives. |
-| [`antigravity-rtk-rules.md`](antigravity-rtk-rules.md) | The RTK section of `~/.claude/CLAUDE.md`, which names Antigravity, Codex, Kimi Code and Grok as the harnesses that need an explicit `rtk` prefix. |
-| This README | Nowhere. A catalog for people is not an instruction, and it was reaching every session as one. |
+| Claude Code | `~/.claude/rules/*.md` |
+| Antigravity | `~/.agents/rules/*.md` globally and `.agents/rules/*.md` per project. Each file needs YAML frontmatter with `trigger: always_on` or another trigger condition. |
+| Codex and Kimi Code | Their `AGENTS.md` instruction files. A link in `~/.agents/rules/` does not make either one load a Markdown rule. Codex's `.rules` files are a different format for command permissions. See [Codex instruction discovery](https://developers.openai.com/codex/guides/agents-md/). |
 
----
+## Installing rules globally
 
-## Topology and harness mapping
-
-Recorded for the day a rule needs the global install back.
-
-* **Claude Code**: reads rules from `~/.claude/rules/*.md`.
-* **Google Antigravity (`agy`)**: discovers rules from global `~/.agents/rules/*.md` and project `.agents/rules/*.md`. Antigravity requires YAML frontmatter, either `trigger: always_on` or a matching trigger condition.
-* **Kimi Code and Codex**: use their documented `AGENTS.md` instruction paths. A symlink into `~/.agents/rules/` alone does not establish that either harness loads its Markdown. Codex's `.rules` execution-policy files are a separate format; see [official instruction discovery](https://developers.openai.com/codex/guides/agents-md/).
-
----
-
-## Global install pattern
-
-Removed on 2026-09-07. Run this only if a new rule must load on every session, and measure `wc -c ~/.claude/CLAUDE.md` plus the rules afterwards against the 24,023-character limit.
+Do this only if a rule must load on every session. Afterwards, check that the global instruction file plus the rules stay under 24,023 characters.
 
 ```bash
-# Link rules directory into Claude Code and ~/.agents hubs
 mkdir -p ~/.claude
 ln -sfn "$(pwd)/rules" ~/.claude/rules
 mkdir -p ~/.agents
 ln -sfn ~/.claude/rules ~/.agents/rules
 ```
-
----
-
-## Catalog
-
-| Rule File | Target Harnesses | Purpose |
-|---|---|---|
-| [`antigravity-rtk-rules.md`](antigravity-rtk-rules.md) | Google Antigravity (`agy`) | Directs the Antigravity agent to prefix shell commands with `rtk` (e.g. `rtk git status`) to save tokens. Requires `trigger: always_on` frontmatter. Not installed. |
-| [`context7.md`](context7.md) | Claude Code, Codex, Antigravity | Directs agents to fetch live documentation via the `ctx7` CLI when querying libraries and frameworks. Not installed. |

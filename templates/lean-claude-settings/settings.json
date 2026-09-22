@@ -1,12 +1,4 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "disableClaudeAiConnectors": true,
-  "enabledPlugins": {
-    "financial-analysis@claude-for-financial-services": false,
-    "pitch-agent@claude-for-financial-services": false,
-    "gl-reconciler@claude-for-financial-services": false,
-    "market-researcher@claude-for-financial-services": false,
-    "investment-banking@claude-for-financial-services": false,
-    "equity-research@claude-for-financial-services": false
-  }
+  "disableClaudeAiConnectors": true
 }

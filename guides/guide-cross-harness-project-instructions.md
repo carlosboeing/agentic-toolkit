@@ -16,17 +16,17 @@ related:
 
 # Cross-harness project instructions
 
-One canonical project brief, readable by every agentic harness you use.
+How to keep one project brief that every AI coding harness reads. Each harness looks for a different file name, so the brief lives in `CLAUDE.md` and the other names are links to it.
 
-## Pattern
+## The pattern
 
+```mermaid
+flowchart RL
+    Agents["AGENTS.md: Codex, Kimi Code, OpenCode, Cursor, Grok"] -- "link" --> Claude["CLAUDE.md: the file you edit"]
+    Gemini["GEMINI.md: Gemini CLI, Antigravity"] -- "link" --> Claude
 ```
-CLAUDE.md          ← canonical (edit this)
-AGENTS.md   → CLAUDE.md    (Codex, Kimi Code, OpenCode, Cursor)
-GEMINI.md   → CLAUDE.md    (Gemini CLI, Antigravity via Superpowers)
-```
 
-Create symlinks from the repo root:
+Create the links from the repository root:
 
 ```bash
 ln -sf CLAUDE.md AGENTS.md
@@ -34,50 +34,50 @@ ln -sf CLAUDE.md GEMINI.md
 git add CLAUDE.md AGENTS.md GEMINI.md
 ```
 
-Git records `AGENTS.md` and `GEMINI.md` as symlinks (`typechange` on first conversion).
+Git stores `AGENTS.md` and `GEMINI.md` as symbolic links. If they were regular files before, `git status` shows them as `typechange`.
 
-## What to put in CLAUDE.md
+## What to put in `CLAUDE.md`
 
-Keep it **harness-neutral** in the header:
+Write the brief so it applies to every harness:
 
-- What the project is, project map, conventions, commit style, working principles
-- Optional: `## Learned User Preferences` / `## Learned Workspace Facts` (Cursor continual-learning appends here via `AGENTS.md` symlink)
+- What the project is, where things live, its conventions, commit style and working rules.
+- Optionally, `## Learned User Preferences` and `## Learned Workspace Facts` sections. Cursor's continual-learning plugin appends to these through the `AGENTS.md` link.
 
-Do **not** embed Claude-only slash commands as requirements unless you guard with “Claude Code only”.
+Do not make a command that exists in only one harness, such as a Claude Code slash command, a requirement unless you mark it as specific to that harness.
 
-## User-level defaults and project precedence
+## Personal defaults belong elsewhere
 
-Put personal, cross-project defaults in the canonical user instruction target rather than the project brief. The global Penmark rule is one example: it selects the `penmark-comments` skill for explicit reviews of writable local Markdown files. Direct user and project instructions can override file mutation and route findings to chat without suppressing skill activation.
+Put preferences that apply to all your projects in your user-level instruction file, not in a project brief. For example, a global rule can tell every harness to use the `penmark-comments` skill when you ask for a review of a local Markdown file. Project instructions can still change where the findings go.
 
-Keep this kind of global rule short and harness-neutral. Put workflow mechanics, dependencies, and validation in the portable skill; see [Penmark agent integration](guide-penmark-agent-integration.md). Do not add a personal global preference to a generic project template unless the project explicitly adopts it.
+Keep such global rules short and neutral across harnesses. Put the detailed workflow, dependencies and validation in the skill itself. See [Penmark agent integration](guide-penmark-agent-integration.md). Do not copy a personal preference into a shared project template unless the project adopts it.
 
-## Harness loading behaviour
+## Which file each harness reads
 
-| Harness | File read | Notes |
-|---------|-----------|-------|
-| Claude Code | `CLAUDE.md` | Auto-loaded every session |
-| Cursor | `AGENTS.md` (+ often `CLAUDE.md`) | Workspace rules; symlink may duplicate content |
-| Antigravity CLI / IDE | `GEMINI.md` | Superpowers `contextFileName`; migration docs also mention `AGENTS.md` |
-| Codex | `AGENTS.md`, with `AGENTS.override.md` taking precedence at the same level | User instructions in `~/.codex/AGENTS.md`; project files are discovered along the path to the working directory. See [official instruction discovery](https://developers.openai.com/codex/guides/agents-md/). |
-| Kimi Code | `AGENTS.md` | Reads project `AGENTS.md` and the shared `~/.agents/AGENTS.md` natively — no symlink or adapter file needed; optional Kimi-specific layer at `~/.kimi-code/AGENTS.md` |
-| Grok Build TUI | `AGENTS.md` (project, native) plus `~/.claude/CLAUDE.md` via Claude compat `agents` | No `~/.grok/AGENTS.md`. A spoke would duplicate the file Grok already loads |
+| Harness | File | Notes |
+|---|---|---|
+| Claude Code | `CLAUDE.md` | Loaded at the start of every session |
+| Cursor | `AGENTS.md`, and often `CLAUDE.md` too | Loaded as workspace rules. With both files present, the content may load twice. |
+| Antigravity | `GEMINI.md` | Named through Superpowers' `contextFileName` setting. Antigravity's migration documentation also mentions `AGENTS.md`. |
+| Codex | `AGENTS.md`. An `AGENTS.override.md` in the same directory takes precedence. | User instructions come from `~/.codex/AGENTS.md`, and project files are found along the path to the working directory. See [Codex instruction discovery](https://developers.openai.com/codex/guides/agents-md/). |
+| Kimi Code | `AGENTS.md` | Reads the project `AGENTS.md` and the shared `~/.agents/AGENTS.md` natively. An optional Kimi-only layer can go in `~/.kimi-code/AGENTS.md`. |
+| Grok Build TUI | `AGENTS.md` in the project, plus `~/.claude/CLAUDE.md` through its Claude compatibility setting | Do not add `~/.grok/AGENTS.md`. It would duplicate a file Grok already loads. |
 
-## Continual-learning (Cursor only)
+## Cursor's continual learning
 
-Cursor’s continual-learning plugin updates **`AGENTS.md`** learned sections. With the symlink, updates land in **`CLAUDE.md`** — intentional single source of truth. No equivalent hook on Agy today; use claude-mem MCP or manual doc updates.
+Cursor's continual-learning plugin writes learned facts into `AGENTS.md`. Through the link, they land in `CLAUDE.md`, so there is still one source. Antigravity has no equivalent, so use claude-mem or update the brief by hand.
 
-## Retrofit checklist
+## Converting an existing project
 
-1. Merge any unique `AGENTS.md` bullets into `CLAUDE.md`
-2. Generalize title (“project instructions for AI agents”)
-3. Create symlinks; update README one-liner
-4. Verify: `readlink AGENTS.md` → `CLAUDE.md`
-5. Commit symlinks + merged content together
+1. Merge anything unique from an existing `AGENTS.md` into `CLAUDE.md`.
+2. Give the brief a neutral title, such as "Project instructions for AI agents".
+3. Create the links, and mention them in the README.
+4. Check the links: `readlink AGENTS.md` should print `CLAUDE.md`.
+5. Commit the links and the merged content together.
 
-## When not to symlink
+## When not to use links
 
-- **Different content per harness** (rare) — use separate files and accept drift
-- **Windows contributors** without symlink support — use copy + CI check, or document Developer Mode / `core.symlinks=true`
+- **The harnesses need different content.** This is rare. Use separate files and accept that they can drift apart.
+- **Contributors use Windows without symbolic link support.** Commit copies and add a CI check that they match, or document Windows Developer Mode and `core.symlinks=true`.
 
 ## See also
 

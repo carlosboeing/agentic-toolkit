@@ -1,68 +1,96 @@
 # validate-mermaid
 
-`PostToolUse` hook on `Write|Edit` that parse-validates every fenced ` ```mermaid ` block in a modified Markdown file. When a block fails to parse, the hook exits `2` with the parser error plus the common causes. Claude Code feeds that back to the model, so a broken diagram gets fixed in the turn it was written. A successful parse does not prove readable layout or exact compatibility with GitHub's renderer version.
+A hook that checks Mermaid diagrams as an agent writes them. After the agent edits a Markdown file, it parses every Mermaid block with the real Mermaid parser. If a block fails, the hook sends the parser error back to the agent, which fixes the diagram in the same turn.
 
-**Origin**: a sequence-diagram message containing `…regression; exit 1 + 180s timeout` shipped broken on 2026-06-12. Mermaid treats `;` as a statement separator inside message text, so the line silently split. GitHub's renderer then choked on the orphaned `+`. Conventions reduce the odds of writing that; this hook detects that syntax when validation actually runs.
+A successful parse means the diagram's syntax is valid. It does not guarantee a readable layout or identical rendering on GitHub, which may run a different Mermaid version.
+
+## Why it exists
+
+A single character can break a diagram without any visible warning while you write it. In one case, a sequence-diagram message containing `;` split into two statements, because Mermaid treats `;` as a statement separator. GitHub then failed to render the diagram. The hook catches this class of error before the file is committed.
 
 ## What it catches
 
-Any Mermaid block the real parser rejects, including the classic silent killers:
+Any block the Mermaid parser rejects, including these common mistakes:
 
-- `;` inside message/label/note text (statement separator in every diagram type)
-- Sequence-message text starting with `+`/`-` (activation markers)
-- Unquoted `()[]{}|` and other grammar characters in flowchart labels
+- A `;` inside a label, message or note
+- A sequence-diagram message that starts with `+` or `-`, which Mermaid reads as an activation marker
+- Unquoted `(`, `)`, `[`, `]`, `{`, `}` or `|` inside a flowchart label
+
+## How it works
+
+```mermaid
+flowchart TB
+    Edit["Agent writes or edits a file"] --> IsMd{"Markdown file with a Mermaid block?"}
+    IsMd -- "No" --> Pass["Exit 0 immediately"]
+    IsMd -- "Yes" --> Parse["Parse each block with mmdc"]
+    Parse --> Valid{"All blocks valid?"}
+    Valid -- "Yes" --> Pass
+    Valid -- "No" --> Report["Exit 2 with the error and line number"]
+    Report --> Fix["Agent fixes the diagram"]
+```
 
 ## Requirements
 
 - `jq`
-- [`@mermaid-js/mermaid-cli`](https://github.com/mermaid-js/mermaid-cli) (`npm install -g @mermaid-js/mermaid-cli`) — preferred; if `mmdc` is absent the script falls back to `npx -y -p @mermaid-js/mermaid-cli mmdc` (slower per call, but the hook keeps enforcing)
+- [`@mermaid-js/mermaid-cli`](https://github.com/mermaid-js/mermaid-cli), installed with `npm install -g @mermaid-js/mermaid-cli`. If `mmdc` is not installed, the script falls back to `npx`, which is slower on every call.
 
-The first `mmdc` run downloads a headless browser — run it once manually after install so the hook never pays that cost: `printf 'graph TD\n a-->b\n' > /tmp/warm.mmd && mmdc -i /tmp/warm.mmd -o /tmp/warm.svg --quiet`
+The first `mmdc` run downloads a headless browser. Run it once by hand after installing, so the hook does not pay that cost during a session:
 
-## Settings fragment
-
-Merge into `~/.claude/settings.json` (global) or `.claude/settings.json` (per-project):
-
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/hooks/validate-mermaid.sh",
-            "timeout": 90,
-            "statusMessage": "Validating Mermaid blocks"
-          }
-        ]
-      }
-    ]
-  }
-}
+```bash
+printf 'graph TD\n a-->b\n' > /tmp/warm.mmd && mmdc -i /tmp/warm.mmd -o /tmp/warm.svg --quiet
 ```
 
-## OpenCode variant
+## Set it up in Claude Code
 
-`opencode-validate-mermaid.ts` does the same job on OpenCode, and does it earlier. OpenCode has no shell hooks, so the check is a JavaScript plugin module hooking `tool.execute.before`.
+1. Copy the script to `~/.claude/hooks/validate-mermaid.sh`. `scripts/sync-toolkit.sh --harness` does this for you.
+2. Add this to `~/.claude/settings.json`, or to a project's `.claude/settings.json`:
 
-The difference is when it runs. On Claude Code the file already exists and the hook reports on it. On OpenCode the content arrives as tool arguments before the write, and throwing aborts the call, so a broken diagram never reaches the file.
+   ```json
+   {
+     "hooks": {
+       "PostToolUse": [
+         {
+           "matcher": "Write|Edit",
+           "hooks": [
+             {
+               "type": "command",
+               "command": "bash ~/.claude/hooks/validate-mermaid.sh",
+               "timeout": 90,
+               "statusMessage": "Validating Mermaid blocks"
+             }
+           ]
+         }
+       ]
+     }
+   }
+   ```
 
-`./skills/sync-skills.sh` copies this file to `~/.config/opencode/plugins/validate-mermaid.ts`. Loose files in that directory load without a config entry. Every export must be a function, which is why the module exports only the plugin. Do not copy `plugins/rtk.ts` by hand — that file comes from `rtk init -g --opencode`.
+## Run it manually
 
-| Tool | What is validated |
+Harnesses without a suitable hook event can run the validator by hand after writing a diagram:
+
+```bash
+jq -n --arg path "$PWD/docs/example.md" '{tool_input: {file_path: $path}}' | bash ~/.claude/hooks/validate-mermaid.sh
+```
+
+An exit code of `0` means no block failed to parse. It can also mean the hook skipped the file, as described under [Behavior](#behavior).
+
+## OpenCode version
+
+`opencode-validate-mermaid.ts` does the same job in OpenCode, and it runs earlier. OpenCode has no shell hooks, so the check is a plugin that runs before each `write` or `edit` tool call. Throwing an error cancels the call, so a broken diagram never reaches the file.
+
+| Tool | What the plugin validates |
 |---|---|
-| `write` | `args.content`, the full text about to be written |
-| `edit` | The file re-read from disk with `oldString` replaced by `newString`, honouring `replaceAll` |
+| `write` | The full content about to be written |
+| `edit` | The file as it will look after the edit: the current file on disk with `oldString` replaced by `newString` |
 
-The `edit` path returns without validating when the file cannot be read, or when `oldString` is absent. A reconstruction it cannot verify would produce false refusals.
+For an `edit`, the plugin skips validation if it cannot read the file or cannot find `oldString`, because it cannot reconstruct the result reliably.
 
-Verified 2026-08-19 against OpenCode 1.18.18. Both plugins resolve in `opencode debug config`. `mmdc` rejects the 2026-06-12 `;` regression that prompted this hook, and accepts a valid flowchart.
+`scripts/sync-toolkit.sh --harness` copies the plugin to `~/.config/opencode/plugins/validate-mermaid.ts`. OpenCode loads files in that directory without a config entry. The module exports only the plugin function, because OpenCode requires every export to be a function. Tested on 2026-08-19 with OpenCode 1.18.18.
 
-## Behavior notes
+## Behavior
 
-- **Fast path**: non-`.md` files, missing files, and `.md` files without a mermaid fence exit `0` in milliseconds — the browser only launches when there's something to validate.
-- **Fails open**: if the payload can't be parsed or no validator is available, the hook exits `0` rather than blocking all writes.
-- **Indented fences** (e.g. inside list items) are handled; each block is validated separately and reported with its starting line number.
-- Validation is parse-level with the installed Mermaid version — it does not check styling conventions like pinned themes; those stay in your CLAUDE.md / conventions docs.
+- **Skips quickly.** Files that are not Markdown, files that do not exist and Markdown files without a Mermaid block exit `0` within milliseconds. The browser starts only when there is a diagram to check.
+- **Fails open.** If the payload cannot be parsed or no validator is available, the hook exits `0` rather than blocking every write.
+- **Handles indented blocks.** Diagrams inside list items are found. Each block is checked separately and reported with its starting line number.
+- **Checks syntax only.** Style rules, such as not pinning a theme, are not enforced.

@@ -1,6 +1,16 @@
-# Penmark Comments
+# penmark-comments
 
-`penmark-comments` handles explicit reviews of writable local Markdown files. It reviews the document, then asks once whether the findings should also go into the file as validated [Penmark](https://github.com/carlosboeing/penmark) v1 comments or stay in chat, and remembers the answer. It is a review surface: it adds findings, never rewrites the document's existing content, and never commits unless separately asked.
+Reviews a local Markdown file when you ask for a review. After reviewing, it asks once whether the findings should also be written into the file as validated [Penmark](https://github.com/carlosboeing/penmark) v1 comments or stay in chat, and remembers your answer. It only adds comments. It never rewrites the document's existing text, and never commits unless you ask separately.
+
+```mermaid
+flowchart TB
+    Request["You ask for a review of a writable .md file"] --> Review["Review the document"]
+    Review --> Q1{"Does the request say comments or chat only?"}
+    Q1 -- "Yes" --> Follow["Do what the request says"]
+    Q1 -- "No" --> Q2{"write or chat set in CLAUDE.md, AGENTS.md or the config file?"}
+    Q2 -- "Yes" --> Setting["Use that setting"]
+    Q2 -- "No, or set to ask" --> Ask["Ask once: comments or chat?"]
+```
 
 ## When it applies
 
@@ -39,15 +49,15 @@ penmark-comments/
 
 Install the whole directory. Copying only `SKILL.md` omits the pinned writer contract and required validator.
 
-## Install for authoring across harnesses
+## Install
 
-From this repository clone, run:
+From a clone of this repository, run:
 
 ```bash
-./skills/sync-skills.sh
+./scripts/sync-toolkit.sh --harness
 ```
 
-The script copies whole authored skill directories into `~/.claude/skills/` and connects `~/.agents/skills/` and `~/.gemini/config/skills/` through whole-directory symlinks. It updates hub copies, including removing files no longer present in the source. Existing real spoke directories are left alone unless `--adopt` is requested; compare same-named skills before adopting. See the [skills catalog](../README.md#synchronize-every-authored-skill) for the install model.
+The script copies each skill directory into `~/.claude/skills/` and links `~/.agents/skills/` and `~/.gemini/config/skills/` to it. It updates the hub copies, including removing files that no longer exist in the source. A harness skill directory that is a real directory rather than a link is left alone unless you pass `--adopt`, so compare same-named skills before adopting. See [Synchronize every authored skill](../README.md#synchronize-every-authored-skill) for details.
 
 For a standalone shared installation, copy the complete `penmark-comments/` directory into the target harness's skill directory rather than copying an individual file.
 

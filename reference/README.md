@@ -1,18 +1,21 @@
 # Reference
 
-These files preserve dated product facts, configuration inventories, performance measurements, and repository standards. Read each file's evidence date before using volatile model, quota, or price data.
+Dated facts and standards: what each harness supports, and the repository standards the skills apply. Check a file's evidence date before relying on anything that changes often, such as product capabilities.
 
 ## Catalog
 
 | Reference | What it covers |
 |---|---|
-| [`reference-harness-capability-map.md`](reference-harness-capability-map.md) | Feature-by-feature capability support map across developer agent harnesses. |
-| [`reference-oss-standards.md`](reference-oss-standards.md) | OSS house standard checklist for any `carlosboeing/*` public repo - health files, pinned workflows, `required` gate, `dependabot`, rulesets, no personal email. |
-| [`reference-build-and-release-standards.md`](reference-build-and-release-standards.md) | Build and release house standard for any `carlosboeing/*` repo that ships a binary - marked local versions, install entry points, one build script, the agreement gate. |
+| [`reference-harness-capability-map.md`](reference-harness-capability-map.md) | What each AI coding harness supports, feature by feature |
+| [`reference-oss-standards.md`](reference-oss-standards.md) | The house standard for open-source repositories: health files, pinned workflows, the `required` check, Dependabot, branch protection and no personal email |
+| [`reference-build-and-release-standards.md`](reference-build-and-release-standards.md) | The house standard for repositories that ship a binary: version strings, install entry points, one build script and the release check |
 
-## Conventions
+The two house standards are the maintainer's own, written for `carlosboeing/*` repositories. Each one explains how to adapt it.
 
-- Filenames are `reference-<topic>.md`. The prefix ensures the file remains self-describing if emailed, gisted, or copied elsewhere.
-- Start each reference document with YAML frontmatter containing its title, `type: reference`, scope, review date, authors, and relevant related links.
-- State the evidence date beside volatile facts and link the primary source.
-- Keep historical measurements intact. Update a current-value table only after checking the cited source.
+## Writing a reference
+
+- Name the file `reference-<topic>.md`, so a copied file is still recognizable outside this repository.
+- Start with YAML frontmatter: `title`, `type: reference`, `scope`, the review date, `authors`, and any `related` links.
+- Put the evidence date next to any fact that changes often, and link its source.
+- Keep historical measurements as they were recorded. Update a current value only after checking its source.
+- Follow the [documentation standard](../CONTRIBUTING.md#documentation-standard).

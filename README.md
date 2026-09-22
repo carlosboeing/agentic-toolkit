@@ -1,71 +1,62 @@
 # agentic-toolkit
 
-`agentic-toolkit` is a portable library of instructions, skills, hooks, templates, and engineering conventions for Claude Code, OpenAI Codex, Google Antigravity, Kimi Code, Grok Build TUI, and OpenCode. It is for engineers who want one tested working method across multiple AI coding harnesses without maintaining independent copies of the same configuration.
+A portable library of skills, hooks, instructions, templates and conventions for AI coding agents. It works with Claude Code, OpenAI Codex, Google Antigravity, Kimi Code, Grok Build TUI and OpenCode.
 
-The toolkit addresses prompt and context cost, configuration drift, informal software delivery phases, tool-specific workflows, and accidental mixing of public code with private working memory. The repository is both installable tooling and a reference implementation of the operating model behind it.
+Use it if you work in more than one AI coding harness and want the same skills, rules and delivery process in each, without keeping separate copies in sync by hand.
 
-## What the toolkit changes
+## What it solves
 
-| Problem | Mechanism in this repository |
+| Problem | How the toolkit handles it |
 |---|---|
-| Repeated context and irrelevant instructions | Short global instructions, task-scoped skills, and model-effort routing guidance |
-| Copies drifting across harnesses | One skill hub, symlinked spokes, and deterministic synchronization |
-| Agents skipping design, tests, or delivery steps | Explicit brainstorm, design, plan, implementation, review, and verification gates |
-| Private working notes entering public history | Separate public and private repositories, an ignored `.workbench/`, and a staged-content privacy guard |
-| Tool-specific workflows | Shared `SKILL.md` packages plus documented harness-specific adapters where the products differ |
+| Every harness needs its own copy of the same skills, and the copies drift apart | One skill hub on disk. Each harness reads it through a link, and one script keeps it current. |
+| Long instruction files use up context on every turn | A short global brief, plus skills that load only for the task that needs them |
+| Agents skip design, testing or review | A delivery workflow with an explicit review stop between each phase |
+| Private notes leak into public repositories | Public and private repositories kept apart, and a pre-commit guard that refuses private paths |
+| Each harness has different install paths and hook support | Guides that map skills, plugins, MCP servers and hooks across harnesses |
 
-## Architecture
+## How it fits together
 
-The repository is the authored source. `scripts/sync-toolkit.sh` copies those resources into a user-level hub and repairs the harness paths that read it.
+The repository is the source. `scripts/sync-toolkit.sh` copies its skills into a hub at `~/.claude/skills`, then links each harness's skill directory to that hub.
 
 ```mermaid
 flowchart TB
-    subgraph Source["Authored source"]
-        Toolkit["Public agentic-toolkit repository"]
-        Workbench["Private .workbench repository"]
-        Toolkit --> PublicState["Skills, hooks, guides, references, templates"]
-        Workbench --> PrivateState["Brainstorms, discovery, designs, plans, reviews"]
-        PrivateState -. "records decisions without entering public history" .-> PublicState
-    end
-
-    PublicState --> Sync["scripts/sync-toolkit.sh"]
-    Sync --> Hub["~/.claude/skills hub"]
-    Hub --> Claude["Claude Code"]
-    Hub --> SharedSpoke["~/.agents/skills symlink"]
-    SharedSpoke --> Codex["Codex"]
-    SharedSpoke --> Kimi["Kimi Code"]
-    Hub --> GeminiSpoke["~/.gemini/config/skills symlink"]
-    GeminiSpoke --> Antigravity["Antigravity"]
-    Hub --> OpenCode["OpenCode discovery and command wrappers"]
-    Hub --> Grok["Grok Claude compatibility"]
+    Repo["agentic-toolkit repository"] --> Sync["scripts/sync-toolkit.sh"]
+    Sync --> Hub["Skill hub: ~/.claude/skills"]
+    Hub --> Claude["Claude Code reads the hub directly"]
+    Hub --> Agents["~/.agents/skills link"]
+    Agents --> Codex["Codex"]
+    Agents --> Kimi["Kimi Code"]
+    Hub --> Gemini["~/.gemini/config/skills link"]
+    Gemini --> Antigravity["Antigravity"]
+    Hub --> OpenCode["OpenCode reads the hub, plus generated slash commands"]
+    Hub --> Grok["Grok Build TUI reads the hub through Claude compatibility"]
 ```
 
-The public repository contains code, user documentation, architectural decision records (ADRs), the roadmap, and the changelog. Maintainer working memory lives in a separate private repository nested at `.workbench/`. Contributors use issues, pull requests, and public ADRs without needing access to the private repository.
+Because every harness reads the same files, a skill updated in the repository reaches all of them after one sync.
 
 ## Delivery workflow
 
-The workflow has an explicit stop between each authoring phase. Implementation starts only after the design and plan have been reviewed.
+The toolkit's skills and conventions follow one delivery process. Each phase ends with a review, and implementation starts only after the plan is approved.
 
 ```mermaid
 flowchart TB
-    Brainstorm["Brainstorm"] --> BrainstormGate{"Direction approved?"}
-    BrainstormGate --> Design["Design"]
-    Design --> DesignGate{"Design reviewed?"}
-    DesignGate --> Plan["Implementation plan"]
-    Plan --> PlanGate{"Plan approved?"}
-    PlanGate --> Worktree["Implementation in an isolated worktree"]
-    Worktree --> Verify["Tests, privacy checks, and link checks"]
-    Verify --> Review["Review and required CI gate"]
-    Review --> ShipGate{"Ready to ship?"}
+    Brainstorm["Brainstorm"] --> Design["Design"]
+    Design --> Plan["Implementation plan"]
+    Plan --> Build["Build in an isolated worktree"]
+    Build --> Verify["Tests and checks"]
+    Verify --> Review["Review and CI"]
+    Review --> Ship["Merge"]
 ```
+
+The [project structure and conventions guide](guides/guide-project-structure-and-conventions.md) explains where each phase's documents live and how they link together.
 
 ## Quick start
 
-Synchronization requires Git, Bash, and `rsync`. Python 3, `jq`, and ShellCheck are required for the contributor verification suite.
+You need Git, Bash and `rsync`. The contributor test suite also needs Python 3, `jq` and ShellCheck.
 
-### Synchronize one clone across installed harnesses
+### Sync everything to your harnesses
 
-Clone the repository, inspect the harness-only changes, then apply them:
+Clone the repository, preview the changes, then apply them:
 
 ```bash
 git clone https://github.com/carlosboeing/agentic-toolkit.git
@@ -74,11 +65,13 @@ cd agentic-toolkit
 ./scripts/sync-toolkit.sh --harness
 ```
 
-`--harness` writes beneath `$HOME` but does not modify neighboring repositories. The broader `--all` mode also installs Git hooks into discovered repositories, so run `./scripts/sync-toolkit.sh --dry-run --all` before using it.
+`--harness` writes only under your home directory. It copies the skills into the hub, links each installed harness to it, and copies the Mermaid validation hook. OpenCode loads that hook automatically. Claude Code needs it registered in `settings.json`, as described in the [validator's README](hooks/validate-mermaid/README.md). The script skips any harness whose configuration directory does not exist.
 
-### Install one skill manually
+The `--all` mode also installs Git hooks into the repositories it finds in your projects directory. Run `./scripts/sync-toolkit.sh --dry-run --all` first to see which repositories it would change.
 
-Copy the complete skill directory because some skills include scripts, schemas, tests, or references:
+### Install a single skill
+
+Copy the whole skill directory, because some skills include scripts, schemas or reference files:
 
 ```bash
 skill_name=schedule-resume
@@ -86,87 +79,91 @@ mkdir -p "$HOME/.claude/skills/$skill_name"
 cp -R "skills/$skill_name/." "$HOME/.claude/skills/$skill_name/"
 ```
 
-Claude Code reads `~/.claude/skills` directly. Codex and Kimi Code read the shared `~/.agents/skills` spoke. Antigravity reads `~/.gemini/config/skills`. See the [skills catalog](skills/README.md) before wiring those paths by hand.
+Claude Code reads `~/.claude/skills`. Codex and Kimi Code read `~/.agents/skills`, and Antigravity reads `~/.gemini/config/skills`. The [skills catalog](skills/README.md) explains how to link those directories to the hub.
 
-### Link the shared instruction file
+### Use the shared instruction file
 
-For a local authoring clone, link the canonical instruction file instead of copying it:
+If you keep a local clone, link the global instruction file instead of copying it, so edits in the repository take effect everywhere:
 
 ```bash
 mkdir -p "$HOME/.claude"
 ln -s "$PWD/instructions/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ```
 
-If the destination already exists, inspect and back it up before replacing it. The [new-machine setup guide](guides/guide-new-machine-setup.md) covers the remaining harness links and local configuration that does not belong in Git.
+Back up any existing `~/.claude/CLAUDE.md` first. The [new-machine setup guide](guides/guide-new-machine-setup.md) covers the links for the other harnesses.
 
-### Create a project from the template
-
-After the repository is public, `degit` can copy only the template directory:
+### Start a new project from the template
 
 ```bash
 npx degit github:carlosboeing/agentic-toolkit/templates/default-project new-project
 ```
 
-## Component directory
+## Components
 
 ### Skills
 
-| Skill | Purpose |
+| Skill | What it does |
 |---|---|
-| [`briefing`](skills/briefing/) | Produces a manual, evidence-backed project orientation without activating on focused follow-up questions |
-| [`learn`](skills/learn/) | Explains a commit, pull request, file, symbol, behavior, or topic at a chosen level and depth |
-| [`schedule-resume`](skills/schedule-resume/) | Schedules and resumes unattended sessions across supported harnesses |
-| [`repo-standards`](skills/repo-standards/) | Audits or applies the repository's public and private governance standards |
-| [`penmark-comments`](skills/penmark-comments/) | Reviews local Markdown and can write validated Penmark inline comments with user consent |
-| [`git-worktrees`](skills/git-worktrees/) | Defines the shared worktree layout and safe branch-isolation rules |
-| [`housekeeping`](skills/housekeeping/) | Audits merged pull requests against local branches and worktrees, with a verified cleanup mode |
-| [`start-planning`](skills/start-planning/) | Starts implementation planning from an approved design while preserving the phase boundary |
-| [`capture-meeting`](skills/capture-meeting/) | Converts a meeting recording and notes into an audited project record |
-| [`externalize-deliverable`](skills/externalize-deliverable/) | Produces a client-safe copy of an internal document under a human review gate |
-| [`oss-standards`](skills/oss-standards/) | Compatibility alias for `repo-standards --oss` |
+| [`briefing`](skills/briefing/) | Summarizes a project's current state from Git, GitHub and its tracking files |
+| [`learn`](skills/learn/) | Explains a commit, pull request, file, symbol or topic at the level you choose |
+| [`schedule-resume`](skills/schedule-resume/) | Schedules an agent session to resume later, for example after a usage limit resets |
+| [`repo-standards`](skills/repo-standards/) | Checks or applies a repository's governance files, workflows and branch protection |
+| [`penmark-comments`](skills/penmark-comments/) | Reviews a local Markdown file and can write inline review comments into it |
+| [`git-worktrees`](skills/git-worktrees/) | Sets where worktrees go and the checks to run before changing branches |
+| [`housekeeping`](skills/housekeeping/) | Finds branches and worktrees left behind by merged pull requests, and removes them on request |
+| [`start-planning`](skills/start-planning/) | Starts an implementation plan from an approved design |
+| [`capture-meeting`](skills/capture-meeting/) | Turns a meeting recording and notes into a project record |
+| [`externalize-deliverable`](skills/externalize-deliverable/) | Makes a client-safe copy of an internal document, with a required human review |
+| [`oss-standards`](skills/oss-standards/) | Shortcut for `repo-standards` in open-source mode |
 
-The [skills catalog](skills/README.md) documents invocation, dependencies, bundled files, and installation details. Locally installed third-party skills are not presented as repository-owned components.
+The [skills catalog](skills/README.md) lists each skill's commands, dependencies and install notes.
 
-### Hooks and gates
+### Hooks
 
-| Component | Runs at | Purpose |
+| Hook | When it runs | What it does |
 |---|---|---|
-| [Drift guard](git-hooks/drift-guard/) | `pre-push`, `post-merge`, and manual `housekeep` | Blocks stale lifecycle records before push and reports merged-branch residue |
-| [Private workbench guard](git-hooks/private-workbench-guard/) | `pre-commit` | Rejects staged workbench gitlinks, private paths, and private-side vocabulary |
-| [Mermaid validator](hooks/validate-mermaid/) | Claude Code `PostToolUse`, OpenCode plugin, or manual command | Parses every modified Mermaid block and returns actionable syntax errors |
+| [Drift guard](git-hooks/drift-guard/) | Before push, after merge, or on demand | Blocks a push when tracking records are out of date, and reports branches left behind by merges |
+| [Private workbench guard](git-hooks/private-workbench-guard/) | Before commit | Refuses commits that stage private paths or a nested private repository |
+| [Mermaid validator](hooks/validate-mermaid/) | After an agent edits a Markdown file | Parses each Mermaid diagram and reports syntax errors |
 
 ### Guides and references
 
-| Resource | Use it for |
+| Resource | Use it to |
 |---|---|
-| [Project structure and conventions](guides/guide-project-structure-and-conventions.md) | Lifecycle directories, document frontmatter, project maps, and change discipline |
-| [AI model and effort routing](guides/guide-ai-model-and-effort-routing.md) | Choosing a model, effort level, and escalation path by task shape |
-| [Harness plugin parity](guides/guide-harness-plugin-parity.md) | Mapping skills, plugins, Model Context Protocol (MCP) servers, hooks, and browser tools across harnesses |
-| [Harness capability map](reference/reference-harness-capability-map.md) | Comparing delegation, routing, hook, browser, and headless capabilities |
-| [OSS repository standard](reference/reference-oss-standards.md) | Community files, pinned workflows, Dependabot, and branch protection |
+| [Project structure and conventions](guides/guide-project-structure-and-conventions.md) | Organize a project's documents, frontmatter and tracking files |
+| [AI model and effort routing](guides/guide-ai-model-and-effort-routing.md) | Choose a model and effort level for a task |
+| [Harness plugin parity](guides/guide-harness-plugin-parity.md) | Match skills, plugins, MCP servers and hooks across harnesses |
+| [Harness capability map](reference/reference-harness-capability-map.md) | Compare what each harness supports |
+| [OSS repository standard](reference/reference-oss-standards.md) | Set up community files, pinned workflows and branch protection |
 
-The complete indexes are in [`guides/`](guides/) and [`reference/`](reference/).
+See [`guides/`](guides/) and [`reference/`](reference/) for the full lists.
 
-### Templates and other resources
+### Other directories
 
 | Directory | Contents |
 |---|---|
-| [`templates/`](templates/) | Private-base and public open-source project scaffolds plus lean Claude settings |
-| [`instructions/`](instructions/) | The canonical cross-harness global brief and its regression criteria |
-| [`plugins/`](plugins/) | Plugin installation and drift reporting, currently focused on Superpowers |
-| [`rules/`](rules/) | Authoring sources for rules that may later justify always-on loading |
-| [`docs/adrs/`](docs/adrs/) | Public architectural decisions |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Current priorities and shipped work |
-| [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Dated release history |
+| [`templates/`](templates/) | Project scaffolds for private and open-source repositories, and a lean Claude Code settings file |
+| [`instructions/`](instructions/) | The global instruction file shared by every harness |
+| [`plugins/`](plugins/) | An installer for the Superpowers plugin across harnesses |
+| [`rules/`](rules/) | Rule files that a harness can load on every session |
+| [`docs/adrs/`](docs/adrs/) | Architecture decision records |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | What is planned and what has shipped |
+| [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Release history |
 
 ## Limitations
 
-The synchronizer copies authored skills; it does not install every external tool or create instruction-file links. Spokes are created only when their harness parent directory exists. Review local sync configuration before applying it, and compare same-named skills before using `--adopt`, which replaces a real spoke directory. Product capabilities, model rosters, and prices in dated references need fresh verification. Mermaid hooks check syntax, not layout, and some skip paths return success without validating a diagram.
+- The synchronizer installs this repository's own skills and hooks. It does not install third-party tools or create instruction-file links.
+- A harness link is created only if that harness's configuration directory already exists.
+- `--adopt` replaces a real skill directory in a harness with a link to the hub. Compare any same-named skills before using it.
+- Guides that mention model names, quotas or prices record the date they were checked. Verify them against the vendor before relying on them.
+- The Mermaid validator checks syntax, not layout.
 
-## Contributing and governance
+## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. It lists the local checks, Conventional Commit format, and the `required` continuous integration gate.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. It covers the local checks, the commit message format and the required CI check.
 
-The repository uses the [Contributor Covenant](CODE_OF_CONDUCT.md), accepts private vulnerability reports through [GitHub Security Advisories](https://github.com/carlosboeing/agentic-toolkit/security/advisories/new), and documents support boundaries in [SUPPORT.md](SUPPORT.md). [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) records bundled dependencies.
+Report security issues privately through [GitHub Security Advisories](https://github.com/carlosboeing/agentic-toolkit/security/advisories/new). The project follows the [Contributor Covenant](CODE_OF_CONDUCT.md), and [SUPPORT.md](SUPPORT.md) explains where to ask for help.
 
-Repository-authored code and documentation use the [MIT License](LICENSE). Reused material has the notices and license exceptions listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Copies or substantial portions must retain the applicable notices.
+## License
+
+The code and documentation are under the [MIT License](LICENSE). [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) lists material from other projects and its licenses.

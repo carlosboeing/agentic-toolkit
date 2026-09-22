@@ -1,64 +1,92 @@
 # Contributing to agentic-toolkit
 
-Thank you for contributing to agentic-toolkit.
+Thank you for helping improve the toolkit. This guide covers how to propose a change, the checks to run, and the standards that commits, pull requests and documentation follow.
 
 ## Code of conduct
 
-This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+This project follows the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By taking part, you agree to follow it.
 
-## Security disclosures
+## Security issues
 
-If you discover a security vulnerability, please do not open a public issue. Refer to [SECURITY.md](SECURITY.md) for private disclosure instructions.
+Do not open a public issue for a security vulnerability. See [SECURITY.md](SECURITY.md) for how to report it privately.
 
-## Contributor route (when `.workbench/` is absent)
+## How to contribute
 
-If `.workbench/` is absent from your checkout, you are working as an outside contributor:
+```mermaid
+flowchart TB
+    Issue["Open or pick an issue"] --> Branch["Branch off origin/main"]
+    Branch --> Change["Make a focused change"]
+    Change --> Checks["Run the local checks"]
+    Checks --> PR["Open a pull request"]
+    PR --> CI["The required CI check passes"]
+    CI --> Merge["Squash merge"]
+```
 
-- Use GitHub Issues, pull requests, and public Architectural Decision Records under `docs/adrs/`.
-- Do not create lifecycle directories (`docs/0-brainstorms/`, `docs/1-discovery/`, `docs/2-design/`, `docs/3-plans/`, `docs/4-reviews/`) under `docs/` or at the repository root.
-- Do not create or nest a private workbench repository.
-- Keep contributions focused on public artifacts: skills, hooks, rules, documentation, guides, references, templates, scripts, and tests.
+- **Discuss larger changes in an issue first.** For a significant architecture decision, propose an ADR in `docs/adrs/`.
+- **Keep changes to public files:** skills, hooks, rules, documentation, guides, references, templates, scripts and tests.
+- **Do not add planning folders** such as `docs/0-brainstorms/`, `docs/1-discovery/`, `docs/2-design/`, `docs/3-plans/` or `docs/4-reviews/`. The issue and pull request hold the discussion.
 
-### Contributor checks vs. maintainer syncing
+## Branches
 
-- **Contributors**: Run the local test suites to verify changes before submitting a pull request:
-  - `bash tests/test-githooks.sh`
-  - `bash tests/test-sync-toolkit.sh`
-  - `bash git-hooks/drift-guard/test-housekeep.sh`
-  - `sh skills/schedule-resume/tests/run-tests.sh`
-  - `python3 -m unittest discover -s tests -p 'test_relative_links.py'`
-  - `python3 scripts/check-relative-links.py`
-  - `shellcheck -S error` on modified shell scripts
-- **Maintainers**: `scripts/sync-toolkit.sh` is an operator tool that syncs skills, hooks, and commands into the user's home configuration and neighboring repositories. Contributors should not run live syncing against their local environments.
+Branch off the latest `origin/main`:
 
-## Workflow and branches
+```bash
+git fetch origin
+git checkout -b <branch-name> origin/main
+```
 
-- Branch off `origin/main`:
-  ```bash
-  git fetch origin
-  git checkout -b <branch-name> origin/main
-  ```
-- Keep changes surgical and focused on a single concern.
-- Ensure all tests pass before submitting a pull request.
-- Linear history: pull requests are squash-merged.
+Keep each pull request to one concern. Pull requests are squash-merged, so `main` keeps a linear history.
 
-## Conventional Commits
+## Local checks
 
-Commits must follow the Conventional Commits specification:
+Run these before opening a pull request. CI runs the same checks.
 
-`<type>(<scope>): <description>`
+```bash
+bash tests/test-githooks.sh
+bash tests/test-sync-toolkit.sh
+bash git-hooks/drift-guard/test-housekeep.sh
+sh skills/schedule-resume/tests/run-tests.sh
+python3 -m unittest discover -s tests -p 'test_relative_links.py'
+python3 scripts/check-relative-links.py
+shellcheck -S error <changed shell scripts>
+```
 
-- Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`.
-- Subject must be in imperative mood and 72 characters or fewer.
-- Body explains the rationale (*why*, not *what*).
-- Never use `#N` unless intentionally referencing a real GitHub issue.
+The tests run in temporary directories. Do not run `scripts/sync-toolkit.sh` against your own home directory to test a change, because it writes to your live harness configuration.
+
+## Commit messages
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <description>
+```
+
+- **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`.
+- **Subject:** imperative mood, 72 characters or fewer.
+- **Body:** explains why the change is needed, not what the diff already shows.
+- **Issue numbers:** write `#N` only when you mean to link a real GitHub issue.
 
 ## Pull requests
 
-- Open a pull request against `main`.
-- Follow the template in `.github/PULL_REQUEST_TEMPLATE.md`.
-- All pull requests must pass the `required` status check in GitHub Actions CI.
+- Open the pull request against `main` and fill in the template.
+- The `required` status check must pass before merging.
+- For a user-facing change, add a line to `docs/CHANGELOG.md` in the same pull request.
 
 ## Continuous integration
 
-Workflows in `.github/workflows/` are pinned to full commit SHAs with version comments. The `required` job is the stable aggregator gate. Do not replace a pinned SHA with a tag.
+Workflows in `.github/workflows/` pin every action to a full commit SHA, with the version in a comment. Keep the SHA when updating an action, and do not replace it with a tag. The `required` job collects the results of the other jobs and is the only required status check.
+
+## Documentation standard
+
+Every public document in this repository follows these rules.
+
+- **Start with the purpose.** The first paragraph says what the document or component is, who it is for and when to use it.
+- **Structure for scanning.** Use sentence-case headings, tables for comparisons and options, and numbered steps for procedures.
+- **Write plain, professional English.** Use short sentences, active voice and common words. Address the reader as "you". Avoid first person, filler, marketing language and unexplained jargon.
+- **Add a diagram where it helps.** Use a Mermaid diagram for a process, a data flow, a directory layout or a decision. Do not add one for decoration.
+- **Follow the Mermaid rules.** No `;` in labels, no leading `+` or `-` in sequence messages, quote labels that contain `()[]{}|`, and no hard-coded colors or themes. Check each diagram with the [Mermaid validator](hooks/validate-mermaid/).
+- **Date volatile facts.** Model names, prices, quotas and product behavior change. State when a fact was checked and link its source.
+- **Keep it general.** Write for any reader's setup. Do not include personal machine paths, account details or private project names.
+- **Check commands against the code.** Every command and flag must match the current scripts.
+- **Keep links working.** Use relative links between files in the repository. Do not rename a heading that other documents link to without updating those links.
+- **One line per paragraph.** Do not hard-wrap lines, so diffs stay small and editors can wrap text themselves.

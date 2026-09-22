@@ -1,15 +1,15 @@
 ---
-title: "Project Structure and Conventions — Portable Guide"
+title: "Project structure and conventions"
 type: guide
 scope: [meta, conventions]
 last_reviewed: 2026-05-02
 ---
 
-# Project Structure and Conventions — Portable Guide
+# Project structure and conventions
 
-A self-contained guide to a project documentation structure that supports long-running work — multiple initiatives shipping over months or years, with always-current state docs, per-initiative designs and plans, retrospectives, decision records, and clear conventions for how everything fits together.
+A documentation structure for projects that run for months or years, with many pieces of work shipping over time. It gives each kind of document a fixed home: current-state docs, designs and plans for each piece of work, retrospectives and decision records, plus conventions for how they link together. It works for people and for AI agents, which both need a quick answer to "where does this go?" and "what is the current state?".
 
-This guide is **portable**: copy this file into a fresh project, follow the steps in §6, and you have the same structure operating in a new repo. Examples use an infrastructure project so the conventions have a concrete shape.
+The guide is self-contained. Copy it into a new project, follow §8, and the same structure works there. Examples use an infrastructure project so the conventions have a concrete shape.
 
 ---
 
@@ -615,12 +615,10 @@ Docs in `docs/` — designs, plans, brainstorms, discovery, reviews, retros — 
 **Illustrate, don't just describe.** When a doc discusses anything visual — UI/UX mockups, hi-fi concepts, screenshot examples, before/after comparisons — embed images:
 
 1. Build a **self-contained single-file HTML mockup** (inline CSS, no build step, no external files) in the doc's `assets/` set — e.g. `docs/2-design/assets/2026-07-31-<topic>/concept.html`, per §5.10. Single-file keeps it git-native, openable in any browser, and editable by AI in one pass. Include a light/dark toggle when theming is part of the design.
-2. **Screenshot it headlessly** (Playwright or equivalent; serve over a throwaway local HTTP server if `file://` is blocked) — one PNG per state/theme that matters.
+2. **Screenshot it headlessly** with Playwright or a similar tool, one PNG per state or theme that matters. If Playwright MCP blocks `file://` URLs, start it with `--allow-unrestricted-file-access` (see the [browser automation guide](guide-browser-automation-mcp-vs-cli.md)) rather than running a local web server.
 3. **Commit HTML and PNGs together** and embed the PNGs in the doc with relative links so they render on GitHub. The PNG is what the doc shows; the HTML is the editable source of truth and doubles as a visual spec for implementation.
 
 Why this over design tools: artifacts version in git next to the doc, render in every markdown viewer, need no external account or export step, and an AI session can regenerate both halves when the design changes. (Same fallback rule as §5.7: reach for Figma/Excalidraw only when a hand-written mockup genuinely can't represent what you need — and still commit the rendered output.)
-
-First use in the wild: the Penmark v1 design doc (`carlosboeing/penmark`, `docs/2-design/`), where a commented-preview concept shipped as one HTML file + light/dark PNGs.
 
 ### 5.10 `assets/` — attachments that belong to a doc
 
@@ -779,7 +777,7 @@ If the answer to any is "no," the agent should propose the missing writes inline
 
 ## 7. Recommended tools and plugins
 
-This structure is tool-agnostic — git, markdown, and a text editor are enough. But it's *designed* to work well with AI coding harnesses (Claude Code, Cursor, Codex CLI), and there are specific plugins/skills that operationalise the conventions described above. The list below is Claude Code-flavoured (since this project was built with it); equivalents for other harnesses likely exist.
+This structure is tool-agnostic — git, markdown, and a text editor are enough. But it's *designed* to work well with AI coding harnesses (Claude Code, Cursor, Codex CLI), and there are specific plugins/skills that operationalise the conventions described above. The list below is for Claude Code, where the structure was developed. Other harnesses may have equivalents. Plugin names and features were current in 2026, so check each one before installing.
 
 You don't need all of these — pick what fits your workflow.
 

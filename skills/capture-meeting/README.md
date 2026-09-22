@@ -1,27 +1,26 @@
-# `/capture-meeting` — Ingest, audit, and file meeting records
+# capture-meeting
 
-A drop-in skill that turns an AI meeting recording (Fathom or other tool) plus manual notes/artifacts into an audited meeting document following the project's conventions, then propagates findings into the project's working memory (ROADMAP/tracker/ADRs).
+Turns a meeting into a project record. The skill combines an AI meeting recording (from Fathom or another tool) with your own notes and files, drafts a meeting document that follows the project's conventions, and asks you to check it before saving. It then offers to update the roadmap, issue tracker or decision records with what the meeting decided.
 
----
+## How it works
 
-## What it does
+```mermaid
+flowchart TB
+    Gather["Gather the transcript, summary, notes and files"] --> Context["Read the project's instructions and glossary"]
+    Context --> Draft["Draft the meeting record and flag conflicts or unknown names"]
+    Draft --> Review{"You review the draft"}
+    Review -- "Corrections" --> Draft
+    Review -- "Approved" --> Save["Save the record"]
+    Save --> Propagate["Offer updates to the roadmap, tracker or ADRs"]
+```
 
-When you run `/capture-meeting` (or ask the agent to process meeting notes), it runs a structured ingestion pipeline:
+1. **Gather.** Finds the meeting transcript and summary through the Fathom MCP server, another MCP source or pasted text, together with your notes.
+2. **Match the project.** Reads the project's instruction file, such as `CLAUDE.md` or `AGENTS.md`, and its glossary, for example `comms/glossary.md`.
+3. **Draft and check.** Combines the inputs and flags conflicts, unrecognized names and unclear action items.
+4. **Review.** Shows you the draft and the flags. Nothing is saved until you approve it, and any name corrections are written back to the glossary.
+5. **Propagate.** Offers to update the roadmap, the issue tracker or an ADR based on the decisions and action items.
 
-1. **Identify & Gather**: Finds the meeting transcript/summary from Fathom MCP (or other MCP adapters/pastes) and manual notes.
-2. **Context Matching**: Evaluates conventions defined in the `<instructions-file>` (e.g. `CLAUDE.md`, `AGENTS.md`) and a glossary file (`comms/glossary.md`).
-3. **Draft & Audit**: Integrates the inputs, highlighting conflicts, unrecognized terms, or ambiguous action items.
-4. **Review & Save**: Presents the draft and audit findings to the user for verification before saving to the codebase.
-5. **Propagate**: Prompts to update the roadmap, issue tracker, or draft ADRs based on the decisions and action items.
-
-## Install
-
-See the [skills catalog README](../README.md#install-one-skill) for the full options and platform notes. In short:
-
-- **Consume just this skill** — copy (or `curl`) its `SKILL.md` into your harness's skills directory. Best for sharing a single skill.
-- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to copy authored skill directories into the hub and repair whole-directory spokes. Re-run it after source edits.
-
-## Usage examples
+## Usage
 
 ```
 /capture-meeting today's sync
@@ -29,8 +28,12 @@ See the [skills catalog README](../README.md#install-one-skill) for the full opt
 /capture-meeting https://fathom.video/share/123456
 ```
 
-## Design philosophy
+## Install
 
-- **Audit Gate**: Transcription AI is lossy and often mishears names. The human user is the final oracle — never bypass the review gate.
-- **Notes override Transcript**: Human manual notes are treated as ground truth over machine transcripts when they contradict.
-- **Convention-Aware**: Respects existing directory layouts, glossary locations, and instructions files.
+See [Install one skill](../README.md#install-one-skill) in the skills catalog, or run `scripts/sync-toolkit.sh --harness` to sync every skill.
+
+## Design decisions
+
+- **You are the final check.** Transcription tools mishear names and mix up people and companies, so the skill never saves without your review.
+- **Your notes win.** When your notes and the transcript disagree, the skill treats your notes as correct.
+- **It follows the project's layout.** It uses the directory structure, glossary location and instruction file the project already has.

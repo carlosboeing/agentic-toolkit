@@ -1,8 +1,8 @@
 ---
-title: Harness plugin and skill parity (Claude Code, Codex, Antigravity, Kimi, Grok)
+title: Harness plugin and skill parity
 type: guide
 scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor, kimi-code, grok]
-last_reviewed: 2026-08-25
+last_reviewed: 2026-09-22
 last_audited: 2026-07-28
 authors:
   - "Carlos Boeing"
@@ -17,180 +17,164 @@ related:
 
 # Harness plugin and skill parity
 
-How to get a similar **methodology and tooling** bar when switching between Claude Code, Codex, Antigravity (`agy`), Kimi Code, and Grok Build TUI. Cursor is parked. Prefer **official installs**; use symlinks only for portable skills (see the topology and parity guides).
+How to get the same working method and tools when you move between Claude Code, Codex, Antigravity (`agy`), Kimi Code, Grok Build TUI and OpenCode. Use each product's official install method where one exists, and share only portable skills through the skill hub.
 
-## Install channels on Antigravity
-
-| Channel | Command / path |
-|---------|----------------|
-| Native plugin | `agy plugin install <url>` |
-| Import Gemini extensions | `gemini extensions install …` then `agy plugin import gemini` |
-| Import Claude plugins | `agy plugin import claude` (when local Claude extensions exist) |
-| Skills | `.agents/skills/` (project); `~/.gemini/config/skills/` (IDE/2.0 global); `~/.gemini/antigravity-cli/skills/` (CLI global). The synchronizer creates only the IDE/2.0 spoke. [Official locations](https://antigravity.google/docs/skills), checked 2026-09-22. |
-| MCP | `~/.gemini/config/mcp_config.json` |
-| Google bundled | `~/.gemini/config/plugins/` (chrome-devtools, modern-web-guidance, …) |
-
-Verify: `agy plugin list`, `/skills` in session, `ls ~/.agents/skills/`.
-
-## Install channels on Kimi Code
-
-| Channel | Command / path |
-|---------|----------------|
-| Native plugin | `/plugins` marketplace, or `/plugins install <github-url>` |
-| Skills | `~/.agents/skills/` (shared, read natively — a whole-dir symlink to the hub since 2026-08-06), `.agents/skills/` + `.kimi-code/skills/` (project). `~/.kimi-code/skills/` was removed as redundant; recreate it only for a genuinely Kimi-specific skill |
-| Instructions | `~/.agents/AGENTS.md` + project `AGENTS.md` (read natively — no symlink needed); optional Kimi-specific `~/.kimi-code/AGENTS.md` |
-| MCP | `~/.kimi-code/mcp.json` (+ project `.kimi-code/mcp.json`); manage interactively with `/mcp-config` |
-| Hooks | `[[hooks]]` in `~/.kimi-code/config.toml` — only PreToolUse, Stop, and UserPromptSubmit can block, and no event can rewrite tool input |
-| Headless | `kimi --session session_<id> -p` (auto-approves; `-p` rejects `--yolo`/`--auto`) |
-
-Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology and the canonical instruction file already cover it with zero wiring — `~/.agents/skills` is a symlink to the hub. Verify: `ls ~/.agents/skills/`, `/plugins info <name>`, `kimi doctor`.
-
-## Install channels on Grok Build TUI
-
-| Channel | Command / path |
-|---------|----------------|
-| Skills | `~/.claude/skills` via `[compat.claude] skills = true`. No `~/.grok/skills` spoke |
-| Instructions | `~/.claude/CLAUDE.md` via `[compat.claude] agents = true`. Project `AGENTS.md` natively. No `~/.grok/AGENTS.md` |
-| MCP inherit | Claude MCP (`fathom`, `mcp-image`, claude-mem plugin `mcp-search`, chrome) |
-| MCP declared | `~/.grok/config.toml`: `claude-mem`, Playwright (`--isolated`), Context7 (`Authorization = Bearer ${CONTEXT7_API_KEY}`) |
-| Hooks | Claude hook ingest **off**. Owned PreToolUse/Stop hooks register natively under `~/.grok/hooks/`. Do not shim inherited Claude plugin hooks. See [`hooks/README.md`](../hooks/README.md#grok-build-tui) |
-| Plugins | Claude discovery on; `[plugins].disabled` mirrors Claude's off list |
-| Superpowers | Claude plugin path to the canonical clone. Do not `grok plugin install` a second tree |
-
-## Install channels on OpenCode
-
-| Channel | Command / path |
-|---------|----------------|
-| Skills | `~/.claude/skills` and `~/.agents/skills`, auto-loaded. No OpenCode spoke needed |
-| Instructions | `AGENTS.md` natively, at global and project scope |
-| Config | `~/.config/opencode/opencode.json`. Not `~/.opencode/`, which holds only the binary |
-| MCP | `mcp` block in `opencode.json`. `enabled: false` turns off a server inherited from a parent config |
-| Hooks | No shell hooks. JavaScript plugin modules, auto-loaded from `~/.config/opencode/plugins/` or declared in the `plugin` array. `tool.execute.before` refuses a call by throwing; `tool.execute.after` documents no blocking |
-| Mermaid | `sync-skills.sh` copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `plugins/validate-mermaid.ts` |
-| Plugins | `plugin` array accepts npm and git specs. Loose files in `plugins/` load without a config entry |
-| Superpowers | `"plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]`. Do not symlink — upstream deprecated that path |
-| RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts` |
-| Providers | `disabled_providers` switches off a registry provider that a stray environment variable enabled |
-| Agents and commands | `~/.config/opencode/agent/<name>.md` and `command/<name>.md`, Markdown with frontmatter |
+For a side-by-side view of what each harness supports, see the [harness capability map](../reference/reference-harness-capability-map.md).
 
 ## Skill hub and spokes
 
-Every skill physically lives in **one** place: `~/.claude/skills`, the hub. It holds real directories and nothing else, so Claude Code — the primary harness — never resolves a symlink to find a skill. Every other harness reaches the same content through a whole-directory symlink.
+Every skill lives in one place on disk, the hub at `~/.claude/skills`. The hub holds real directories, so Claude Code never has to follow a link to find a skill. Other harnesses reach the same files through a link to the whole directory.
 
-| Directory | Role | Serves |
+```mermaid
+flowchart LR
+    Repo["agentic-toolkit/skills"] -- "sync-toolkit.sh copies" --> Hub["~/.claude/skills"]
+    Vendor["Third-party installers"] -- "install into" --> Hub
+    Agents["~/.agents/skills"] -- "link" --> Hub
+    Gemini["~/.gemini/config/skills"] -- "link" --> Hub
+```
+
+| Directory | Role | Used by |
 |---|---|---|
-| `~/.claude/skills` | **Hub** with real skill directories; counts depend on the installed set | Claude Code |
-| `~/.agents/skills` | Whole-dir symlink to the hub | Codex, Kimi Code |
-| `~/.gemini/config/skills` | Whole-dir symlink to the hub | Antigravity |
-| `~/.codex/skills` | **Not a spoke.** Holds `.system/`, Codex's own bundled skills | Codex internals — leave alone |
-| `~/.kimi-code/skills` | Removed 2026-08-06 — redundant with `~/.agents/skills` | — |
+| `~/.claude/skills` | The hub, holding real skill directories | Claude Code, OpenCode, Grok Build TUI |
+| `~/.agents/skills` | A link to the hub | Codex, Kimi Code, OpenCode |
+| `~/.gemini/config/skills` | A link to the hub | Antigravity |
+| `~/.codex/skills` | Codex's own bundled skills in `.system/`. Not linked to the hub. | Codex. Leave it alone. |
 
-Whole-directory spokes share one installed copy. The authored source can still drift from the hub until synchronization runs. Before this, four skills existed as independent copies across harnesses and two had already diverged.
+Skills reach the hub in two ways:
 
-Content reaches the hub two ways:
+- **Skills from this repository** are copied in by `scripts/sync-toolkit.sh --harness`. Editing the repository does not change the hub until you sync again.
+- **Third-party skills** are installed straight into the hub. An installer that writes to `~/.agents/skills` writes through the link and lands in the hub. If an installer replaces the link with a real directory, `scripts/sync-toolkit.sh --adopt` moves its contents into the hub and restores the link.
 
-- **Authored skills** stay canonical in `agentic-toolkit/skills/` and are copied in by [`sync-skills.sh`](../skills/sync-skills.sh). They are no longer live-edited — an edit in the repo needs a sync run before any harness sees it.
-- **Third-party skills** are installed straight into the hub. Vendor CLIs that write to `~/.agents/skills` now write through the spoke symlink and land in the hub automatically. If one recreates the spoke as a real directory, `./skills/sync-skills.sh --adopt` folds it back in.
+The hub is not tracked in Git. Reinstall third-party skills from their upstream sources.
 
-The hub is derived state and is not tracked by this repository. Reinstall third-party skills from their upstream sources.
+### Linking rules
 
-Full rationale, risks, and the migration record: the skill installation topology established in August 2026.
+- **Do link** instruction files, and whole harness skill directories that point at the hub.
+- **Do not link** plugin directories from a harness's cache, because their paths contain hashes that change. Do not link MCP configuration files, Superpowers twice, or anything from the hub out to another location. Links out of the hub bring back the drift the hub exists to prevent.
+- **Installers that copy a skill into every harness** only need the hub copy now, since every harness reads the hub.
+- **Antigravity's slash menu.** If skills do not appear under `/skills` in the Antigravity command-line tool, also link `~/.gemini/antigravity-cli/skills/`.
 
-## Minimum viable set (autonomous coding runs)
+## Install locations by harness
 
-Evidence from a long autonomous run (2026-06): Superpowers + shell gates do ~90% of the work; Octo was never load-bearing.
+### Antigravity
 
-| Priority | Capability | Official Agy path |
-|----------|------------|-------------------|
-| P0 | Superpowers | Bundled at `~/.gemini/config/plugins/superpowers` (full skill set); fresh install: `agy plugin install https://github.com/obra/superpowers` |
-| P1 | ui-ux-pro-max | `npm i -g uipro-cli` → `uipro init --ai antigravity` in repo |
-| P2 | Context7 | MCP in `mcp_config.json` (or `npx ctx7 setup --mcp --antigravity` / `--cli --antigravity`) |
-| P2 | claude-mem | MCP in `mcp_config.json` (or `npx claude-mem install`, pick Gemini CLI in picker) |
-| P3 | Playwright MCP | Required alongside the Playwright CLI for Claude Code, Codex, and Antigravity parity; configure only after inspection using the [shared baseline](guide-browser-automation-mcp-vs-cli.md#cross-harness-playwright-baseline) |
-| P3 | Browser live debug | **chrome-devtools-plugin** (Google bundled; replaces superpowers-chrome) |
+| Item | Command or path |
+|---|---|
+| Native plugin | `agy plugin install <url>` |
+| Import Gemini extensions | `gemini extensions install ...`, then `agy plugin import gemini` |
+| Import Claude plugins | `agy plugin import claude`, when local Claude extensions exist |
+| Skills | `.agents/skills/` per project, `~/.gemini/config/skills/` for the IDE, and `~/.gemini/antigravity-cli/skills/` for the command-line tool. The synchronizer links only the IDE path. See [Google's skill locations](https://antigravity.google/docs/skills), checked 2026-09-22. |
+| MCP servers | `~/.gemini/config/mcp_config.json` |
+| Bundled Google plugins | `~/.gemini/config/plugins/`, for example chrome-devtools and modern-web-guidance |
 
-## Claude Code plugins → Antigravity
+Check with `agy plugin list`, `/skills` in a session, and `ls ~/.agents/skills/`.
 
-Legend: **Official** | **Substitute** | **MCP** | **In hub** | **Skip**
+### Kimi Code
 
-> **Since 2026-08-06** there is no per-skill wiring for Agy. `~/.gemini/config/skills` is a whole-directory symlink to the hub, so anything in `~/.claude/skills` is already there. Rows marked **In hub** need no action.
+| Item | Command or path |
+|---|---|
+| Native plugin | The `/plugins` marketplace, or `/plugins install <github-url>` |
+| Skills | `~/.agents/skills/`, read natively, plus `.agents/skills/` and `.kimi-code/skills/` per project. Add `~/.kimi-code/skills/` only for a skill that is specific to Kimi. |
+| Instructions | `~/.agents/AGENTS.md` and the project `AGENTS.md`, read natively. An optional Kimi-only layer goes in `~/.kimi-code/AGENTS.md`. |
+| MCP servers | `~/.kimi-code/mcp.json`, and `.kimi-code/mcp.json` per project. Manage them with `/mcp-config`. |
+| Hooks | `[[hooks]]` in `~/.kimi-code/config.toml`. Only `PreToolUse`, `Stop` and `UserPromptSubmit` can block, and no hook can change a tool's input. |
+| Headless runs | `kimi --session session_<id> -p`, which approves actions automatically. `-p` rejects `--yolo` and `--auto`. |
 
-| Claude / Cursor plugin | Agy approach |
-|------------------------|--------------|
-| superpowers | **Official** — bundled (full skill set); fresh install: `agy plugin install https://github.com/obra/superpowers` |
-| ui-ux-pro-max | **Official** — uipro |
-| context7 | **Official** — already wired as MCP; fresh: `npx ctx7 setup --mcp --antigravity` |
-| claude-mem | **Official** — already wired as MCP; fresh: `npx claude-mem install` (pick Gemini CLI) |
-| playwright | **MCP + CLI** — `@playwright/mcp` and Playwright CLI (`@playwright/test`) are both required for Claude Code, Codex, and Antigravity parity; chrome-devtools-plugin remains an additional Agy live-debug tool. Run the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure). |
-| superpowers-chrome | **Substitute** — chrome-devtools-plugin |
-| frontend-design | **Import** (`agy plugin import claude`) or **Bundled** at `~/.gemini/config/plugins/frontend-design` |
-| code-review, pr-review-toolkit, feature-dev | **Substitute** — Superpowers review / brainstorming / subagent skills |
-| elements-of-style | **Skip** — plugin-provided on Claude Code, not in the hub |
-| graphify | **In hub** — no longer a separate `~/.gemini/config/skills/graphify` copy |
-| briefing, capture-meeting, externalize-deliverable, learn, schedule-resume | **In hub** — copied in by [`sync-skills.sh`](../skills/sync-skills.sh) from `agentic-toolkit/skills/`, reached through the spoke symlink |
-| penmark-comments | **In hub** — same path as the other authored skills. Canonical source is `agentic-toolkit/skills/penmark-comments`; the hub copy is no longer a live symlink into the repo, so edits need a sync run. See the [integration guide](guide-penmark-agent-integration.md) for validation and the deferred cross-harness audit. |
-| octo | **Skip** — no port; multi-model review optional only |
-| financial-* (6 plugins) | **Skip** unless doing IB work in Agy |
-| continual-learning (Cursor) | **Skip** — Cursor-only hooks |
-| Claude-only (playground, output-style, agent-sdk-dev, …) | **Skip** |
+Kimi reads the shared `~/.agents/` directory natively, so the hub and the shared instruction file cover it without extra setup. Check with `ls ~/.agents/skills/`, `/plugins info <name>` and `kimi doctor`.
 
-## Browser automation: MCP vs CLI vs chrome-devtools
+### Grok Build TUI
 
-Keep **both** Playwright MCP and the Playwright CLI; choose **per job**, not one globally. Full decision guide with the reasoning, token-cost truth, and corrected myths: [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md).
+| Item | Command or path |
+|---|---|
+| Skills | `~/.claude/skills`, through `[compat.claude] skills = true`. Do not create `~/.grok/skills`. |
+| Instructions | `~/.claude/CLAUDE.md`, through `[compat.claude] agents = true`, and the project `AGENTS.md` natively. Do not create `~/.grok/AGENTS.md`. |
+| MCP servers | Inherits servers configured for Claude Code. Declare others, such as Playwright with `--isolated` or Context7 with `Authorization = Bearer ${CONTEXT7_API_KEY}`, in `~/.grok/config.toml`. |
+| Hooks | Grok does not load Claude hooks. Register your own `PreToolUse` and `Stop` hooks under `~/.grok/hooks/`. See [Grok Build TUI hooks](../hooks/README.md#grok-build-tui). |
+| Plugins | Grok discovers Claude plugins. List the ones to turn off under `[plugins].disabled`, matching Claude Code. |
+| Superpowers | Uses Claude Code's plugin copy. Do not install a second one with `grok plugin install`. |
 
-| Tool | Use for | Per harness |
+### OpenCode
+
+| Item | Command or path |
+|---|---|
+| Skills | `~/.claude/skills` and `~/.agents/skills`, loaded automatically |
+| Instructions | `AGENTS.md`, read natively at user and project level |
+| Configuration | `~/.config/opencode/opencode.json`. `~/.opencode/` holds only the program. |
+| MCP servers | The `mcp` block in `opencode.json`. `enabled: false` turns off a server inherited from a parent configuration. |
+| Hooks | JavaScript plugin modules, loaded from `~/.config/opencode/plugins/` or listed in the `plugin` array. `tool.execute.before` can refuse a call by throwing. `tool.execute.after` cannot block. |
+| Mermaid validation | `scripts/sync-toolkit.sh --harness` copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `plugins/validate-mermaid.ts` |
+| Plugins | The `plugin` array accepts npm and Git sources. Files placed in `plugins/` load without a configuration entry. |
+| Superpowers | `"plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]`. Do not use links, which upstream no longer supports. |
+| RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts` |
+| Providers | `disabled_providers` turns off a provider that an environment variable enabled by accident |
+| Agents and commands | `~/.config/opencode/agent/<name>.md` and `command/<name>.md`, as Markdown with frontmatter |
+
+## A useful minimum for unattended runs
+
+For long unattended coding runs, process skills and automated checks matter most.
+
+| Priority | Capability | Antigravity setup |
 |---|---|---|
-| **Playwright MCP** (`@playwright/mcp`) | Exploratory / ad-hoc / web browsing / live aesthetic review — the interactive REPL loop | Claude Code, Codex, Antigravity (required for parity); Cursor |
-| **Playwright CLI** (`@playwright/test`) | Repeatable flows, visual-regression goldens, anything committed or re-run | Claude Code, Codex, Antigravity (required for parity); Cursor |
-| **chrome-devtools-plugin** (Agy bundled) | Additional live debugging / exploratory tool in Antigravity (replaces superpowers-chrome); it does not replace the MCP parity check | Antigravity |
+| 1 | Superpowers | Bundled at `~/.gemini/config/plugins/superpowers`. For a fresh install: `agy plugin install https://github.com/obra/superpowers` |
+| 2 | UI design skills (ui-ux-pro-max) | `npm i -g uipro-cli`, then `uipro init --ai antigravity` in the repository |
+| 3 | Context7 documentation lookup | MCP server in `mcp_config.json`, or `npx ctx7 setup --mcp --antigravity` |
+| 3 | claude-mem | MCP server in `mcp_config.json`, or `npx claude-mem install` |
+| 4 | Playwright MCP and CLI | Set up after checking the existing configuration. See the [shared Playwright baseline](guide-browser-automation-mcp-vs-cli.md#cross-harness-playwright-baseline). |
+| 4 | Live browser debugging | chrome-devtools-plugin, bundled with Antigravity |
 
-The repeatable test runner is **`@playwright/test`**. Microsoft also publishes [`@playwright/cli`](https://github.com/microsoft/playwright-cli) for agent-driven browser sessions; these are distinct interfaces, checked 2026-09-22. MCP idle cost is harness-dependent: Claude Code can defer tool schemas (~names until first use), so "skip the MCP to save context" only holds on eager-loading harnesses. Judging *looks* needs screenshots + vision either way — the accessibility snapshot shows structure, not aesthetics. Follow the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure); configuration listings alone do not establish parity.
+## Claude Code plugins in Antigravity
 
-## Third-party routers (optional)
+| Claude Code plugin | In Antigravity |
+|---|---|
+| superpowers | Official plugin, bundled. Fresh install: `agy plugin install https://github.com/obra/superpowers` |
+| ui-ux-pro-max | Official, through `uipro` |
+| context7 | Official MCP server: `npx ctx7 setup --mcp --antigravity` |
+| claude-mem | Official MCP server: `npx claude-mem install` |
+| playwright | Playwright MCP (`@playwright/mcp`) and the Playwright CLI (`@playwright/test`). Run the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure). |
+| superpowers-chrome | Use chrome-devtools-plugin instead |
+| frontend-design | Import it with `agy plugin import claude`, or use the bundled copy in `~/.gemini/config/plugins/frontend-design` |
+| code-review, pr-review-toolkit, feature-dev | Use Superpowers' review, brainstorming and subagent skills instead |
+| Skills from this repository | Already available through the hub link |
+| elements-of-style | Not available. It comes from a Claude Code plugin, not the hub. |
+| continual-learning (Cursor) | Not available. It depends on Cursor's hooks. |
+| Plugins that exist only for Claude Code, such as playground or agent-sdk-dev | Not available |
 
-Not plugins — sit **under** or **beside** the harness:
+## Browser automation
 
-- **llm-router** — prompt classification + hooks (Gemini CLI documented; verify Agy)
-- **BrokeLLM** — slot lanes (sonnet/opus/haiku) + quota-aware harness mode
-- **lite-harness** — unified API across claude-code / codex (no Agy yet)
+Keep both Playwright MCP and the Playwright CLI, and choose for each job. The [browser automation guide](guide-browser-automation-mcp-vs-cli.md) explains how to choose.
 
-Use one when you want per-prompt routing rather than a fixed model per task.
+| Tool | Use it for | Harnesses |
+|---|---|---|
+| Playwright MCP (`@playwright/mcp`) | Exploring pages, one-off tasks, browsing and visual review, one step at a time | Claude Code, Codex, Antigravity, Kimi Code, Grok Build TUI |
+| Playwright CLI (`@playwright/test`) | Repeatable flows, visual regression baselines and anything you commit or run again | All of the above |
+| chrome-devtools-plugin | Extra live debugging in Antigravity. It does not replace Playwright MCP. | Antigravity |
 
-## Symlink rules of thumb
+A server appearing in a configuration list does not prove it works. Run the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure).
 
-**Skills are no longer symlinked per-skill.** Since 2026-08-06 the direction is the reverse of what this section used to say: `~/.claude/skills` is the hub holding real directories, and each harness's skill directory is a whole-directory symlink *into* it. Nothing links out of the hub. Run [`../skills/sync-skills.sh`](../skills/sync-skills.sh) to copy authored skills in and repair the spokes; it is independent of the `find-skills` tool.
+## Routing add-ons
 
-**Do symlink:** instruction files; whole harness skill directories pointing at the hub.
+These tools sit alongside a harness rather than inside it:
 
-**Do not symlink:** full plugin directories from Cursor cache (hash paths break); MCP config; Superpowers twice; anything *out of* the hub into another location, which reintroduces the drift the hub exists to prevent. Vendor installers that fan out byte-identical copies per harness (`kimi-webbridge` did this) now only need the hub copy, since every harness resolves there.
+- **llm-router** classifies each prompt and routes it using hooks. Its documentation covers Gemini CLI, so check Antigravity support first.
+- **BrokeLLM** routes by quota across model lanes.
+- **lite-harness** offers one API across Claude Code and Codex.
 
-For Agy **slash menu**, also link to `~/.gemini/antigravity-cli/skills/` if skills don't appear under `/skills`.
+Use one when you want each prompt routed to a different model, rather than a fixed model per task.
 
 ## Useful commands
 
 ```bash
-# Check plugins
-agy plugin list
-
-# Check agent skills
-ls ~/.agents/skills/
-
-# Check project-level agent config
-ls .agents/
-
-# Launch with auto-approve (no prompts)
-agy --dangerously-skip-permissions
-
-# Check MCP config (redact keys before sharing)
-cat ~/.gemini/config/mcp_config.json
+agy plugin list                     # installed Antigravity plugins
+ls ~/.agents/skills/                # skills visible to Codex and Kimi Code
+ls .agents/                         # project-level agent configuration
+agy --dangerously-skip-permissions  # run Antigravity without approval prompts
+cat ~/.gemini/config/mcp_config.json   # MCP servers (remove keys before sharing)
 ```
 
-## Project-specific run prompts
-
-Keep run prompts (e.g. "autonomous sprint until milestone X") in **each app repo**. Link to this guide for harness setup — don't duplicate the matrix per project.
+Keep project-specific run prompts, such as "work autonomously until milestone X", in each project's repository, and link to this guide for harness setup.
 
 ## See also
 
-- [Cross-harness instructions](guide-cross-harness-project-instructions.md)
-- [Agy models and quotas](guide-agy-model-and-quota-selection.md)
-- [Capability map](../reference/reference-harness-capability-map.md)
+- [Cross-harness project instructions](guide-cross-harness-project-instructions.md)
+- [Antigravity model and quota selection](guide-agy-model-and-quota-selection.md)
+- [Harness capability map](../reference/reference-harness-capability-map.md)

@@ -1,109 +1,87 @@
 ---
-title: Claude-mem Harness Configuration Guide
+title: Sharing claude-mem across harnesses
 type: guide
 scope: [harness-parity, claude-mem, mcp, database]
-last_reviewed: 2026-06-14
+last_reviewed: 2026-09-22
 related:
   - guide-harness-plugin-parity.md
 ---
 
-# Claude-mem Harness Configuration Guide
+# Sharing claude-mem across harnesses
 
-Historical configuration recorded on 2026-06-14. Cache versions and local adapter paths below are examples, not portable install targets. Follow the [upstream installation guide](https://docs.claude-mem.ai/installation), locate the installed MCP entry point, and verify it exists before configuring another harness. A shared MCP query service does not by itself install capture hooks in every harness.
+[claude-mem](https://github.com/thedotmack/claude-mem) gives an AI coding agent memory across sessions. It records observations from your work in a local database and lets the agent search them later. This guide shows how to install it and share one memory store between several harnesses.
 
-This guide documents the unified configuration of **claude-mem** (the persistent memory plugin for Claude Code) across your AI coding harnesses: Claude Code, Antigravity (`agy`), Cursor, Codex, and OpenCode.
+## How it works
 
----
+One background worker process manages a single SQLite database. Each harness talks to the same store, either through a native plugin or through claude-mem's MCP server, so memory recorded in one harness can be searched from another.
 
-## Architecture Overview
+```mermaid
+flowchart LR
+    Claude["Claude Code plugin"] --> Worker["claude-mem worker"]
+    Codex["Codex"] --> Worker
+    Cursor["Cursor MCP server"] --> MCP["claude-mem MCP server"]
+    Antigravity["Antigravity MCP server"] --> MCP
+    MCP --> Worker
+    Worker --> DB["~/.claude-mem/claude-mem.db"]
+```
 
-`claude-mem` operates via a central background daemon (worker) and stores all observations, concepts, and project memories in a single, shared SQLite database.
+Searching memory through MCP works in any harness that supports MCP. Recording new observations automatically depends on hooks, which not every harness supports, so check the upstream documentation for what each harness gets.
 
-*   **Plugin Install Directory**: `~/.claude/plugins/marketplaces/thedotmack/plugin`
-*   **Active Cache Directory**: `~/.claude/plugins/cache/thedotmack/claude-mem/13.6.0`
-*   **MCP Server Entrypoint**: `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs`
-*   **Database & State Directory**: `~/.claude-mem/`
-*   **Central SQLite DB**: `~/.claude-mem/claude-mem.db`
+## Install
 
----
+Upstream supports Claude Code, Cursor, Windsurf, OpenCode, Codex CLI, the Antigravity CLI and others, as listed in the [installation guide](https://docs.claude-mem.ai/installation) on 2026-09-22.
 
-## Unified Config Map
+Run the interactive installer and pick your harnesses:
 
-Each harness is wired to invoke the exact same `mcp-server.cjs` entrypoint and access the same `claude-mem.db` instance, ensuring instant memory sync regardless of which tool is active.
+```bash
+npx claude-mem install
+```
 
-### 1. Claude Code (Native Plugin)
-Claude Code manages the plugin lifecycle natively.
-*   **Config File**: `~/.claude/settings.json`
-*   **Registration**:
-    ```json
-    "enabledPlugins": {
-      "claude-mem@thedotmack": true
-    }
-    ```
+Or, in Claude Code, install it from the plugin marketplace:
 
-### 2. Antigravity (MCP Server)
-Antigravity integrates `claude-mem` as an external Model Context Protocol server.
-*   **Config File**: `~/.gemini/config/mcp_config.json`
-*   **Registration**:
-    ```json
-    "claude-mem": {
-      "command": "node",
-      "args": [
-        "<path-to-home>/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs"
-      ]
-    }
-    ```
+```
+/plugin marketplace add thedotmack/claude-mem
+/plugin install claude-mem
+```
 
-### 3. Cursor (MCP Server)
-Cursor integrates `claude-mem` as a global stdio MCP server.
-*   **Config File**: `~/.cursor/mcp.json`
-*   **Registration**:
-    ```json
-    "claude-mem": {
-      "command": "node",
-      "args": [
-        "<path-to-home>/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs"
-      ]
-    }
-    ```
+Data lives in `~/.claude-mem/` by default: the database `claude-mem.db`, the worker's process ID and port files, logs and `settings.json`. Set `CLAUDE_MEM_DATA_DIR` to use another location.
 
-### 4. Codex (Plugin)
-Codex integrates `claude-mem` natively as a runtime plugin.
-*   **Config File**: `~/.codex/config.toml`
-*   **Registration**:
-    ```toml
-    [plugins."claude-mem@claude-mem-local"]
-    enabled = true
-    ```
+## Connect a harness by hand
 
-### 5. OpenCode (Plugin)
-OpenCode integrates `claude-mem` as a local Javascript plugin.
-*   **Config File**: `~/.config/opencode/opencode.json`
-*   **Registration**:
-    ```json
-    "plugin": [
-      "./plugins/claude-mem.js"
-    ]
-    ```
+If the installer does not cover a harness that supports MCP, register claude-mem's MCP server yourself. First find the server script in your installation. For a Claude Code plugin install it is under `~/.claude/plugins/`, at a path like `marketplaces/thedotmack/plugin/scripts/mcp-server.cjs`. Confirm the file exists, because the exact path changes between versions.
 
----
+Then add an entry to the harness's MCP configuration. Replace `<mcp-server-path>` with the full path you found:
 
-## Verification & Troubleshooting
+```json
+"claude-mem": {
+  "command": "node",
+  "args": ["<mcp-server-path>"]
+}
+```
 
-### Check Worker Daemon Status
-To check if the central worker daemon is running and check its process ID:
+| Harness | MCP configuration file |
+|---|---|
+| Antigravity | `~/.gemini/config/mcp_config.json` |
+| Cursor | `~/.cursor/mcp.json` |
+
+## Check that it works
+
+Check that the worker is running:
+
 ```bash
 cat ~/.claude-mem/worker.pid
 cat ~/.claude-mem/supervisor.json
 ```
 
-### Verify Tools in Sessions
-*   **In Antigravity**: Start a session and run `/skills`. Check for the presence of `mcp__claude-mem__*` tools.
-*   **In Claude Code**: Run `/plugin list` or `/skills` to confirm that the plugin is running.
-*   **In Cursor**: Open **Cursor Settings > Features > MCP** and ensure the `claude-mem` entry shows a green "Connected" status dot during active chat.
+Then check each harness:
 
----
+| Harness | How to check |
+|---|---|
+| Claude Code | `/plugin list` shows claude-mem |
+| Antigravity | Tools named `mcp__claude-mem__*` are available in a session |
+| Cursor | Cursor Settings, Features, MCP shows the `claude-mem` server as connected |
 
-## References
-*   **Upstream Repository**: [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem)
-*   **Harness Parity Guide**: [guide-harness-plugin-parity.md](guide-harness-plugin-parity.md)
+## See also
+
+- [claude-mem repository](https://github.com/thedotmack/claude-mem)
+- [Harness plugin parity guide](guide-harness-plugin-parity.md)

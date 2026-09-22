@@ -80,8 +80,7 @@ Three clusters at the top level. See [README.md](README.md) for the visitor-faci
 ├── docs/                   — PUBLIC TRACKING & DECISIONS: ROADMAP, CHANGELOG, adrs/
 │
 ├── instructions/           — HARNESS MIRROR: ~/.claude/CLAUDE.md symlinks here
-│   ├── CLAUDE.md           — the global brief every harness reads
-│   └── STABILITY.md        — its regression test
+│   └── CLAUDE.md           — the global brief every harness reads
 │
 ├── skills/                 — HARNESS MIRROR: drop-in to ~/.claude/skills/
 │   └── learn/

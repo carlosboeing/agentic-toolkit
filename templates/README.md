@@ -1,66 +1,68 @@
 # Templates
 
-Project-bootstrap scaffolds for starting a new project that follows the conventions in [`guides/guide-project-structure-and-conventions.md`](../guides/guide-project-structure-and-conventions.md).
+Starting points for new projects that follow the [project structure conventions](../guides/guide-project-structure-and-conventions.md), plus a lean Claude Code settings file.
 
 ## Catalog
 
-| Template | What |
-|---|---|
-| [`default-project/`](default-project/) | Private-base scaffold: `CLAUDE.md`, `README.md`, `docs/` skeleton, `.gitignore`, plus base governance (`.github/CODEOWNERS`, `.github/dependabot.yml`, `.github/PULL_REQUEST_TEMPLATE.md`). |
-| [`default-project-oss/`](default-project-oss/) | Public OSS superset: `default-project` + `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `.github/ISSUE_TEMPLATE/*.yml` (private -> public via `/repo-standards fix oss`). |
-| [`lean-claude-settings/`](lean-claude-settings/) | A lean `.claude/settings.json` (connectors off + finance plugins off) for running Claude Code with minimal startup context. See [`guide-trimming-claude-code-startup-context.md`](../guides/guide-trimming-claude-code-startup-context.md). |
+| Template | Use it for | Contents |
+|---|---|---|
+| [`default-project/`](default-project/) | A private project | `CLAUDE.md`, `README.md`, a `docs/` skeleton, `.gitignore`, and base governance files: `.github/CODEOWNERS`, `.github/dependabot.yml` and a pull request template |
+| [`default-project-oss/`](default-project-oss/) | Files to add when a project becomes open source | `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `LICENSE`, `THIRD_PARTY_NOTICES.md` and GitHub issue forms |
+| [`lean-claude-settings/`](lean-claude-settings/) | Claude Code sessions with less startup context | A `settings.json` that turns off claude.ai connectors. See the [startup context guide](../guides/guide-trimming-claude-code-startup-context.md). |
 
-Additional variants remain out of scope until a real project needs them.
+To turn a private project into an open-source one, run `/repo-standards fix oss`, which adds the open-source files.
 
-## Use
+## Start a new project
 
-Two paths to bootstrap a new project from `default-project/`:
+Copy the template with `degit`, which downloads only that directory:
 
 ```bash
-# Fetch only the template directory without cloning the full repository
 npx degit github:carlosboeing/agentic-toolkit/templates/default-project ./new-project
+```
 
-# Or copy it from an existing agentic-toolkit clone
+Or copy it from a local clone of this repository:
+
+```bash
 cp -R ./templates/default-project ./new-project
+```
 
+Then replace the `<PROJECT_NAME>` placeholders and make the first commit:
+
+```bash
 cd ./new-project
-# Substitute <PROJECT_NAME> placeholders via editor or sed:
-#   grep -rl '<PROJECT_NAME>' . | xargs sed -i '' 's/<PROJECT_NAME>/your-project-name/g'   # macOS
-#   grep -rl '<PROJECT_NAME>' . | xargs sed -i 's/<PROJECT_NAME>/your-project-name/g'      # Linux
+grep -rl '<PROJECT_NAME>' . | xargs sed -i '' 's/<PROJECT_NAME>/your-project-name/g'   # macOS
+# grep -rl '<PROJECT_NAME>' . | xargs sed -i 's/<PROJECT_NAME>/your-project-name/g'    # Linux
 git init && git add . && git commit -m "chore: bootstrap repo with project structure conventions"
 ```
 
-The first command requires anonymous access after publication and downloads the subdirectory from GitHub. The second uses the current local clone and does not require `npx` or `degit`.
+## Apply the conventions to an existing project
 
-## Retrofitting an existing project
+See "Retrofitting an existing project" in the [conventions guide](../guides/guide-project-structure-and-conventions.md). It is a manual procedure for now.
 
-For applying these conventions to an *existing* project (not creating a new one), see the "Retrofitting an existing project" section in [`guides/guide-project-structure-and-conventions.md`](../guides/guide-project-structure-and-conventions.md). Manual procedure for now; future `/init-project` skill will automate both bootstrap and retrofit.
-
-## What's in the template
+## What the templates contain
 
 ```
-default-project/  (private-base)
-├── CLAUDE.md              — generic project brief (now includes OSS house-standard pointer)
-├── README.md              — minimal stub with <PROJECT_NAME> placeholder
-├── .gitignore             — sensible defaults
+default-project/
+├── CLAUDE.md              project brief for AI agents
+├── README.md              short stub with a <PROJECT_NAME> placeholder
+├── .gitignore
 ├── .github/
-│   ├── CODEOWNERS         — * @<OWNER>
-│   ├── dependabot.yml     — github-actions + npm weekly
+│   ├── CODEOWNERS         * @<OWNER>
+│   ├── dependabot.yml     weekly GitHub Actions and npm updates
 │   └── PULL_REQUEST_TEMPLATE.md
 └── docs/
-    ├── ROADMAP.md         — seven-section template
-    ├── CHANGELOG.md       — empty stub
-    ├── notes/             — scratch, chat dumps, research
-    ├── 0-brainstorms/     — pre-design ideas
-    ├── 1-discovery/       — research, spikes, analyses
-    ├── 2-design/          — specs + designs
-    ├── 3-plans/           — phased implementation plans
-    ├── 4-reviews/         — retros, audits, reviews, analyses
-    ├── adrs/              — single-decision records (NNNN-title.md)
-    └── guides/            — internal procedural how-tos
+    ├── ROADMAP.md         seven-section roadmap template
+    ├── CHANGELOG.md       empty changelog
+    ├── notes/             scratch notes and research
+    ├── 0-brainstorms/     early ideas
+    ├── 1-discovery/       research, spikes and analyses
+    ├── 2-design/          specifications and designs
+    ├── 3-plans/           implementation plans
+    ├── 4-reviews/         retrospectives, audits and reviews
+    ├── adrs/              architecture decision records (NNNN-title.md)
+    └── guides/            internal how-to guides
 ```
 
-`default-project-oss/` extends `default-project` with:
 ```
 default-project-oss/
 ├── CODE_OF_CONDUCT.md
@@ -75,4 +77,4 @@ default-project-oss/
     └── config.yml
 ```
 
-The templates do not create `system/` or `architecture.md`. Add them only when the README's architecture section no longer holds the required detail. See the conventions guide for that promotion path.
+The templates leave out `docs/system/` and `docs/architecture.md`. Add them when the README's architecture section outgrows a page, as the conventions guide describes.

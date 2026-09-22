@@ -13,7 +13,7 @@ related:
 
 # Penmark agent integration
 
-Use the `penmark-comments` skill when an agent is explicitly asked to review, audit, critique, or comment on a writable local Markdown file. That request activates the skill even when direct or project instructions require read-only work, no file changes, or chat-only findings. The skill adds validated Penmark v1 findings only when mutation is allowed. It is a global user preference, not a project-template requirement.
+How to set up and test the `penmark-comments` skill, which lets an AI agent write review findings into a Markdown file as [Penmark](https://github.com/carlosboeing/penmark) v1 inline comments. The skill activates when you explicitly ask an agent to review, audit, critique or comment on a local Markdown file you can write to. It writes comments only when writing is allowed. Turning it on is a personal, global preference, not something a project template should require.
 
 ## Behavior and precedence
 
@@ -30,35 +30,34 @@ Precedence is highest first:
 
 ## Components
 
-```text
-Canonical global instruction
-        ↓
-penmark-comments skill
-        ├── pinned Penmark v1 writer contract
-        └── structural validator
-        ↓
-Reviewed Markdown document with one EOF review block
+```mermaid
+flowchart TB
+    Instruction["Global instruction: use penmark-comments for reviews"] --> Skill["penmark-comments skill"]
+    Skill --> Contract["Pinned Penmark v1 writer contract"]
+    Skill --> Validator["Structural validator"]
+    Contract --> Doc["Reviewed Markdown file with one review block at the end"]
+    Validator --> Doc
 ```
 
 The global instruction stays small and selects the skill. `SKILL.md` first selects the read-only or writer branch, then supplies the read, validate, anchor, atomic-write, and revalidate workflow when writing is allowed. The bundled contract is a pinned writer subset; Penmark's upstream format specification remains normative.
 
 ## Install and verify
 
-For a development clone, run:
+From a clone of this repository, run:
 
 ```bash
-./skills/sync-skills.sh
+./scripts/sync-toolkit.sh --harness
 ```
 
-It copies the whole bundle into the hub and repairs whole-directory spokes where the corresponding harness parent directory exists:
+It copies the whole skill into the hub and links each installed harness's skill directory to it:
 
 | Harness | Skill directory |
 |---|---|
 | Claude Code | `~/.claude/skills/penmark-comments` |
 | Codex | `~/.agents/skills/penmark-comments` |
-| Agy | `~/.gemini/config/skills/penmark-comments` |
+| Antigravity | `~/.gemini/config/skills/penmark-comments` |
 
-The script updates the real hub copy. It leaves real spoke directories alone unless `--adopt` is requested. A standalone installation must copy the complete `penmark-comments/` bundle, including `references/` and `scripts/`. Do not create an Agy slash-menu link unless normal skill discovery proves it necessary.
+The script updates the hub copy. It leaves a harness skill directory alone if it is a real directory rather than a link, unless you pass `--adopt`. If you install by hand, copy the complete `penmark-comments/` directory, including `references/` and `scripts/`. Add a link for Antigravity's slash menu only if normal skill discovery does not find the skill.
 
 Verify the shared spokes and the copied bundle before use:
 
@@ -97,34 +96,16 @@ For a multi-source review, verify that only the primary document changes. Compar
 
 A positive activation result requires either a native skill-invocation event or a trace-visible read/load of `penmark-comments/SKILL.md`. An agent announcement that it activated the skill is supporting evidence only. A non-activation result requires a complete trace from a harness that exposes the relevant trace and no native invocation or read/load event; if that trace is unavailable, record the result as incomplete rather than pass.
 
-## Evidence audit — 2026-07-22
-
-The forward-test is intentionally incomplete. The results below distinguish completed behavioral evidence from execution blockers; deferred rows are not passes.
-
-| Harness | Version | Installed path observed | Verified results | Deferred evidence |
-|---|---:|---|---|---|
-| Claude Code | 2.1.217 | `~/.claude/skills/penmark-comments` | Skill link resolved | Positive, negative, and multi-source runs blocked by session quota |
-| Codex CLI | 0.145.0 | `~/.agents/skills/penmark-comments` | Two positive runs validated by bundled validator and Penmark parser; read-only target byte-identical; multi-source changed only primary and validated | Summary run left the target byte-identical but stalled before a final response; remaining matrix deferred |
-| Antigravity (`agy`) | 1.1.5 | `~/.agents/skills/penmark-comments` shared with Codex in this audit | Correct noninteractive invocation form verified | Positive, negative, and multi-source runs stalled during file search; no behavioral pass recorded |
-
-The original raw evaluation is not distributed with this repository. The results above are historical summaries, not reproducible evidence of current harness behavior. Use the public runbook below for a fresh check.
-
-## Activation-guard evidence — 2026-07-26
-
-The activation-guard evaluation (2026-07-26) completed Codex 0.145.0's five-boundary matrix, including a Markdown-containing general code review; Claude Code 2.1.220 and Agy 1.1.7 completed read-only activation cases. Cursor's global instruction loading is structurally verified through its `AGENTS.md` symlink, while Cursor Penmark skill discovery and runtime behavior remain unverified. The durable negative Codex event streams are retained with that evaluation.
-
 ## Manual cross-harness verification runbook
 
-> **Superseded as the default (2026-07-27).** This full matrix documents the 2026-07-26 activation-guard exercise and remains valid as reference. It is no longer the standard for routine changes: under the consent workflow introduced on 2026-07-27, routine changes verify activation only — four probes on one harness — because the gate and the disclosure summary make every other failure mode visible on first use. Run this full matrix only for high-risk changes, or when focused probes reveal harness-specific differences.
+Use this full test for high-risk changes to the skill, or when a quick check suggests a harness behaves differently. For routine changes, a short activation check on one harness is enough, because the consent question and the summary of written comments make other failures visible the first time the skill runs.
 
-The 2026-07-23 release left cross-harness evidence incomplete. Complete the rows below in a new evaluation when that evidence is required; do not infer a current pass from the earlier release.
-
-The existing evidence already covers two Codex positive runs, its read-only override, and its multi-source run. Preserve those historical behavioral facts, but do not infer the newly required trace evidence from them. Run the full matrix below in fresh sessions and record direct activation or non-activation evidence for every row.
+Run every scenario in a fresh session, and record direct evidence that the skill did or did not activate.
 
 | Harness | Scenarios to run in a fresh session |
 |---|---|
-| Claude Code | Writable positive, chat-only, summary, Markdown-containing general code review, multi-source |
-| Agy | Writable positive, chat-only, summary, Markdown-containing general code review, multi-source |
+| Claude Code | Writable positive, chat-only, summary, general code review that includes Markdown, multi-source |
+| Antigravity | Writable positive, chat-only, summary, general code review that includes Markdown, multi-source |
 
 ### 1. Prepare a disposable test directory
 
@@ -569,11 +550,11 @@ When the pinned local Penmark checkout is available, run its production parser f
 
 For a writable or multi-source positive, the assertion must report zero corruption, at most one review block at EOF, more than zero entries, and a 1:1 anchor/entry count. If the production parser cannot be run, record that as incomplete evidence rather than a pass.
 
-### 5. Record and close the deferred evidence
+### 5. Record the results
 
-Append one row per run to the evaluation report's cross-harness smoke-test table: date, harness/version, installed skill path, scenario, exact terminal response, direct activation or non-activation evidence, before/after SHA-256 values, validator result, production-parser result, and whether only the allowed file changed. Attach or retain the named scenario evidence files until the report has the relevant detail.
+Record one row per run: date, harness and version, installed skill path, scenario, the exact terminal response, direct evidence of activation or non-activation, before and after SHA-256 values, the validator result, the production parser result, and whether only the allowed file changed. Keep the scenario evidence files until the results are written up.
 
-Mark a row `pass` only when every expected outcome above is met. Record a timeout, quota limit, missing response, parser failure, or unexpected file change as a blocker without changing the skill speculatively. When all outstanding rows pass, replace the report's deferred status with completed Task 6 evidence and update this guide's audit table and `last_reviewed` date.
+Mark a row as passed only when every expected outcome is met. Record a timeout, quota limit, missing response, parser failure or unexpected file change as a blocker, and do not change the skill on a guess. When every row passes, update this guide's `last_reviewed` date.
 
 ## Failure handling and rollback
 

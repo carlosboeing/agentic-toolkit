@@ -1,16 +1,14 @@
-# `/learn` — Educational explainer skill for Claude Code
+# learn
 
-A single-file [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that turns any commit, PR, file, folder, symbol, behaviour, or topic into a software-engineering lesson tailored to someone who is still learning.
+Turns a commit, pull request, file, folder, symbol, behavior or topic into a short software-engineering lesson. It is a single-file [agent skill](https://code.claude.com/docs/en/skills).
 
-It names the concrete decisions in the code, ties principles to the lines that embody them, links every named concept inline to a canonical reference, and stays honest when there's nothing big to teach.
+The lesson names the concrete decisions in the code, ties each principle to the lines that show it, and links every concept to a standard reference. When a change is too small to teach much, it says so.
 
-Designed for engineers using Claude Code to *write* code who also want to *understand* what just got produced — bridging the gap between code that works and knowing why it's structured the way it is.
-
----
+It is for engineers who use an AI agent to write code and also want to understand the code it produced.
 
 ## What it does
 
-Type `/learn` (with or without args) in any Claude Code session and you get a structured 5- or 6-section lesson:
+Run `/learn`, with or without arguments, to get a lesson in five or six sections:
 
 1. **What this is** / what changed
 2. **Why it's structured this way** (the deliberate decisions, with alternatives shown)
@@ -19,11 +17,11 @@ Type `/learn` (with or without args) in any Claude Code session and you get a st
 5. **What an experienced engineer would still call out** — the honest critical-review pass
 6. **Further reading** — one or two canonical pointers, only when warranted
 
-Refactors, async changes, and control-flow rewrites also get a Mermaid diagram when one earns its keep.
+Refactors, asynchronous changes and control-flow rewrites also get a Mermaid diagram when one helps.
 
-## Targets — what `/learn` accepts
+## What you can point it at
 
-The skill auto-detects the target type from the syntactic shape of what you type.
+The skill works out the target type from the shape of what you type.
 
 | Target shape | Looks like | What you get |
 |---|---|---|
@@ -34,9 +32,9 @@ The skill auto-detects the target type from the syntactic shape of what you type
 | **Topic** | the literal `topic <name>` | Concept-first lesson, then mapped to your codebase |
 | **Help** | `help`, `?`, `usage`, `--help`, `-h` | Render usage and stop |
 
-## Dials — how the lesson is shaped
+## Options
 
-Three knobs you can mix and match. Order doesn't matter; put them anywhere in the args.
+Three options shape the lesson. Combine them in any order.
 
 | Dial | Keywords | Default | Effect |
 |---|---|---|---|
@@ -44,7 +42,7 @@ Three knobs you can mix and match. Order doesn't matter; put them anywhere in th
 | **Depth** | `quick` (or `peek`), `standard` (or `overview`), `deep` (or `deep-dive`/`deepdive`/`audit`) | `standard` | Codebase coverage in topic and folder modes. `deep` is hard-capped at 20 files. |
 | **Save** | `save` (or `--save`/`export`) | off | Write the lesson to `<repo>/.claude/learn-log/` (or `~/.claude/learn-log/` outside a git repo). |
 
-The level dial is canonically `expert` / `intermediate` (default) / `beginner` / `eli5`; the depth dial is canonically `quick` / `standard` (default) / `deep`. These match the house vocabulary shared with `/briefing`. All previously-typed forms remain valid as backwards-compatible synonyms — `simple` still parses as `beginner`, `overview` as `standard`, and `deep-dive` / `deepdive` / `audit` as `deep`. One change to be aware of: `deep` is no longer a level synonym for `expert` (it's now the canonical depth keyword); use `expert` / `technical` / `staff` for the top tier instead. See `SKILL.md` for the full synonym list.
+The level and depth keywords match those of `/briefing`. Older forms still work: `simple` means `beginner`, `overview` means `standard`, and `deep-dive`, `deepdive` and `audit` mean `deep`. `deep` sets depth, not level, so use `expert`, `technical` or `staff` for the most technical lesson. `SKILL.md` lists every synonym.
 
 ## Built-in topic vocabulary
 
@@ -52,14 +50,11 @@ The level dial is canonically `expert` / `intermediate` (default) / `beginner` /
 
 `auth` · `dependency-injection` · `error-handling` · `logging` · `observability` · `validation` · `state-management` · `routing` · `caching` · `concurrency` · `security` · `performance` · `i18n` · `accessibility` · `layering` · `domain-modeling` · `api-design` · `data-access` · `testing`
 
-Off-list topics are handled with a hybrid fallback: the skill admits it's improvising and lists the search terms it derived, then runs anyway.
+For a topic not on the list, the skill says it is improvising, shows the search terms it chose, and continues.
 
 ## Install
 
-See the [skills catalog README](../README.md#install-one-skill) for the full options and platform notes. In short:
-
-- **Consume just this skill** — copy (or `curl`) its `SKILL.md` into your harness's skills directory. Best for sharing a single skill.
-- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to copy authored skill directories into the hub and repair whole-directory spokes. Re-run it after source edits.
+See [Install one skill](../README.md#install-one-skill) in the skills catalog, or run `scripts/sync-toolkit.sh --harness` to sync every skill.
 
 ## Usage examples
 
@@ -97,7 +92,7 @@ See the [skills catalog README](../README.md#install-one-skill) for the full opt
 
 ## Saved lessons (`learn-log`)
 
-When you append `save`, the lesson is written to disk so it can be re-read later — and so any Mermaid diagrams in it render properly (the Claude Code CLI doesn't render Mermaid; saved files do, in any markdown viewer).
+Add `save` to write the lesson to a file. You can read it again later, and any Mermaid diagrams render in a Markdown viewer, which the Claude Code terminal cannot do.
 
 - **Location**: `<repo>/.claude/learn-log/` if you're in a git repo, else `~/.claude/learn-log/`.
 - **Filename**: `YYYY-MM-DD-<short-sha-or-pr>-<level>.md` (e.g. `2026-05-01-cfc4afb-eli5.md`).
@@ -105,9 +100,9 @@ When you append `save`, the lesson is written to disk so it can be re-read later
 - **Overwrite policy**: never silent. If the filename already exists, a `-2`, `-3`, … suffix is appended.
 - **Gitignore**: not auto-ignored. Whether to commit your learn-log is up to you and your team.
 
-## Design philosophy
+## Design rules
 
-A few load-bearing rules — read these if you want to understand why the skill behaves as it does, or if you want to extend it:
+These rules explain how the skill behaves. Read them before extending it.
 
 - **Plain English first; jargon second.** Every named concept gets defined the first time it appears. The level dial controls how aggressively this rule fires.
 - **Anti-fabrication, applied to citations.** Never invent a URL. If a link isn't certain, the skill verifies via WebFetch or writes a search hint instead. A wrong link is worse than no link.
@@ -116,7 +111,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Don't manufacture topic hits.** If `/learn topic caching` finds no caching layer in your codebase, that's a finding, not a failure.
 - **Concrete to abstract, every time.** Pattern: here's the line, here's the principle, here's why the principle matters in practice. Never a principle without the line that embodies it.
 - **Bounded by design.** Hard 20-file cap on `deep`; the skill stops and says so. Reaching the cap is itself a finding.
-- **Single file.** All ~500 lines of skill behaviour, including the topic vocabulary, live in one `SKILL.md`. Easy to share, easy to extend (add a row to the vocabulary table; no new files).
+- **Single file.** All of the skill's behavior, about 500 lines including the topic vocabulary, is in one `SKILL.md`. To add a topic, add a row to its vocabulary table.
 
 ## Requirements
 
@@ -133,7 +128,7 @@ This whole thing is one `SKILL.md` file. To share with someone:
 2. They put it at `~/.claude/skills/learn/SKILL.md`.
 3. Restart Claude Code.
 
-That's it. No package install, no plugin marketplace, no auth setup.
+No package, marketplace or sign-in is needed.
 
 ## Extending
 
@@ -145,4 +140,4 @@ Common edits:
 
 ## License
 
-MIT — share freely, modify freely.
+MIT, like the rest of the repository.

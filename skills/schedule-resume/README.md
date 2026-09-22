@@ -1,13 +1,27 @@
-# Schedule Resume
+# schedule-resume
 
-`/schedule-resume` schedules an unattended continuation of an existing Claude Code, Agy, Codex, or Kimi coding session. It can start at an explicit time or a known usage-reset time, then retry only quota or service-availability failures until the resumed session exits successfully.
+Schedules an existing Claude Code, Antigravity (`agy`), Codex or Kimi Code session to continue later without you, for example when a usage limit resets overnight. The job starts at the time you choose, and retries only when the failure is a quota or service-availability problem, until the resumed session finishes its task.
+
+```mermaid
+flowchart TB
+    Create["/schedule-resume creates a job"] --> Wait["Scheduler polls every minute"]
+    Wait --> Due{"Attempt due?"}
+    Due -- "No" --> Wait
+    Due -- "Yes" --> Live{"Claude session in active use?"}
+    Live -- "Yes" --> Defer["Defer, no quota spent"] --> Wait
+    Live -- "No" --> Run["Resume the session with the prompt"]
+    Run --> Done{"Result"}
+    Done -- "Completion token printed" --> Complete["Job completed"]
+    Done -- "Quota limit, outage, or exit without the token" --> Retry["Schedule the next retry"] --> Wait
+    Done -- "Sign-in, missing session or other error" --> Failed["Job failed"]
+```
 
 ## Examples
 
 ```text
 /schedule-resume
 /schedule-resume resume Claude session 8b2f... from this Codex project when usage resets at 23:00, retry every 15 minutes
-/schedule-resume resume my Agy conversation at 2026-07-23 06:30 Australia/Brisbane
+/schedule-resume resume my Agy conversation at 2026-07-23 06:30 Europe/London
 /schedule-resume retry every 10 minutes until the session exits zero
 /schedule-resume list scheduled jobs
 /schedule-resume show status for job-20260722T130000Z-1234
@@ -15,11 +29,11 @@
 /schedule-resume clean up terminal jobs older than 30 days
 ```
 
-The skill confirms all consequential values before creation and states: `This will not start another run now.` Read-only list and status requests do not need confirmation. Cancellation requires a job ID unless there is exactly one active job. Cleanup always requires confirmation and a retention period.
+Before creating a job, the skill confirms every value that matters and states: `This will not start another run now.` Listing jobs and checking status need no confirmation. Cancelling needs a job ID unless exactly one job is active. Cleanup always asks for confirmation and a retention period.
 
 ## Prerequisites
 
-- On macOS: `launchd` (built in) with a logged-in GUI session — the scheduler runs jobs as user LaunchAgents in the GUI domain, which is what keeps the login keychain readable for the resumed harness. On Linux: a working `cron` with a per-user `crontab` (cronie/vixie-cron). The helper is macOS-tested this pass.
+- On macOS: `launchd` (built in) with a logged-in GUI session — the scheduler runs jobs as user LaunchAgents in the GUI domain, which is what keeps the login keychain readable for the resumed harness. On Linux: a working `cron` with a per-user `crontab` (cronie/vixie-cron). The helper has been tested on macOS.
 - `jq` installed.
 - On macOS, `caffeinate` and `lockf` (both built in). `caffeinate -i` prevents idle sleep only while an attempt is running; on other platforms the idle guard is simply skipped.
 - Each target CLI installed and authenticated: `claude`, `agy`, `codex`, or `kimi`. For Claude targets on macOS, create checks that the `Claude Code-credentials` keychain item is readable and warns if not. For Kimi targets, create warns that resuming a session open in a TUI injects the prompt into the live session and switches it to auto permissions.
@@ -30,7 +44,7 @@ The skill confirms all consequential values before creation and states: `This wi
 
 The bundle contains `SKILL.md`, this README, `scripts/resume-job.sh`, its `scripts/lib/` modules, and static/shell tests under `tests/`. Keep the directory together and keep the helper executable.
 
-Install it like any other skill in this repo — see the [skills catalog README](../README.md#install-one-skill). [`sync-skills.sh`](../sync-skills.sh) copies the whole `schedule-resume/` directory (scripts, libs, tests) into the hub and repairs the shared spokes; the helper's executable bit travels with the repo file, so no `chmod` step is needed. To consume just this one skill instead, copy its whole directory into your harness's skills directory.
+Install it like any other skill: see [Install one skill](../README.md#install-one-skill), or run `scripts/sync-toolkit.sh --harness`. Either way, copy the whole `schedule-resume/` directory, including scripts, libraries and tests. The helper's executable bit is stored in Git, so no `chmod` step is needed.
 
 ## State and scheduling
 

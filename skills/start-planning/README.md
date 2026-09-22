@@ -1,8 +1,6 @@
-# `/start-planning`
+# start-planning
 
-A drop-in skill that starts implementation planning from a design artifact in a fresh session. The skill holds the phase boundary. The project holds the mechanics: where plans go, how they are named, how they are reviewed, and which planning skill to follow.
-
----
+Starts an implementation plan from an approved design, in a fresh session. The skill keeps design and planning as separate steps. The project decides the details: where plans go, how they are named and reviewed, and which planning skill to use.
 
 ## What it does
 
@@ -10,9 +8,9 @@ A drop-in skill that starts implementation planning from a design artifact in a 
 /start-planning [design-path]
 ```
 
-Also activates from natural requests to start implementation planning from a design. A path is optional: if omitted, the skill resolves the design from the project's own artifacts.
+It also runs when you ask in plain words to start planning from a design. The path is optional. Without one, the skill finds the current design in the project's own files.
 
-A new session can plan without the previous design conversation. The agent:
+A new session can plan without the design conversation that came before it. The agent:
 
 1. Resolves the design (explicit path, or project-native discovery).
 2. Discovers this project's planning conventions from its instructions and existing files.
@@ -20,7 +18,16 @@ A new session can plan without the previous design conversation. The agent:
 4. Delegates structure to the project's planner (`writing-plans` when that is what the project uses).
 5. Writes a plan that references the design, checks it against the design, and stops before implementation.
 
-It will not reconstruct requirements from the previous design chat, reopen settled decisions without an explicit current-session instruction, or offer to implement.
+```mermaid
+flowchart TB
+    Design["Find the design"] --> Conventions["Read the project's planning conventions"]
+    Conventions --> Inspect["Inspect the code the design affects"]
+    Inspect --> Plan["Write the plan with the project's planner"]
+    Plan --> Check["Check the plan against the design"]
+    Check --> Stop["Stop before implementation"]
+```
+
+It does not rebuild requirements from the earlier design chat, reopen settled decisions unless you ask in the current session, or offer to start implementing.
 
 ## Example
 
@@ -47,7 +54,7 @@ A fresh session reads that design, inspects this repo, writes the plan where **t
 
 ## Install
 
-See the [skills catalog README](../README.md#install-one-skill). Copy or `curl` this `SKILL.md` into your harness skills directory, or run [`sync-skills.sh`](../sync-skills.sh) to author across harnesses.
+See [Install one skill](../README.md#install-one-skill) in the skills catalog, or run `scripts/sync-toolkit.sh --harness` to sync every skill.
 
 ## Help
 

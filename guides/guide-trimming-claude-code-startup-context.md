@@ -9,20 +9,22 @@ related:
 
 # Trimming Claude Code startup context
 
-A fresh Claude Code session can open at ~75% context remaining before you type anything — a heavily-connected environment measured **~232k tokens of fixed startup** on the 1M window. This guide is the durable recipe that took that to **~70k (~93% remaining)** without losing any tool used in coding sessions.
+Claude Code loads tool definitions, skills, agents and instruction files before you type anything. With many integrations connected, this startup context can take a large share of the context window. This guide shows how to measure it and reduce it without losing the tools you use.
 
-## What dominated this measurement
+In one heavily connected environment measured on 2026-07-08, startup context was about 232,000 tokens of a 1M-token window. The steps below brought it to about 70,000.
 
-In the 2026-07-08 measurement, MCP schemas were the largest reducible bucket: 173.6k of roughly 232k startup tokens, about 75% of the total. Memory files were under 4%. Measure your current session first; deferred tool loading and changed catalog budgets can make these ratios inapplicable.
+## Where startup context goes
 
-Within MCP tools, **claude.ai connectors dominate** (~156k across Canva, Notion, Slack, Google Workspace, travel, Vercel, …), not plugins. Disabling `octo` + finance plugins reclaims only ~13k; the connectors are the prize.
+In that measurement, MCP tool definitions were 173,600 of the 232,000 tokens, about 75%. Almost all of that came from claude.ai connectors, not plugins. Instruction files were under 4%.
 
-## Step 0 — measure first
+Your numbers will differ, and newer Claude Code versions can load tool definitions only when needed. Measure your own session before changing anything.
 
-Change nothing until you can measure. Two tools:
+## Step 1: measure
 
-- **`/context`** (TUI) — authoritative per-bucket + per-tool split. Run before and after every change.
-- **Turn-1 `usage`** (scriptable) — on the first turn, almost the whole startup context is written to the prompt cache at once, so the first assistant message's `usage` gives the total:
+Use two measurements:
+
+- **`/context`** shows startup context by category and by tool. Run it before and after every change.
+- **The first turn's `usage`** gives a scriptable total. On the first turn, almost all startup context is written to the prompt cache at once, so the first assistant message's `usage` is close to the full startup cost:
 
   ```bash
   python3 - "<transcript>.jsonl" <<'PY'
@@ -35,83 +37,90 @@ Change nothing until you can measure. Two tools:
   PY
   ```
 
-  Transcripts live at `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`, where the encoded directory is the working path with each `/` replaced by `-`.
+  Transcripts are stored at `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`, where the encoded directory is the working path with each `/` replaced by `-`.
 
-**Golden rule:** reclaim is realized on the *next* session. Always **change → restart → `/context`**. Nothing is reclaimed until the meter confirms it.
+A change takes effect in the next session. Always change the setting, start a new session, then run `/context` again.
 
-## The three levers (and their granularity)
+```mermaid
+flowchart TB
+    Measure["Measure with /context"] --> Change["Change one setting"]
+    Change --> Restart["Start a new session"]
+    Restart --> Check["Measure again"]
+    Check --> Measure
+```
 
-| Lever | Controls | Granularity | Versioned? |
+## The settings that control it
+
+| Setting | What it controls | Granularity | Stored in a file |
 |---|---|---|---|
-| `disableClaudeAiConnectors: true` (settings.json) | all claude.ai connectors | **all-or-nothing** | ✅ |
-| `enabledPlugins: {"x@mkt": false}` (settings.json) | one plugin's MCP + skills + agents | per-plugin | ✅ |
-| `claude mcp add …` (self-config MCP in `~/.claude.json`) | one server | per-server; **survives `disableClaudeAiConnectors`** | ✅ |
-| `/chrome` → "Enabled by default: No" | Claude-in-Chrome extension | on/off | menu toggle (reliable); `--no-chrome` is per-session only |
+| `"disableClaudeAiConnectors": true` in `settings.json` | Every claude.ai connector | All or nothing | Yes |
+| `"enabledPlugins": {"name@marketplace": false}` in `settings.json` | One plugin's MCP servers, skills and agents | One plugin | Yes |
+| `claude mcp add ...`, stored in `~/.claude.json` | One MCP server you configure yourself | One server. Not affected by the connector switch. | Yes |
+| `/chrome`, then "Enabled by default: No" | The Claude in Chrome extension | On or off | Menu setting |
 
-Two facts make the recipe work:
-- Disabling connectors inside Claude Code does **not** touch the claude.ai web/desktop apps — those are separate account toggles. Lean Claude Code costs you nothing there.
-- Connectors have **no per-connector file lever** — you can't durably keep *just* Notion. To keep one integration while cutting the rest, **self-host its MCP** (see Fathom below).
+Two facts make this work:
 
-## The recipe: a global lean baseline
+- **Turning connectors off in Claude Code does not affect the claude.ai web or desktop apps.** Those have their own settings.
+- **You cannot keep a single connector.** To keep one integration and drop the rest, run that integration's MCP server yourself, as in step 2.
 
-Set it once at user scope (`~/.claude/settings.json`); every project inherits it. Per-project `.claude/settings.json` is for exceptions only.
+## Step 2: run the integrations you need yourself
 
-### 1. Self-host the integrations you actually use in code — FIRST
-
-Do this **before** disabling connectors, so nothing breaks. Worked example — Fathom (needed by a `/capture-meeting` skill):
+Do this before turning connectors off, so nothing stops working. For example, to keep Fathom meeting recordings available to a meeting-capture skill:
 
 ```bash
 claude mcp add --scope user fathom -- npx mcp-remote@latest https://api.fathom.ai/mcp
 ```
 
-Complete the OAuth in your browser, then verify: `/mcp` shows a `fathom` self-config server; call one tool (e.g. `get_identity`) to confirm it's authenticated. This is the *same* official backend the claude.ai Fathom connector proxied — same tools — but as a self-config stdio server it survives the connector flag. (Pin `mcp-remote@<version>` instead of `@latest` if you want to freeze the bridge.)
+Complete the sign-in in your browser. Then check that `/mcp` lists `fathom`, and call one of its tools to confirm it is signed in. This uses the same backend as the claude.ai connector, with the same tools, but it is not affected by the connector switch. To freeze the bridge version, replace `@latest` with a specific version.
 
-The pattern generalizes: any connector you need in code (Vercel, Notion, …) → self-host a lean MCP for it rather than keeping the heavy connector.
+The same approach works for any connector you need while coding.
 
-### 2. Disable all connectors
+## Step 3: turn off connectors
+
+Add this to `~/.claude/settings.json`:
 
 ```json
-// ~/.claude/settings.json
 "disableClaudeAiConnectors": true
 ```
 
-Restart → `/context` → confirm no `mcp__claude_ai_*` remain and your self-config server(s) survive.
+Start a new session and run `/context`. No tools starting with `mcp__claude_ai_` should remain, and the servers you added in step 2 should still be there.
 
-### 3. Disable plugins you don't use
+## Step 4: turn off plugins you do not use
+
+In `~/.claude/settings.json`, set unused plugins to `false`:
 
 ```json
-// ~/.claude/settings.json → enabledPlugins
-"financial-analysis@claude-for-financial-services": false,
-"pitch-agent@claude-for-financial-services": false
-// … keep the ones you use
+"enabledPlugins": {
+  "some-plugin@some-marketplace": false
+}
 ```
 
-Disabling (not uninstalling) reclaims 100% of a plugin's context — MCP, skills, and agents — and re-enabling is a one-line flip. There is no token benefit to uninstalling.
+Turning a plugin off removes all of its startup context: MCP servers, skills and agents. Turning it back on is a one-line change, so there is no reason to uninstall it.
 
-### 4. Drop redundant integrations
+## Step 5: remove overlapping integrations
 
-If two stacks cover the same ground, keep the cheaper one. Example: `claude-in-chrome` (~10k) overlaps with `superpowers-chrome` (~1.3k, drives an existing Chrome via CDP) and Playwright (~6k, fresh-browser automation). Disable it persistently via the `/chrome` menu → set **"Enabled by default: No"**, then summon it on demand with `claude --chrome` when you actually need your real logged-in browser.
+If two integrations do the same job, keep the smaller one. For example, Claude in Chrome (about 10,000 tokens) overlaps with Playwright (about 6,000 tokens) for browser automation. Turn Claude in Chrome off with `/chrome`, then "Enabled by default: No", and start it for a single session with `claude --chrome` when you need your logged-in browser.
 
-> The reliable lever is the `/chrome` menu toggle. The `claudeInChromeDefaultEnabled` / `settings.json` keys are ignored (Claude Code issues [#26204](https://github.com/anthropics/claude-code/issues/26204), [#35825](https://github.com/anthropics/claude-code/issues/35825)), and `--no-chrome` is per-session only. This matches Anthropic's own guidance — enabling Chrome by default loads its tools into every session, so keep it off and use `--chrome` when needed.
+The `/chrome` menu is the setting that works. The `claudeInChromeDefaultEnabled` key in `settings.json` is ignored (Claude Code issues [#26204](https://github.com/anthropics/claude-code/issues/26204) and [#35825](https://github.com/anthropics/claude-code/issues/35825)), and `--no-chrome` applies to one session only.
 
-## Reversibility
+## Result in the measured environment
 
-| Change | Undo |
-|---|---|
-| `disableClaudeAiConnectors: true` | delete the line / set `false` (user or a project scope) |
-| plugin `false` | set `true` / delete the key |
-| self-config MCP | `claude mcp remove <name>` |
-| Claude-in-Chrome off (`/chrome` → Enabled by default: No) | `/chrome` → Enabled by default: Yes, or `claude --chrome` on demand |
-
-## Measured result
-
-| Stage | Fixed startup | Status line |
+| Stage | Startup context | Context free |
 |---|---:|---:|
-| Baseline | ~232k | ~75% remaining |
-| + finance plugins off | ~226k | — |
-| + connectors off (Fathom self-hosted) | ~84k | ~91% |
-| + claude-in-chrome dropped | ~70k | ~93% |
+| Before | about 232,000 tokens | about 75% |
+| Unused plugins off | about 226,000 tokens | |
+| Connectors off, Fathom run separately | about 84,000 tokens | about 91% |
+| Claude in Chrome off | about 70,000 tokens | about 93% |
 
-## Per-project overrides
+## Undoing a change
 
-The global baseline makes every project lean. For a project that genuinely needs connectors back, opt out in its own `.claude/settings.json` with `"disableClaudeAiConnectors": false` — but note that restores **all** connectors (no per-connector file lever), so prefer self-hosting the one you need. See the [lean-settings template](../templates/lean-claude-settings/README.md).
+| Change | How to undo it |
+|---|---|
+| `disableClaudeAiConnectors: true` | Remove the line or set it to `false` |
+| A plugin set to `false` | Set it to `true` or remove the key |
+| An MCP server you added | `claude mcp remove <name>` |
+| Claude in Chrome off | `/chrome`, then "Enabled by default: Yes", or start with `claude --chrome` |
+
+## Exceptions for one project
+
+User-level settings make every project lean. If one project needs connectors, set `"disableClaudeAiConnectors": false` in that project's `.claude/settings.json`. That brings back every connector, so running the one you need yourself is usually better. See the [lean settings template](../templates/lean-claude-settings/README.md).

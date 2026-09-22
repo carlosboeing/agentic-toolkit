@@ -1,12 +1,21 @@
 # Git hooks
 
-These hooks run inside a target Git repository. They apply to commits and pushes made by people or agents, independent of the AI harness in use.
+These hooks run inside a Git repository, on commits, pushes and merges. They apply to everyone who works in the repository, person or agent, whatever AI harness they use.
 
-The separate [`hooks/`](../hooks/) directory contains harness lifecycle hooks that intercept tool calls.
+The separate [`hooks/`](../hooks/) directory holds harness hooks, which run inside an AI coding harness when the agent uses a tool.
 
-## Install (shared pattern)
+## Catalog
 
-Each hook is versioned **inside** the target repository rather than sourced from here, so a fresh clone carries it:
+| Hook | Runs on | What it does |
+|---|---|---|
+| [`private-workbench-guard`](private-workbench-guard/) | `pre-commit` | Stops a public repository from committing a nested private repository, citations of private documents, or private paths |
+| [`drift-guard`](drift-guard/) | `pre-push`, `post-merge`, and the `housekeep` command | Stops a push when tracking records are out of date, and reports branches and worktrees left behind after a merge |
+
+The CopyDesk commit hook that used to live here now ships with [CopyDesk](https://github.com/carlosboeing/copydesk).
+
+## Install a hook in a repository
+
+Each hook is committed into the target repository, so every clone carries it. Copy the hook, then point Git at the hook directory:
 
 ```bash
 hook_name=private-workbench-guard
@@ -18,19 +27,17 @@ chmod +x "$target_repo/scripts/githooks/pre-commit"
 git -C "$target_repo" config core.hooksPath scripts/githooks
 ```
 
-`core.hooksPath` is local to each clone. Git does not copy that setting when another machine clones the repository, so configure it on every clone. Check it with `git -C "$target_repo" config --get core.hooksPath`.
+`core.hooksPath` is a per-clone setting. Git does not copy it when someone clones the repository, so set it on each clone. Check it with:
 
-## Catalog
+```bash
+git -C "$target_repo" config --get core.hooksPath
+```
 
-| Hook | Event | What it does |
-|---|---|---|
-| [`private-workbench-guard/`](private-workbench-guard/) | `pre-commit` | Rejects a staged workbench gitlink, workbench citation, or private-side vocabulary in a public repository. |
-| [`drift-guard/`](drift-guard/) | `pre-push`, `post-merge`, manual `housekeep` | Rejects stale project records before push and reports branches, worktrees, or issues left behind after a merge. |
-| `copydesk` | `pre-commit` | Extracted to [`carlosboeing/copydesk`](https://github.com/carlosboeing/copydesk) on 2026-08-19, and lives in that repository's `git-hooks/`. It runs the CopyDesk suite before a commit. |
+`scripts/sync-toolkit.sh --repos` installs the hooks into every repository in your projects directory. Run it with `--dry-run` first.
 
-## Conventions for this type
+## Writing a Git hook
 
-- One directory per hook, named for what it guards rather than which event it uses.
-- The script filename is the git hook name (`pre-commit`), so installing is a copy rather than a rename.
-- Each directory's `README.md` states what the hook checks and what it deliberately leaves out. This prevents a later maintainer from rebuilding a rejected approach.
-- Every pattern that can produce false positives is measured against real history before shipping, and the numbers go in the README. A hook that fires on legitimate commits gets bypassed reflexively, which is worse than no hook.
+- **Name the directory after what the hook protects,** not the Git event it uses.
+- **Name the script after the Git hook,** for example `pre-commit`, so installing it is a plain copy.
+- **Document what the hook leaves out on purpose.** This stops a later maintainer from rebuilding an approach that was already rejected.
+- **Measure false positives before shipping.** Run each pattern against real commit history and record the numbers in the README. A hook that blocks legitimate commits gets bypassed out of habit, which is worse than having no hook.

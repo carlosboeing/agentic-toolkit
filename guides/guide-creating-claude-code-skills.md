@@ -1,5 +1,5 @@
 ---
-title: "Creating Claude Code Skills — A Practitioner's Guide"
+title: "Creating Claude Code skills"
 type: guide
 scope: [skills, claude-code]
 last_reviewed: 2026-05-02
@@ -7,11 +7,20 @@ related:
   - skills/learn/SKILL.md
 ---
 
-# Creating Claude Code Skills — A Practitioner's Guide
+# Creating Claude Code skills
 
-The official spec is at the [Claude Code skills docs](https://code.claude.com/docs/en/skills) — read that first if you've never written a skill. This guide is the *opinionated layer* on top: the design decisions you actually face when writing one, the tradeoffs that aren't covered in the reference, and the lessons from shipping `/learn` (a real, working, drop-in skill that lives in this repo at `skills/learn/SKILL.md`).
+A practical guide to designing a skill: when a skill is the right tool, how to shape its commands and arguments, how to write its instructions, and how to test and share it. It builds on the official [Claude Code skills documentation](https://code.claude.com/docs/en/skills), so read that first if you have never written a skill. The examples come from `/learn`, a working skill in this repository at `skills/learn/SKILL.md`.
 
-This guide assumes you've used Claude Code, can read a YAML frontmatter block, and want to write a skill that's actually useful — not a toy. It is roughly 500 lines on purpose; that's the same line budget the harness recommends for `SKILL.md` itself, and the constraint that produces the constraint is itself the lesson.
+It assumes you have used Claude Code and can read YAML frontmatter.
+
+```mermaid
+flowchart TB
+    Need["A repeatable procedure"] --> Fit{"Right tool? (section 1)"}
+    Fit -- "Skill" --> Surface["Design the commands and arguments (section 3)"]
+    Surface --> Body["Write the instructions (section 4)"]
+    Body --> Iterate["Sketch, tighten, evaluate (section 7)"]
+    Iterate --> Share["Share it (section 8)"]
+```
 
 ## 1. When to write a skill (vs the alternatives)
 
@@ -387,4 +396,4 @@ That's a workable skill in well under 100 lines. Most useful skills are this siz
 - **`/learn`** — the working example this guide drew from. See `skills/learn/SKILL.md` and `skills/learn/README.md` in this repo for the full skill and its design notes.
 - **`superpowers:writing-skills`** — if you have the superpowers plugin installed, this skill captures additional discipline around skill design. Shares some DNA with this guide; emphasises eval-driven iteration more.
 
-The thing that compounds across all of these resources: **a skill is a contract you write with future-you**. The constraints make sense when you read them; the constraints save you when you've forgotten why they exist. Write the *why* into the skill body as you go, and the skill will keep working long after you've stopped thinking about it.
+Across all of these, one habit matters most: write the reason for each rule into the skill as you go. When you return to the skill months later, the reasons tell you which rules still apply.

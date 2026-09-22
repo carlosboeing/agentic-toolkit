@@ -5,8 +5,9 @@ authors:
   - "Carlos Boeing"
   - "gpt-5.6-sol (codex)"
   - "grok-4.6 (grok)"
+  - "claude-opus-5 (claude-code)"
 scope: [model-routing, claude-code, codex, kimi-code, antigravity, grok, quota, open-weight]
-last_reviewed: 2026-08-17
+last_reviewed: 2026-09-22
 related:
   - guide-agy-model-and-quota-selection.md
   - ../reference/reference-harness-capability-map.md
@@ -14,128 +15,44 @@ related:
 
 # AI model and effort routing
 
-The named-model recommendations below are a historical policy based on the August 2026 comparison, not a current ranking. A 2026-09-22 check found newer rosters, including [GPT-6 Astra in Codex](https://learn.chatgpt.com/docs/pricing) and [Gemini 3.8/3.7 Flash in Antigravity](https://antigravity.google/docs/models). Use the task-selection method, then verify current models, plan terms, and prices before choosing.
+How to choose a harness, model and effort level for a task in under a minute, when you have subscriptions to several AI coding tools. The aim is steady, high-quality output across the week, not using the strongest model on every task.
 
-Use this guide to choose a harness, model, and effort in under a minute. The aim is sustained high-quality throughput, not winning every task with the strongest model.
+The method in the first half of this guide is meant to stay valid as products change. The [example routing table](#example-routing-table-august-2026) at the end names specific models from an August 2026 comparison, and newer models have appeared since. On 2026-09-22, for example, Codex offered [GPT-6 Astra](https://learn.chatgpt.com/docs/pricing) and Antigravity offered [Gemini 3.8 and 3.7 Flash](https://antigravity.google/docs/models). Check current models, plans and prices before you rely on a named model.
 
-The default policy is:
+## The core rule
 
-> Start with the cheapest independent capacity pool that can finish the task reliably. Escalate when you observe complexity, not when the task merely sounds important.
+> Start with the cheapest separate capacity pool that can finish the task reliably. Escalate when you observe complexity, not when a task merely sounds important.
 
-The comparison assumed one subscription tier per harness. Plans, prices, model rosters, quota structures and benchmarks change often, so check each vendor's pricing and model pages before relying on a named model. The routing logic is meant to outlast those changes.
+Each subscription is its own pool with its own limits. Spreading work across pools keeps the strongest models free for the tasks that need them.
 
-Grok Build TUI is a fifth daily harness. Do not route work to it from this guide until the models reference has a live roster and quota snapshot.
+## Choosing, step by step
 
-## The short answer
+Decide in this order:
 
-If you don't want to read the rest, use these defaults:
+1. **Required capability.** Does the task need a terminal, a browser, vision, a logged-in session, a document tool, a particular skill or hook, long context or background running?
+2. **Privacy.** Must it stay local, can it go to an approved cloud provider, or can any provider see it?
+3. **Task type.** Is it collecting, transforming, implementing, debugging, deciding or reviewing?
+4. **Difficulty.** How large is the scope, how ambiguous is it, how much damage could a mistake do, and have evidence-backed attempts already failed?
+5. **Context size.** A few targeted files, under 256,000 tokens, or genuinely more?
+6. **Quota.** Protect the five-hour limit first, the weekly limit second, and keep a separate fallback third.
+7. **Escalation.** Raise effort first, then the model tier, then move to a different frontier provider.
 
-- **Cheap collection, reading, and extraction:** Antigravity with Gemini 3.6 Flash medium. Use Codex Luna low when terminal/repository access matters more than browser or vision.
-- **Everyday coding:** Codex Terra medium. Use Claude Sonnet 5 medium/high when Claude Code's skills and hooks fit the repository better, or Kimi K3-256k high to preserve both pools.
-- **Hard coding and debugging:** Codex Sol high. Move to max only after a high-effort run has a concrete unresolved ambiguity.
-- **Architecture, brainstorming, and final prose judgment:** Claude Opus 5 high. Use xhigh for high-blast-radius decisions; use Fable 5 max only for the rare long-horizon task that justifies its weekly cost.
-- **Very large repositories or documents:** Kimi K3-256k high first, then K3 high only when the evidence really exceeds 256k.
-- **Visual UI work and browser QA:** Antigravity with Gemini 3.1 Pro high for consequential judgment, Gemini 3.6 Flash high for iteration.
-- **Long autonomous runs:** Choose the harness with the freshest independent pool. Antigravity is useful for browser-heavy/background work; Kimi K3-256k and Claude Sonnet 5 are good implementation runners.
-- **Quota relief:** Use Gemini Flash, Luna, Kimi K2.7/K3-256k, or a measured open-weight worker. Do not send architecture or final review to a local 12B–30B model just because it is available.
+```mermaid
+flowchart TB
+    Task["New task"] --> Cap["Filter harnesses by required capability and privacy"]
+    Cap --> Type{"Collect or transform?"}
+    Type -- "Yes" --> Cheap["Cheapest adequate model, low effort"]
+    Type -- "No" --> Daily["Everyday model, medium effort"]
+    Cheap --> Obs{"Observed ambiguity, failures or high stakes?"}
+    Daily --> Obs
+    Obs -- "No" --> Done["Finish"]
+    Obs -- "Yes" --> Effort["Raise effort"]
+    Effort --> Still{"Still unresolved?"}
+    Still -- "No" --> Done
+    Still -- "Yes" --> Tier["Stronger model, or another provider's frontier model"]
+```
 
-## 60-second chooser
-
-| Task | Start here | Why this is efficient | Escalate when you observe | Independent-pool fallback |
-|---|---|---|---|---|
-| Search current docs and collect sources | Agy, Gemini 3.6 Flash medium | Fast, visual/browser-capable, separate pool | Sources conflict, the conclusion is consequential, or synthesis crosses domains | Codex Luna low as worker; Kimi K3-256k high as judge |
-| Read, extract, classify, or summarize supplied material | Codex Luna low | Very low Codex credit rate and reliable structured handoff when scope is explicit | Missing facts, subtle legal/business meaning, or more than one interpretation | Gemini 3.6 Flash low/medium; local Gemma 4 12B after validation |
-| Mechanical code edits, formatting, renames | Codex Luna low | Cheap terminal loop for bounded changes | The edit crosses APIs, changes behavior, or tests fail unexpectedly | Kimi K2.7 Code; Gemini 3.6 Flash medium |
-| Everyday feature or test work | Codex Terra medium | Strong coding value without Sol's burn | More than two layers, unclear invariants, or two evidence-backed failed fixes | Claude Sonnet 5 medium/high; Kimi K3-256k high |
-| Debugging a cross-layer or intermittent problem | Codex Sol high | Fast frontier coding agent with strong terminal performance | High effort still has competing root causes or high-blast-radius choices | Claude Opus 5 high; Kimi K3 high |
-| Architecture or system design | Claude Opus 5 high | Strong judgment, synthesis, and writing | Irreversible/high-cost decision, security boundary, or unresolved trade-off | Codex Sol high; Kimi K3 high |
-| Brainstorm and challenge a product idea | Claude Opus 5 high | Strong divergent thinking and critique | The idea spans many systems or needs long-horizon coherence | Kimi K3 high; Gemini 3.1 Pro high for visual products |
-| Turn an approved design into an implementation plan | Codex Sol high or Claude `opusplan` | Strong decomposition tied to executable repository evidence | Plan contains unknown APIs or architecture is still unsettled | Kimi K3 high |
-| Business writing, handbook content, proposals | Kimi K3-256k high for draft; Claude Opus 5 high for final judge | Kimi preserves scarce Claude capacity; Opus handles consequential polish | Claims, positioning, negotiation, or brand voice can change the outcome | Claude Sonnet 5 high; Codex Terra medium |
-| UI design and visual critique | Agy, Gemini 3.1 Pro high with browser/screenshots | Visual judgment and live browser tools outweigh small text-score differences | Design-system architecture or conflicting product constraints | Claude Opus 5 high with browser screenshots |
-| Browser QA and visual regression investigation | Agy, Gemini 3.6 Flash high | Fast screenshots, DOM inspection, and separate quota | Root cause crosses app architecture or accessibility/security | Gemini 3.1 Pro high; Codex Terra/Sol for the code fix |
-| Code review | Codex Sol high | Strong repository reasoning and fast issue verification | Security, data loss, concurrency, or architectural contract is involved | Claude Opus 5 high as second reviewer |
-| Document/design/plan review | Claude Opus 5 high | Better judgment and prose-level contradiction detection | Corpus exceeds comfortable context or claims need fresh research | Kimi K3 high; Gemini Flash worker plus Opus judge |
-| Large-repository or long-document analysis | Kimi K3-256k high | Independent pool and lower quota than K3 1M for the same results within 256k | Evidence packet genuinely exceeds 256k after structural search | Kimi K3 high at 1M; Claude Opus/Sonnet 5 at 1M |
-| Long autonomous implementation | Claude Sonnet 5 high or Kimi K3-256k high | Good implementation capability without the top-tier burn | Repeated repair loops, unclear architecture, or review finds systemic issues | Agy Sonnet 4.6 Thinking; Codex Terra/Sol depending difficulty |
-
-## Choose effort before you choose a stronger model
-
-Effort labels are provider-specific. “High” on Kimi, Claude, Gemini, and Codex does not represent equal compute.
-
-### Lowest-sufficient-effort rule
-
-1. Use **low** for collection, extraction, classification, mechanical transformations, and a precisely named symbol or file.
-2. Use **medium** for ordinary implementation, test writing, structured drafting, and well-scoped analysis.
-3. Use **high** for ambiguity, multi-layer reasoning, debugging, architecture, critique, or final synthesis.
-4. Use **xhigh/max** only when the task has high blast radius, a high-effort attempt leaves concrete uncertainty, or a benchmarked long-horizon workflow justifies the extra capacity.
-
-Do not raise effort to compensate for a vague prompt. First narrow the goal, provide the relevant evidence, and define success.
-
-### Provider mappings
-
-| Provider | Cheap | Daily | Hard | Exceptional |
-|---|---|---|---|---|
-| Claude Code | Haiku 4.5; Sonnet 5 low | Sonnet 5 medium/high | Opus 5 high | Opus 5 xhigh or Fable 5 max |
-| Codex | Luna low | Terra medium | Sol high | Sol xhigh/max |
-| Kimi Code | K2.7 Code or K3-256k low | K3-256k high | K3 high | K3 max only when a high attempt is demonstrably insufficient |
-| Antigravity | Gemini 3.6 Flash low | Gemini 3.6 Flash medium/high | Gemini 3.1 Pro high or Sonnet 4.6 Thinking | Opus 4.6 Thinking; note that Agy's Claude roster trails native Claude Code |
-
-## Task recipes
-
-Each recipe separates collection from judgment. “Do not spend it on” identifies the easiest quota waste to avoid.
-
-### Research, reading, and investigation
-
-| Workload | Choose | Why | Use it for | Escalate when | Do not spend it on | Low-quota fallback |
-|---|---|---|---|---|---|---|
-| Current web research | Gemini 3.6 Flash medium in Agy | Fast, browser/vision capable, separate pool | Finding official docs, dates, prices, product changes, source packets | Sources disagree or the recommendation has material cost/risk | Opus/Fable doing raw search-result collection | Luna low or an Ollama/Groq worker with mandatory source URLs |
-| Supplied-document extraction | Luna low | Cheap structured processing | Facts, entities, headings, action lists, comparisons | Meaning is implicit, politically sensitive, or contract-like | Sol max copying fields from a document | Local Gemma 4 12B after a sample accuracy check |
-| Repository mapping | Luna low or Kimi K2.7 Code | Low-cost terminal/search loop | Locate files, symbols, tests, call paths, and uncertainties | Mapping requires architectural conclusions or broad skills inflate context | Opus reading an entire repository before `rg`/AST search | K3-256k high when the repository is genuinely large |
-| Consequential synthesis | Opus 5 high or K3 high | Stronger judgment after collection | Proposals, design decisions, investigation conclusions | Conflicting constraints remain after one synthesis pass | Asking the judge to repeat every worker search | Sol high as an independent judge |
-
-### Coding and debugging
-
-| Workload | Choose | Why | Use it for | Escalate when | Do not spend it on | Low-quota fallback |
-|---|---|---|---|---|---|---|
-| Small, deterministic change | Luna low | Cheapest reliable Codex tier | Renames, config edits, snapshots, obvious tests | Behavior changes or an unexpected failure appears | Sol/Opus on boilerplate | K2.7 Code or Gemini Flash medium |
-| Ordinary implementation | Terra medium | Best default balance | Features with a clear design, tests, refactors, API wiring | More than two layers or the design has unresolved choices | Sol max before a first implementation attempt | Sonnet 5 medium or K3-256k high |
-| Hard implementation | Sol high | Frontier coding plus fast agent wall time | Cross-layer changes, extension behavior, concurrency, migrations | The problem is architectural rather than implementation detail | Max effort on a task that lacks evidence | Opus 5 high or K3 high |
-| Debugging | Sol high | Strong hypothesis/test loop | Intermittent failures, toolchain issues, integration bugs | Two evidence-backed hypotheses fail or security/data integrity is involved | Repeating the same prompt at higher effort without new evidence | Terra high, then Opus high from another pool |
-| Final code review | Sol high | Strong issue finding and verification | Correctness, tests, compatibility, maintainability | Security, irreversible data changes, or a disputed finding | Luna approving its own broad implementation | Opus 5 high as second opinion |
-
-### Design, planning, and writing
-
-| Workload | Choose | Why | Use it for | Escalate when | Do not spend it on | Low-quota fallback |
-|---|---|---|---|---|---|---|
-| Brainstorm | Opus 5 high | Strong divergence and challenge | Options, trade-offs, product framing, failure modes | Long-horizon coherence or unusually high stakes | Fable max for a small feature idea | K3 high |
-| System design | Opus 5 high | Strong synthesis and prose | Boundaries, contracts, alternatives, risks | Decision is costly to reverse or evidence is incomplete | Designing from summaries without source inspection | Sol high or K3 high |
-| Implementation planning | Sol high or `opusplan` | Converts approved intent into executable tasks | File-level plan, tests, checkpoints, rollout | Design questions reappear | Using a cheap model to silently decide architecture | K3 high |
-| Documentation and handbook prose | K3-256k high or Sonnet 5 high | Strong writing at lower scarce-pool cost than Opus | Guides, explanations, brand-aligned drafts | Final wording affects customers, negotiation, or policy | Opus on formatting and link cleanup | Terra medium or Gemini Flash high |
-| Proposal/final editorial pass | Opus 5 high | Strong judgment, clarity, and contradiction detection | Positioning, claims, final narrative | Facts need external verification | Opus collecting raw facts and then writing from the same bloated session | K3 high judge over a Flash/Luna evidence packet |
-
-### Visual, browser, and artifact work
-
-| Workload | Choose | Why | Use it for | Escalate when | Do not spend it on | Low-quota fallback |
-|---|---|---|---|---|---|---|
-| UI iteration | Gemini 3.6 Flash high in Agy | Fast screenshot and browser loop | Spacing, responsive states, obvious visual defects | Product/design-system choices conflict | Text-only architecture model guessing what the page looks like | Claude Sonnet with screenshots |
-| UI critique or design direction | Gemini 3.1 Pro high | Better visual reasoning | Hierarchy, composition, accessibility, interaction judgment | Decision spans brand, system architecture, and product strategy | Flash finalizing a high-stakes redesign without review | Opus 5 high with captured screenshots |
-| Authenticated exploratory browsing | Kimi WebBridge with a suitable model | Uses the real browser session | Admin panels, purchases, logged-in research, form inspection | A destructive action is possible | Any unattended model confirming purchases or deletes | Manual supervision; use the cheapest competent model |
-| Presentations, spreadsheets, PDFs | Harness with the dedicated artifact skill; model by reasoning difficulty | Render/edit tooling determines success | Slides, formulas, layout, document conversion | Claims, narrative, or calculations are consequential | Choosing solely by intelligence benchmark | Flash/Terra for extraction; Opus/K3 for final narrative |
-
-## Route by task properties, not by repository name
-
-Use this decision order manually now and preserve it if you automate later:
-
-1. **Required capability:** terminal, browser, vision, real login, artifact tool, skill, hook, long context, or background operation.
-2. **Privacy:** local-only, approved cloud, or any provider.
-3. **Task class:** collect, transform, implement, debug, decide, or review.
-4. **Difficulty signal:** scope, ambiguity, blast radius, and failed evidence-backed attempts.
-5. **Context size:** targeted files, under 256k, or genuinely above 256k.
-6. **Quota state:** five-hour headroom first, weekly preservation second, independent fallback third.
-7. **Escalation:** raise effort, then model tier, then move to an independent frontier pool.
-
-A future router should accept at least these fields:
+If you automate routing later, give the router these fields rather than one "intelligence" score, which would route browser, privacy, quota and context-heavy tasks badly:
 
 ```yaml
 task_class: collect | transform | implement | debug | decide | review
@@ -148,187 +65,151 @@ fallback_order: []
 escalation_triggers: []
 ```
 
-Do not automate a single numeric “intelligence tier.” It will route browser, privacy, quota, and context tasks incorrectly.
+## Choose effort before a stronger model
 
-## Worker–judge routing
+Effort levels differ by provider. "High" on Kimi, Claude, Gemini and Codex does not mean the same amount of compute.
 
-The worker collects. The judge decides.
+| Effort | Use it for |
+|---|---|
+| Low | Gathering information, extraction, classification, mechanical changes, and work on one named file or symbol |
+| Medium | Ordinary implementation, writing tests, structured drafting and well-scoped analysis |
+| High | Ambiguity, reasoning across several layers, debugging, architecture, critique and final synthesis |
+| Extra high or max | Only when a mistake would be costly, a high-effort attempt left specific open questions, or a long task has shown it needs more |
 
-### Worker contract
+Do not raise effort to make up for a vague prompt. Narrow the goal, supply the relevant evidence and define what success looks like first.
 
-Give the worker a narrow request:
+## Split gathering from judgment
 
-- named scope and stop condition;
-- required files, symbols, or official source types;
-- exact evidence format;
-- source links or file locations for every claim;
-- uncertainties and contradictions;
-- no architecture, recommendation, or final approval;
-- a handoff cap of about 1,500 tokens unless the task proves it needs more.
+For large tasks, let a cheap model gather the evidence and a strong model make the decision.
 
-The judge receives the original question plus the compact packet. It samples important evidence, resolves trade-offs, and performs the consequential synthesis. It does not automatically repeat collection.
+```mermaid
+flowchart TB
+    Question["Question"] --> Worker["Worker: cheap model gathers evidence"]
+    Worker --> Packet["Short evidence packet with sources"]
+    Packet --> Judge["Judge: strong model decides"]
+    Question --> Judge
+    Judge --> Answer["Decision"]
+```
 
-### When the split saves capacity
+Give the worker a narrow brief:
 
-The bounded trials behind this guide found:
+- The scope and when to stop.
+- The files, symbols or kinds of official source to use.
+- The exact format for its findings.
+- A source link or file location for every claim.
+- Any uncertainties and contradictions it found.
+- No architecture, recommendations or approvals.
+- A limit of about 1,500 tokens for the handoff, unless the task clearly needs more.
 
-- Ollama pricing research used about 25.1k Luna tokens for the worker versus 34.9k Sol tokens for a one-pass answer. The worker packet was adequate if a judge supplied the recommendation without browsing again.
-- A Penmark flow trace used about 48.0k Luna tokens versus 66.1k Sol tokens. The worker found the correct path; Sol added material architectural risks.
-- A broad codebase skill expanded both runs. The routing contract must constrain skill activation and file reads, or the cheaper worker can still burn large context.
+The judge gets the original question and the packet. It checks samples of the important evidence and makes the decision. It does not repeat the gathering.
 
-Use the split when collection is large but mechanical, the handoff is small, and the judge can sample rather than rediscover. Use one stronger model when the task is small, collection and judgment are interleaved, both models would load the same large instructions, or worker mistakes would force a full restart.
+In bounded trials, the split saved capacity. A pricing research task used about 25,100 tokens with a cheap worker against 34,900 for a single pass by a strong model, and a code-tracing task used about 48,000 against 66,100. In the code-tracing trial, the strong model's review added architectural risks the worker had missed. A skill that loaded a lot of context inflated both runs, so limit what the worker can load.
 
-### Good worker–judge pairings
+Use the split when gathering is large but mechanical and the handoff is small. Use one strong model when the task is small, when gathering and judgment are mixed together, or when a worker mistake would mean starting over.
 
-| Worker | Judge | Good fit |
-|---|---|---|
-| Gemini 3.6 Flash medium | Opus 5 high | Web research, product comparisons, proposal evidence |
-| Luna low | Sol high | Repository mapping before architecture, debugging, or review |
-| K2.7 Code / K3-256k low | Opus or Sol high | Large code/document collection from an independent pool |
-| Local Gemma 4 12B or GPT-OSS 20B | Any frontier judge | Private extraction, classification, logs, first-pass indexing |
+## Managing quota
 
-## Project playbooks
+Five-hour limits shape today's work. Weekly limits decide whether a hard task later in the week still has a frontier model.
 
-These are starting points by task difficulty. No repository gets one permanent model.
+### At the start of a work block
 
-### Production web application
-
-| Task | Start | Escalate / fallback |
-|---|---|---|
-| Component, copy, or test with clear acceptance criteria | Terra medium | Sonnet 5 high if skills/hooks fit better; K3-256k high when Codex is tight |
-| Visual polish, responsive QA, browser defect | Gemini 3.6 Flash high in Agy | Gemini 3.1 Pro high for design judgment; Sol high for cross-layer code root cause |
-| Design system architecture or major redesign | Opus 5 high plus screenshots | Sol high as implementation planner; K3 high as independent reviewer |
-
-### Technical documentation and handbook
-
-| Task | Start | Escalate / fallback |
-|---|---|---|
-| Link checks, formatting, extraction, catalogue updates | Luna low or Gemini Flash low | Local Gemma 4 12B after accuracy sampling |
-| New guide or brand-aligned section | K3-256k high or Sonnet 5 high | Opus 5 high for final editorial judgment |
-| Brand system, positioning, or conflicting policy review | Opus 5 high | K3 high independent review; Gemini Pro high when visual identity is central |
-
-### Client delivery and research synthesis
-
-| Task | Start | Escalate / fallback |
-|---|---|---|
-| Source discovery and evidence collection | Gemini 3.6 Flash medium worker | Luna low if terminal/local docs dominate; preserve citations |
-| Investigation synthesis and option analysis | K3 high or Opus 5 high | Sol high for technical feasibility; second frontier judge for disputed claims |
-| Client proposal or consequential recommendation | Opus 5 high over a sourced packet | K3 high draft/review; never let a cheap worker make the final claim |
-
-### Personal administration and automation
-
-| Task | Start | Escalate / fallback |
-|---|---|---|
-| Product specs and current price research | Gemini 3.6 Flash medium with browser | Kimi WebBridge for logged-in/local availability; require official sources |
-| Comparison and recommendation | K3 high or Opus 5 high over the worker packet | Gemini 3.1 Pro high when visual fit matters |
-| Scheduled monitoring, summaries, routine documents | Gemini Flash low/medium or Luna low | Ollama Cloud/local worker after a successful trial; human approval for purchases |
-
-### Developer tools and desktop extensions
-
-| Task | Start | Escalate / fallback |
-|---|---|---|
-| Bounded TypeScript change or unit test | Terra medium | K3-256k high or Sonnet 5 high |
-| VS Code/webview integration or flaky behavior | Sol high | Opus 5 high when extension architecture or UX contract is the issue |
-| Release/code review, persistence, concurrency, compatibility | Sol high | Opus 5 high as independent reviewer for data loss or architectural risk |
-
-### Working memory and design sidecars
-
-| Task | Start | Escalate / fallback |
-|---|---|---|
-| Discovery extraction and file/symbol evidence | Luna low worker | K3-256k low/high for large private context |
-| Brainstorm, design, or ADR | Opus 5 high | K3 high independent challenge; Gemini Pro high for visual designs |
-| Approved implementation plan or cross-document review | Sol high or Opus 5 high | Use the other as reviewer; do not plan while architecture remains unsettled |
-
-### Multi-agent workflow and orchestration
-
-| Task | Start | Escalate / fallback |
-|---|---|---|
-| Prompt/rule mechanical change and tests | Terra medium | K3-256k high |
-| Router, orchestration, retry, or context architecture | Opus 5 high for design; Sol high for implementation | K3 high as independent long-context reviewer |
-| Long autonomous workflow validation | Agy or Kimi on a bounded scenario | Sol/Opus review the trace; never infer reliability from one happy path |
-
-### Host server and local infrastructure
-
-| Task | Start | Escalate / fallback |
-|---|---|---|
-| Current hardware/model/provider research | Gemini 3.6 Flash medium worker | Opus/K3 judge when it affects a purchase |
-| Docker, LiteLLM, Ollama, or driver implementation | Terra medium | Sol high for ROCm/CUDA/container debugging |
-| Hardware purchase, privacy architecture, or buy-versus-rent decision | Opus 5 high with refreshed prices and measurements | Sol high technical review; rent the target VRAM class before buying |
-
-## Quota pacing
-
-Five-hour limits affect today's flow. Weekly limits affect whether Friday's hard task still has a frontier model.
-
-### Start of a work block
-
-1. Check the relevant pool before a long task: Claude `/usage`, Codex `/status`, Kimi `/usage`, Agy `/usage` or `/quota`.
-2. Decide whether today's work is collection, implementation, or consequential judgment.
-3. Reserve one frontier pool for unexpected debugging or review.
+1. Check the relevant limits before a long task: `/usage` in Claude Code, `/status` in Codex, `/usage` in Kimi Code, and `/usage` or `/quota` in Antigravity.
+2. Decide whether the day's work is mostly gathering, implementation or consequential judgment.
+3. Keep one frontier pool free for unexpected debugging or review.
 4. Use a separate pool for bounded background work.
 
-### Preserve weekly capacity
+### Protect weekly capacity
 
-- Do not use Fable 5, Opus 5 xhigh/max, or Sol max for mechanical work.
-- Prefer K3-256k over K3 1M whenever the evidence fits within 256k.
-- Avoid changing Kimi model or effort mid-session because the switch invalidates the cache; start a fresh session for a materially different task.
-- Start fresh when the conversation contains obsolete investigation, repeated failed attempts, or a large completed phase. Compaction helps continuity but cannot make irrelevant context free.
-- Keep raw research out of the judge's main session. Hand over a sourced packet.
+- Do not use the most expensive models or maximum effort for mechanical work.
+- Use a smaller context window when the evidence fits in it.
+- Do not switch models or effort partway through a Kimi session, because it invalidates the cache. Start a new session for a different task.
+- Start a new session when the conversation holds old investigation, repeated failed attempts or a large finished phase. Compaction helps continuity but does not make irrelevant context free.
+- Keep raw research out of the judge's session. Give it a sourced packet.
 
-### Low-quota fallback order
+### When quota runs low
 
-1. Lower effort if the task is still bounded.
-2. Move collection to Gemini Flash, Luna, Kimi K2.7/K3-256k, or a validated open-weight worker.
-3. Move the whole task to an independent paid pool at the same capability level.
-4. Split collection from judgment if the handoff will be small.
-5. Defer non-urgent frontier judgment until reset rather than accepting a low-confidence decision.
+1. Lower the effort, if the task is still bounded.
+2. Move gathering to a cheaper model or an open-weight worker you have tested.
+3. Move the whole task to another provider's pool at the same capability level.
+4. Split gathering from judgment, if the handoff will be small.
+5. Wait for the reset for non-urgent decisions, rather than accepting a low-confidence one.
 
-Do not chase a five-hour reset by starting the same investigation in three harnesses. That duplicates context and leaves three half-informed sessions.
+Do not start the same investigation in three harnesses to get around a five-hour limit. It duplicates context and leaves three half-informed sessions.
 
-## Local and hosted open-weight routing
+## Open-weight models
 
-Treat open-weight inference as an extra worker pool.
+Treat open-weight models as an extra pool of workers.
 
-### Useful now
+| Option | Use it for |
+|---|---|
+| Ollama Cloud | A one-month trial with measurements, for research packets, repository maps, extraction, first drafts and test-log triage. On 2026-09-21 it cost US$20 a month with US$60 of included usage credit. Check [current pricing](https://ollama.com/pricing). |
+| Groq | Very fast, metered workers, such as GPT-OSS 20B or 120B, when latency matters |
+| OpenRouter | Many models behind one API, with provider fallbacks, price and latency routing, budget caps and zero-data-retention filtering |
+| RunPod | Renting a 24 GB or 48 GB GPU to test a model before buying hardware |
 
-- **Ollama Cloud Pro:** run a one-month instrumented trial for research packets, repository maps, extraction, first drafts, and test-log triage. The 2026-09-21 reference records a US$20 monthly price, US$60 in included usage credits, and published per-model overage rates; verify the [current pricing](https://ollama.com/pricing) before subscribing.
-- **Groq:** use GPT-OSS 20B/120B or Qwen 3.6 for very fast, metered workers when low latency matters.
-- **OpenRouter:** use when you want model breadth, provider fallbacks, price/latency routing, budget caps, or Zero Data Retention filtering.
-- **RunPod:** rent a 24 GB or 48 GB NVIDIA GPU to test a model before buying hardware for it.
+Buy local GPU capacity for privacy, offline work, predictable high-volume workers or measured cloud savings, not to replace a frontier model. Before buying, rent an equivalent GPU and measure prompt processing speed, generation speed, usable context and success rate on your own tasks. Check power and cooling as well as memory.
 
-### Local hardware
+Accept a local model's result without frontier review only when all of these are true:
 
-Buy local GPU capacity for privacy, offline work, predictable high-volume workers or measured cloud spend, not to replace a frontier model. Before buying, rent an equivalent GPU and measure prompt ingestion, decode speed, usable context and success rate on your own tasks. Check power supply and cooling headroom as well as VRAM.
+- The output can be checked mechanically.
+- Errors are cheap to find and undo.
+- The task has no consequential ambiguity.
+- A sample has already shown the model is accurate enough.
+- Privacy or volume justifies running it locally.
 
-### Local escalation contract
+Everything else gets a frontier judge, or stays on a frontier model throughout.
 
-Accept a local result without frontier review only when all of these are true:
+## Common mistakes
 
-- the output is mechanically verifiable;
-- errors are cheap to detect and reverse;
-- the task has no consequential ambiguity;
-- a sample has already established adequate accuracy;
-- privacy or volume justifies the local path.
+- **Choosing by benchmark rank alone.** Harness tools, run time, quota and task fit can matter more than a one-point score difference.
+- **Using maximum effort by default.** It multiplies time and quota use.
+- **Treating a subscription like an API balance.** A five-hour message range does not tell you its value in tokens.
+- **Using a 1M-token context because it exists.** Targeted search plus a short evidence packet is usually cheaper and more accurate.
+- **Switching Kimi models often.** Each switch invalidates the cache.
+- **Assuming a model that fits in GPU memory is useful.** Leave room for the runtime and context cache, then test the real context and tool loop.
+- **Letting the worker decide.** Cheap gathering saves money. Cheap, unreviewed judgment causes rework.
+- **Repeating the gathering in the judge's session.** Sample the packet. If you have to redo everything, the split failed.
 
-Everything else receives a frontier judge or stays on a frontier model end to end.
+## Example routing table (August 2026)
 
-## Common routing mistakes
+This table records one routing policy from an August 2026 comparison. It assumed one subscription tier each for Claude Code, Codex, Kimi Code and Antigravity. Model names and limits have changed since, so use it as an example of the method, not a current recommendation. Grok Build TUI is not included, because no roster or quota snapshot was recorded for it.
 
-- **Picking by benchmark rank alone:** harness tools, active time, quota, and task fit can dominate a one-point score difference.
-- **Using max effort as a default:** effort can move benchmark capability substantially, but it also multiplies time and allowance use.
-- **Treating subscriptions like API balances:** exact token value cannot be inferred from a five-hour message range.
-- **Using 1M context because it exists:** targeted search plus a compact packet is usually cheaper and more accurate.
-- **Switching Kimi models repeatedly:** cache invalidation makes apparent variety expensive.
-- **Calling a VRAM fit a useful deployment:** leave room for runtime and KV cache, then test the actual context and tool loop.
-- **Letting a worker decide:** cheap collection is valuable; cheap unreviewed judgment is where savings turn into rework.
-- **Repeating collection in the judge session:** sample the packet. If you must redo everything, the split failed.
+### Effort by provider
 
-## Refresh procedure
+| Provider | Cheap | Everyday | Hard | Exceptional |
+|---|---|---|---|---|
+| Claude Code | Haiku 4.5, or Sonnet 5 low | Sonnet 5 medium or high | Opus 5 high | Opus 5 extra high, or Fable 5 max |
+| Codex | Luna low | Terra medium | Sol high | Sol extra high or max |
+| Kimi Code | K2.7 Code, or K3-256k low | K3-256k high | K3 high | K3 max, only when high has clearly failed |
+| Antigravity | Gemini 3.6 Flash low | Gemini 3.6 Flash medium or high | Gemini 3.1 Pro high, or Sonnet 4.6 Thinking | Opus 4.6 Thinking. Antigravity's Claude models trail Claude Code's. |
+
+### By task
+
+| Task | Start here | Escalate when you see | Fallback in another pool |
+|---|---|---|---|
+| Search current documentation and collect sources | Antigravity, Gemini 3.6 Flash medium | Conflicting sources, a consequential conclusion, or synthesis across domains | Codex Luna low as worker, Kimi K3-256k high as judge |
+| Read, extract, classify or summarize material | Codex Luna low | Missing facts, subtle meaning, or more than one interpretation | Gemini 3.6 Flash low or medium |
+| Mechanical code edits, formatting, renames | Codex Luna low | Changes that cross APIs or behavior, or unexpected test failures | Kimi K2.7 Code, or Gemini 3.6 Flash medium |
+| Everyday feature or test work | Codex Terra medium | More than two layers, unclear invariants, or two failed fixes | Claude Sonnet 5 medium or high, or Kimi K3-256k high |
+| Debugging a cross-layer or intermittent problem | Codex Sol high | Competing root causes at high effort, or risky choices | Claude Opus 5 high, or Kimi K3 high |
+| Architecture or system design | Claude Opus 5 high | An irreversible or costly decision, a security boundary, or an open trade-off | Codex Sol high, or Kimi K3 high |
+| Brainstorming and challenging an idea | Claude Opus 5 high | Many systems involved, or a need for long-range coherence | Kimi K3 high, or Gemini 3.1 Pro high for visual products |
+| Turning an approved design into a plan | Codex Sol high, or Claude `opusplan` | Unknown APIs, or architecture still unsettled | Kimi K3 high |
+| Business writing and proposals | Kimi K3-256k high to draft, Claude Opus 5 high to review | Claims, positioning or negotiation that affect the outcome | Claude Sonnet 5 high, or Codex Terra medium |
+| UI design and visual critique | Antigravity, Gemini 3.1 Pro high with browser screenshots | Design-system architecture or conflicting product constraints | Claude Opus 5 high with screenshots |
+| Browser testing and visual regressions | Antigravity, Gemini 3.6 Flash high | A root cause in the app's architecture, accessibility or security | Gemini 3.1 Pro high, then Codex for the code fix |
+| Code review | Codex Sol high | Security, data loss, concurrency or an architectural contract | Claude Opus 5 high as a second reviewer |
+| Document, design or plan review | Claude Opus 5 high | Material too large for comfortable context, or claims needing fresh research | Kimi K3 high, or a Gemini Flash worker with an Opus judge |
+| Large repository or long document analysis | Kimi K3-256k high | Evidence that really exceeds 256,000 tokens after targeted search | Kimi K3 high at 1M, or Claude at 1M |
+| Long unattended implementation | Claude Sonnet 5 high, or Kimi K3-256k high | Repeated repair loops, unclear architecture, or systemic review findings | Antigravity's Sonnet 4.6 Thinking, or Codex Terra or Sol |
+
+## Keeping this guide current
 
 When plans or models change:
 
-1. Check official model rosters, pricing pages, quota documentation and current independent benchmarks.
-2. Update the current-plan snapshot and remove retired model names.
-3. Run one bounded task if a new model is supposed to replace an existing routing role.
-4. Change this guide only when the evidence changes a start choice, escalation trigger, fallback, or deployment verdict.
+1. Check the official model lists, pricing pages, quota documentation and current independent benchmarks.
+2. Replace the example table with the current models, and remove retired names.
+3. Before a new model takes over a role, test it on one bounded task.
+4. Change the method sections only when the evidence changes a starting choice, an escalation trigger, a fallback or a deployment decision.
 
-The model names will age. The durable policy is to separate capability, harness fit, allowance, and task difficulty—then spend the strongest model only where it changes the outcome.
+Model names age quickly. What lasts is keeping capability, harness fit, quota and task difficulty separate, and using the strongest model only where it changes the outcome.

@@ -1,20 +1,22 @@
-# `git-worktrees`
+# git-worktrees
 
-The cross-harness worktree convention, moved out of `~/.claude/CLAUDE.md` on 2026-09-07.
+Sets one worktree convention for every AI coding harness, and the checks an agent runs before it changes branches. The agent loads it automatically before a command such as `git checkout -b`, `git switch -c` or `git worktree add`.
 
-## Why it is a skill and not an instruction
+## What it defines
 
-The convention applies at implementation only. A brainstorm, a design or a plan session never needs it, and those are most sessions. Delivering 435 words to every session to serve a minority of them is what pushed the instruction file past Antigravity's 24,023-character limit.
+- **Where worktrees go:** `<repo>/.worktrees/<harness>/<branch>`, with a fixed folder name for each harness.
+- **When a worktree is required:** if `git worktree list` shows more than one entry, another session may be active, so the agent creates a worktree instead of changing branches in place.
+- **Two corrections to the `superpowers:using-git-worktrees` skill,** applied here rather than by editing that upstream skill.
+- **Harness notes,** including the VS Code `git.detectWorktrees` setting.
 
-The trigger stays in `CLAUDE.md`, in the housekeeping section: run `git fetch` and `git worktree list` before the first command that changes branch state. That line names this skill. So the rule still fires, and the detail arrives only when it is needed.
+## Why it is a skill
 
-## What it states
+Worktrees matter only when implementation starts. Brainstorm, design and planning sessions never need these rules, so keeping them in the always-loaded instruction file wasted context in most sessions. The instruction file keeps a one-line trigger, run `git fetch` and `git worktree list` before changing branch state, which names this skill. The full rules load only when they apply.
 
-- The path convention `<repo>/.worktrees/<harness>/<branch>`, and the seven harness segment names.
-- When a worktree is required rather than offered: more than one entry in `git worktree list`.
-- Two corrections to `superpowers:using-git-worktrees`, which is an upstream clone and is never patched locally.
-- Per-harness notes, and the VS Code `git.detectWorktrees` setting.
+## Nested private repositories
 
-## Design note
+If the repository contains a nested private repository, `git worktree list` in the outer repository says nothing about the inner one. The skill tells the agent to check both. Otherwise it could wrongly conclude that no other session is working there.
 
-The nested `.workbench/` case is worth keeping in the skill rather than in a guide. `git worktree list` in the outer repository reports nothing about the inner one, so an agent that checks only the outer repository draws the wrong conclusion about whether another session is live.
+## Install
+
+See [Install one skill](../README.md#install-one-skill) in the skills catalog, or run `scripts/sync-toolkit.sh --harness` to sync every skill.

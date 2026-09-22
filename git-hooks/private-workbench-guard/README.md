@@ -1,94 +1,102 @@
 # private-workbench-guard
 
-A git `pre-commit` hook for the **public-repo-plus-private-workbench** pattern: an independent private clone nested inside a public repository, sharing one working tree.
-
-Instances today: `carlosboeing/crossrev` with `crossrev-workbench`, and `carlosboeing/penmark` with `penmark-workbench`. Both nest the private clone at `.workbench/`.
+A Git `pre-commit` hook for a public repository that has a private companion repository nested inside it. It stops private content from reaching a public commit.
 
 ## The pattern
 
-Two repositories, one working tree. The public repository holds code, user docs, ADRs, roadmap and changelog. The private one holds the build process — brainstorms, discovery, designs, plans, reviews, scratch notes — plus anything about brand, company or commercial direction.
+Two repositories share one working tree. The public repository holds code, user documentation, ADRs, the roadmap and the changelog. The private one, cloned into `.workbench/` and ignored by the public repository, holds the working process: brainstorms, research, designs, plans, reviews and notes, plus anything about business or commercial direction.
 
 ```
-<public-repo>/          public  (carlosboeing/crossrev)
-  .workbench/                        private (carlosboeing/crossrev-workbench), gitignored above
+<public-repo>/            public repository
+  .workbench/             private repository, listed in the public .gitignore
 ```
 
-`git …` at the root targets the public repository. `git -C .workbench …` targets the private one. They never cross-commit.
+`git ...` at the root targets the public repository. `git -C .workbench ...` targets the private one. Nothing is ever committed to both.
 
-## What already protects it, without this hook
+```mermaid
+flowchart TB
+    Tree["Shared working tree"] --> Public["Public repository: code, docs, ADRs"]
+    Tree --> Private[".workbench/: private working notes"]
+    Private -. "blocked by .gitignore and this hook" .-> Public
+```
 
-Worth knowing, because it decides what the hook is actually for. Three layers exist before any hook runs, and none of them needs vigilance:
+## What already protects it
 
-1. **`.workbench/` is gitignored** in the public repository, so `git add -A` at the root cannot sweep workbench files into a public commit.
-2. **Git will not reach inside a nested repository.** Even `git add -f .workbench/some/file` stages nothing — it silently no-ops. A workbench *file* cannot become a public blob by accident.
-3. **Paths outside the work tree are refused.** From inside `.workbench/`, `git add ../scripts/lint.sh` fails outright.
+Three safeguards work before any hook runs:
 
-So the file-level leak is already closed. What remains is the content-level one.
+1. **`.workbench/` is in `.gitignore`**, so `git add -A` at the root cannot pick up its files.
+2. **Git does not stage files inside a nested repository.** Even `git add -f .workbench/some/file` stages nothing.
+3. **Git refuses paths outside the current repository.** From inside `.workbench/`, `git add ../scripts/lint.sh` fails.
+
+A private file cannot become a public file by accident. What remains is private content typed or pasted into a public file, and that is what this hook checks.
 
 ## What the hook checks
 
-**1. The workbench staged as a gitlink.** `git add -f .workbench` does succeed, recording a submodule reference. Clones get none of the content, but the private repository's name and commit SHA become public. The trailing `(/|$)` in the match matters — the staged path has no slash, and requiring one misses the only case that can actually happen.
+| Check | What it catches |
+|---|---|
+| Nested repository staged as a gitlink | `git add -f .workbench` records a submodule reference. Clones get none of the content, but the private repository's name and commit ID become public. |
+| Private vocabulary in added lines | References to `.workbench` paths, and terms such as hosted service or tier, monetisation, pricing, per-seat figures and dollar amounts |
 
-**2. Workbench vocabulary in added lines.** The scan list from the repository's `CLAUDE.md`: `.workbench` paths, hosted service or tier, monetisation, pricing, per-seat figures, dollar amounts.
+Both checks refuse the commit. `git commit --no-verify` overrides them deliberately.
 
-The second check is the reason this hook exists. Private content retyped, pasted or summarised into a public file — from the correct directory, with a correct path — is invisible to every structural layer above. Nothing about the path is wrong. Only the words are.
-
-Both checks refuse the commit. `git commit --no-verify` is the deliberate override.
+The vocabulary check is the reason the hook exists. Private content retyped or summarized into a public file, in the right directory with a valid path, passes every structural safeguard above. Only the words give it away.
 
 ## Why the money pattern is not `\$[0-9]`
 
-That is what `CLAUDE.md` documents for the manual sweep, where a human reads the hits. As a blocking hook it is unusable: `\$[0-9]` matches every shell positional parameter.
+`\$[0-9]` matches every shell positional parameter, such as `"$1"`. Measured over the last 40 commits of one repository:
 
-Measured against `crossrev`, over its last 40 commits:
-
-| Term | Commits blocked |
+| Pattern | Commits blocked |
 |---|---|
-| `\$[0-9]` | **16 of 40** |
+| `\$[0-9]` | 16 of 40 |
 | `\.workbench` | 1 |
 | `hosted (service\|tier)` | 1 |
 | `monetiz\|monetis` | 1 |
 | `pricing` | 1 |
 | `per (seat\|month\|user)` | 0 |
 
-Requiring two digits or a separator — `\$[0-9]{2,}` or `\$[0-9]+[.,][0-9]` — still catches `$50`, `$1.50` and `$4,500` while ignoring `"$1"`. With that change plus the allowlist below, **0 of the same 40 commits are blocked**, and a synthetic leak carrying all three vocabulary classes is still caught.
+The hook instead requires two digits or a separator: `\$[0-9]{2,}` or `\$[0-9]+[.,][0-9]`. That still catches `$50`, `$1.50` and `$4,500` but ignores `"$1"`. With this change and the allowlist below, none of the same 40 commits is blocked, and a test leak containing all three vocabulary types is still caught.
 
-The general point is worth keeping: a hook that fires on 40% of legitimate commits gets bypassed reflexively, and a reflexively bypassed hook is worse than none.
+A hook that blocks 40% of legitimate commits gets bypassed out of habit, which is worse than having no hook.
 
-## The allowlist
+## Allowlist
 
-`CLAUDE.md`, `AGENTS.md`, `.gitignore`, and the hook script itself are skipped. Stating a rule requires naming the words the rule forbids, so these files can never satisfy their own check. `CLAUDE.md` documents the same exclusion for the manual sweep, where a human reads them instead.
+The hook skips `CLAUDE.md`, `AGENTS.md`, `.gitignore` and its own script. Stating a rule means naming the words it forbids, so those files could never pass their own check.
 
-## What this deliberately does not do
+## What it does not do, on purpose
 
-Recorded so it does not get rebuilt. An earlier design guarded the *working directory* — blocking bare `git commit` and `gh` writes when the shell had drifted into the nested repository. It was dropped, for two reasons that hold generally:
+An earlier design blocked `git commit` and `gh` commands when the shell was inside the nested repository. It was dropped for two reasons:
 
-**A wrong-repo commit is recoverable and cannot leak.** Committing from inside `.workbench` puts the content in the private repository, which is where it belongs. You get a misleading commit message, fixable with `git reset`. Nothing escapes.
-
-**A directory guard points the wrong way.** The leak direction is private words reaching a *public* repository, which happens from the correct directory with the correct repo named. A cwd rule blocks the harmless direction and permits the harmful one. No routing rule can see whether the words are private — that is a content question, which is why the check that survived is a content check.
+- **Committing to the wrong repository from inside `.workbench/` cannot leak anything.** The content lands in the private repository, where it belongs. At worst the commit message is misleading, and `git reset` fixes it.
+- **A directory rule guards the wrong direction.** Leaks happen when private words reach the public repository, from the right directory with the right repository named. Only a content check can see that.
 
 ## Install
 
-Run from the toolkit root after replacing the target placeholder. Per repository, once. The script is versioned inside the target repository rather than sourced from here, so a fresh clone carries it.
+Run from the toolkit root, once per repository. The script is committed into the target repository, so every clone carries it.
 
 ```bash
-REPO="<path-to-target-repository>"
-mkdir -p "$REPO/scripts/githooks"
-cp git-hooks/private-workbench-guard/pre-commit "$REPO/scripts/githooks/pre-commit"
-chmod +x "$REPO/scripts/githooks/pre-commit"
-git -C "$REPO" config core.hooksPath scripts/githooks
+repo="<path-to-target-repository>"
+mkdir -p "$repo/scripts/githooks"
+cp git-hooks/private-workbench-guard/pre-commit "$repo/scripts/githooks/pre-commit"
+chmod +x "$repo/scripts/githooks/pre-commit"
+git -C "$repo" config core.hooksPath scripts/githooks
 ```
 
-`core.hooksPath` is per clone and git will not enable it automatically, so the config line is repeated on every machine. That is git's decision, not a gap here — a hook that ran on clone would be a remote code execution vector.
+`core.hooksPath` is a per-clone setting, so repeat the last line on every machine. Git never enables hooks automatically on clone, because that would let a repository run code on your machine.
 
-Verify the configured hook path with the first command. Run the staged-gitlink refusal probe only in a disposable repository with a disposable nested repository and a clean index; `git reset` in a working project could unstage unrelated work:
+Check the setting:
 
 ```bash
-git -C "$REPO" config --get core.hooksPath      # scripts/githooks
-git -C "$REPO" add -f .workbench && git -C "$REPO" commit -m probe
+git -C "$repo" config --get core.hooksPath      # expect: scripts/githooks
+```
+
+To test the gitlink refusal, use a throwaway repository with a throwaway nested repository and nothing else staged, because the final `git reset` unstages everything:
+
+```bash
+git -C "$repo" add -f .workbench && git -C "$repo" commit -m probe
 # expect: refusing — the private workbench is staged
-git -C "$REPO" reset
+git -C "$repo" reset
 ```
 
-## Adding a third instance
+## Using a different directory name
 
-Copy the script, run the two commands above, and add the repository to the list at the top of this file. The hook hardcodes `.workbench` as the nested directory name; a pair using a different name needs that string changed in both the gitlink check and the vocabulary pattern.
+The hook assumes the nested repository is at `.workbench`. For another name, change that string in both the gitlink check and the vocabulary pattern.
