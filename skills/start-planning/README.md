@@ -47,7 +47,7 @@ A fresh session reads that design, inspects this repo, writes the plan where **t
 
 ## Install
 
-See the [skills catalog README](../README.md#install-any-skill-in-this-directory). Copy or `curl` this `SKILL.md` into your harness skills directory, or run [`sync-skills.sh`](../sync-skills.sh) to author across harnesses.
+See the [skills catalog README](../README.md#install-one-skill). Copy or `curl` this `SKILL.md` into your harness skills directory, or run [`sync-skills.sh`](../sync-skills.sh) to author across harnesses.
 
 ## Help
 

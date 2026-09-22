@@ -22,7 +22,7 @@ One canonical project brief, readable by every agentic harness you use.
 
 ```
 CLAUDE.md          ← canonical (edit this)
-AGENTS.md   → CLAUDE.md    (Cursor, continual-learning)
+AGENTS.md   → CLAUDE.md    (Codex, Kimi Code, OpenCode, Cursor)
 GEMINI.md   → CLAUDE.md    (Gemini CLI, Antigravity via Superpowers)
 ```
 
@@ -58,7 +58,7 @@ Keep this kind of global rule short and harness-neutral. Put workflow mechanics,
 | Claude Code | `CLAUDE.md` | Auto-loaded every session |
 | Cursor | `AGENTS.md` (+ often `CLAUDE.md`) | Workspace rules; symlink may duplicate content |
 | Antigravity CLI / IDE | `GEMINI.md` | Superpowers `contextFileName`; migration docs also mention `AGENTS.md` |
-| Codex | Project instructions vary | Copy or symlink per Codex project config |
+| Codex | `AGENTS.md`, with `AGENTS.override.md` taking precedence at the same level | User instructions in `~/.codex/AGENTS.md`; project files are discovered along the path to the working directory. See [official instruction discovery](https://developers.openai.com/codex/guides/agents-md/). |
 | Kimi Code | `AGENTS.md` | Reads project `AGENTS.md` and the shared `~/.agents/AGENTS.md` natively — no symlink or adapter file needed; optional Kimi-specific layer at `~/.kimi-code/AGENTS.md` |
 | Grok Build TUI | `AGENTS.md` (project, native) plus `~/.claude/CLAUDE.md` via Claude compat `agents` | No `~/.grok/AGENTS.md`. A spoke would duplicate the file Grok already loads |
 

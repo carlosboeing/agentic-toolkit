@@ -7,7 +7,7 @@ Project-bootstrap scaffolds for starting a new project that follows the conventi
 | Template | What |
 |---|---|
 | [`default-project/`](default-project/) | Private-base scaffold: `CLAUDE.md`, `README.md`, `docs/` skeleton, `.gitignore`, plus base governance (`.github/CODEOWNERS`, `.github/dependabot.yml`, `.github/PULL_REQUEST_TEMPLATE.md`). |
-| [`default-project-oss/`](default-project-oss/) | Public OSS superset: `default-project` + `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `LICENSE`, `.github/ISSUE_TEMPLATE/*.yml` (private -> public via `/repo-standards fix oss`). |
+| [`default-project-oss/`](default-project-oss/) | Public OSS superset: `default-project` + `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `.github/ISSUE_TEMPLATE/*.yml` (private -> public via `/repo-standards fix oss`). |
 | [`lean-claude-settings/`](lean-claude-settings/) | A lean `.claude/settings.json` (connectors off + finance plugins off) for running Claude Code with minimal startup context. See [`guide-trimming-claude-code-startup-context.md`](../guides/guide-trimming-claude-code-startup-context.md). |
 
 Additional variants remain out of scope until a real project needs them.
@@ -30,7 +30,7 @@ cd ./new-project
 git init && git add . && git commit -m "chore: bootstrap repo with project structure conventions"
 ```
 
-The first command downloads the subdirectory from GitHub. The second uses the current local clone and does not require `npx` or `degit`.
+The first command requires anonymous access after publication and downloads the subdirectory from GitHub. The second uses the current local clone and does not require `npx` or `degit`.
 
 ## Retrofitting an existing project
 
@@ -48,7 +48,7 @@ default-project/  (private-base)
 │   ├── dependabot.yml     — github-actions + npm weekly
 │   └── PULL_REQUEST_TEMPLATE.md
 └── docs/
-    ├── ROADMAP.md         — six-section template
+    ├── ROADMAP.md         — seven-section template
     ├── CHANGELOG.md       — empty stub
     ├── notes/             — scratch, chat dumps, research
     ├── 0-brainstorms/     — pre-design ideas
@@ -68,6 +68,7 @@ default-project-oss/
 ├── SUPPORT.md
 ├── CONTRIBUTING.md
 ├── LICENSE
+├── THIRD_PARTY_NOTICES.md
 └── .github/ISSUE_TEMPLATE/
     ├── bug_report.yml
     ├── feature_request.yml

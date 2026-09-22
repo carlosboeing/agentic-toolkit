@@ -54,6 +54,8 @@ The topology is:
 | `~/.gemini/config/skills` | Whole-directory symlink to the hub | Antigravity |
 | `~/.codex/skills` | Codex-owned system skills, not a spoke | Codex internals |
 
+Antigravity CLI documents `~/.gemini/antigravity-cli/skills` separately from the IDE/2.0 global path. The synchronizer does not create that CLI spoke; verify discovery or link it deliberately after inspecting existing content. See [Google's skill locations](https://antigravity.google/docs/skills), checked 2026-09-22.
+
 See the [harness parity guide](../guides/guide-harness-plugin-parity.md) for the product-specific discovery rules.
 
 ## Install a project-level skill
@@ -66,7 +68,7 @@ mkdir -p ".claude/skills/$skill_name"
 cp -R "skills/$skill_name/." ".claude/skills/$skill_name/"
 ```
 
-Project-level skills can override a user-level skill with the same name. Check the harness's precedence rules before committing a duplicate.
+Check each harness's precedence before committing a duplicate. Claude Code gives enterprise skills precedence over personal skills, and personal skills over project skills, according to the [official discovery rules](https://code.claude.com/docs/en/skills), checked 2026-09-22.
 
 ## CrossRev review skills
 

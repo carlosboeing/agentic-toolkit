@@ -12,19 +12,13 @@ The style is no longer hand-maintained. It is generated from CopyDesk's rule dat
 npm install -g copydesk
 ```
 
-Install the style by pointing at the generated file in a CopyDesk checkout:
+Configure the installed CopyDesk version through its setup wizard:
 
 ```bash
-ln -s "$(pwd)/output-styles/plain-english.md" ~/.claude/output-styles/plain-english.md
+copydesk setup
 ```
 
-Then activate it with `/config`, selecting **Plain English** under **Output style**, or set it in a settings file:
-
-```json
-{
-  "outputStyle": "Plain English"
-}
-```
+Review the wizard's changes before applying them. It can install more than an output style, including instruction text and hooks. Do not use the old `output-styles/plain-english.md` symlink recipe: that generated path is not a stable installation interface. See [CopyDesk's current setup instructions](https://github.com/carlosboeing/copydesk#readme), checked at commit `0553163c3061b4a2db33ca7d8002ba3ba08374b7` on 2026-09-22.
 
 Output styles are a Claude Code mechanism. Codex, Antigravity, Kimi Code and Grok Build TUI have no equivalent, and receive the same rules through their instructions files instead.
 

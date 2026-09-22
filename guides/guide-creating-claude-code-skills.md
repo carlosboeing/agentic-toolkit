@@ -315,7 +315,7 @@ A pragmatic rule: **if you find yourself adding a new constraint to the skill bo
 Three scopes:
 
 - **Personal**: `~/.claude/skills/<name>/SKILL.md`. All your projects, only your machine. The default during development.
-- **Project**: `<repo>/.claude/skills/<name>/SKILL.md`. Travels with the repo, available to teammates who clone it. Project skills override personal skills with the same name.
+- **Project**: `<repo>/.claude/skills/<name>/SKILL.md`. Travels with the repo, available to teammates who clone it. For duplicate names, Claude Code gives enterprise skills precedence over personal skills, then project skills. See the official skills documentation, checked 2026-09-22.
 - **Plugin**: bundle skills with hooks, commands, MCP servers as a single installable unit. Distributed via marketplaces. The right path when your skill has dependencies the user shouldn't have to install separately.
 
 For a one-off skill you want to share with a friend, the simplest path is a public gist of the `SKILL.md` plus a one-line install snippet:

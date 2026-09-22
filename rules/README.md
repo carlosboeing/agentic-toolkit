@@ -22,7 +22,7 @@ Recorded for the day a rule needs the global install back.
 
 * **Claude Code**: reads rules from `~/.claude/rules/*.md`.
 * **Google Antigravity (`agy`)**: discovers rules from global `~/.agents/rules/*.md` and project `.agents/rules/*.md`. Antigravity requires YAML frontmatter, either `trigger: always_on` or a matching trigger condition.
-* **Kimi Code and Codex**: read rules shared via `~/.agents/rules/` or global instructions.
+* **Kimi Code and Codex**: use their documented `AGENTS.md` instruction paths. A symlink into `~/.agents/rules/` alone does not establish that either harness loads its Markdown. Codex's `.rules` execution-policy files are a separate format; see [official instruction discovery](https://developers.openai.com/codex/guides/agents-md/).
 
 ---
 

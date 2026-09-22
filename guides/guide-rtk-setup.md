@@ -75,14 +75,12 @@ Cursor intercepts shell executions globally using a lifecycle event hook.
     ```
 
 ### 4. Codex (Instruction-based)
-Codex does not support pre-shell-execution hooks. Instead, it relies on instructions loaded from the user's configuration.
-*   **Config File**: `~/.codex/RTK.md`
+This toolkit uses explicit RTK prefixes in Codex. Upstream now documents `rtk init -g --codex` with a PreToolUse rewrite hook, checked 2026-09-22; that is an optional external integration, not installed by this toolkit. Verify support in the active Codex version before relying on it.
+*   **Instruction file**: the shared brief linked to `~/.codex/AGENTS.md`. Do not assume a standalone `RTK.md` is discovered unless your configuration explicitly loads it.
 *   **Method**: System prompt instruction forcing the agent to prefix commands (e.g. `rtk git status`).
 
-### 5. OpenCode (Instruction-based)
-OpenCode also uses instruction-based prefixing.
-*   **Config File**: `~/.config/opencode/opencode.json` (or global `CLAUDE.md`)
-*   **Method**: Global `CLAUDE.md` instructions dictate prefixing shell commands with `rtk` (shared via root symlinks: `AGENTS.md` and `GEMINI.md`).
+### 5. OpenCode (plugin rewrite)
+Run `rtk init -g --opencode` to install RTK's OpenCode plugin. The toolkit synchronizer does not install this plugin. Verify that rewriting works before relying on it; otherwise prefix commands explicitly. See the [RTK source and installation documentation](https://github.com/rtk-ai/rtk).
 
 ### 6. Kimi Code (Instruction-based)
 Kimi's hook events can allow or deny a tool call but cannot rewrite `tool_input`, so the transparent rewrite hook RTK uses on Claude Code is impossible here. RTK runs instruction-driven, the same integration class as Codex.

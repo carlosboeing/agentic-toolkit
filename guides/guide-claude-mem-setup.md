@@ -10,6 +10,8 @@ related:
 
 # Claude-mem Harness Configuration Guide
 
+Historical configuration recorded on 2026-06-14. Cache versions and local adapter paths below are examples, not portable install targets. Follow the [upstream installation guide](https://docs.claude-mem.ai/installation), locate the installed MCP entry point, and verify it exists before configuring another harness. A shared MCP query service does not by itself install capture hooks in every harness.
+
 This guide documents the unified configuration of **claude-mem** (the persistent memory plugin for Claude Code) across your AI coding harnesses: Claude Code, Antigravity (`agy`), Cursor, Codex, and OpenCode.
 
 ---

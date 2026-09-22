@@ -9,7 +9,7 @@ Instances today: `carlosboeing/crossrev` with `crossrev-workbench`, and `carlosb
 Two repositories, one working tree. The public repository holds code, user docs, ADRs, roadmap and changelog. The private one holds the build process — brainstorms, discovery, designs, plans, reviews, scratch notes — plus anything about brand, company or commercial direction.
 
 ```
-~/Projects/carlos/crossrev/          public  (carlosboeing/crossrev)
+<public-repo>/          public  (carlosboeing/crossrev)
   .workbench/                        private (carlosboeing/crossrev-workbench), gitignored above
 ```
 
@@ -68,19 +68,19 @@ Recorded so it does not get rebuilt. An earlier design guarded the *working dire
 
 ## Install
 
-Per repository, once. The script is versioned inside the target repository rather than sourced from here, so a fresh clone carries it.
+Run from the toolkit root after replacing the target placeholder. Per repository, once. The script is versioned inside the target repository rather than sourced from here, so a fresh clone carries it.
 
 ```bash
-REPO=~/Projects/carlos/crossrev
+REPO="<path-to-target-repository>"
 mkdir -p "$REPO/scripts/githooks"
-cp pre-commit "$REPO/scripts/githooks/pre-commit"
+cp git-hooks/private-workbench-guard/pre-commit "$REPO/scripts/githooks/pre-commit"
 chmod +x "$REPO/scripts/githooks/pre-commit"
 git -C "$REPO" config core.hooksPath scripts/githooks
 ```
 
 `core.hooksPath` is per clone and git will not enable it automatically, so the config line is repeated on every machine. That is git's decision, not a gap here — a hook that ran on clone would be a remote code execution vector.
 
-Verify it is live:
+Verify the configured hook path with the first command. Run the staged-gitlink refusal probe only in a disposable repository with a disposable nested repository and a clean index; `git reset` in a working project could unstage unrelated work:
 
 ```bash
 git -C "$REPO" config --get core.hooksPath      # scripts/githooks

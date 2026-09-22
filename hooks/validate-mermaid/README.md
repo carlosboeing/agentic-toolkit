@@ -1,8 +1,8 @@
 # validate-mermaid
 
-`PostToolUse` hook on `Write|Edit` that parse-validates every fenced ` ```mermaid ` block in a modified Markdown file. When a block fails to parse, the hook exits `2` with the parser error plus the common causes. Claude Code feeds that back to the model, so a broken diagram gets fixed in the turn it was written. It never ships as a red "Unable to render rich display" box on GitHub.
+`PostToolUse` hook on `Write|Edit` that parse-validates every fenced ` ```mermaid ` block in a modified Markdown file. When a block fails to parse, the hook exits `2` with the parser error plus the common causes. Claude Code feeds that back to the model, so a broken diagram gets fixed in the turn it was written. A successful parse does not prove readable layout or exact compatibility with GitHub's renderer version.
 
-**Origin**: a sequence-diagram message containing `…regression; exit 1 + 180s timeout` shipped broken on 2026-06-12. Mermaid treats `;` as a statement separator inside message text, so the line silently split. GitHub's renderer then choked on the orphaned `+`. Conventions reduce the odds of writing that; this hook makes it impossible to ship.
+**Origin**: a sequence-diagram message containing `…regression; exit 1 + 180s timeout` shipped broken on 2026-06-12. Mermaid treats `;` as a statement separator inside message text, so the line silently split. GitHub's renderer then choked on the orphaned `+`. Conventions reduce the odds of writing that; this hook detects that syntax when validation actually runs.
 
 ## What it catches
 
@@ -65,4 +65,4 @@ Verified 2026-08-19 against OpenCode 1.18.18. Both plugins resolve in `opencode 
 - **Fast path**: non-`.md` files, missing files, and `.md` files without a mermaid fence exit `0` in milliseconds — the browser only launches when there's something to validate.
 - **Fails open**: if the payload can't be parsed or no validator is available, the hook exits `0` rather than blocking all writes.
 - **Indented fences** (e.g. inside list items) are handled; each block is validated separately and reported with its starting line number.
-- Validation is parse-level (the same parser GitHub uses) — it does not check styling conventions like pinned themes; those stay in your CLAUDE.md / conventions docs.
+- Validation is parse-level with the installed Mermaid version — it does not check styling conventions like pinned themes; those stay in your CLAUDE.md / conventions docs.

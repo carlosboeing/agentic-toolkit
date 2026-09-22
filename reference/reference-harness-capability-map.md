@@ -14,6 +14,8 @@ related:
 
 # Harness capability map
 
+This is a capability snapshot from the dated integrations below, not a live inventory. Product versions, plugin paths, model access, provider counts, and quotas may have changed. For installation, use the [current setup guide](../guides/guide-new-machine-setup.md) and verify the installed product's documentation.
+
 Quick comparison for the five core concerns across agent delegation and task routing.
 
 ## Concern matrix

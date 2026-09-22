@@ -39,4 +39,4 @@ This project follows [`guide-project-structure-and-conventions.md`](https://gith
 
 ## License
 
-<Add a license. MIT recommended unless your project has different needs.>
+This scaffold includes an [MIT License](LICENSE). Replace its owner placeholder before publishing. The adapted Code of Conduct retains CC BY 4.0; see [third-party notices](THIRD_PARTY_NOTICES.md).

@@ -1,56 +1,12 @@
 # Third-party notices
 
-Repository-authored code and documentation use the [MIT License](LICENSE), except for material identified below. External tools mentioned by the guides or downloaded by installers are not bundled merely because this repository invokes them. No vendored runtime package tree is included.
+`CODE_OF_CONDUCT.md` adapts [Contributor Covenant 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) by Coraline Ada Ehmke and contributors under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). It changes reporting contacts, shortens scope and wording, and omits the enforcement ladder and FAQ/translation paragraphs. This adaptation retains CC BY 4.0, separate from the project's MIT license.
 
-## Contributor Covenant 2.1
+Source license: [upstream before its version 3 website redesign](https://github.com/EthicalSource/contributor_covenant/blob/e0324b3cc9df5f3a62b6027157d8c2da5e0f6d68%5E/LICENSE.md).
 
-`CODE_OF_CONDUCT.md` and `templates/default-project-oss/CODE_OF_CONDUCT.md` adapt Contributor Covenant 2.1 by Coraline Ada Ehmke and contributors, under Creative Commons Attribution 4.0 International (CC BY 4.0).
-
-Source: [Contributor Covenant 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). The [upstream license before the version 3 website redesign](https://github.com/EthicalSource/contributor_covenant/blob/e0324b3cc9df5f3a62b6027157d8c2da5e0f6d68%5E/LICENSE.md) records CC BY 4.0. The current website's software license is not the license of the version 2.1 text.
-
-Changes: project-specific reporting contacts, shortened scope, minor wording changes, and omission of the upstream enforcement ladder and FAQ/translation paragraphs. The original attribution remains in both copies. These adaptations retain CC BY 4.0; the repository's MIT license does not replace that notice.
-
-## Penmark writer specification
-
-`skills/penmark-comments/references/penmark-agent-contract-v1.md` is a condensed adaptation of `spec/penmark-format.md` and `AGENTS-GUIDE.md` from [carlosboeing/penmark at 0a97d8c2a6b364b21166bc9b5841b071c6f0e25a](https://github.com/carlosboeing/penmark/tree/0a97d8c2a6b364b21166bc9b5841b071c6f0e25a), under MIT. The upstream commit remains pinned in the contract. The integration guide describes the same format. Penmark is a separate project by the same author; its reused material still requires attribution.
-
-[Upstream license](https://github.com/carlosboeing/penmark/blob/0a97d8c2a6b364b21166bc9b5841b071c6f0e25a/LICENSE):
-
-```text
-MIT License
-
-Copyright (c) 2026 Carlos Boeing
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-## CopyDesk generated instructions and commit hook
-
-The generated `copydesk:start` block in `instructions/CLAUDE.md` and `scripts/githooks/commit-msg` originate from [carlosboeing/copydesk](https://github.com/carlosboeing/copydesk). The commit hook is byte-identical to [upstream at 0553163c3061b4a2db33ca7d8002ba3ba08374b7](https://github.com/carlosboeing/copydesk/blob/0553163c3061b4a2db33ca7d8002ba3ba08374b7/git-hooks/commit-msg), checked 2026-09-22. The generated block does not record its generator version; its marker is preserved. CopyDesk uses MIT, copyright 2026 Carlos Boeing, with the same full MIT text reproduced in the Penmark section above. [Upstream license](https://github.com/carlosboeing/copydesk/blob/0553163c3061b4a2db33ca7d8002ba3ba08374b7/LICENSE).
-
-## RTK measurement screenshot
-
-`reference/assets/uploaded_media_1783469978607.png` is a terminal capture retained with the repository's 2026-07-07 measurements. It depicts output from [RTK](https://github.com/rtk-ai/rtk), an independently installed tool. No RTK executable or source code is bundled. The capture does not record the RTK version, so it cannot establish behavior or savings for a current release.
+Add notices for any dependencies or adapted material your project bundles. The template does not establish that a generated project has no third-party dependencies.
 
 ## CC BY 4.0 license text
-
-The following is the full license text retained by the upstream Contributor Covenant repository before its version 3 website redesign.
 
 ```text
 ### Creative Commons Attribution 4.0 International Public License

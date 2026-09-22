@@ -222,7 +222,7 @@ Graduating is also the escape hatch for MCP's own limits. `browser_run_code` exi
 
 These have appeared in older notes and in at least one harness's advice — they are wrong:
 
-- **"`@playwright/cli`"** — no such package. The CLI ships with **`@playwright/test`**; the `playwright` binary provides `test`, `codegen`, `screenshot`, `open`, `pdf`, `install`.
+- **"`@playwright/cli` does not exist"** is obsolete. Microsoft publishes [Playwright CLI](https://github.com/microsoft/playwright-cli) for agent-driven browser sessions. This guide uses the **Playwright Test CLI** (`@playwright/test`, `npx playwright test`) for repeatable test specifications and screenshot baselines. They are distinct interfaces, checked 2026-09-22.
 - **"Playwright CLI is 4–10x cheaper than MCP"** — a fabricated, precise-sounding number. The direction (artifacts on disk vs per-step snapshots) is real; the multiplier is not measured.
 - **"MCP always adds schema overhead every session"** — only when the harness eager-loads schemas. Deferred-loading harnesses (Claude Code in its default deferred mode) carry ~names until first use.
 - **"Just skip the MCP, the goldens/test runner cover it"** — conflates two jobs. Goldens are regression (CLI's job); they do nothing for exploratory browsing, ad-hoc ops, or live aesthetic review (MCP's job). Keep both.
@@ -246,7 +246,7 @@ flowchart TD
 ## Quick reference
 
 ```bash
-# Playwright CLI (ships with @playwright/test — NOT @playwright/cli)
+# Playwright Test CLI (the test runner, distinct from @playwright/cli)
 npx playwright test                 # run specs
 npx playwright test --headed        # watch locally (also --debug, --ui)
 npx playwright test --update-snapshots   # refresh pixel goldens

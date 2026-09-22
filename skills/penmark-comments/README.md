@@ -47,7 +47,7 @@ From this repository clone, run:
 ./skills/sync-skills.sh
 ```
 
-The script symlinks every authored skill into each installed target: `~/.claude/skills/` for Claude Code, `~/.agents/skills/` for Codex and other cross-harness agents, and `~/.gemini/config/skills/` for Agy. It is idempotent and does not overwrite real directories. See the [skills catalog](../README.md#mirror-install-symlink--for-authoring-across-harnesses) for the install model.
+The script copies whole authored skill directories into `~/.claude/skills/` and connects `~/.agents/skills/` and `~/.gemini/config/skills/` through whole-directory symlinks. It updates hub copies, including removing files no longer present in the source. Existing real spoke directories are left alone unless `--adopt` is requested; compare same-named skills before adopting. See the [skills catalog](../README.md#synchronize-every-authored-skill) for the install model.
 
 For a standalone shared installation, copy the complete `penmark-comments/` directory into the target harness's skill directory rather than copying an individual file.
 

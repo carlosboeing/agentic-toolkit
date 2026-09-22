@@ -15,11 +15,13 @@ related:
 
 # Antigravity model and quota selection
 
+Model choices below record the 2026-08-02 comparison. On 2026-09-22, [Google's model list](https://antigravity.google/docs/models) includes Gemini 3.8 Flash and 3.7 Flash as well as 3.6 Flash. The table is not the complete current picker. Verify availability and quota in your account before applying the historical routing examples.
+
 This is the Antigravity operating supplement. Use the [AI model and effort routing guide](guide-ai-model-and-effort-routing.md) to choose a model for a task and the [cross-harness reference](../reference/reference-cross-harness-models.md) for benchmarks, prices, and comparisons.
 
-## Current picker
+## Recorded picker
 
-Antigravity currently documents these models and effort choices. Check the live picker before a long session because availability can change. [Antigravity models](https://antigravity.google/docs/models)
+The August comparison used these models and effort choices. Check the live picker before a long session because availability can change. [Antigravity models](https://antigravity.google/docs/models)
 
 | Model | Effort | Use inside Antigravity |
 |---|---|---|

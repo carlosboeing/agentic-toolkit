@@ -27,7 +27,7 @@ How to get a similar **methodology and tooling** bar when switching between Clau
 | Native plugin | `agy plugin install <url>` |
 | Import Gemini extensions | `gemini extensions install …` then `agy plugin import gemini` |
 | Import Claude plugins | `agy plugin import claude` (when local Claude extensions exist) |
-| Skills | `~/.agents/skills/` (global), `.agents/skills/` (project) |
+| Skills | `.agents/skills/` (project); `~/.gemini/config/skills/` (IDE/2.0 global); `~/.gemini/antigravity-cli/skills/` (CLI global). The synchronizer creates only the IDE/2.0 spoke. [Official locations](https://antigravity.google/docs/skills), checked 2026-09-22. |
 | MCP | `~/.gemini/config/mcp_config.json` |
 | Google bundled | `~/.gemini/config/plugins/` (chrome-devtools, modern-web-guidance, …) |
 
@@ -81,7 +81,7 @@ Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology
 | Authored skills (briefing, penmark-comments, schedule-resume, …) | Reached through `~/.agents/skills`, a whole-dir symlink to the hub — no Kimi-specific step. **Changed 2026-08-06:** they are copies in the hub now, not live symlinks into the repo, so a repo edit needs `sync-skills.sh` before Kimi sees it |
 | `kimi-webbridge` skill | **Removed 2026-08-06** from all four locations, pending reinstall. `~/.kimi-code/skills` was deleted with it. Rebuild path in [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md) |
 | MCP servers (context7, claude-mem, fathom, playwright) | Parity target: mirror the four entries from `~/.gemini/config/mcp_config.json` into `~/.kimi-code/mcp.json`. `headroom` was a fifth until 2026-08-04 — do not re-add it, see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md) |
-| Superpowers | Native plugin registration + canonical-clone content: `~/.kimi-code/plugins/managed/superpowers` is a whole-dir symlink to `plugins/superpowers` (v6.2.0), restored by `plugins/superpowers-relink.sh` after any `/plugins` update. `git pull` in the clone now propagates to all five daily harnesses |
+| Superpowers | Historical setup, superseded 2026-08-19. Use native `/plugins install` and the report from [`install-superpowers.sh`](../plugins/install-superpowers.sh); the local clone and relinker are retired. |
 | RTK | Instructions mode (`rtk init --agent kimi`, needs rtk ≥ 0.44.0) — Kimi hooks can't rewrite tool input, so no transparent hook |
 
 ## Verified installed state — Antigravity (audited 2026-06-14)
@@ -130,20 +130,20 @@ Every skill physically lives in **one** place: `~/.claude/skills`, the hub. It h
 
 | Directory | Role | Serves |
 |---|---|---|
-| `~/.claude/skills` | **Hub** — 19 real directories, zero symlinks | Claude Code |
+| `~/.claude/skills` | **Hub** with real skill directories; counts depend on the installed set | Claude Code |
 | `~/.agents/skills` | Whole-dir symlink to the hub | Codex, Kimi Code |
 | `~/.gemini/config/skills` | Whole-dir symlink to the hub | Antigravity |
 | `~/.codex/skills` | **Not a spoke.** Holds `.system/`, Codex's own bundled skills | Codex internals — leave alone |
 | `~/.kimi-code/skills` | Removed 2026-08-06 — redundant with `~/.agents/skills` | — |
 
-One copy on disk means drift is structurally impossible. Before this, four skills existed as independent copies across harnesses and two had already diverged.
+Whole-directory spokes share one installed copy. The authored source can still drift from the hub until synchronization runs. Before this, four skills existed as independent copies across harnesses and two had already diverged.
 
 Content reaches the hub two ways:
 
 - **Authored skills** stay canonical in `agentic-toolkit/skills/` and are copied in by [`sync-skills.sh`](../skills/sync-skills.sh). They are no longer live-edited — an edit in the repo needs a sync run before any harness sees it.
 - **Third-party skills** are installed straight into the hub. Vendor CLIs that write to `~/.agents/skills` now write through the spoke symlink and land in the hub automatically. If one recreates the spoke as a real directory, `./skills/sync-skills.sh --adopt` folds it back in.
 
-Because the hub is derived state, `~/.claude` gitignores it. Recovery comes from [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md), which records the rebuild command for every skill this repo does not author.
+The hub is derived state and is not tracked by this repository. Recovery comes from [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md), which records the rebuild command for every skill this repo does not author.
 
 Full rationale, risks, and the migration record: the skill installation topology established in August 2026.
 
@@ -195,7 +195,7 @@ Keep **both** Playwright MCP and the Playwright CLI; choose **per job**, not one
 | **Playwright CLI** (`@playwright/test`) | Repeatable flows, visual-regression goldens, anything committed or re-run | Claude Code, Codex, Antigravity (required for parity); Cursor |
 | **chrome-devtools-plugin** (Agy bundled) | Additional live debugging / exploratory tool in Antigravity (replaces superpowers-chrome); it does not replace the MCP parity check | Antigravity |
 
-The CLI is **`@playwright/test`** (the `playwright` binary provides `test`, `codegen`, `screenshot`, `open`) — there is no `@playwright/cli` package. MCP idle cost is harness-dependent: Claude Code can defer tool schemas (~names until first use), so "skip the MCP to save context" only holds on eager-loading harnesses. Judging *looks* needs screenshots + vision either way — the accessibility snapshot shows structure, not aesthetics. Follow the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure); configuration listings alone do not establish parity.
+The repeatable test runner is **`@playwright/test`**. Microsoft also publishes [`@playwright/cli`](https://github.com/microsoft/playwright-cli) for agent-driven browser sessions; these are distinct interfaces, checked 2026-09-22. MCP idle cost is harness-dependent: Claude Code can defer tool schemas (~names until first use), so "skip the MCP to save context" only holds on eager-loading harnesses. Judging *looks* needs screenshots + vision either way — the accessibility snapshot shows structure, not aesthetics. Follow the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure); configuration listings alone do not establish parity.
 
 ## Third-party routers (optional)
 

@@ -12,9 +12,9 @@ related:
 
 A fresh Claude Code session can open at ~75% context remaining before you type anything — a heavily-connected environment measured **~232k tokens of fixed startup** on the 1M window. This guide is the durable recipe that took that to **~70k (~93% remaining)** without losing any tool used in coding sessions. See the [cost reference](../reference/reference-claude-code-context-costs.md) for the per-server numbers this guide acts on.
 
-## The one thing that matters
+## What dominated this measurement
 
-**MCP tool schemas are ~95% of the reducible startup cost** (173.6k of 232k in the measured case). Prose — CLAUDE.md, memory files — is under 4% combined; optimizing it is theatre. Attack MCP tools, ignore the rest.
+In the 2026-07-08 measurement, MCP schemas were the largest reducible bucket: 173.6k of roughly 232k startup tokens, about 75% of the total. Memory files were under 4%. Measure your current session first; deferred tool loading and changed catalog budgets can make these ratios inapplicable.
 
 Within MCP tools, **claude.ai connectors dominate** (~156k across Canva, Notion, Slack, Google Workspace, travel, Vercel, …), not plugins. Disabling `octo` + finance plugins reclaims only ~13k; the connectors are the prize.
 
@@ -49,7 +49,7 @@ Set it once at user scope (`~/.claude/settings.json`); every project inherits it
 Do this **before** disabling connectors, so nothing breaks. Worked example — Fathom (needed by a `/capture-meeting` skill):
 
 ```bash
-claude mcp add fathom -- npx mcp-remote@latest https://api.fathom.ai/mcp
+claude mcp add --scope user fathom -- npx mcp-remote@latest https://api.fathom.ai/mcp
 ```
 
 Complete the OAuth in your browser, then verify: `/mcp` shows a `fathom` self-config server; call one tool (e.g. `get_identity`) to confirm it's authenticated. This is the *same* official backend the claude.ai Fathom connector proxied — same tools — but as a self-config stdio server it survives the connector flag. (Pin `mcp-remote@<version>` instead of `@latest` if you want to freeze the bridge.)

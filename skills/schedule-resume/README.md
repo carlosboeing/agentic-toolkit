@@ -30,7 +30,7 @@ The skill confirms all consequential values before creation and states: `This wi
 
 The bundle contains `SKILL.md`, this README, `scripts/resume-job.sh`, its `scripts/lib/` modules, and static/shell tests under `tests/`. Keep the directory together and keep the helper executable.
 
-Install it like any other skill in this repo — see the [skills catalog README](../README.md#install-any-skill-in-this-directory). [`sync-skills.sh`](../sync-skills.sh) symlinks the whole `schedule-resume/` directory (scripts, libs, tests) into each installed harness at once; the helper's executable bit travels with the repo file, so no `chmod` step is needed. To consume just this one skill instead, copy its whole directory into your harness's skills directory.
+Install it like any other skill in this repo — see the [skills catalog README](../README.md#install-one-skill). [`sync-skills.sh`](../sync-skills.sh) copies the whole `schedule-resume/` directory (scripts, libs, tests) into the hub and repairs the shared spokes; the helper's executable bit travels with the repo file, so no `chmod` step is needed. To consume just this one skill instead, copy its whole directory into your harness's skills directory.
 
 ## State and scheduling
 

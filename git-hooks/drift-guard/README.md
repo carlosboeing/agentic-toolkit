@@ -129,7 +129,7 @@ HOOK_SRC=<path-to-toolkit>/git-hooks/drift-guard
 TARGET=<path-to-repo>
 
 mkdir -p "$TARGET/scripts/githooks"
-cp "$HOOK_SRC/housekeep" "$HOOK_SRC/pre-push" "$TARGET/scripts/githooks/"
-chmod +x "$TARGET/scripts/githooks/housekeep" "$TARGET/scripts/githooks/pre-push"
+cp "$HOOK_SRC/housekeep" "$HOOK_SRC/pre-push" "$HOOK_SRC/post-merge" "$TARGET/scripts/githooks/"
+chmod +x "$TARGET/scripts/githooks/housekeep" "$TARGET/scripts/githooks/pre-push" "$TARGET/scripts/githooks/post-merge"
 git -C "$TARGET" config core.hooksPath scripts/githooks
 ```

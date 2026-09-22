@@ -15,13 +15,15 @@ related:
 
 # AI model and effort routing
 
+The named-model recommendations below are a historical policy based on the August 2026 comparison, not a current ranking. A 2026-09-22 check found newer rosters, including [GPT-6 Astra in Codex](https://learn.chatgpt.com/docs/pricing) and [Gemini 3.8/3.7 Flash in Antigravity](https://antigravity.google/docs/models). Use the task-selection method, then verify current models, plan terms, and prices before choosing.
+
 Use this guide to choose a harness, model, and effort in under a minute. The aim is sustained high-quality throughput, not winning every task with the strongest model.
 
 The default policy is:
 
 > Start with the cheapest independent capacity pool that can finish the task reliably. Escalate when you observe complexity, not when the task merely sounds important.
 
-Current plan snapshot: Claude Max 5x, ChatGPT Plus, Kimi Allegretto, and Google AI Pro with Antigravity. This snapshot will change. The routing logic should survive those changes; prices, model rosters, quota structures, and benchmarks live in the dated [cross-harness reference](../reference/reference-cross-harness-models.md).
+Example plan mix used for the historical comparison: Claude Max 5x, ChatGPT Plus, Kimi Allegretto, and Google AI Pro with Antigravity. This snapshot will change. The routing logic should survive those changes; prices, model rosters, quota structures, and benchmarks live in the dated [cross-harness reference](../reference/reference-cross-harness-models.md).
 
 Grok Build TUI is a fifth daily harness. Do not route work to it from this guide until the models reference has a live roster and quota snapshot.
 
@@ -289,7 +291,7 @@ Treat open-weight inference as an extra worker pool.
 
 ### Useful now
 
-- **Ollama Cloud Pro:** run a one-month instrumented trial for research packets, repository maps, extraction, first drafts, and test-log triage. Its US$20 price is attractive, but the absolute allowance and overage rates are unpublished.
+- **Ollama Cloud Pro:** run a one-month instrumented trial for research packets, repository maps, extraction, first drafts, and test-log triage. The 2026-09-21 reference records a US$20 monthly price, US$60 in included usage credits, and published per-model overage rates; verify the [current pricing](https://ollama.com/pricing) before subscribing.
 - **Groq:** use GPT-OSS 20B/120B or Qwen 3.6 for very fast, metered workers when low latency matters.
 - **OpenRouter:** use when you want model breadth, provider fallbacks, price/latency routing, budget caps, or Zero Data Retention filtering.
 - **RunPod:** rent a 24 GB or 48 GB NVIDIA GPU before buying hardware for a model that does not fit the current 16 GB plan.

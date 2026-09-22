@@ -47,7 +47,7 @@ The public repository contains code, user documentation, architectural decision 
 The workflow has an explicit stop between each authoring phase. Implementation starts only after the design and plan have been reviewed.
 
 ```mermaid
-flowchart LR
+flowchart TB
     Brainstorm["Brainstorm"] --> BrainstormGate{"Direction approved?"}
     BrainstormGate --> Design["Design"]
     Design --> DesignGate{"Design reviewed?"}
@@ -160,10 +160,14 @@ The complete indexes are in [`guides/`](guides/) and [`reference/`](reference/).
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Current priorities and shipped work |
 | [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Dated release history |
 
+## Limitations
+
+The synchronizer copies authored skills; it does not install every external tool or create instruction-file links. Spokes are created only when their harness parent directory exists. Review local sync configuration before applying it, and compare same-named skills before using `--adopt`, which replaces a real spoke directory. Product capabilities, model rosters, and prices in dated references need fresh verification. Mermaid hooks check syntax, not layout, and some skip paths return success without validating a diagram.
+
 ## Contributing and governance
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. It lists the local checks, Conventional Commit format, and the `required` continuous integration gate.
 
 The repository uses the [Contributor Covenant](CODE_OF_CONDUCT.md), accepts private vulnerability reports through [GitHub Security Advisories](https://github.com/carlosboeing/agentic-toolkit/security/advisories/new), and documents support boundaries in [SUPPORT.md](SUPPORT.md). [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) records bundled dependencies.
 
-The code and documentation are available under the [MIT License](LICENSE). Copies or substantial portions must retain the copyright and permission notices.
+Repository-authored code and documentation use the [MIT License](LICENSE). Reused material has the notices and license exceptions listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Copies or substantial portions must retain the applicable notices.

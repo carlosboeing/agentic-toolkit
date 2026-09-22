@@ -1,6 +1,6 @@
 # `/capture-meeting` — Ingest, audit, and file meeting records
 
-A drop-in skill that turn an AI meeting recording (Fathom or other tool) plus manual notes/artifacts into an audited meeting document following the project's conventions, then propagates findings into the project's working memory (ROADMAP/tracker/ADRs).
+A drop-in skill that turns an AI meeting recording (Fathom or other tool) plus manual notes/artifacts into an audited meeting document following the project's conventions, then propagates findings into the project's working memory (ROADMAP/tracker/ADRs).
 
 ---
 
@@ -16,16 +16,16 @@ When you run `/capture-meeting` (or ask the agent to process meeting notes), it 
 
 ## Install
 
-See the [skills catalog README](../README.md#install-any-skill-in-this-directory) for the full options and platform notes. In short:
+See the [skills catalog README](../README.md#install-one-skill) for the full options and platform notes. In short:
 
 - **Consume just this skill** — copy (or `curl`) its `SKILL.md` into your harness's skills directory. Best for sharing a single skill.
-- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to symlink every authored skill from this repo into all your installed harnesses (Claude, Codex, Agy) at once, with zero copy drift.
+- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to copy authored skill directories into the hub and repair whole-directory spokes. Re-run it after source edits.
 
 ## Usage examples
 
 ```
 /capture-meeting today's sync
-/capture-meeting "meeting with Mat on equity"
+/capture-meeting "weekly project meeting"
 /capture-meeting https://fathom.video/share/123456
 ```
 

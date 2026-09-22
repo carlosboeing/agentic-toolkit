@@ -99,10 +99,10 @@ Standing instructions for every failure mode (no git repo, no remote, `gh` missi
 
 ## Install
 
-See the [skills catalog README](../README.md#install-any-skill-in-this-directory) for the full options and platform notes. In short:
+See the [skills catalog README](../README.md#install-one-skill) for the full options and platform notes. In short:
 
-- **Consume just this skill** — copy (or `curl`) its `SKILL.md` into your harness's skills directory. Best for sharing a single skill.
-- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to symlink every authored skill from this repo into all your installed harnesses (Claude, Codex, Agy) at once, with zero copy drift.
+- **Consume just this skill** — copy the entire `briefing/` directory, including `agents/openai.yaml`, into your harness's skills directory.
+- **Author across harnesses** — run [`sync-skills.sh`](../sync-skills.sh) to copy authored skill directories into the hub and repair whole-directory spokes. Re-run it after source edits.
 
 ## Usage examples
 
@@ -165,7 +165,7 @@ When you append `save`, the briefing is written to disk so you can re-read it la
 - **Overwrite policy**: never silent. If the filename already exists, a `-2`, `-3`, … suffix is appended.
 - **Gitignore**: not auto-ignored. Whether to commit your `briefing-log/` is up to you and your team.
 
-The save log is the only write the skill ever makes; everything else is read-only.
+Normal briefing mode writes only when `save` is requested. The separate `setup` mode can update the project brief after confirmation.
 
 ## Design philosophy
 
@@ -174,7 +174,7 @@ A few load-bearing rules — read these if you want to understand why the skill 
 - **Four layers, never more.** Always-on universal mechanics, declared sources, default-path sniffing, and fallbacks for graceful degradation. Each new source kind earns its place in one of the four. The split between declared (explicit) and default-path (sniffed) keeps convention-specific knowledge out of the universal baseline.
 - **Convention-aware, not convention-coupled.** The skill is shareable to projects using any conventions. Adopting the canonical conventions in this repo lights it up with richer behaviour; not adopting them produces simpler but still-useful output. Never imposes; always suggests.
 - **Adaptive over fixed.** The default has no depth keyword precisely because the right shape changes with project state. `quick`/`standard`/`deep` are escape hatches when you know what you want.
-- **Read-only on the project.** The skill never modifies project files; the only exception is the briefing log it writes to `briefing-log/` when you invoke it with `save`.
+- **Read-only on the project.** Normal briefing mode leaves project files unchanged except for a requested saved log. The separate `setup` mode can update the project brief after confirmation.
 - **`git fetch`, never `git pull`.** Fetching updates refs without modifying the working tree, so the briefing can compute accurate ahead/behind without risking a merge mid-task. Fetch failures are tolerated — the briefing falls back to stale refs and surfaces the gap in the footer.
 - **Anti-fabrication.** Every data point comes from a source read this invocation. No invented PR numbers, file paths, SHAs, or URLs. Stale data labelled stale beats stale data presented as fresh.
 - **Honest about gaps.** Source unreachable, declared tracker missing, no `## Project Map` section, network down — orientation-affecting gaps name themselves in the conditional `★ About this briefing` block. Setup-affecting gaps surface in `/briefing sources` if you ask for them. Never papered over.

@@ -50,7 +50,7 @@ For a development clone, run:
 ./skills/sync-skills.sh
 ```
 
-It links the whole bundle, where the corresponding harness is installed:
+It copies the whole bundle into the hub and repairs whole-directory spokes where the corresponding harness parent directory exists:
 
 | Harness | Skill directory |
 |---|---|
@@ -58,14 +58,15 @@ It links the whole bundle, where the corresponding harness is installed:
 | Codex | `~/.agents/skills/penmark-comments` |
 | Agy | `~/.gemini/config/skills/penmark-comments` |
 
-The script does not overwrite a real directory. A standalone installation must copy the complete `penmark-comments/` bundle, including `references/` and `scripts/`. Do not create an Agy slash-menu link unless normal skill discovery proves it necessary.
+The script updates the real hub copy. It leaves real spoke directories alone unless `--adopt` is requested. A standalone installation must copy the complete `penmark-comments/` bundle, including `references/` and `scripts/`. Do not create an Agy slash-menu link unless normal skill discovery proves it necessary.
 
-Verify the links and bundle before use:
+Verify the shared spokes and the copied bundle before use:
 
 ```bash
-readlink ~/.claude/skills/penmark-comments
-readlink ~/.agents/skills/penmark-comments
-readlink ~/.gemini/config/skills/penmark-comments
+readlink ~/.agents/skills
+readlink ~/.gemini/config/skills
+cmp skills/penmark-comments/SKILL.md ~/.claude/skills/penmark-comments/SKILL.md
+test -f ~/.claude/skills/penmark-comments/scripts/validate-penmark-comments.mjs
 ```
 
 ## Validate and smoke test
@@ -106,7 +107,7 @@ The forward-test is intentionally incomplete. The results below distinguish comp
 | Codex CLI | 0.145.0 | `~/.agents/skills/penmark-comments` | Two positive runs validated by bundled validator and Penmark parser; read-only target byte-identical; multi-source changed only primary and validated | Summary run left the target byte-identical but stalled before a final response; remaining matrix deferred |
 | Antigravity (`agy`) | 1.1.5 | `~/.agents/skills/penmark-comments` shared with Codex in this audit | Correct noninteractive invocation form verified | Positive, negative, and multi-source runs stalled during file search; no behavioral pass recorded |
 
-See the evaluation report (2026-07-22) for commands, hashes, parser assertions, and rerun requirements.
+The original raw evaluation is not distributed with this repository. The results above are historical summaries, not reproducible evidence of current harness behavior. Use the public runbook below for a fresh check.
 
 ## Activation-guard evidence — 2026-07-26
 
@@ -114,9 +115,9 @@ The activation-guard evaluation (2026-07-26) completed Codex 0.145.0's five-boun
 
 ## Manual cross-harness verification runbook
 
-> **Superseded as the default (2026-07-27).** This full matrix documents the 2026-07-26 activation-guard exercise and remains valid as reference. It is no longer the standard for routine changes: per the consent gate design (2026-07-27), routine changes verify activation only — four probes on one harness — because the gate and the disclosure summary make every other failure mode visible on first use. Run this full matrix only for high-risk changes, or when focused probes reveal harness-specific differences.
+> **Superseded as the default (2026-07-27).** This full matrix documents the 2026-07-26 activation-guard exercise and remains valid as reference. It is no longer the standard for routine changes: under the consent workflow introduced on 2026-07-27, routine changes verify activation only — four probes on one harness — because the gate and the disclosure summary make every other failure mode visible on first use. Run this full matrix only for high-risk changes, or when focused probes reveal harness-specific differences.
 
-The 2026-07-23 release is shipped with the remaining Task 6 cross-harness evidence explicitly deferred. Completing the outstanding rows below and recording the results in the evaluation report completes that deferred Task 6 evidence; it is not a prerequisite for using the released skill.
+The 2026-07-23 release left cross-harness evidence incomplete. Complete the rows below in a new evaluation when that evidence is required; do not infer a current pass from the earlier release.
 
 The existing evidence already covers two Codex positive runs, its read-only override, and its multi-source run. Preserve those historical behavioral facts, but do not infer the newly required trace evidence from them. Run the full matrix below in fresh sessions and record direct activation or non-activation evidence for every row.
 
@@ -584,7 +585,7 @@ Mark a row `pass` only when every expected outcome above is met. Record a timeou
 | Skill is missing | Return findings in chat; do not invent or rediscover the format. |
 | The target cannot be written | Return findings in chat and state the limitation. |
 
-To disable automatic activation, remove the global instruction section. A direct read-only or no-write instruction does not disable activation and does not by itself choose the output surface; it reaches the consent gate. Deleting `~/.config/penmark-comments/config.json` restores the gate after "Yes, and stop asking" was used. Removing the machine-local symlink disables discovery for that harness; it does not alter reviewed documents.
+To disable automatic activation, remove the global instruction section. A direct read-only or no-write instruction does not disable activation and does not by itself choose the output surface; it reaches the consent gate. Deleting `~/.config/penmark-comments/config.json` restores the gate after "Yes, and stop asking" was used. The shared spoke exposes every hub skill. To disable only Penmark, use the harness's skill controls or remove its installed bundle after checking which harnesses share it; unlinking a spoke affects all hub skills for that harness. Reviewed documents are unaffected.
 
 ## Format upgrades
 

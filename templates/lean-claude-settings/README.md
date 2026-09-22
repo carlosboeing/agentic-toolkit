@@ -15,7 +15,7 @@ Read this first — the right placement depends on your setup:
 `disableClaudeAiConnectors` is a single switch for **all** claude.ai connectors — there is no per-connector key. To keep **one** integration (e.g. Fathom, Notion) while cutting the rest, **self-host its MCP** so it survives the flag:
 
 ```bash
-claude mcp add fathom -- npx mcp-remote@latest https://api.fathom.ai/mcp
+claude mcp add --scope user fathom -- npx mcp-remote@latest https://api.fathom.ai/mcp
 ```
 
 Add and verify the self-hosted server **before** enabling the flag, so nothing breaks. See the guide for the full pattern.

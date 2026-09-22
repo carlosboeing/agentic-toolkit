@@ -5,7 +5,7 @@ Applies the OSS house standard (`reference/reference-oss-standards.md`) to any p
 ## What it does
 
 - `check` - audit community health files, pinned workflow SHAs, `dependabot.yml`, branch protection `required` gate, and email exposure.
-- `fix` - patch gaps in place (copies from `templates/default-project/`, pins SHAs from reference §2).
+- `fix` - patch gaps in place (copies from `templates/default-project-oss/`, pins SHAs from reference §2).
 - `scaffold` - create a new repo from the house-standard template.
 
 ## Use
@@ -26,7 +26,7 @@ Via hub (already mirrored to `~/.agents/skills`, `~/.gemini/config/skills`):
 ./skills/sync-skills.sh
 ```
 
-Or single skill:
+Install the `repo-standards` skill too: this compatibility alias delegates to it. For the alias directory:
 
 ```bash
 mkdir -p ~/.claude/skills/oss-standards

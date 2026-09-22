@@ -214,7 +214,7 @@ If you're not using Claude Code, this file is still a useful "agents and contrib
 
 #### `docs/ROADMAP.md`
 
-The single source of truth for "what's next." Six sections, each with a clear semantic — see §6.3 for full detail.
+The single source of truth for "what's next." Seven sections, each with a clear semantic — see §6.3 for full detail.
 
 #### `docs/CHANGELOG.md`
 
@@ -475,6 +475,8 @@ last_reviewed: 2026-05-12          # optional — deliberate "I confirmed this i
 - `assets/`, `imports/`, and files *inside* a review/discovery bundle (raw model outputs, dispatched prompts, per-persona responses): the bundle's top-level report or README carries the frontmatter for the set.
 - Project-level docs (`README.md`, `CLAUDE.md`, `CHANGELOG.md`, `ROADMAP.md`) — well-known by name.
 - **Public user docs are out of scope entirely** (e.g. a public repo's end-user `docs/`): they may carry their own project standard, including none. Don't add agent attribution there unless the project says to.
+
+The bundled [drift-guard](../git-hooks/drift-guard/) currently accepts only `draft`, `approved`, `in-progress`, `shipped`, `resolved`, and `superseded`. The `open`, `parked`, and `abandoned` values described in this guide are not accepted by that hook. Reconcile the project's chosen vocabulary with its hook before enabling the gate; this documentation does not change hook behavior.
 
 ### 5.5 Status semantics
 
@@ -837,7 +839,7 @@ These come with the harness itself and complement the structure:
 
 - `/schedule` — create recurring or one-time remote agents. The natural home for proposals captured in `docs/0-brainstorms/` (e.g., quarterly maintenance routines, monthly health checks).
 - `/loop` — run a prompt or slash command on a recurring interval within a session. Useful for "keep checking until X" workflows.
-- `find-skills` — discover and install skills when you express a need ("how do I do X?").
+- `find-skills` is an external skill from [vercel-labs/skills](https://github.com/vercel-labs/skills), not a guaranteed built-in. Install it separately if wanted.
 - `update-config` — configure the harness via `settings.json`, including hooks for automated behaviours.
 - `keybindings-help` — customise keyboard shortcuts.
 
@@ -865,7 +867,7 @@ Plugins come from marketplaces. Three to know:
 - **`superpowers-marketplace`** — community-curated discipline skills (the canonical home of `superpowers`).
 - **Project-specific marketplaces** (e.g., `ui-ux-pro-max-skill`) — single-plugin marketplaces from individual authors.
 
-Manage via `/plugin` (TUI) or by editing `~/.claude/plugins/installed_plugins.json` directly. Snapshot your installed set occasionally — versions and SHAs drift over time.
+Manage via `/plugin` or the documented plugin CLI. Treat `~/.claude/plugins/installed_plugins.json` as generated state, not a hand-edited install manifest. Snapshot your installed set occasionally — versions and SHAs drift over time.
 
 ### 7.9 Minimum viable setup for this structure
 
