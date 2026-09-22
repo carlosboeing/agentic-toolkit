@@ -1,4 +1,4 @@
-# Contributing to agentic-toolkit
+# Contributing to Agentic Toolkit
 
 Thank you for helping improve the toolkit. This guide covers how to propose a change, the checks to run, and the standards that commits, pull requests and documentation follow.
 
@@ -104,6 +104,7 @@ Every public document in this repository follows these rules.
 - **Add a diagram where it helps.** Use a Mermaid diagram for a process, a data flow, a directory layout or a decision. Do not add one for decoration.
 - **Follow the Mermaid rules.** No `;` in labels, no leading `+` or `-` in sequence messages, quote labels that contain `()[]{}|`, and no hard-coded colors or themes. Check each diagram with the [Mermaid validator](hooks/validate-mermaid/).
 - **Date volatile facts.** Model names, prices, quotas and product behavior change. State when a fact was checked and link its source.
+- **Use the project's name consistently.** Write "Agentic Toolkit" in prose and headings, and `agentic-toolkit` in code, paths, URLs and commands.
 - **Keep it general.** Write for any reader's setup. Do not include personal machine paths, account details or private project names.
 - **Check commands against the code.** Every command and flag must match the current scripts.
 - **Keep links working.** Use relative links between files in the repository. Do not rename a heading that other documents link to without updating those links.

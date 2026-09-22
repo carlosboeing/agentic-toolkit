@@ -12,7 +12,7 @@ This file is auto-loaded on every session. It is the operator-facing brief; `REA
 
 <!--
 This section declares where project-tracking information lives so AI tools
-(notably the /briefing skill from agentic-toolkit) can read it without
+(notably the /briefing skill from Agentic Toolkit) can read it without
 guessing. Each line is `- **Field**: value`. Recognised fields:
 
   - **Tracker**       — where work items live (GitHub Issues, Linear, Jira,

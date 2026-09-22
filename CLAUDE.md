@@ -1,4 +1,4 @@
-# agentic-toolkit — instructions for AI agents
+# Agentic Toolkit — instructions for AI agents
 
 This file is auto-loaded on every session. It's the agent-facing brief; `README.md` is the human-facing one. `AGENTS.md` symlinks to this file for harnesses that expect that filename.
 

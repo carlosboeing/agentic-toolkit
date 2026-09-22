@@ -1,4 +1,4 @@
-# agentic-toolkit
+# Agentic Toolkit
 
 A portable library of skills, hooks, instructions, templates and conventions for AI coding agents. It works with Claude Code, OpenAI Codex, Google Antigravity, Kimi Code, Grok Build TUI and OpenCode.
 
@@ -21,7 +21,7 @@ The repository is the source. `scripts/sync-toolkit.sh` copies its skills into a
 ```mermaid
 flowchart TB
     subgraph Source["Where things are written"]
-        Repo["agentic-toolkit: skills, hooks, guides, templates"]
+        Repo["Agentic Toolkit repository: skills, hooks, guides, templates"]
         Notes["Private companion repository: brainstorms, designs, plans, reviews"]
         Notes -. "decisions restated in public ADRs, never copied" .-> Repo
     end
