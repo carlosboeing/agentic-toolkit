@@ -8,7 +8,6 @@ authors:
 scope: [model-routing, claude-code, codex, kimi-code, antigravity, grok, quota, open-weight]
 last_reviewed: 2026-08-17
 related:
-  - ../reference/reference-cross-harness-models.md
   - guide-agy-model-and-quota-selection.md
   - ../reference/reference-harness-capability-map.md
 ---
@@ -23,7 +22,7 @@ The default policy is:
 
 > Start with the cheapest independent capacity pool that can finish the task reliably. Escalate when you observe complexity, not when the task merely sounds important.
 
-Example plan mix used for the historical comparison: Claude Max 5x, ChatGPT Plus, Kimi Allegretto, and Google AI Pro with Antigravity. This snapshot will change. The routing logic should survive those changes; prices, model rosters, quota structures, and benchmarks live in the dated [cross-harness reference](../reference/reference-cross-harness-models.md).
+The comparison assumed one subscription tier per harness. Plans, prices, model rosters, quota structures and benchmarks change often, so check each vendor's pricing and model pages before relying on a named model. The routing logic is meant to outlast those changes.
 
 Grok Build TUI is a fifth daily harness. Do not route work to it from this guide until the models reference has a live roster and quota snapshot.
 
@@ -294,13 +293,11 @@ Treat open-weight inference as an extra worker pool.
 - **Ollama Cloud Pro:** run a one-month instrumented trial for research packets, repository maps, extraction, first drafts, and test-log triage. The 2026-09-21 reference records a US$20 monthly price, US$60 in included usage credits, and published per-model overage rates; verify the [current pricing](https://ollama.com/pricing) before subscribing.
 - **Groq:** use GPT-OSS 20B/120B or Qwen 3.6 for very fast, metered workers when low latency matters.
 - **OpenRouter:** use when you want model breadth, provider fallbacks, price/latency routing, budget caps, or Zero Data Retention filtering.
-- **RunPod:** rent a 24 GB or 48 GB NVIDIA GPU before buying hardware for a model that does not fit the current 16 GB plan.
+- **RunPod:** rent a 24 GB or 48 GB NVIDIA GPU to test a model before buying hardware for it.
 
-### GPU decision
+### Local hardware
 
-The RTX 5060 Ti 16 GB is the safer home server purchase: lower power, mature NVIDIA container support, and enough VRAM for Gemma 4 12B, GPT-OSS 20B, and tightly configured coding models. The RX 7900 XTX 24 GB opens useful 27B–30B quantizations, but its 355 W board power, AMD's 800 W PSU recommendation, ROCm 7 requirement, and greater heat make it a system upgrade rather than a simple GPU swap.
-
-Do not buy either card to replace Opus, Sol, K3, or Gemini Pro. Buy for privacy, offline work, predictable high-volume workers, or measured cloud spend. See the [reference's deployment section](../reference/reference-cross-harness-models.md#open-weight-and-hosted-quota-relief-options) for models and economics.
+Buy local GPU capacity for privacy, offline work, predictable high-volume workers or measured cloud spend, not to replace a frontier model. Before buying, rent an equivalent GPU and measure prompt ingestion, decode speed, usable context and success rate on your own tasks. Check power supply and cooling headroom as well as VRAM.
 
 ### Local escalation contract
 
@@ -329,7 +326,7 @@ Everything else receives a frontier judge or stays on a frontier model end to en
 
 When plans or models change:
 
-1. Refresh the [cross-harness reference](../reference/reference-cross-harness-models.md) from official rosters, pricing pages, quota docs, and current independent benchmarks.
+1. Check official model rosters, pricing pages, quota documentation and current independent benchmarks.
 2. Update the current-plan snapshot and remove retired model names.
 3. Run one bounded task if a new model is supposed to replace an existing routing role.
 4. Change this guide only when the evidence changes a start choice, escalation trigger, fallback, or deployment verdict.

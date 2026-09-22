@@ -89,7 +89,7 @@ Follow the per-tool guides in this directory:
 - [`guide-rtk-setup.md`](guide-rtk-setup.md) — RTK (shell-output token filter)
 - [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) — claude-mem (session memory)
 
-Headroom is **not** installed on new machines. It was removed on 2026-08-04 — see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md). Its [setup guide](guide-headroom-setup.md) is retained, marked retired, as a record of what the teardown reverted.
+Headroom is **not** installed on new machines. It was removed on 2026-08-04 — see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md).
 
 ### 6. Plugins and external tools
 

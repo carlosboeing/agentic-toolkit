@@ -11,7 +11,6 @@ last_reviewed: 2026-08-17
 related:
   - guide-harness-plugin-parity.md
   - guide-claude-mem-setup.md
-  - guide-headroom-setup.md
 ---
 
 # RTK Token Killer Setup Guide

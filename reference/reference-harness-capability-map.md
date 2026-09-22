@@ -92,8 +92,3 @@ Sixth daily harness, alongside Claude Code, Codex, Antigravity, Kimi, and Grok. 
 - **Design doc council:** Superpowers brainstorming first; Octo or lean delegation only if you repeatedly want external voices.
 - **Quota-aware long runs:** Agy model guide + orchestrator routing; not Octo.
 - **Cross-harness same repo:** Instruction symlinks + plugin parity guide.
-
-## Links
-
-- [Cross-harness model comparison](reference-cross-harness-models.md)
-- [Claude Code plugins snapshot](reference-claude-code-plugins.md)

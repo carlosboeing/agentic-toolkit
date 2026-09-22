@@ -424,7 +424,7 @@ The exact lesson rendered in the response, verbatim — including all inline lin
 
 Tell the reader the absolute path you wrote to. One line is enough — don't restate the lesson. Example:
 
-> Saved to `/Users/.../example-app/.claude/learn-log/2026-05-01-cfc4afb-eli5.md`. Open it in any markdown viewer with Mermaid support to see the diagram render properly.
+> Saved to `~/Projects/example-app/.claude/learn-log/2026-05-01-cfc4afb-eli5.md`. Open it in any markdown viewer with Mermaid support to see the diagram render properly.
 
 If the save failed (permission denied, disk full, weird path), say so plainly, show the error, and continue — don't suppress the error and pretend the save worked. The lesson itself was already rendered, so the reader hasn't lost anything; they just won't have a saved copy.
 

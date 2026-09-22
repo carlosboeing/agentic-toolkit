@@ -8,7 +8,6 @@ scope: [antigravity, model-selection, quota, sessions]
 last_reviewed: 2026-08-02
 related:
   - guide-ai-model-and-effort-routing.md
-  - ../reference/reference-cross-harness-models.md
   - guide-harness-plugin-parity.md
   - ../reference/reference-harness-capability-map.md
 ---
@@ -17,7 +16,7 @@ related:
 
 Model choices below record the 2026-08-02 comparison. On 2026-09-22, [Google's model list](https://antigravity.google/docs/models) includes Gemini 3.8 Flash and 3.7 Flash as well as 3.6 Flash. The table is not the complete current picker. Verify availability and quota in your account before applying the historical routing examples.
 
-This is the Antigravity operating supplement. Use the [AI model and effort routing guide](guide-ai-model-and-effort-routing.md) to choose a model for a task and the [cross-harness reference](../reference/reference-cross-harness-models.md) for benchmarks, prices, and comparisons.
+This is the Antigravity operating supplement. Use the [AI model and effort routing guide](guide-ai-model-and-effort-routing.md) to choose a model for a task, and the vendors' own pages for current benchmarks and prices.
 
 ## Recorded picker
 
@@ -73,4 +72,4 @@ The CLI commands are documented in [Antigravity usage commands](https://antigrav
 
 Antigravity does not know which of your other subscriptions has the cheapest adequate capacity. It also cannot infer business impact, privacy requirements, or whether a 1M context is actually necessary. Apply the cross-harness routing policy before choosing from this picker.
 
-Do not keep a duplicated cross-provider ranking here. When a model, price, or benchmark changes, update the [canonical reference](../reference/reference-cross-harness-models.md); change this supplement only when Antigravity's picker or quota/session behavior changes.
+Do not keep a duplicated cross-provider ranking here. Cross-provider comparisons belong in the routing guide. Change this supplement only when Antigravity's picker or quota/session behavior changes.

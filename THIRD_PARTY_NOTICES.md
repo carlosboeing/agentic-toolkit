@@ -44,10 +44,6 @@ SOFTWARE.
 
 The generated `copydesk:start` block in `instructions/CLAUDE.md` and `scripts/githooks/commit-msg` originate from [carlosboeing/copydesk](https://github.com/carlosboeing/copydesk). The commit hook is byte-identical to [upstream at 0553163c3061b4a2db33ca7d8002ba3ba08374b7](https://github.com/carlosboeing/copydesk/blob/0553163c3061b4a2db33ca7d8002ba3ba08374b7/git-hooks/commit-msg), checked 2026-09-22. The generated block does not record its generator version; its marker is preserved. CopyDesk uses MIT, copyright 2026 Carlos Boeing, with the same full MIT text reproduced in the Penmark section above. [Upstream license](https://github.com/carlosboeing/copydesk/blob/0553163c3061b4a2db33ca7d8002ba3ba08374b7/LICENSE).
 
-## RTK measurement screenshot
-
-`reference/assets/uploaded_media_1783469978607.png` is a terminal capture retained with the repository's 2026-07-07 measurements. It depicts output from [RTK](https://github.com/rtk-ai/rtk), an independently installed tool. No RTK executable or source code is bundled. The capture does not record the RTK version, so it cannot establish behavior or savings for a current release.
-
 ## CC BY 4.0 license text
 
 The following is the full license text retained by the upstream Contributor Covenant repository before its version 3 website redesign.

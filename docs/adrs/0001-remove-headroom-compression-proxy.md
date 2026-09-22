@@ -7,8 +7,7 @@ authors:
   - "Carlos Boeing"
   - "claude-opus-5 (claude-code)"
 scope: [headroom, proxy, context-compression, harness-parity, claude-code, cursor]
-related:
-  - ../../guides/guide-headroom-setup.md
+related: []
 ---
 
 # 0001: Remove the Headroom compression proxy from all harnesses
@@ -58,4 +57,4 @@ RTK is unaffected and stays. It filters shell command output only, bypasses the 
 
 ## Related
 
-- [guide-headroom-setup.md](../../guides/guide-headroom-setup.md) — retired by this decision
+- The Headroom setup guide, retired by this decision, is no longer published.

@@ -9,7 +9,7 @@ last_reviewed: 2026-05-02
 
 A self-contained guide to a project documentation structure that supports long-running work — multiple initiatives shipping over months or years, with always-current state docs, per-initiative designs and plans, retrospectives, decision records, and clear conventions for how everything fits together.
 
-This guide is **portable**: copy this file into a fresh project, follow the steps in §6, and you have the same structure operating in a new repo. Examples throughout are drawn from a real infrastructure project so the abstract conventions have a concrete shape.
+This guide is **portable**: copy this file into a fresh project, follow the steps in §6, and you have the same structure operating in a new repo. Examples use an infrastructure project so the conventions have a concrete shape.
 
 ---
 
@@ -152,7 +152,7 @@ Exploratory thinking isn't scratch — it's a first-class artifact in `docs/0-br
 │
 │ # Optional, per-project (created on demand):
 │ # ├── architecture/              # promoted from architecture.md when one file isn't enough
-│ # ├── system/                    # for ops/infrastructure projects with operational state
+│ # ├── system/                    # for ops projects with operational state
 │ # ├── prompts/                   # stable reusable prompts (3+)
 │ # └── <custom-evergreen>/        # project-specific (e.g., art/, gdd/)
 │
@@ -243,7 +243,7 @@ Optional, created when README's `## Architecture` section overflows. Two shapes:
 
 This is the *only* convention-blessed promotion-to-folder path. Other single-file evergreen content stays flat at `docs/` root (e.g., `vision.md` if you treat it as internal content, `gdd.md` for a game-design doc, `best-practices.md`).
 
-For ops / infrastructure projects with *operational state* (running containers, hardware inventory, network topology) that's broader than architecture alone: optionally add `docs/system/` (or `docs/state/`, `docs/ops/` — operator's call). Keep architectural and operational state separate when they have different update cadences. Examples of `system/*` files for an infrastructure: `hardware.md`, `storage.md`, `containers.md`, `backups.md`.
+For operations projects with *operational state* (running containers, hardware inventory, network topology) that's broader than architecture alone: optionally add `docs/system/` (or `docs/state/`, `docs/ops/` — operator's call). Keep architectural and operational state separate when they have different update cadences. Examples of `system/*` files for an infrastructure project: `hardware.md`, `storage.md`, `containers.md`, `backups.md`.
 
 **No frontmatter `status:` field** — these are evergreen. Optionally include `last_reviewed: YYYY-MM-DD` as a *deliberate* claim that you've personally verified the doc is up-to-date as of that date (NOT auto-bumped on every commit).
 
@@ -440,7 +440,7 @@ date: 2026-05-12
 title: "Install Plex"
 type: design                       # design | plan | retro | review | research | adr | brainstorm
 status: draft                      # draft | approved | shipped | superseded | abandoned (or open/parked for brainstorms)
-authors: ["Carlos Boeing", "claude-fable-5 (claude-code)"]  # see "Authorship" below
+authors: ["Jane Doe", "claude-fable-5 (claude-code)"]  # see "Authorship" below
 scope: [containers, network]       # optional, multi-valued tags
 reviewed_by: []                    # optional — review passes, same entry grammar as authors
 supersedes:                        # optional, path of doc this replaces
@@ -455,7 +455,7 @@ related: []                        # optional, paths to related docs
 ---
 title: "Container Roster"
 type: system                       # system | guide | architecture | reference
-authors: ["Carlos Boeing", "claude-fable-5 (claude-code)"]
+authors: ["Jane Doe", "claude-fable-5 (claude-code)"]
 scope: [containers]                # what aspect(s) this doc covers
 last_reviewed: 2026-05-12          # optional — deliberate "I confirmed this is current"
 ---
@@ -1086,6 +1086,6 @@ As the canonical conventions evolve, re-run this procedure. The `/init-project` 
 
 ## 12. Credits
 
-This structure was developed by [@carlosboeing](https://github.com/carlosboeing) for a infrastructure project, evolved from the `reference-workflow` reference structure.
+This structure was developed by [@carlosboeing](https://github.com/carlosboeing).
 
 Free to adopt, adapt, ignore. If it works for you, use it. If parts don't fit your project, drop them. The principle that matters is "single source of truth for any given question, with conventions cheap enough to actually follow."

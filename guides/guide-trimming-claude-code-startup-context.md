@@ -4,13 +4,12 @@ type: guide
 scope: [context-window, tokens, mcp, connectors, plugins, harness-config]
 updated: 2026-07-08
 related:
-  - reference/reference-claude-code-context-costs.md
   - templates/lean-claude-settings/README.md
 ---
 
 # Trimming Claude Code startup context
 
-A fresh Claude Code session can open at ~75% context remaining before you type anything — a heavily-connected environment measured **~232k tokens of fixed startup** on the 1M window. This guide is the durable recipe that took that to **~70k (~93% remaining)** without losing any tool used in coding sessions. See the [cost reference](../reference/reference-claude-code-context-costs.md) for the per-server numbers this guide acts on.
+A fresh Claude Code session can open at ~75% context remaining before you type anything — a heavily-connected environment measured **~232k tokens of fixed startup** on the 1M window. This guide is the durable recipe that took that to **~70k (~93% remaining)** without losing any tool used in coding sessions.
 
 ## What dominated this measurement
 
@@ -23,7 +22,20 @@ Within MCP tools, **claude.ai connectors dominate** (~156k across Canva, Notion,
 Change nothing until you can measure. Two tools:
 
 - **`/context`** (TUI) — authoritative per-bucket + per-tool split. Run before and after every change.
-- **Turn-1 `usage`** (scriptable) — see the [reference's measure loop](../reference/reference-claude-code-context-costs.md#measure-loop) for the one-liner.
+- **Turn-1 `usage`** (scriptable) — on the first turn, almost the whole startup context is written to the prompt cache at once, so the first assistant message's `usage` gives the total:
+
+  ```bash
+  python3 - "<transcript>.jsonl" <<'PY'
+  import json, sys
+  for ln in open(sys.argv[1], encoding="utf-8"):
+      o = json.loads(ln)
+      u = (o.get("message") or {}).get("usage") if o.get("type") == "assistant" else None
+      if u:
+          print("startup context:", u.get("input_tokens", 0) + u.get("cache_creation_input_tokens", 0) + u.get("cache_read_input_tokens", 0)); break
+  PY
+  ```
+
+  Transcripts live at `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`, where the encoded directory is the working path with each `/` replaced by `-`.
 
 **Golden rule:** reclaim is realized on the *next* session. Always **change → restart → `/context`**. Nothing is reclaimed until the meter confirms it.
 

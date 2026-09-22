@@ -298,7 +298,7 @@ mkdir "$code_review_dir"
 git -C "$code_review_dir" init
 cp "$resources_repo/skills/penmark-comments/tests/fixtures/markdown-code-review-baseline.md" "$code_review_dir/design.md"
 git -C "$code_review_dir" add design.md
-git -C "$code_review_dir" -c user.name='Carlos Boeing' -c user.email='carlos@example.invalid' commit -m 'docs: establish design baseline'
+git -C "$code_review_dir" -c user.name='Example Author' -c user.email='author@example.invalid' commit -m 'docs: establish design baseline'
 cp "$resources_repo/skills/penmark-comments/tests/fixtures/markdown-code-review-changed.md" "$code_review_dir/design.md"
 if git -C "$code_review_dir" diff --quiet -- design.md; then exit 1; fi
 ```

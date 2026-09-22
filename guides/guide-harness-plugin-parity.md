@@ -13,7 +13,6 @@ related:
   - guide-browser-automation-mcp-vs-cli.md
   - guide-cross-harness-project-instructions.md
   - reference/reference-harness-capability-map.md
-  - reference/reference-claude-code-plugins.md
 ---
 
 # Harness plugin and skill parity
@@ -74,57 +73,7 @@ Kimi reads the shared `~/.agents/` layer natively, so the hub-and-spoke topology
 | Providers | `disabled_providers` switches off a registry provider that a stray environment variable enabled |
 | Agents and commands | `~/.config/opencode/agent/<name>.md` and `command/<name>.md`, Markdown with frontmatter |
 
-## Verified installed state — Kimi (audited 2026-07-28)
-
-| Piece | State |
-|-------|-------|
-| Authored skills (briefing, penmark-comments, schedule-resume, …) | Reached through `~/.agents/skills`, a whole-dir symlink to the hub — no Kimi-specific step. **Changed 2026-08-06:** they are copies in the hub now, not live symlinks into the repo, so a repo edit needs `sync-skills.sh` before Kimi sees it |
-| `kimi-webbridge` skill | **Removed 2026-08-06** from all four locations, pending reinstall. `~/.kimi-code/skills` was deleted with it. Rebuild path in [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md) |
-| MCP servers (context7, claude-mem, fathom, playwright) | Parity target: mirror the four entries from `~/.gemini/config/mcp_config.json` into `~/.kimi-code/mcp.json`. `headroom` was a fifth until 2026-08-04 — do not re-add it, see [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md) |
-| Superpowers | Historical setup, superseded 2026-08-19. Use native `/plugins install` and the report from [`install-superpowers.sh`](../plugins/install-superpowers.sh); the local clone and relinker are retired. |
-| RTK | Instructions mode (`rtk init --agent kimi`, needs rtk ≥ 0.44.0) — Kimi hooks can't rewrite tool input, so no transparent hook |
-
-## Verified installed state — Antigravity (audited 2026-06-14)
-
-### MCP servers
-
-Configured in `~/.gemini/config/mcp_config.json`.
-
-| Server | Type | Tools | Notes |
-|--------|------|-------|-------|
-| `claude-mem` | HTTP (lazy) | 19 | Memory/observations/corpus |
-| `context7` | HTTP (lazy) | 2 | `resolve-library-id`, `query-docs` |
-| `headroom` | stdio (lazy) | 3 | Context compression (compress/retrieve/stats). **Removed 2026-08-04** — [ADR 0001](../docs/adrs/0001-remove-headroom-compression-proxy.md); row kept because this table is a dated audit snapshot |
-| `fathom` | HTTP (lazy) | 4 | Fathom meeting capture (list/search meetings, get summary/transcript) |
-
-### CLI Proxies & Token Optimizers
-
-| Tool | Hook Type | Mapped Harnesses | Notes |
-|------|-----------|------------------|-------|
-| `rtk` | Pre-execution hooks & instructions | Claude Code, Cursor, OpenCode (transparent hooks); Antigravity (`agy`), Codex, Kimi, Grok (instructions mode) | CLI proxy that intercepts and compresses command outputs to save 60–90%+ context tokens. Claude Code, Cursor and OpenCode rewrite transparently; the rest use explicit prefix instructions. OpenCode moved to the transparent group on 2026-08-19 when `rtk init -g --opencode` was verified to write `~/.config/opencode/plugins/rtk.ts`. |
-
-### Bundled plugins (`~/.gemini/config/plugins/`)
-
-Ship with Antigravity; always active.
-
-| Plugin | Key skills | Typical relevance |
-|--------|-----------|-------------------|
-| `superpowers` | brainstorming, TDD, plans, verification, code review, subagent-driven-dev, git worktrees, writing-skills | Critical |
-| `chrome-devtools-plugin` | chrome-devtools, a11y-debugging, debug-optimize-lcp, memory-leak-debugging, troubleshooting | Medium (browser automation) |
-| `frontend-design` | frontend-design | Medium |
-| `modern-web-guidance-plugin` | modern-web-guidance, chrome-extensions | Medium |
-| `firebase` | firestore, auth, hosting, app-hosting, data-connect, crashlytics, remote-config, security-rules-auditor | Project-dependent |
-| `google-antigravity-sdk` | google-antigravity-sdk | Low |
-| `android-cli-plugin` | android-cli | Project-dependent |
-| `science` | 70+ bioinformatics skills | Project-dependent |
-
-### Global skills (`~/.gemini/config/skills/`)
-
-| Skill | Source |
-|-------|--------|
-| `graphify` | Installed directly (32 KB SKILL.md + references/) |
-
-### Agent skills — the hub-and-spoke model (since 2026-08-06)
+## Skill hub and spokes
 
 Every skill physically lives in **one** place: `~/.claude/skills`, the hub. It holds real directories and nothing else, so Claude Code — the primary harness — never resolves a symlink to find a skill. Every other harness reaches the same content through a whole-directory symlink.
 
@@ -143,7 +92,7 @@ Content reaches the hub two ways:
 - **Authored skills** stay canonical in `agentic-toolkit/skills/` and are copied in by [`sync-skills.sh`](../skills/sync-skills.sh). They are no longer live-edited — an edit in the repo needs a sync run before any harness sees it.
 - **Third-party skills** are installed straight into the hub. Vendor CLIs that write to `~/.agents/skills` now write through the spoke symlink and land in the hub automatically. If one recreates the spoke as a real directory, `./skills/sync-skills.sh --adopt` folds it back in.
 
-The hub is derived state and is not tracked by this repository. Recovery comes from [`reference-third-party-skills.md`](../reference/reference-third-party-skills.md), which records the rebuild command for every skill this repo does not author.
+The hub is derived state and is not tracked by this repository. Reinstall third-party skills from their upstream sources.
 
 Full rationale, risks, and the migration record: the skill installation topology established in August 2026.
 
@@ -205,7 +154,7 @@ Not plugins — sit **under** or **beside** the harness:
 - **BrokeLLM** — slot lanes (sonnet/opus/haiku) + quota-aware harness mode
 - **lite-harness** — unified API across claude-code / codex (no Agy yet)
 
-Use when you want **dynamic** per-prompt routing; use **reference-workflow** `modelRouting` for **orchestrator-level** rules.
+Use one when you want per-prompt routing rather than a fixed model per task.
 
 ## Symlink rules of thumb
 

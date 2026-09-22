@@ -15,6 +15,8 @@ related:
 
 # OSS repository house standard
 
+> This is the maintainer's house standard for `carlosboeing/*` repositories. To use it elsewhere, replace the owner, contacts and pinned versions with your own.
+
 Checklist for any `carlosboeing/*` public repository. Derived from `copydesk` `2b9a29d`, `penmark` `a643c07`, `quotacap` `de7d220`, `crossrev` `953a64d` (2026-09-02). One source, not per-repo folklore.
 
 ## How to use

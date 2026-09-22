@@ -142,7 +142,6 @@ The [skills catalog](skills/README.md) documents invocation, dependencies, bundl
 | [Project structure and conventions](guides/guide-project-structure-and-conventions.md) | Lifecycle directories, document frontmatter, project maps, and change discipline |
 | [AI model and effort routing](guides/guide-ai-model-and-effort-routing.md) | Choosing a model, effort level, and escalation path by task shape |
 | [Harness plugin parity](guides/guide-harness-plugin-parity.md) | Mapping skills, plugins, Model Context Protocol (MCP) servers, hooks, and browser tools across harnesses |
-| [Cross-harness model reference](reference/reference-cross-harness-models.md) | Dated model capabilities, API rates, quota behavior, and deployment economics |
 | [Harness capability map](reference/reference-harness-capability-map.md) | Comparing delegation, routing, hook, browser, and headless capabilities |
 | [OSS repository standard](reference/reference-oss-standards.md) | Community files, pinned workflows, Dependabot, and branch protection |
 

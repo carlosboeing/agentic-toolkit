@@ -12,6 +12,8 @@ related:
 
 # Build and release house standard
 
+> This is the maintainer's house standard for `carlosboeing/*` repositories. To use it elsewhere, replace the owner, contacts and pinned versions with your own.
+
 Checklist for any `carlosboeing/*` repository that ships a binary. Derived from `quotacap` (npm/Bun) and `crossrev` (Go) (2026-09-16). One source, not per-repo folklore. The two standards cross-link through `related:`; the OSS standard covers governance, this one covers the build.
 
 ## How to use

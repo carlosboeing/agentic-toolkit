@@ -344,7 +344,7 @@ A non-exhaustive list of mistakes worth dodging.
 
 ## 10. A worked sketch
 
-What does the *minimum* useful skill look like? Here's the sketch of one I'd write next, deliberately small:
+What does the *minimum* useful skill look like? Here is a deliberately small example:
 
 ```markdown
 ---

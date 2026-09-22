@@ -18,7 +18,6 @@ These guides document repeatable operating procedures for AI coding harnesses an
 | [`guide-rtk-setup.md`](guide-rtk-setup.md) | Installing RTK and selecting transparent-hook or explicit-prefix operation per harness |
 | [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) | Installing and verifying claude-mem session memory |
 | [`guide-trimming-claude-code-startup-context.md`](guide-trimming-claude-code-startup-context.md) | Measuring and reducing Claude Code startup context without removing required integrations |
-| [`guide-headroom-setup.md`](guide-headroom-setup.md) | Understanding the retired Headroom setup and the steps needed to remove it safely |
 
 The CrossRev credentials guide moved to the public [CrossRev repository](https://github.com/carlosboeing/crossrev/blob/main/docs/credentials.md) with the tool on 2026-08-13.
 

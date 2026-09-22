@@ -5,7 +5,6 @@ scope: [harness-parity, claude-mem, mcp, database]
 last_reviewed: 2026-06-14
 related:
   - guide-harness-plugin-parity.md
-  - guide-headroom-setup.md
 ---
 
 # Claude-mem Harness Configuration Guide
