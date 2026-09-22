@@ -25,7 +25,7 @@ Inspect available skills and agent capabilities for PR or code-review support be
 
 ## OSS house standard
 
-Before creating or editing any public repo's governance files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/*`, `.github/dependabot.yml`, `.github/workflows/*`, `.github/CODEOWNERS`) or branch protection, read the canonical checklist at `~/Projects/carlos/agentic-toolkit/reference/reference-oss-standards.md` (or `https://github.com/carlosboeing/agentic-toolkit/blob/main/reference/reference-oss-standards.md`) and follow it verbatim. Pin SHAs as listed there, use `https://github.com/<owner>/<repo>/security/advisories/new` + `@<owner>` contacts, no personal email. The `required` job is the only `required_status_checks` entry.
+Before creating or editing any public repo's governance files (`CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/*`, `.github/dependabot.yml`, `.github/workflows/*`, `.github/CODEOWNERS`) or branch protection, read the canonical checklist at `reference/reference-oss-standards.md` in your local agentic-toolkit clone (or `https://github.com/carlosboeing/agentic-toolkit/blob/main/reference/reference-oss-standards.md`) and follow it verbatim. Pin SHAs as listed there, use `https://github.com/<owner>/<repo>/security/advisories/new` + `@<owner>` contacts, no personal email. The `required` job is the only `required_status_checks` entry.
 
 ## Principles
 
