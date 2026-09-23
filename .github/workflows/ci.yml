@@ -48,6 +48,9 @@ jobs:
       - name: Run relative links unit tests
         run: python3 -m unittest discover -s tests -p 'test_relative_links.py'
 
+      - name: Run plan checker unit tests
+        run: python3 -m unittest discover -s tests -p 'test_plan_checker.py'
+
       - name: Check relative links across public Markdown
         run: python3 scripts/check-relative-links.py
 

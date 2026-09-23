@@ -62,7 +62,7 @@ Ask only for these: an action you cannot undo (delete, publish, merge, money, cr
 
 **Before the first command that changes branch state:** run `git fetch`, run `git worktree list`, and confirm `.worktrees/` is git-ignored. More than one worktree means another session is live, so create a worktree rather than asking. The `git-worktrees` skill states the path convention `<repo>/.worktrees/<harness>/<branch>`, the harness segment names, and the two corrections to `superpowers:using-git-worktrees`.
 
-**Plan files record progress as it happens.** Tick the box and write the commit SHA when a step finishes, inside that step's own commit. A step ticked with no SHA, or unticked after its code shipped, shows a session that died mid-step.
+**Plan files record progress as it happens.** A commit cannot contain its own SHA. After a verified, authorized code commit, a following plan-repository commit ticks the task and records that code SHA: two repositories in a split setup, two commits in one repository. One controller owns plan writes, and only durable plans get this second write. Record the PR and merge SHA separately after an actual merge; never present a branch SHA as the merge SHA. A step ticked with no SHA, or unticked after its code shipped, shows a session that died mid-step.
 
 ```
 - [x] Task 3: wire the resolver to the base branch — a1b2c3d

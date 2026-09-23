@@ -2,6 +2,44 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-09-24: review fixes for checker classification and fixture links
+
+Corrections found by the final independent review of this increment.
+
+- **Checker classification:** requirement IDs now anchor outside YAML frontmatter (author lines can no longer become phantom requirements), coverage is credited only from mapping-shaped lines instead of prose mentions (a plan that maps nothing reports `absent design coverage` rather than a false clean), and a design requirement ID inside a dependency phrase is no longer flagged as an unresolved dependency. The verification keyword heuristic is stated in `--help`.
+- **Link scanning:** `scripts/check-relative-links.py` excludes `tests/fixtures/`, so the intentional broken-link fixture no longer fails the required CI step while remaining a live negative fixture for the checker suite.
+
+## 2026-09-24: advisory plan checker
+
+A mechanical checker for plan artifacts, wired into the planning self-check and CI. Advisory only.
+
+- **Checker:** new `skills/start-planning/scripts/check-plan.py` reports missing frontmatter, broken local design links, duplicate task IDs, unresolved dependency IDs, tasks without verification evidence and absent design coverage. It recognizes bullet, table, heading (`Task N`) and bare-ID task forms, and requirement IDs anchor to their line's identifier so prose noise never becomes a phantom requirement. Presentations it cannot parse report `unable to check` instead of claiming a field is missing. Finding reports exit 0; usage or file-read errors exit 2. Not wired to any push hook.
+- **Skill:** `start-planning` runs the checker before presenting the draft; the checker's `--help` states what it checks. The plan contract is unchanged.
+- **Tests:** `tests/test_plan_checker.py` runs 17 tests over synthetic fixtures in `tests/fixtures/sdlc/` — substantial and compact valid plans plus one labeled omission per finding class — and joins the CI test job.
+
+## 2026-09-24: start-implementation controller skill
+
+One controller skill for the implementation phase, with two entry scopes plus direct work.
+
+- **Skill:** new `skills/start-implementation/SKILL.md` covers whole-plan and single-task scope and direct small work through five readiness questions. It reconciles plan status, design revision, local and remote git, workspaces, effect markers and plan-writer ownership before touching anything, keeps the five delivery states (verified local work, committed work, PR review, merge, rollout) apart, and never infers merge or deploy permission. Non-repeatable effects need a durable checkpoint first; an effect marker no committed checkpoint explains halts its task; competing plan-writer evidence freezes plan writes and is never self-reconciled.
+- **Tests:** new `tests/sdlc-controller-fixture.py` builds disposable code and plan repositories for 14 cases — ready work, unmet predecessors, blocked tasks, parallel file collisions, missing worker facilities, dirty designs, competing writers, withheld commit authorization, performed effects, interrupted runs, direct fixes and simulated squash merges — with `setup`, `state` and `assert` commands. Assertions bind ticked SHAs to the task's own change and order plan ticks after their code commits.
+- **Catalog:** `skills/README.md` lists the new entry.
+
+## 2026-09-24: corrected progress and worktree guidance
+
+Two guidance defects fixed where they misstated Git behavior.
+
+- **Plan progress:** the global brief no longer asks a commit to record its own SHA. The rule is now a verified code commit first, then a plan-repository commit that ticks the task and records that code SHA — two repositories in a split setup, two commits in one. One controller owns plan writes, and PR and merge SHAs are recorded separately after a real merge.
+- **Worktrees:** `git-worktrees` no longer claims that creating a branch moves other worktrees' HEAD or reverts their edits; a disposable two-worktree fixture disproved both. The worktree requirement stays, for session isolation.
+
+## 2026-09-24: shared plan quality contract
+
+`/start-planning` now plans against a written artifact contract, so two sessions planning the same approved design reach the same standard.
+
+- **Contract:** new `skills/start-planning/references/plan-contract.md` fixes what a plan must answer (source and scope, current state, tasks, execution contract, completion) and the conditional detail rule, with substantial and compact examples. It explicitly rejects fixed task counts, per-task commit subjects, a universal failing-test rule and a single Markdown layout.
+- **Discovery:** the skill reads a project-named contract or template first (it may replace presentation, not minimum answers), then the shared contract resolved relative to the installed `SKILL.md`, then the project's planner. Recent plans are examples only, and a missing optional project pointer never blocks planning.
+- **Handoff authority:** a pasted prior-session prompt is context, not a specification. A handoff rule that conflicts with the approved design or project contract draws one clarification unless the user adopts it in the session.
+
 ## 2026-09-23: OpenCode 2.x plugin compatibility
 
 OpenCode 2.0 replaced the plugin API, which left the Mermaid validator plugin failing to load with `Plugin must export a default definition`.
