@@ -2,6 +2,14 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-09-24: shared plan quality contract
+
+`/start-planning` now plans against a written artifact contract, so two sessions planning the same approved design reach the same standard.
+
+- **Contract:** new `skills/start-planning/references/plan-contract.md` fixes what a plan must answer (source and scope, current state, tasks, execution contract, completion) and the conditional detail rule, with substantial and compact examples. It explicitly rejects fixed task counts, per-task commit subjects, a universal failing-test rule and a single Markdown layout.
+- **Discovery:** the skill reads a project-named contract or template first (it may replace presentation, not minimum answers), then the shared contract resolved relative to the installed `SKILL.md`, then the project's planner. Recent plans are examples only, and a missing optional project pointer never blocks planning.
+- **Handoff authority:** a pasted prior-session prompt is context, not a specification. A handoff rule that conflicts with the approved design or project contract draws one clarification unless the user adopts it in the session.
+
 ## 2026-09-23: OpenCode 2.x plugin compatibility
 
 OpenCode 2.0 replaced the plugin API, which left the Mermaid validator plugin failing to load with `Plugin must export a default definition`.
