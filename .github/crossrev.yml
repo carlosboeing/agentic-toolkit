@@ -5,7 +5,7 @@
 # match what `crossrev config show` already merged from the built-in defaults. Pinning
 # them means the policy travels with the repository instead of following whatever the
 # installed CLI defaults to.
-version: 1
+version: 2
 
 policy:
   # Findings at or above this severity keep the loop alive. Everything below is reported
