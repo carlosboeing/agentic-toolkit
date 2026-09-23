@@ -10,7 +10,10 @@ design link, duplicate task IDs, unresolved dependency IDs, a task without
 verification evidence, and absent design coverage. It advises, it never
 blocks: a report exits 0, and usage or file-read errors exit 2. A
 presentation the checker cannot parse is reported as `unable to check` for
-that field, never as missing. The checker introduces no required Markdown
+that field, never as missing. Verification evidence is a keyword heuristic
+(verif, proof, prove, test, check, assert, command) over the task's text,
+so a task phrased in other words may read as unverified. The checker
+introduces no required Markdown
 syntax.
 """
 
@@ -41,6 +44,14 @@ def norm(token):
 
 def has_frontmatter(text):
     return text.startswith("---\n") and "\n---" in text[4:]
+
+
+def strip_frontmatter(text):
+    if text.startswith("---\n"):
+        end = text.find("\n---", 4)
+        if end != -1:
+            return text[end + 4:]
+    return text
 
 
 def local_targets(line):
@@ -108,7 +119,7 @@ def parse_tasks(lines, requirement_ids):
 
 def design_requirement_ids(text):
     ids = set()
-    for line in text.splitlines():
+    for line in strip_frontmatter(text).splitlines():
         if re.match(r"^\s*\|", line):
             cells = line.split("|")
             segment = cells[1] if len(cells) > 2 else line
@@ -119,6 +130,22 @@ def design_requirement_ids(text):
             continue
         ids.update(norm(t) for t in ID_TOKEN.findall(segment))
     return ids
+
+
+MAPPING_ARROW = re.compile(r"->|→|=>")
+
+
+def covered_requirement_ids(text, requirement_ids):
+    covered = set()
+    for line in strip_frontmatter(text).splitlines():
+        cells = line.split("|")
+        is_table_mapping = (
+            line.lstrip().startswith("|") and len(cells) > 2
+            and any(norm(t) in requirement_ids for t in ID_TOKEN.findall(cells[1]))
+        )
+        if is_table_mapping or MAPPING_ARROW.search(line):
+            covered.update(norm(t) for t in ID_TOKEN.findall(line))
+    return covered & requirement_ids
 
 
 def check(path):
@@ -145,7 +172,8 @@ def check(path):
             break
 
     requirement_ids = design_requirement_ids(design_text) if design_text is not None else set()
-    order, blocks, display, duplicates = parse_tasks(text.splitlines(), requirement_ids)
+    order, blocks, display, duplicates = parse_tasks(
+        strip_frontmatter(text).splitlines(), requirement_ids)
     for tid in duplicates:
         findings.append(f"duplicate task ID {tid}")
 
@@ -158,7 +186,7 @@ def check(path):
             m = DEP_PHRASE.search(block)
             if m:
                 for dep in ID_TOKEN.findall(m.group("deps")):
-                    if norm(dep) not in known:
+                    if norm(dep) not in known and norm(dep) not in requirement_ids:
                         findings.append(
                             f"task {display[nid]}: unresolved dependency {dep}")
             if not VERIFICATION.search(block):
@@ -171,8 +199,8 @@ def check(path):
     elif not requirement_ids:
         findings.append("unable to check: design requirements not recognized")
     else:
-        covered = {norm(t) for t in ID_TOKEN.findall(text)}
-        if not (requirement_ids & covered):
+        covered = covered_requirement_ids(text, requirement_ids)
+        if not covered:
             findings.append("absent design coverage: no design requirement is mapped")
         else:
             for rid in sorted(requirement_ids - covered):

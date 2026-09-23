@@ -93,6 +93,32 @@ class PlanCheckerTests(unittest.TestCase):
         self.assertIn("unable to check: design requirement", result.stdout)
         self.assertNotIn("absent design coverage", result.stdout)
 
+    def test_frontmatter_authors_are_not_requirement_ids(self):
+        result = run_check("plan-prose-credit.md")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("AGENT3", result.stdout)
+        self.assertNotIn("BOT7", result.stdout)
+
+    def test_prose_mention_does_not_credit_coverage(self):
+        result = run_check("plan-prose-credit.md")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("absent design coverage: no design requirement is mapped",
+                      result.stdout)
+
+    def test_requirement_id_in_dependency_phrase_is_not_unresolved(self):
+        result = run_check("plan-dep-requirement.md")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("0 finding", result.stdout)
+
+    def test_help_states_the_verification_heuristic(self):
+        result = subprocess.run(
+            [sys.executable, str(CHECKER), "--help"],
+            capture_output=True, text=True, cwd=str(REPO),
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("keyword", result.stdout)
+        self.assertIn("verif", result.stdout)
+
     # Output and exit semantics
 
     def test_findings_name_file_and_task_when_available(self):

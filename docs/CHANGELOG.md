@@ -2,6 +2,13 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-09-24: review fixes for checker classification and fixture links
+
+Corrections found by the final independent review of this increment.
+
+- **Checker classification:** requirement IDs now anchor outside YAML frontmatter (author lines can no longer become phantom requirements), coverage is credited only from mapping-shaped lines instead of prose mentions (a plan that maps nothing reports `absent design coverage` rather than a false clean), and a design requirement ID inside a dependency phrase is no longer flagged as an unresolved dependency. The verification keyword heuristic is stated in `--help`.
+- **Link scanning:** `scripts/check-relative-links.py` excludes `tests/fixtures/`, so the intentional broken-link fixture no longer fails the required CI step while remaining a live negative fixture for the checker suite.
+
 ## 2026-09-24: advisory plan checker
 
 A mechanical checker for plan artifacts, wired into the planning self-check and CI. Advisory only.

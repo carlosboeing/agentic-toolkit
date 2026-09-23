@@ -27,6 +27,7 @@ EXCLUDED_PREFIXES = (
     "docs/notes/",
     "docs/guides/",
     "tools/",
+    "tests/fixtures/",
     ".workbench/",
 )
 
