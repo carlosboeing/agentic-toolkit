@@ -4,7 +4,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 
 ## In flight
 
-- **First public release.** Publish the repository with its skills, hooks, guides, references and templates.
+None at the moment.
 
 ## Next actions
 
@@ -30,4 +30,5 @@ None at the moment.
 
 ## Recently shipped
 
+- **First public release (2026-09-23).** The repository is public, with branch protection, CI and security reporting in place.
 - **Initial public release preparation.** Public documentation, governance files, privacy guard, relative-link checker and CI.

@@ -2,7 +2,7 @@
 
 All notable changes to this project are recorded here, newest first.
 
-## Unreleased: initial public release
+## 2026-09-23: initial public release
 
 The first public version of the toolkit.
 
