@@ -139,6 +139,7 @@ This skill only adds:
 - The plan must reference the design artifact so a later implementer can find it.
 - After the planner's own self-check, confirm each design requirement maps to planned work, is verified as already satisfied, or is explicitly outside implementation scope according to an authoritative source. The plan does not add requirements the design lacks.
 - Then run the plan contract self-check: every required answer present under the contract in force, stable task IDs with dependency IDs or `none`, a verification method or stated alternative proof per task, design-requirement coverage, the design revision recorded, and each execution-contract category answered or `none identified`.
+- Before presenting the draft, run the advisory checker beside this skill: `python3 <this skill's installed directory>/scripts/check-plan.py <plan-path>`. Its `--help` states what it checks. Fix its mechanical findings or explain them in the report; `unable to check` lines need a human read. It advises only: it never blocks a push, and it is not wired to any hook.
 
 ### 6. Stop
 

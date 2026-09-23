@@ -2,6 +2,14 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-09-24: advisory plan checker
+
+A mechanical checker for plan artifacts, wired into the planning self-check and CI. Advisory only.
+
+- **Checker:** new `skills/start-planning/scripts/check-plan.py` reports missing frontmatter, broken local design links, duplicate task IDs, unresolved dependency IDs, tasks without verification evidence and absent design coverage. It recognizes bullet, table, heading (`Task N`) and bare-ID task forms, and requirement IDs anchor to their line's identifier so prose noise never becomes a phantom requirement. Presentations it cannot parse report `unable to check` instead of claiming a field is missing. Finding reports exit 0; usage or file-read errors exit 2. Not wired to any push hook.
+- **Skill:** `start-planning` runs the checker before presenting the draft; the checker's `--help` states what it checks. The plan contract is unchanged.
+- **Tests:** `tests/test_plan_checker.py` runs 17 tests over synthetic fixtures in `tests/fixtures/sdlc/` — substantial and compact valid plans plus one labeled omission per finding class — and joins the CI test job.
+
 ## 2026-09-24: start-implementation controller skill
 
 One controller skill for the implementation phase, with two entry scopes plus direct work.
