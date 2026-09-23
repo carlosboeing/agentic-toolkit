@@ -8,13 +8,13 @@ None at the moment.
 
 ## Next actions
 
+- **Consistent SDLC artifacts across sessions and harnesses.** Publish a shared plan quality contract, update `/start-planning` and the progress rule, and trial `/start-implementation` with whole-plan and single-task scopes before adding format gates.
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
-- **Phase skills for the rest of the delivery workflow.** Add `/start-brainstorm`, `/start-design` and `/start-implementation` alongside the existing `/start-planning`, so each phase of brainstorm, design, plan and implementation has an explicit entry point.
+- **Phase skills for the earlier workflow.** Add `/start-brainstorm` and `/start-design` after the plan and implementation handoff trials, so each phase has an explicit entry point.
 - **Codex parity follow-up.** Decide whether Codex should get hook-level RTK filtering and Mermaid validation once its plugin packages support hooks.
 
 ## Future considerations
 
-- **Consistent SDLC artifacts across sessions and harnesses.** Define discoverable project-aware templates and progress rules before adding format gates.
 - **Native-first tool routing.** Let each harness prefer its own built-in tools where they are equivalent, instead of prescribing one tool set for every harness.
 - **`/init-project` skill.** One skill to scaffold a new project, fill an empty directory, or retrofit the documentation conventions onto an existing project.
 - **Distribution for tools that bundle agent files.** Package a command-line tool together with its skills, hooks and commands so users do not assemble the pieces by hand.
