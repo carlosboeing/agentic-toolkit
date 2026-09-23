@@ -2,6 +2,13 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-09-24: corrected progress and worktree guidance
+
+Two guidance defects fixed where they misstated Git behavior.
+
+- **Plan progress:** the global brief no longer asks a commit to record its own SHA. The rule is now a verified code commit first, then a plan-repository commit that ticks the task and records that code SHA — two repositories in a split setup, two commits in one. One controller owns plan writes, and PR and merge SHAs are recorded separately after a real merge.
+- **Worktrees:** `git-worktrees` no longer claims that creating a branch moves other worktrees' HEAD or reverts their edits; a disposable two-worktree fixture disproved both. The worktree requirement stays, for session isolation.
+
 ## 2026-09-24: shared plan quality contract
 
 `/start-planning` now plans against a written artifact contract, so two sessions planning the same approved design reach the same standard.

@@ -5,6 +5,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 ## In flight
 
 - **Plan quality contract for `/start-planning`.** A shared contract at `skills/start-planning/references/plan-contract.md` states what a plan must answer — source and scope, current state, tasks, execution contract and completion — with substantial and compact examples. The skill resolves a project-named contract first, then the shared contract beside its installed `SKILL.md`, then the project's planner. On the SDLC-artifacts review branch.
+- **Corrected progress and worktree guidance.** The global brief prescribes the two-commit progress sequence — code commit, then the plan commit that ticks the task and records the code SHA — with one plan writer and a separately recorded merge SHA. The `git-worktrees` skill no longer claims that creating a branch moves other worktrees' HEAD or reverts their edits.
 
 ## Next actions
 
