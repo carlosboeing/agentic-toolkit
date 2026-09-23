@@ -2,6 +2,14 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-09-24: start-implementation controller skill
+
+One controller skill for the implementation phase, with two entry scopes plus direct work.
+
+- **Skill:** new `skills/start-implementation/SKILL.md` covers whole-plan and single-task scope and direct small work through five readiness questions. It reconciles plan status, design revision, local and remote git, workspaces, effect markers and plan-writer ownership before touching anything, keeps the five delivery states (verified local work, committed work, PR review, merge, rollout) apart, and never infers merge or deploy permission. Non-repeatable effects need a durable checkpoint first; an effect marker no committed checkpoint explains halts its task; competing plan-writer evidence freezes plan writes and is never self-reconciled.
+- **Tests:** new `tests/sdlc-controller-fixture.py` builds disposable code and plan repositories for 14 cases — ready work, unmet predecessors, blocked tasks, parallel file collisions, missing worker facilities, dirty designs, competing writers, withheld commit authorization, performed effects, interrupted runs, direct fixes and simulated squash merges — with `setup`, `state` and `assert` commands. Assertions bind ticked SHAs to the task's own change and order plan ticks after their code commits.
+- **Catalog:** `skills/README.md` lists the new entry.
+
 ## 2026-09-24: corrected progress and worktree guidance
 
 Two guidance defects fixed where they misstated Git behavior.
