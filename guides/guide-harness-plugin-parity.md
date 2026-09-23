@@ -2,13 +2,14 @@
 title: Harness plugin and skill parity
 type: guide
 scope: [harness-parity, plugins, skills, antigravity, claude-code, codex, cursor, kimi-code, grok]
-last_reviewed: 2026-09-22
+last_reviewed: 2026-09-23
 last_audited: 2026-07-28
 authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
   - "grok-4.6 (grok)"
   - "gemini-3.7-flash (agy)"
+  - "MiMo-V2.6-Pro (opencode)"
 related:
   - guide-browser-automation-mcp-vs-cli.md
   - guide-cross-harness-project-instructions.md
@@ -98,16 +99,16 @@ Kimi reads the shared `~/.agents/` directory natively, so the hub and the shared
 | Item | Command or path |
 |---|---|
 | Skills | `~/.claude/skills` and `~/.agents/skills`, loaded automatically |
-| Instructions | `AGENTS.md`, read natively at user and project level |
+| Instructions | `AGENTS.md`, read natively at user and project level; the global file is `~/.config/opencode/AGENTS.md`. OpenCode 2.x recognizes `AGENTS.md` only: the `CLAUDE.md` fallback is gone, and the `instructions` config array is accepted but not loaded |
 | Configuration | `~/.config/opencode/opencode.json`. `~/.opencode/` holds only the program. |
 | MCP servers | The `mcp` block in `opencode.json`. `enabled: false` turns off a server inherited from a parent configuration. |
-| Hooks | JavaScript plugin modules, loaded from `~/.config/opencode/plugins/` or listed in the `plugin` array. `tool.execute.before` can refuse a call by throwing. `tool.execute.after` cannot block. |
-| Mermaid validation | `scripts/sync-toolkit.sh --harness` copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `plugins/validate-mermaid.ts` |
-| Plugins | The `plugin` array accepts npm and Git sources. Files placed in `plugins/` load without a configuration entry. |
+| Hooks | JavaScript plugin modules in `~/.config/opencode/plugins/`. On 2.x a plugin default-exports a definition with `id` and `setup`, registers hooks with `ctx.tool.hook("execute.before", ...)`, and refuses a call by throwing. On 1.x the module returns a hooks map and `tool.execute.before` refuses by throwing. `tool.execute.after` cannot block on either. One module can serve both APIs with a dual entrypoint: `id` plus `setup` for 2.x, `server()` for 1.x from 1.18.29 |
+| Mermaid validation | `scripts/sync-toolkit.sh --harness` copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `plugins/validate-mermaid.ts`. Dual-API: OpenCode 2.x and 1.x from 1.18.29 |
+| Plugins | The `plugins` array (named `plugin` on 1.x) accepts npm and Git sources. Files placed in `plugins/` load without a configuration entry. |
 | Superpowers | `"plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]`. Do not use links, which upstream no longer supports. |
-| RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts` |
+| RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts`. Checked 2026-09-23: that file is V1-format and does not load on OpenCode 2.x, which reports `Plugin must export a default definition`; porting it is an RTK-side change |
 | Providers | `disabled_providers` turns off a provider that an environment variable enabled by accident |
-| Agents and commands | `~/.config/opencode/agent/<name>.md` and `command/<name>.md`, as Markdown with frontmatter |
+| Agents and commands | `~/.config/opencode/agent/<name>.md` and `command/<name>.md`, as Markdown with frontmatter. On 2.x the canonical command directory is `commands/`, and `command/` is still discovered |
 
 ## A useful minimum for unattended runs
 

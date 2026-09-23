@@ -572,6 +572,58 @@ else
   printf '  FAIL CLI flag --projects-dir did not override config file\n'
 fi
 
+# --- 20. OpenCode plugin API shape and behavior (V1 + V2) ---
+# The installed plugin must satisfy both OpenCode plugin APIs: 2.x reads a
+# default definition with `id` and `setup`, 1.x (1.18.29+) calls `server()`.
+# Assert the shape and the guard behavior on the installed file, not only that
+# the file exists. A module that loads on one API and not the other fails here,
+# before a harness reports "Plugin must export a default definition".
+PLUGIN_INSTALLED="$MOCK_HOME/.config/opencode/plugins/validate-mermaid.ts"
+
+TS_PROBE_DIR="$TMP/ts-probe"
+mkdir -p "$TS_PROBE_DIR"
+printf 'export const n: number = 1\n' > "$TS_PROBE_DIR/probe.ts"
+printf 'import { n } from "./probe.ts"; if (n !== 1) process.exit(9);\n' > "$TS_PROBE_DIR/probe.mjs"
+
+TS_RUNNER=""
+for cand in "bun" "node" "node --experimental-strip-types"; do
+  if command -v "${cand%% *}" >/dev/null 2>&1 && (cd "$TS_PROBE_DIR" && $cand probe.mjs >/dev/null 2>&1); then
+    TS_RUNNER="$cand"
+    break
+  fi
+done
+
+if [ -z "$TS_RUNNER" ]; then
+  fail=$((fail + 1))
+  printf '  FAIL plugin API assertions: no TypeScript-capable runtime (need bun, or node >= 22.6)\n'
+else
+  FAKE_BIN="$TMP/fake-bin"
+  mkdir -p "$FAKE_BIN"
+  cat > "$FAKE_BIN/mmdc" <<'EOF'
+#!/usr/bin/env bash
+# Offline stand-in for @mermaid-js/mermaid-cli in tests. It fails on the case
+# this hook exists to catch: Mermaid reads ';' in label or message text as a
+# statement separator and rejects the diagram.
+in_file=""
+prev=""
+for a in "$@"; do
+  [ "$prev" = "-i" ] && in_file="$a"
+  prev="$a"
+done
+if [ -n "$in_file" ] && grep -q ';' "$in_file"; then
+  echo "Parse error on line 1: unexpected ';' in label text" >&2
+  exit 1
+fi
+exit 0
+EOF
+  chmod +x "$FAKE_BIN/mmdc"
+
+  plugin_out="$(PATH="$FAKE_BIN:$PATH" $TS_RUNNER "$TEST_DIR/assert-opencode-plugin.mjs" "$PLUGIN_INSTALLED" 2>&1)"
+  plugin_rc=$?
+  printf '%s\n' "$plugin_out"
+  _assert "opencode plugin shape and behavior against both APIs (V1 + V2)" 0 "$plugin_rc"
+fi
+
 
 echo ""
 printf '%d passed, %d failed\n' "$pass" "$fail"

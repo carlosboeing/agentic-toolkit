@@ -47,7 +47,7 @@ Hook support differs between harnesses, so a hook written for Claude Code does n
 
 ### OpenCode
 
-OpenCode has no shell hooks. The Mermaid validator ships as a plugin module, `hooks/validate-mermaid/opencode-validate-mermaid.ts`. `scripts/sync-toolkit.sh --harness` copies it to `~/.config/opencode/plugins/validate-mermaid.ts`, where OpenCode loads it without a config entry. The plugin runs before each write and throws to stop a write that contains a broken diagram.
+OpenCode has no shell hooks. The Mermaid validator ships as a plugin module, `hooks/validate-mermaid/opencode-validate-mermaid.ts`. `scripts/sync-toolkit.sh --harness` copies it to `~/.config/opencode/plugins/validate-mermaid.ts`, where OpenCode loads it without a config entry. The plugin runs before each write and throws to stop a write that contains a broken diagram. One module serves both OpenCode plugin APIs: 2.x reads its `id` and `setup`, and 1.x (1.18.29 and newer) calls its `server()`. The [validator's README](validate-mermaid/README.md) has the version matrix.
 
 ### Kimi Code
 

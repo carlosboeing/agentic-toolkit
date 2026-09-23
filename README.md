@@ -199,6 +199,7 @@ Filenames carry their type, such as `guide-*.md` and `reference-*.md`, so a file
 - `--adopt` replaces a real skill directory in a harness with a link to the hub. Compare any same-named skills before using it.
 - Guides that mention model names, quotas or prices record the date they were checked. Verify them against the vendor before relying on them.
 - The Mermaid validator checks syntax, not layout.
+- The Mermaid validator covers the `write` and `edit` tools in OpenCode. Shell writes and patch-style tools (`patch` on 2.x, `apply_patch` on 1.x) are not covered. The OpenCode plugin supports OpenCode 2.x and 1.x from 1.18.29.
 
 ## Contributing
 
