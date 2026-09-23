@@ -86,11 +86,41 @@ An exit code of `0` means no block failed to parse. It can also mean the hook sk
 
 For an `edit`, the plugin skips validation if it cannot read the file or cannot find `oldString`, because it cannot reconstruct the result reliably.
 
-`scripts/sync-toolkit.sh --harness` copies the plugin to `~/.config/opencode/plugins/validate-mermaid.ts`. OpenCode loads files in that directory without a config entry. The module exports only the plugin function, because OpenCode requires every export to be a function. Tested on 2026-08-19 with OpenCode 1.18.18.
+### Version compatibility
+
+One file serves both OpenCode plugin APIs through the dual entrypoint that OpenCode's own V1 migration guide documents. Each loader reads its own entrypoint and ignores the other, so nothing detects the version at load time. The module imports only Node built-ins and default-exports the definition, so it needs neither plugin types package.
+
+| OpenCode | What the loader reads | Status |
+|---|---|---|
+| 2.x | The default export's `id` and `setup`. Hooks register with `ctx.tool.hook("execute.before", ...)` and throwing refuses the call | Verified 2026-09-23 with 2.0.14 |
+| 1.18.29 and newer | The default export's `server()`, which returns the `tool.execute.before` hooks map | Verified 2026-09-23 with 1.18.32 |
+| 1.x before 1.18.29 | A named function export | Not covered. Use the previous single-function version of this file |
+
+```mermaid
+flowchart TB
+    Module["opencode-validate-mermaid.ts"] --> Loader{"Which loader"}
+    Loader -- "OpenCode 2.x" --> Setup["Reads id and setup"]
+    Setup --> Hook["ctx.tool.hook execute.before"]
+    Loader -- "OpenCode 1.x 1.18.29 or newer" --> Server["Calls server"]
+    Server --> Map["tool.execute.before hooks map"]
+    Hook --> Guard["Shared guard parses every Mermaid block"]
+    Map --> Guard
+    Guard --> Refuse["Throwing refuses the write"]
+```
+
+On 2.x the hook receives one mutable event and reads `event.tool` and `event.input`. On 1.x it receives `input` and `output` and reads `input.tool` and `output.args`. The path argument is `filePath` on 1.x and `path` on 2.x (see the [2.x tools reference](https://opencode.ai/v2/docs/tools)), so the guard accepts both.
+
+`scripts/sync-toolkit.sh --harness` copies the plugin to `~/.config/opencode/plugins/validate-mermaid.ts`. OpenCode loads files in that directory without a config entry.
+
+Verified 2026-09-23 on both loaders with the same check, a Markdown file with a valid diagram and one with `;` in a message. On OpenCode 2.0.14 `opencode plugin list` shows the plugin's id, the good file writes normally, and the bad one is refused before the file is created; an edit that introduces a broken diagram is refused the same way. On 1.18.32 the good file writes and the bad one is refused the same way. Both refusals carry the parser error and the common causes above. Sources, all read 2026-09-23: the [OpenCode 2.x plugin API](https://opencode.ai/v2/docs/build/plugins), the [V1 plugin migration guide](https://opencode.ai/v2/docs/build/plugins/migrate-v1), and the [2.x tools reference](https://opencode.ai/v2/docs/tools).
+
+### Limits
+
+- The guard covers the `write` and `edit` tools only. Writes made through the shell are never validated. On 2.x some GPT models get the `patch` tool instead of `write` and `edit`, and 1.x has `apply_patch`; neither is covered.
 
 ## Behavior
 
 - **Skips quickly.** Files that are not Markdown, files that do not exist and Markdown files without a Mermaid block exit `0` within milliseconds. The browser starts only when there is a diagram to check.
-- **Fails open.** If the payload cannot be parsed or no validator is available, the hook exits `0` rather than blocking every write.
+- **Fails open (shell hook).** If the payload cannot be parsed or no validator is available, the shell hook exits `0` rather than blocking every write. The OpenCode plugin refuses the write whenever the validator exits non-zero, which includes the case where neither `mmdc` nor `npx` can run.
 - **Handles indented blocks.** Diagrams inside list items are found. Each block is checked separately and reported with its starting line number.
 - **Checks syntax only.** Style rules, such as not pinning a theme, are not enforced.

@@ -30,5 +30,6 @@ None at the moment.
 
 ## Recently shipped
 
+- **OpenCode 2.x plugin compatibility (2026-09-23).** The Mermaid validator plugin now serves both OpenCode plugin APIs from one file: 2.x, and 1.x from 1.18.29. Tests assert the installed plugin's shape and guard behavior against both APIs.
 - **First public release (2026-09-23).** The repository is public, with branch protection, CI and security reporting in place.
 - **Initial public release preparation.** Public documentation, governance files, privacy guard, relative-link checker and CI.
