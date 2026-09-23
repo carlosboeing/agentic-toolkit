@@ -14,6 +14,7 @@ None at the moment.
 
 ## Future considerations
 
+- **Consistent SDLC artifacts across sessions and harnesses.** Define discoverable project-aware templates and progress rules before adding format gates.
 - **Native-first tool routing.** Let each harness prefer its own built-in tools where they are equivalent, instead of prescribing one tool set for every harness.
 - **`/init-project` skill.** One skill to scaffold a new project, fill an empty directory, or retrofit the documentation conventions onto an existing project.
 - **Distribution for tools that bundle agent files.** Package a command-line tool together with its skills, hooks and commands so users do not assemble the pieces by hand.
