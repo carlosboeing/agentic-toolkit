@@ -7,6 +7,7 @@ Dated facts and standards: what each harness supports, and the repository standa
 | Reference | What it covers |
 |---|---|
 | [`reference-harness-capability-map.md`](reference-harness-capability-map.md) | What each AI coding harness supports, feature by feature |
+| [`reference-agent-memory-options.md`](reference-agent-memory-options.md) | Dated memory-system options, capture differences, observer candidates and API rates |
 | [`reference-oss-standards.md`](reference-oss-standards.md) | The house standard for open-source repositories: health files, pinned workflows, the `required` check, Dependabot, branch protection and no personal email |
 | [`reference-build-and-release-standards.md`](reference-build-and-release-standards.md) | The house standard for repositories that ship a binary: version strings, install entry points, one build script and the release check |
 

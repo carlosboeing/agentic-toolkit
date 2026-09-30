@@ -1,10 +1,15 @@
 ---
 title: Sharing claude-mem across harnesses
 type: guide
+authors:
+  - "Carlos Boeing"
+  - "gpt-6 (codex)"
 scope: [harness-parity, claude-mem, mcp, database]
 last_reviewed: 2026-09-22
 related:
   - guide-harness-plugin-parity.md
+  - guide-agent-memory-selection.md
+  - ../reference/reference-agent-memory-options.md
 ---
 
 # Sharing claude-mem across harnesses
@@ -26,6 +31,8 @@ flowchart LR
 ```
 
 Searching memory through MCP works in any harness that supports MCP. Recording new observations automatically depends on hooks, which not every harness supports, so check the upstream documentation for what each harness gets.
+
+Capture also needs an observer model to turn session activity into observations and summaries. The worker stores records; the observer consumes provider capacity. A connected MCP server and successful search do not prove that new memories are being captured. For provider choice and alternatives, see [Choosing agent memory across harnesses](guide-agent-memory-selection.md) and the [dated options reference](../reference/reference-agent-memory-options.md).
 
 ## Install
 
@@ -66,18 +73,20 @@ Then add an entry to the harness's MCP configuration. Replace `<mcp-server-path>
 
 ## Check that it works
 
-Check that the worker is running:
+Check the runtime with the upstream CLI, documented in the [installer source](https://github.com/thedotmack/claude-mem/blob/main/src/npx-cli/index.ts):
 
 ```bash
-cat ~/.claude-mem/worker.pid
-cat ~/.claude-mem/supervisor.json
+npx claude-mem status
 ```
+
+Keep connection, retrieval and capture checks separate. Search for a known existing observation, then verify that a new session produces a new observation. Provider allowance exhaustion can block capture while search remains available. Do not restart the worker to address an exhausted allowance; change the approved observer provider or wait for its reset.
 
 Then check each harness:
 
 | Harness | How to check |
 |---|---|
 | Claude Code | `/plugin list` shows claude-mem |
+| Codex | `/mcp` shows the memory server, and an existing-memory search succeeds |
 | Antigravity | Tools named `mcp__claude-mem__*` are available in a session |
 | Cursor | Cursor Settings, Features, MCP shows the `claude-mem` server as connected |
 
@@ -85,3 +94,5 @@ Then check each harness:
 
 - [claude-mem repository](https://github.com/thedotmack/claude-mem)
 - [Harness plugin parity guide](guide-harness-plugin-parity.md)
+- [Choosing agent memory across harnesses](guide-agent-memory-selection.md)
+- [Agent memory options and observer costs](../reference/reference-agent-memory-options.md)

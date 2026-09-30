@@ -11,6 +11,7 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 | [`guide-new-machine-setup.md`](guide-new-machine-setup.md) | Set up the shared instructions, skill hub, hooks, plugins and OpenCode configuration on a new machine |
 | [`guide-rtk-setup.md`](guide-rtk-setup.md) | Install RTK and choose between automatic hooks and explicit `rtk` prefixes for each harness |
 | [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) | Install and check claude-mem session memory |
+| [`guide-agent-memory-selection.md`](guide-agent-memory-selection.md) | Choose capture and retrieval behavior, an observer model, or a local memory alternative |
 | [`guide-trimming-claude-code-startup-context.md`](guide-trimming-claude-code-startup-context.md) | Measure and reduce how much context Claude Code uses before your first message |
 
 ### Working across harnesses
