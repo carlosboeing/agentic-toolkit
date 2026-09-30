@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-09-30: agent memory selection guidance
+
+- **Guide:** add a selection method for cross-harness memory, observer quality checks and migration verification.
+- **Reference:** compare claude-mem, Engram, Basic Memory and MCP Memory Service, with dated observer API rates and evidence limits.
+- **Setup:** distinguish MCP connectivity, existing-memory search and new observation capture; replace obsolete worker-file checks with the upstream status command.
+
 ## 2026-09-23: OpenCode 2.x plugin compatibility
 
 OpenCode 2.0 replaced the plugin API, which left the Mermaid validator plugin failing to load with `Plugin must export a default definition`.
