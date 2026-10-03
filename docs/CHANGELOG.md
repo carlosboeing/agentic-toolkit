@@ -2,6 +2,11 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-03: consistent SDLC artifacts, first increment
+
+- **Delivery:** [PR 6](https://github.com/carlosboeing/agentic-toolkit/pull/6) integrates the shared plan quality contract, advisory plan checker, `/start-implementation` controller, and corrected progress and worktree guidance described in the September 24 entries.
+- **Tracking:** consolidate the SDLC roadmap into one delivery record and retain `/start-brainstorm` and `/start-design` as subsequent work.
+
 ## 2026-09-30: agent memory selection guidance
 
 - **Guide:** add a selection method for cross-harness memory, observer quality checks and migration verification.

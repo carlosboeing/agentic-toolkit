@@ -4,13 +4,13 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 
 ## In flight
 
-- **Consistent SDLC artifacts, first increment.** [PR 6](https://github.com/carlosboeing/agentic-toolkit/pull/6) is under review: shared plan quality contract, `/start-planning` discovery and advisory checker, `/start-implementation` controller, and corrected progress and worktree guidance.
+None at the moment.
 
 ## Next actions
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
 - **Phase skills for the earlier workflow.** Add `/start-brainstorm` and `/start-design` after the plan and implementation handoff trials, so each phase has an explicit entry point.
-- **Codex parity follow-up.** Decide whether Codex should get hook-level RTK filtering and Mermaid validation once its plugin packages support hooks.
+- **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
 
 ## Future considerations
 
@@ -29,6 +29,8 @@ None at the moment.
 None at the moment.
 
 ## Recently shipped
+
+- **Consistent SDLC artifacts, first increment (2026-10-03).** [PR 6](https://github.com/carlosboeing/agentic-toolkit/pull/6) delivers the shared plan quality contract, `/start-planning` discovery and advisory checker, `/start-implementation` controller, and corrected progress and worktree guidance.
 
 - **Agent memory selection guidance (2026-09-30).** Separate capture, retrieval and authority; document low-cost observer candidates and local alternatives, with limits on the evidence. No provider switch or migration is recorded as complete.
 
