@@ -25,7 +25,7 @@ At implementation, ask before the first command that changes branch state: "Work
 
 One case is not a question. If `git worktree list` prints more than one entry for the repository, another session is live in it.
 
-A `git checkout -b` there moves HEAD for every worktree of that repository, and reverts uncommitted edits with no warning. Create the worktree and say why.
+Creating a branch in one worktree does not move other worktrees' HEADs or discard their edits; each worktree has its own HEAD and its own uncommitted state. The rule stands for isolation: sessions that share one working tree interleave edits and branch switches in a tree none of them owns. Create the worktree and say why.
 
 ## Check for company first
 

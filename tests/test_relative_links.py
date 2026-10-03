@@ -12,9 +12,18 @@ from scripts.check_relative_links import (
     check_file_links,
     clean_target,
     extract_links_from_content,
+    get_public_tracked_md_files,
     is_external_or_anchor,
     is_template_placeholder,
 )
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+class TestFixtureExclusion(unittest.TestCase):
+    def test_negative_fixtures_are_excluded_from_public_link_scan(self):
+        files = get_public_tracked_md_files(REPO_ROOT)
+        self.assertFalse([f for f in files if f.startswith("tests/fixtures/")])
 
 
 class TestRelativeLinks(unittest.TestCase):
