@@ -73,6 +73,7 @@ From those instructions, and from artifacts they name, discover only what this p
 | Need | Look in |
 |---|---|
 | Planning methodology | A named planning skill; else `writing-plans` if available; else how this repo already writes plans |
+| Plan content contract | A project-named contract or template when project instructions name one; else the shared contract at `references/plan-contract.md` beside this skill's installed `SKILL.md` |
 | Where designs live | Working-memory / docs pointers; existing design files |
 | Where plans go | Explicit project/repository convention, then the selected planner's convention, then existing plan patterns |
 | What "ready to plan" means | The project's own approval, status, or review rules |
@@ -80,6 +81,12 @@ From those instructions, and from artifacts they name, discover only what this p
 | Git, tests, naming, frontmatter | Project instructions and the chosen planner. Never this skill. |
 
 A generic planner default must not override an explicit project convention.
+
+The shared plan contract resolves relative to this skill's own installed `SKILL.md`, so every installed copy reads its own versioned contract. Never guess the path from another project's layout.
+
+A project-named contract extends the shared minimum and may replace its presentation. It cannot drop a shared minimum answer without an explicit, named project exception that states the recovery consequence. A missing optional project pointer is not a blocker: plan against the shared contract and the project's ordinary conventions.
+
+Recent plans are examples only. Read them after these sources, never as requirements.
 
 Ask only when the missing information is required to write a correct plan and cannot be resolved from project patterns or the planner. Do not invent a schema, filename pattern, frontmatter block, test command, or review ritual to fill a gap.
 
@@ -112,6 +119,8 @@ Git facts that affect decomposition (dirty tree, current branch, files already p
 
 Previous-session conversation, transcripts, summaries, and handmade handoff prompts are not sources of requirements. Explicit instructions the user gives **in this planning session** remain authoritative under normal instruction precedence. They may constrain the session (for example, "plan the backend only"). They are not an excuse to reconstruct missing design decisions or to silently override settled ones, unless the user explicitly instructs that change.
 
+A pasted prior-session prompt, including text between `PROMPT STARTS` and `PROMPT ENDS` delimiters, is handoff material even when the operator submits it as a user message. If one of its rules conflicts with the approved design or the project contract and the operator has not explicitly adopted that rule in this session, ask once whether to adopt it. Its task counts, section limits, product requirements, and review gates do not travel.
+
 ### 5. Plan with the project's methodology
 
 Activate the planner discovered in step 2.
@@ -122,12 +131,15 @@ The planner and the project own plan location, filename, metadata, task format, 
 
 This skill only adds:
 
+- The plan contract resolved in step 2 is the output's quality bar. The planner's method still decides the prose.
 - Argue from the named design, not from previous-session chat.
 - Reconcile with current code. Work that already satisfies a requirement is verified, not re-planned. An intended change from current behaviour is planned work, not a contradiction. Do not silently reverse a settled design decision.
 - Surface true blockers only: missing prerequisites, mutually incompatible requirements, or a clash the design does not resolve.
 - Keep scope inside the design. Do not add product behaviour the design did not specify, unless the user explicitly instructs that change in this session.
 - The plan must reference the design artifact so a later implementer can find it.
 - After the planner's own self-check, confirm each design requirement maps to planned work, is verified as already satisfied, or is explicitly outside implementation scope according to an authoritative source. The plan does not add requirements the design lacks.
+- Then run the plan contract self-check: every required answer present under the contract in force, stable task IDs with dependency IDs or `none`, a verification method or stated alternative proof per task, design-requirement coverage, the design revision recorded, and each execution-contract category answered or `none identified`.
+- Before presenting the draft, run the advisory checker beside this skill: `python3 <this skill's installed directory>/scripts/check-plan.py <plan-path>`. Its `--help` states what it checks. Fix its mechanical findings or explain them in the report; `unable to check` lines need a human read. It advises only: it never blocks a push, and it is not wired to any hook.
 
 ### 6. Stop
 
@@ -136,6 +148,7 @@ Write the plan using the location, metadata, and git handling from step 2 and th
 Then stop at the planning boundary.
 
 - Tell the user the path.
+- Name the plan's weakest handoff point when you present it.
 - Follow the project's review workflow if it has one. If it does not, stop. Do not invent a review ceremony.
 - Do not implement.
 - Do not offer to execute, dispatch implementers, or invoke `executing-plans`, `subagent-driven-development`, or any other implementation skill.
@@ -150,6 +163,7 @@ If the user then asks to implement, that is a new phase. This skill does not do 
 Stop and correct if you are about to:
 
 - Reconstruct requirements from the previous design chat instead of reading the file
+- Let a pasted kickoff prompt add requirements, task counts, or review gates
 - Reopen a settled design decision without an explicit current-session instruction
 - Offer to implement, or start implementing
 - Duplicate the project's planner in this skill's voice
