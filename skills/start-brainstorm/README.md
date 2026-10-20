@@ -18,7 +18,7 @@ The skill reads project conventions, inspects relevant facts, and asks decisions
 
 The result distinguishes accepted decisions, recommendations, assumptions, and open questions. It includes scope, alternatives, reasons, and evidence. Project rules control where artifacts go and their metadata. A short discussion can stay in chat unless the project requires a file.
 
-The skill presents the brainstorm for review and asks about saving when optional and the appropriate next phase. The next phase may skip discovery, design, or a plan document when its inputs suffice; this review does not itself authorize implementation. It stops there. It does not write a technical design, plan implementation, or treat a recommendation as approval.
+The skill presents the brainstorm for its applicable review and asks about saving only when that choice remains open. The next phase may skip discovery, design, or a plan document when its inputs suffice. A brainstorm-only request stops here; an authorized autonomous workflow may continue after the requested review. A recommendation or review verdict alone grants no authority.
 
 ## Boundary examples
 
@@ -41,3 +41,7 @@ Install the complete directory using [Install one skill](../README.md#install-on
 The discussion method draws on Matt Pocock's [grilling](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/productivity/grilling/SKILL.md) and [domain-modeling](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/engineering/domain-modeling/SKILL.md), reviewed 2026-10-03. [writing-for-agents](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/productivity/writing-for-agents/SKILL.md) informs the completion conditions. This adaptation bounds questioning to brainstorm decisions, permits serial fact finding, and leaves glossary and ADR writes to project rules. The skill is self-contained and does not chain-call upstream skills. See [LICENSE](LICENSE) for the upstream MIT notice.
 
 Useful discussion techniques also appear in [Superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md). This skill keeps brainstorming separate from that workflow's design and planning handoff.
+
+## Phase scope and autonomy
+
+Human review and a stop at the phase boundary are the default. An explicit full or partial autonomous workflow can authorize the included reviews and handoffs. Complete the requested review, preserve retained human gates, and continue only within that authority and stopping point. Record agent review and delegated readiness as such, never as personal human approval. A request for this phase alone grants no later phase. Use existing project records; no new authorization form is required.

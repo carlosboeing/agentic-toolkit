@@ -83,15 +83,17 @@ Every Markdown document inside a working-memory tree starts at byte 0 with a YAM
 
 ### SDLC phase checkpoints
 
-Choose phases according to uncertainty and recovery needs. Brainstorming, optional discovery, design, durable planning, implementation, and review can be combined without creating a document for every phase. Each selected authoring phase stops for its required review. Do not auto-advance.
+Choose phases and documents according to the request, uncertainty, and recovery needs, regardless of whether the work is a feature, fix, documentation, dependency update, configuration change, or something else. These are examples, not a closed list. A phase request invokes that phase; ordinary work does not require a design or plan document by category alone.
 
-1. **Brainstorm:** Explore and challenge ideas. Present settled points and open questions. Follow project rules for saving, then stop for review.
-2. **Design:** Write the complete design document when one is needed. Stop for human review before approval or the next phase, then follow authorized Git handling.
-3. **Plan:** Write a durable implementation plan when requested or needed for dependencies, handoffs, or recovery. Stop for review before implementing.
-4. **Implementation:** Work from the approved plan or design, an execution-ready issue, or a clear current request for a bounded bug fix or improvement. Without a plan document, inspect current state and state the scope, invariants, sequence, and proof in session before editing. Do not require a design, plan, or issue solely to authorize clear direct work.
-5. **Review:** Use the project's existing review tools at the required checkpoints and for the integrated result. Model review and self-review do not grant human approval.
+Do not auto-advance by default. An explicit request for a full or partial autonomous workflow authorizes progression through the included phases and requested agent reviews, except at a human gate the user or applicable instructions retain. Identify the scope and stopping point from the request, record the authorization in the existing run/task context, and proceed without asking again at every included transition. No new policy document or fixed phase list is required. A phase-only request or generic "continue" does not grant broader authority.
 
-Keep applicable product decisions and architecture constraints visible in every selected phase. A human approval record identifies the source revision, scope, approver, and approval reference using existing project conventions; agent-written status alone is not approval. A clear direct request authorizes its bounded work without a second approval ritual. Each phase can start in a fresh session from its source and current repository. Persist artifacts and recovery context when required by the project or the work, and use authorized Git handling. Raise genuine forks instead of deciding silently.
+1. **Brainstorm:** Explore and challenge ideas. Present settled points and open questions, and follow project rules for saving and review.
+2. **Design:** Write a design document when requested or included in the authorized workflow. Complete its applicable review before treating it as ready for the next phase.
+3. **Plan:** Write a durable implementation plan when requested or needed for dependencies, handoffs, or recovery. In-session planning does not require this document-producing phase.
+4. **Implementation:** Work from the applicable source artifacts or a clear current request. Plan in session using the harness's native plan/task tools or another proportionate method. Check scope, constraints, order, and proof before editing; no fixed response template or separate document is required.
+5. **Review:** Use the project's review methods at the applicable checkpoints and for the integrated result. In an authorized autonomous run, agent review can satisfy a delegated gate. It never proves that a human personally reviewed the artifact.
+
+Keep applicable product decisions and architecture constraints visible in every selected phase. Distinguish personal human approval from readiness under delegated review. Record the source revision, scope, review evidence, and authorizing instruction using existing project conventions; agent-written status alone grants no authority. Stop for a retained human gate or a consequential choice outside the delegated scope. A clear implementation request authorizes its work and in-session plan without a second approval ritual. Each phase can start in a fresh session from its source, recorded run authorization, and current repository. Persist context when recovery needs it. Autonomous phase progression does not authorize commit, publication, merge, installation, or rollout beyond the actions actually included in the request. Do not ask again for actions already authorized.
 
 ### Plan granularity and review cadence
 

@@ -29,7 +29,7 @@ None at the moment.
 
 ## Recently shipped
 
-- **Flexible lifecycle skills (2026-10-20).** Add `/start-brainstorm`, `/start-design`, and the shared design quality contract. Permit bounded direct fixes and design-led implementation with in-session planning, preserve applicable product and architecture decisions, and distinguish human approval from model review.
+- **Flexible lifecycle skills (2026-10-21).** Add `/start-brainstorm`, `/start-design`, and the shared design quality contract. Select phases across task categories, use native in-session plans when appropriate, and support explicitly authorized autonomous workflows while preserving retained human gates and prior decisions.
 
 - **Consistent SDLC artifacts, first increment (2026-10-03).** [PR 6](https://github.com/carlosboeing/agentic-toolkit/pull/6) delivers the shared plan quality contract, `/start-planning` discovery and advisory checker, `/start-implementation` controller, and corrected progress and worktree guidance.
 

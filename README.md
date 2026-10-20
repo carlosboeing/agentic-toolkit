@@ -157,9 +157,9 @@ These directories mirror the harness's own layout under `~/.claude/`, so each it
 | [`git-worktrees`](skills/git-worktrees/) | Sets where worktrees go and the checks to run before changing branches |
 | [`housekeeping`](skills/housekeeping/) | Finds branches and worktrees left behind by merged pull requests, and removes them on request |
 | [`start-brainstorm`](skills/start-brainstorm/) | Explores an idea and presents a brainstorm for review before technical design |
-| [`start-design`](skills/start-design/) | Writes a design against a shared or project contract and stops for review before planning |
+| [`start-design`](skills/start-design/) | Writes a reviewable design against a shared or project contract |
 | [`start-planning`](skills/start-planning/) | Starts an implementation plan from an approved design |
-| [`start-implementation`](skills/start-implementation/) | Drives an approved plan or direct work from a design, issue, or clear bounded request to the authorized milestone |
+| [`start-implementation`](skills/start-implementation/) | Drives an authoritative plan or direct request, using in-session planning when no plan document is needed |
 | [`capture-meeting`](skills/capture-meeting/) | Turns a meeting recording and notes into a project record |
 | [`externalize-deliverable`](skills/externalize-deliverable/) | Makes a client-safe copy of an internal document, with a required human review |
 | [`oss-standards`](skills/oss-standards/) | Shortcut for `repo-standards` in open-source mode |

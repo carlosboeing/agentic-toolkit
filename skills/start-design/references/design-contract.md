@@ -32,7 +32,9 @@ Compare materially different interface choices when the choice changes caller ob
 
 ## Review and amendments
 
-The draft ends at design review. After review the user may choose a durable plan or direct implementation with in-session planning, according to readiness and recovery needs. Neither route starts automatically. An open question that changes implementation blocks planning of the affected part. A design does not become approved because it was written, committed, or found in a search index. Apply the project's readiness and approval rules. A required human approval is supported by the reviewed revision, scope, approver, and approval reference in an existing project record. Self-review and model review are separate evidence and do not authorize a status change to approved.
+The design reaches a review checkpoint before downstream work. Human review and a stop are the default. An explicit full or partial autonomous request may delegate that review and authorize continuation to the next included phase; preserve any retained human gate and the requested stopping point. The next phase may be durable planning or implementation with an in-session plan, according to readiness and recovery needs.
+
+Record the reviewed revision, scope, review evidence, and authorizing instruction using existing project conventions. Distinguish personal human approval from readiness under delegated review. A status field, self-review, model verdict, commit, or search result alone grants no authority; completed review plus the actual delegation can establish readiness under project rules without claiming the human reviewed the artifact. Unresolved consequential decisions outside that delegation block affected downstream work. No new approval schema or policy file is required.
 
 Approval fixes the behavioral boundary, not incidental file hints. If later work disproves a consequential assumption, stop that affected work, record evidence, amend the design, and obtain review before changing the plan or code to follow the amendment. Independent unaffected work may continue.
 

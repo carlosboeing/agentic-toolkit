@@ -1,6 +1,6 @@
 # start-implementation
 
-Drives implementation from an approved plan, whole or by one task, an execution-ready design or issue, or a clear current request for a bounded fix or improvement. Direct work can start without a design or plan document. One controller runs the phase: it selects ready work, delegates where the harness supports it, verifies results, integrates, and records progress. It stops at the authorized delivery milestone.
+Drives implementation from an approved plan, whole or by one task, an execution-ready design or issue, or a clear current request for work whose scope and acceptance can be established. Direct work can start without a design or plan document. One controller runs the phase: it selects ready work, delegates where the harness supports it, verifies results, integrates, and records progress. It stops at the authorized delivery milestone.
 
 ## What it does
 
@@ -36,9 +36,9 @@ flowchart TB
 
 ## Choosing documents
 
-A clear bug fix or small improvement may need neither a design nor a plan file. A reviewed design may already provide enough detail for implementation with a brief in-session sequence. The skill proceeds after that preflight when the implementation request is clear and no consequential decision remains open; it does not add another approval round.
+These routes apply across task categories. Documentation, dependencies, configuration, features, and fixes are examples; none determines the required paperwork by its label alone. A clear request may need neither a design nor a plan file. A reviewed design may already provide enough detail for implementation with an in-session plan using the harness's native plan/task tools or another proportionate method. The readiness questions are checks, not a required response template. The skill proceeds after that preflight when the implementation request is clear and no consequential decision remains open; it does not add another approval round.
 
-Use a durable plan when dependencies, handoffs, risky effects, or sequencing cannot be recovered adequately from the source and ordinary project records. Creating an issue or PR is not an entry requirement. Applicable product decisions and architecture constraints still hold on the shortest route. If a source requires human approval, verify the actual approval of its revision and scope; model review and an agent-written status do not supply it.
+Use a durable plan when dependencies, handoffs, risky effects, or sequencing cannot be recovered adequately from the source and ordinary project records. Creating an issue or PR is not an entry requirement. Applicable product decisions and architecture constraints still hold on the shortest route. Verify the source revision, review evidence, and actual authority. An explicit autonomous run can delegate review and progression; preserve retained human gates and never mislabel agent review as personal human approval. A newly written, reviewed source can be identified by its exact content revision without a commit solely for readiness.
 
 ## Delivery states
 
@@ -61,3 +61,7 @@ See [Install one skill](../README.md#install-one-skill) in the skills catalog, o
 - The five readiness questions live in the skill so it stands alone: no separate implementation guide is needed to run direct small work.
 - When a durable plan exists, progress follows the two-commit sequence: the code commit first, then a plan commit that ticks the task and records the code SHA. One controller owns plan writes.
 - Delegation is checked against the live harness at run time. When no worker facility exists, the same tasks run serially instead of faking one.
+
+## Phase scope and autonomy
+
+Human review and a stop at the phase boundary are the default. An explicit full or partial autonomous workflow can authorize the included reviews and handoffs. Complete the requested review, preserve retained human gates, and continue only within that authority and stopping point. Record agent review and delegated readiness as such, never as personal human approval. A request for this phase alone grants no later phase. Use existing project records; no new authorization form is required.

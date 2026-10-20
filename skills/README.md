@@ -15,9 +15,9 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 | [`penmark-comments`](penmark-comments/) | Automatic, or on request | Reviews a local Markdown file and, once you choose where the output goes, can write validated Penmark inline comments |
 | [`git-worktrees`](git-worktrees/) | Automatic | Sets the worktree location shared by all harnesses and the checks to run before changing branches |
 | [`start-brainstorm`](start-brainstorm/) | `/start-brainstorm` | Challenges an idea, compares options, and presents a brainstorm for review before technical design |
-| [`start-design`](start-design/) | `/start-design` | Writes a technical design from a reviewed brainstorm or clear brief and stops for review before planning |
+| [`start-design`](start-design/) | `/start-design` | Writes a reviewable design from a reviewed brainstorm or clear brief |
 | [`start-planning`](start-planning/) | `/start-planning` | Starts an implementation plan from an approved design, keeping design and planning as separate steps |
-| [`start-implementation`](start-implementation/) | `/start-implementation` | Drives an approved plan or direct work from a design, issue, or clear bounded request, with in-session planning when no plan document is needed |
+| [`start-implementation`](start-implementation/) | `/start-implementation` | Drives an approved plan or direct work from a design, issue, or clear request, with in-session planning when no plan document is needed |
 | [`capture-meeting`](capture-meeting/) | `/capture-meeting` | Turns a meeting recording, notes and related files into a checked project record |
 | [`externalize-deliverable`](externalize-deliverable/) | `/externalize-deliverable` | Makes a client-safe copy of an internal document, which a person must review before it is sent |
 
@@ -25,25 +25,27 @@ Each skill's README covers its arguments, dependencies, install steps and design
 
 ## Phase boundaries
 
-Choose phases according to uncertainty and recovery needs. Each selected authoring phase presents its result and stops for review. A later session starts from its source and current repository; a clear bounded request can itself be the source.
+Choose phases and documents according to the request, uncertainty, and recovery needs, not the task category. Invoke a phase explicitly or through a natural-language request for that work; an autonomous workflow may include several phases. A later session starts from its source, recorded run authority, and current repository. A clear request can itself be the source.
 
-| Phase | Input | Output and stop |
+| Phase | Input | Output and checkpoint |
 |---|---|---|
 | `/start-brainstorm` | Idea or active brainstorm | Settled points, options, and open questions, presented for brainstorm review |
 | `/start-design` | Reviewed brainstorm and optional discovery, or a clear brief | Design against the shared or project contract, presented for design review |
 | `/start-planning` | Approved design | Implementation plan, presented for plan review |
-| `/start-implementation` | Approved plan or design, execution-ready issue, or clear bounded request | In-session sequence when no plan document exists, then verified work at the authorized delivery milestone |
+| `/start-implementation` | Authoritative plan or design, execution-ready issue, or clear request | In-session plan when no plan document is needed, then verified work at the authorized delivery milestone |
 
-Discovery is optional research, including spikes, that returns evidence and uncertainty to a question. It grants no approval. Use existing review tools at authoring checkpoints and for the integrated implementation result. A model review does not grant required human approval.
+Human review gates and a stop between phases are the default. An explicit full or partial autonomous workflow can authorize its included agent reviews and handoffs without another permission round at every phase. Preserve retained human gates and the requested endpoint. Record delegated readiness and review evidence truthfully; an agent review is never a claim that the human personally reviewed the artifact. A phase-only request does not authorize subsequent phases.
 
-Examples of valid routes:
+Discovery is optional research, including spikes, that returns evidence and uncertainty to a question. It grants no authority by itself. Use existing review methods at the applicable checkpoints and for the integrated result. Native planning/task tools can hold an in-session plan; no fixed prose format is required.
+
+Examples of valid routes, not an exhaustive list:
 
 - A substantial feature or MVP: brainstorm, optional discovery, design, durable plan, implementation, review.
 - A bounded feature: brainstorm, design, implementation with in-session planning, review.
 - A clear solution: design, optional durable plan, implementation, review.
-- A clear bug fix or small improvement: implementation with a brief in-session sequence, verification, review. No design, plan, or issue document is required solely to start.
+- A clear change, such as a documentation correction, dependency update, configuration change, fix, or improvement: implementation with an appropriate in-session plan, verification, and review. No design, plan, or issue document is required solely by category.
 
-A reviewed design may suffice for implementation without a separate plan file. Add a durable plan when dependencies, handoffs, risky effects, or unresolved sequencing cannot be recovered adequately from the source and ordinary project records. Applicable product decisions and architecture constraints remain in force on every route. Human approval of a document and authorization to implement are checked separately; a direct implementation request supplies authorization for its bounded scope.
+A reviewed design may suffice for implementation without a separate plan file. Add a durable plan when dependencies, handoffs, risky effects, or unresolved sequencing cannot be recovered adequately from the source and ordinary project records. Applicable product decisions and architecture constraints remain in force on every route. Document readiness and authorization to implement are checked separately. A direct request authorizes its scope; an autonomous request can authorize several included phases and reviews. Neither invents authority for external effects beyond the request.
 
 ## Install one skill
 

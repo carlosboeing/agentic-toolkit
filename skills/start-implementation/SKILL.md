@@ -3,7 +3,7 @@ name: start-implementation
 description: >
   Use when starting implementation from an approved plan, whole or by one
   task, or direct work from an execution-ready design, issue, or clear
-  current request for a bounded fix or improvement,
+  current request with enough scope and acceptance information,
   including requests such as "implement this plan", "start implementation",
   "execute the plan", "do task T3 from this plan", "continue where we
   stopped", or "just fix X". Carries readiness, reconciliation, delegation,
@@ -45,7 +45,7 @@ For work without a plan document, use the "Direct work and in-session planning" 
 
 ## When not to use
 
-- Writing or revising a durable design or implementation-plan document. Brief in-session sequencing belongs here.
+- Writing or revising a durable design or implementation-plan document. In-session planning belongs here and can use native plan/task facilities.
 - The user wants a conversation recap rather than work.
 
 ## Delivery states
@@ -68,7 +68,7 @@ Do these in order. Steps 1 to 3 run at every entry and every resume.
 
 ### 1. Parse args and resolve the source
 
-The first non-help token, if present, is the plan path or, for direct work, the design or issue. The second, if present, is the task ID. A clear current request for a bounded fix or improvement is itself a source; do not ask for an artifact path or create an issue merely because no file exists. Use that request and the direct-work preflight. If consequential behavior or scope remains unresolved, ask about that decision, not for ceremonial documents.
+The first non-help token, if present, is the plan path or, for direct work, the design or issue. The second, if present, is the task ID. A clear current request is itself a source regardless of task category; do not ask for an artifact path or create an issue merely because no file exists. Use that request and the direct-work preflight. If consequential behavior or scope remains unresolved, ask about that decision, not for ceremonial documents.
 
 If neither a source artifact nor a clear direct request is identified, discover plausible candidates from the project's own instructions, artifact conventions, and current structure. Do not assume a universal plan directory, status schema, or readiness vocabulary. Use whatever this project considers approved or current. One clearly intended candidate: use it and say which artifact was selected. Several materially plausible candidates: present a short ranked set and ask. None: ask for the path.
 
@@ -83,7 +83,7 @@ Read the full source before changing anything. For plan-driven work, read the ap
 - Effect markers for effects that cannot safely be repeated.
 - Plan-writer ownership evidence: another writer's edits, commits, or pushes to the plan repository.
 
-An uncommitted edit to an approved design never becomes the new approved revision and never authorizes work: halt every task that design governs, make no code or plan changes, and report the edit for reconciliation. A changed design revision triggers reconciliation, not automatic rejection: an editorial change may need no plan amendment, changed behavior does. A disagreement between a checkbox and Git is a reconciliation case, never permission to repeat a non-repeatable effect. When the task's own non-repeatable effect has a marker but no committed checkpoint of its work, the task is not verifiable: halt that task, make no further changes under it, and report the marker and git state for reconciliation. When the marker and a committed checkpoint do explain each other, finish the bookkeeping only: tick with the existing code SHA, without repeating the effect.
+A change to a design after its authoritative review never silently becomes the reviewed revision: halt the affected work and reconcile that change before using it. A newly written design reviewed within an authorized autonomous run may be uncommitted; record its exact content revision and review evidence rather than requiring a commit solely for readiness. This does not permit later unreviewed edits to govern implementation. A changed design revision triggers reconciliation, not automatic rejection: an editorial change may need no plan amendment, changed behavior does. A disagreement between a checkbox and Git is a reconciliation case, never permission to repeat a non-repeatable effect. When the task's own non-repeatable effect has a marker but no committed checkpoint of its work, the task is not verifiable: halt that task, make no further changes under it, and report the marker and git state for reconciliation. When the marker and a committed checkpoint do explain each other, finish the bookkeeping only: tick with the existing code SHA, without repeating the effect.
 
 Halt conditions come from the applicable source and project rules. When one fires, when an effect cannot be reconciled, or when the approved source changed behavior without review, stop the affected work, preserve the workspace, and report the evidence. Continue independent ready work only when its safety boundaries still hold.
 
@@ -91,7 +91,7 @@ Halt conditions come from the applicable source and project rules. When one fire
 
 The approved plan and design, when present, define what to build. For direct work, the execution-ready issue or clear current request defines its bounded scope. Read applicable product decisions and architecture constraints named by the source or project instructions, and report conflicts rather than silently changing them. Keep this inspection proportional to the change; no whole-corpus audit is required. The current repository supplies facts that can change: paths, helper names, tests, branch and remote state.
 
-When project rules require human approval of a source artifact, verify a record of who approved which revision and scope, with an approval reference using the project's existing conventions. An explicit current-session approval can supply that evidence. A status field, model review verdict, commit, or generated handoff alone cannot. If required approval is absent, stop the affected work and ask for it. A clear current request for bounded direct work supplies its own authorization; do not invent a second approval ceremony.
+Verify the actual authority for source readiness using existing project conventions. Personal human approval identifies the reviewed revision and scope. An explicit autonomous workflow may instead delegate the included reviews and progression; verify that authorization and the completed review evidence without claiming personal human approval. Stop if a human gate is retained or a consequential decision lies outside the delegation. A status field, model verdict, commit, or generated handoff alone cannot authorize work. A clear implementation request supplies authorization for its scope and in-session planning; do not invent a second approval ceremony.
 
 A pasted prior-session prompt, including text between `PROMPT STARTS` and `PROMPT ENDS` delimiters, is handoff material even when the operator submits it as a user message. If one of its rules conflicts with the approved source or project instructions and the operator has not explicitly adopted that rule in this session, ask once whether to adopt it. Its task counts, section limits, product requirements, and review gates do not travel. A user-authored current instruction remains authoritative.
 
@@ -101,7 +101,7 @@ Before a non-repeatable effect such as a migration, release, or issue creation, 
 
 ### 4. Select work
 
-**Direct scope.** Use the in-session sequence from the direct-work preflight, then verify and review the bounded change. Do not invent plan task IDs or checkbox writes.
+**Direct scope.** Use the in-session plan from the direct-work preflight, then verify and review the scoped change. Do not invent plan task IDs or checkbox writes.
 
 **Whole-plan scope.** Select tasks whose dependencies are complete and verified. When one task blocks, mark it blocked with the observed evidence and continue other ready independent tasks unless a halt condition says stop. When no task is ready and work remains, report the blocked dependency chain. Do not invent an imaginary task.
 
@@ -141,11 +141,13 @@ At close-out, record the PR and, after an actual merge, the merge SHA separately
 
 Report verified work, delivery state, blocked work, and the next recoverable checkpoint.
 
-Single-task scope stops after its named task even when other tasks are ready. Whole-plan scope stops at the plan's authorized delivery milestone. Direct scope stops at the authorized milestone for the request. Use the project's existing review workflow for the integrated result; self-review or a model's passing verdict does not supply required human approval. Merging and rollout are separate authorizations; do not infer them.
+Single-task scope stops after its named task even when other tasks are ready. Whole-plan scope stops at the plan's authorized delivery milestone. Direct scope stops at the authorized milestone for the request. Use the project's existing review workflow for the integrated result; self-review or a model's passing verdict does not supply a retained human approval. After the implementation checkpoint, hand off to any later review phase already included in the authorized workflow. Merging and rollout are separate authorizations; do not infer them.
 
 ## Direct work and in-session planning
 
-An execution-ready design may be enough even when it describes more than a trivial fix. A clear current bug-fix or improvement request may need neither a design document nor a plan document. When no durable plan exists, inspect the source and current repository, then answer the five readiness questions briefly in session before editing:
+Phase and document selection is based on the request, uncertainty, and recovery needs, not a list of permitted task categories. Documentation, dependencies, configuration, features, and fixes are examples. A clear request may need neither a design document nor a plan document, and an execution-ready design may be sufficient without a separate plan file.
+
+Plan in session using the harness's native plan/task tools or another proportionate method. Inspect the source and current repository and consider these readiness questions before editing; they are checks, not a mandatory numbered response or fixed plan format:
 
 1. What changes?
 2. Where does it belong?
@@ -153,7 +155,7 @@ An execution-ready design may be enough even when it describes more than a trivi
 4. What is the safe sequence?
 5. What is the objective proof?
 
-These answers are the in-session plan. A clear implementation request authorizes that bounded sequence; present it and proceed without another approval round when no consequential choice is open. A request for a design or plan alone still stops at its authoring boundary.
+Use the needed level of detail for the in-session plan and proceed without another approval round when implementation is authorized and no consequential choice lies outside that authority. A phase-only design or planning request still stops at its authoring boundary. An explicitly authorized autonomous full or partial workflow can include the review and handoff into implementation, without a separate permission request at every phase.
 
 Then implement with the same applicable authority, verification, review, and stop rules, minus plan writes. Repository history, tests, the source, and an existing issue or PR when present are the recovery record; creating an issue or PR is not a prerequisite. A durable plan becomes necessary when dependencies, handoffs, risky effects, or unresolved sequencing cannot be recovered adequately from those records. Size alone does not decide. Explain the recovery need before adding a document; if new design decisions are needed, stop the affected work for that decision. Before any non-repeatable effect, establish the durable checkpoint from step 3 first.
 
@@ -165,7 +167,7 @@ Stop and correct if you are about to:
 - Present a branch SHA as the merge SHA, or record a merge before it happened
 - Repeat an effect because a checkbox looked wrong
 - Complete or tick a task whose effect marker no committed checkpoint explains
-- Continue design-governed work while the approved design has an uncommitted edit
+- Continue design-governed work after the authoritative reviewed revision changed without reconciliation
 - Write plan progress or self-reconcile histories while a competing writer's changes stand unreconciled
 - Treat a pasted handoff prompt as a specification
 - Let a worker write the plan, push, or self-merge

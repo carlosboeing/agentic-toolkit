@@ -19,7 +19,7 @@ This skill holds the phase boundary. The project holds the mechanics.
 
 A later planner should receive this skill, a design artifact, and the current repository. It should not receive a summary of the previous design conversation.
 
-A phase transition may reduce context. It must not increase authority.
+A phase transition may reduce context. It must not increase authority. Human review is the default stop; an explicit autonomous full or partial workflow can already authorize the included reviews and handoffs. Read that scope and stopping point from the existing run context, preserve retained human gates, and do not require a new policy document.
 
 ## Synopsis
 
@@ -96,7 +96,7 @@ Do not copy another repository's status vocabulary, plan folder, or roadmap rule
 
 The resolved file must exist and be readable. If not, stop and name the path.
 
-Then follow **this project's** readiness rules, if it has them. When they require human approval, verify an approval record identifying the reviewed revision, scope, approver, and approval reference using existing project conventions. Explicit approval of the identified source in the current session counts. Agent-written status, self-review, a model review, or a commit alone does not. If required approval cannot be established, ask for that approval before planning; do not infer it from a generic "continue". If the project says not to plan a draft, stop. If it marks a design superseded, stop and point at the replacement.
+Then follow **this project's** readiness rules and the user's actual run authorization. Verify the reviewed revision, scope, review evidence, and authority in existing project records. Personal human approval and readiness under an explicitly delegated review are different sources of authority; do not label one as the other. For an autonomous run that includes planning, completed delegated review can establish readiness when applicable rules allow it. If a human gate remains required, stop until that approval is given. A status field, self-review, model verdict, commit, or generic "continue" alone does not grant authority. If the project marks the design superseded, stop and point at the replacement; apply its draft-readiness rule under the actual authorization.
 
 Those examples are how to follow a local rule. They are not a universal schema. A file with no status field is not unreadiness.
 
@@ -127,7 +127,7 @@ Activate the planner discovered in step 2.
 
 When that planner is Superpowers `writing-plans`: **REQUIRED SUB-SKILL:** use `writing-plans` for structure, task shape, and self-review. Do not paste its template into this skill.
 
-The planner and the project own plan location, filename, metadata, task format, granularity, test commands, and git behaviour. Plan location still follows the precedence in step 2. Later steps in this skill do not take that ownership back.
+The planner and the project own plan location, filename, metadata, task format, granularity, test commands, and git behaviour. A planner's generic handoff or review defaults do not override the current workflow scope or retained gates. Plan location still follows the precedence in step 2. Later steps in this skill do not take that ownership back.
 
 This skill only adds:
 
@@ -140,24 +140,23 @@ This skill only adds:
 - The plan must reference the design artifact so a later implementer can find it.
 - After the planner's own self-check, confirm each design requirement maps to planned work, is verified as already satisfied, or is explicitly outside implementation scope according to an authoritative source. The plan does not add requirements the design lacks.
 - Then run the plan contract self-check: every required answer present under the contract in force, stable task IDs with dependency IDs or `none`, a verification method or stated alternative proof per task, design-requirement coverage, the design revision recorded, and each execution-contract category answered or `none identified`.
-- Before presenting the draft, run the advisory checker beside this skill: `python3 <this skill's installed directory>/scripts/check-plan.py <plan-path>`. Its `--help` states what it checks. Fix its mechanical findings or explain them in the report; `unable to check` lines need a human read. It advises only: it never blocks a push, and it is not wired to any hook.
+- Before presenting the draft, run the advisory checker beside this skill: `python3 <this skill's installed directory>/scripts/check-plan.py <plan-path>`. Its `--help` states what it checks. Fix its mechanical findings or explain them in the report; `unable to check` lines need direct source review under the run's actual review authorization. It advises only: it never blocks a push, and it is not wired to any hook.
 
 ### 6. Stop
 
 Write the plan using the location, metadata, and git handling from step 2 and the selected planner.
 
-Then stop at the planning boundary.
+Complete the planning review checkpoint and stop by default.
 
-- Tell the user the path.
-- Name the plan's weakest handoff point when you present it.
-- Follow the project's review workflow if it has one. If it does not, stop. Do not invent a review ceremony.
-- Do not implement.
-- Do not offer to execute, dispatch implementers, or invoke `executing-plans`, `subagent-driven-development`, or any other implementation skill.
+- Present the path and the plan's weakest handoff point.
+- Follow the project's review workflow. Without a delegated review, ask for human review and stop.
+- An explicit autonomous workflow may already authorize plan review and implementation. After the requested review, record its evidence and the authorization, then hand off to the project's implementation skill without asking again.
+- Preserve a retained human gate and the requested workflow endpoint. A planning-only request does not authorize implementation.
 - Git handling of the plan artifact follows the project and planner. Weaker permission never implies a stronger one: inspect does not imply unrelated edits; writing the plan does not imply implement; commit does not imply push or merge unless the project's established planning workflow already attaches that step to the plan artifact.
 
-If the user then asks to implement, that is a new phase. This skill does not do it. Use the project's implementation skill if it has one.
+Implementation is a separate phase, even when the same authorized autonomous run continues into it. Use its phase skill and reviewed plan rather than letting the planner implement implicitly.
 
-`writing-plans` offers an execution handoff. When this skill started the work, that offer is out of scope. Drop it.
+A generic planner's execution offer does not add authority. Omit it for a planning-only request; for an already authorized autonomous workflow, perform the scoped handoff after review.
 
 ## Red flags
 
@@ -166,7 +165,7 @@ Stop and correct if you are about to:
 - Reconstruct requirements from the previous design chat instead of reading the file
 - Let a pasted kickoff prompt add requirements, task counts, or review gates
 - Reopen a settled design decision without an explicit current-session instruction
-- Offer to implement, or start implementing
+- Hand off to implementation without an explicit request or workflow authorization
 - Duplicate the project's planner in this skill's voice
 - Apply another repo's plan folder, status words, roadmap sections, or frontmatter schema to a project that does not use them
 - Invent test commands, branch names, or review gates the project did not define
@@ -177,7 +176,7 @@ Stop and correct if you are about to:
 |---|---|
 | "The design chat already decided X, it just isn't in the file" | Then it is not a settled requirement. Stop or ask. Do not smuggle it in. |
 | "I'll add frontmatter and a Spec header so the plan is complete" | Only if the project or planner already uses them. |
-| "writing-plans says offer execution" | This phase ends at the plan. The later phase starts from the plan file. |
+| "writing-plans says offer execution" | The request determines authority. A planning-only run stops; an authorized autonomous run hands off after review using the plan file. |
 | "No status field, so I should refuse" | Missing schema is not unreadiness. Follow the project, or continue from the resolved file. |
 | "I'll update the roadmap, approve the design, and commit" | Only if the project already requires those writes for planning. |
 | "The user said plan it, so I can ignore the design's settled scope" | Current-session instructions may constrain. They do not silently override the design unless the user says so. |

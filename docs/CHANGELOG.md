@@ -2,13 +2,14 @@
 
 All notable changes to this project are recorded here, newest first.
 
-## 2026-10-20: flexible lifecycle skills
+## 2026-10-21: flexible lifecycle skills
 
-- **Skills:** add `/start-brainstorm` and `/start-design` as self-contained entry points. Brainstorming presents options, settled points, and open questions for review; design reads durable sources and current architecture, writes a complete draft, and stops before planning.
+- **Skills:** add `/start-brainstorm` and `/start-design` as self-contained entry points. Brainstorming presents options, settled points, and open questions for review; design reads durable sources and current architecture, writes a complete draft, and reaches the applicable review checkpoint.
 - **Contract:** package a shared design quality contract beside `/start-design`, with project presentation overrides, proportional research, acceptance methods, visible blockers, and compact and substantial examples.
 - **Documentation:** document the four lifecycle entry points and review checkpoints and attribute adapted Matt Pocock techniques with MIT notices carried in each new skill directory. No upstream skill installation or chain call is required.
-- **Flexible entry:** permit a clear bounded fix or improvement without a design, plan, or issue document, and implementation from a reviewed design with in-session planning. Reconcile global phase instructions with optional durable plans.
-- **Decision context and approval:** identify applicable product and architecture decisions, account for their treatment in designs, and check actual human approval of the reviewed revision. Model review does not supply that approval.
+- **Flexible entry:** select phases and documents across task categories according to the request, uncertainty, and recovery needs. Use native in-session planning without a fixed prose template when no plan document is needed. Example routes are not an exhaustive list.
+- **Autonomy:** retain human review gates by default while allowing explicitly authorized full or partial autonomous workflows, with their included reviews, retained human gates, and stopping points. Record delegated readiness without claiming personal human approval.
+- **Decision context and approval:** identify applicable product and architecture decisions, account for their treatment in designs, and establish the actual authority for the reviewed revision. Distinguish personal human approval from readiness under explicitly delegated review.
 - **Packaging:** verify both skill entry points, the installed design contract, license notices, and OpenCode command wrappers in the disposable sync suite.
 
 ## 2026-10-03: consistent SDLC artifacts, first increment

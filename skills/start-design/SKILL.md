@@ -12,7 +12,7 @@ argument-hint: "[brief-or-brainstorm-path] [discovery-path ...] [help]"
 
 Write a reviewable technical design from durable sources and current repository facts. A fresh session needs this skill, the source brief, and the repository rather than a recap of earlier conversation.
 
-This skill owns the design phase. The shared contract defines required answers; project instructions own presentation, storage, and review mechanics.
+This skill owns the design phase. The shared contract defines required answers; project instructions own presentation, storage, and review mechanics. Human review is the default boundary. An explicit full or partial autonomous workflow can delegate review and continuation through its included phases. Preserve retained human gates and record the run's scope and stopping point in existing context; no new authorization document is required.
 
 ## Synopsis
 
@@ -37,7 +37,7 @@ Completion: the sources, required contract, output location, and review rules ar
 
 ### 2. Confirm authority and read the sources
 
-Read the full brief or reviewed brainstorm and all supplied discovery artifacts. Read applicable product decisions and architecture records named by those sources or project instructions. Identify which decisions constrain this change; do not require a new product document or read unrelated history. When project rules require human review of an input, establish the actual review evidence rather than trusting agent-written status. Follow the project's readiness rules; a missing status field is not itself unreadiness. Stop on unreadable sources, a superseded source without an authorized replacement, or missing decisions that would require inventing the problem or scope. If a reviewed source has uncommitted changes, report the difference for reconciliation before treating those changes as reviewed decisions.
+Read the full brief or reviewed brainstorm and all supplied discovery artifacts. Read applicable product decisions and architecture records named by those sources or project instructions. Identify which decisions constrain this change; do not require a new product document or read unrelated history. Establish the actual review evidence and its authority: personal human approval, or review and readiness under an explicit autonomous delegation. If a human gate remains required, only that human approval satisfies it. Agent-written status alone establishes neither. Follow the project's readiness rules; a missing status field is not itself unreadiness. Stop on unreadable sources, a superseded source without an authorized replacement, or missing decisions that would require inventing the problem or scope. If a reviewed source has uncommitted changes, report the difference for reconciliation before treating those changes as reviewed decisions.
 
 The brief and reviewed decisions define intent. Discovery supplies evidence and uncertainty, not approval. Current repository facts can disprove an assumption; report the conflict and its effect instead of silently changing a settled decision.
 
@@ -71,10 +71,10 @@ Completion: a fresh planner can identify intended behavior, constraints, proof, 
 
 Check every required contract answer. Compare the design against the source scope and settled decisions. Resolve contradictions and unexplained placeholders; keep genuine unanswered choices explicit. Name the weakest assumption or unresolved point when presenting the draft. Run the project's applicable document checks, including diagram validation where required.
 
-Present the design path and stop for the project's design review. If no review workflow is defined, ask the user to review the draft and stop. Presenting the draft is not approval. Do not write an implementation plan, invoke a planner or implementation skill, or implement in this run. The user may later choose planning or direct implementation from the reviewed design according to readiness and recovery needs. That next phase starts from the reviewed source, not a generated recap.
+Present the design path and complete the applicable design review. By default ask for human review and stop. If an explicit autonomous workflow includes later phases and delegates this review, perform the requested review, record its evidence and run authority, and hand off to the next authorized phase skill without another permission round. Stop at a retained human gate, at the workflow's requested endpoint, or for a consequential choice outside the delegation. A design-only request does not authorize planning or implementation. The next phase uses the reviewed source and recorded authorization, not a generated recap.
 
-Git actions follow project rules and explicit authorization. A required review-before-commit stop stays in place. Writing the draft does not authorize commit, push, publication, or a later phase. After review, update status or record approval only according to the project's rules and the approval actually given. Identify the reviewed revision, scope, human approver, and approval reference in the existing project record. Keep model review results distinct; they never supply the human's approval.
+Git actions follow project rules and actual authorization; a retained review-before-commit gate stays in place. Writing a draft alone does not authorize commit, push, publication, or a later phase. Record the reviewed revision, scope, review evidence, and authority using existing project conventions. Distinguish a human's artifact approval from delegated readiness based on the user's autonomous request and completed review. Use project-native status only when its readiness rules are met, and never label delegated agent review as personal human approval.
 
 If planning or implementation later disproves a consequential assumption, stop the affected work, record the evidence, amend the design, and obtain review of that amendment before changing the plan or code to follow it. Unaffected independent work may continue.
 
-Completion: the complete draft has passed self-review and is presented for human review, with no automatic transition to planning.
+Completion: the complete design has passed its applicable review, or is waiting at the required human gate. Continue only through a handoff already included in the explicit workflow authorization.

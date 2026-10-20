@@ -17,7 +17,7 @@ A new session can plan without the design conversation that came before it. The 
 3. Resolves the plan contract: a project-named contract or template when the project has one, else the shared `references/plan-contract.md` that ships beside `SKILL.md`.
 4. Inspects repository state materially implicated by the design.
 5. Delegates structure to the project's planner (`writing-plans` when that is what the project uses).
-6. Writes a plan that answers the contract, references the design, checks it against the design, and stops before implementation.
+6. Writes a plan that answers the contract, checks it against the design, and completes the applicable review. It stops unless the authorized workflow already includes the implementation handoff.
 
 ```mermaid
 flowchart TB
@@ -28,7 +28,7 @@ flowchart TB
     Check --> Stop["Stop before implementation"]
 ```
 
-It does not rebuild requirements from the earlier design chat, reopen settled decisions unless you ask in the current session, or offer to start implementing.
+It does not rebuild requirements from earlier design chat or reopen settled decisions without current authority. A planning-only request stops at plan review; an explicitly authorized autonomous run may complete that review and hand off to implementation.
 
 ## Example
 
@@ -44,7 +44,7 @@ Or, with one clearly current design:
 /start-planning
 ```
 
-A fresh session reads that design, inspects this repo, writes the plan where **this** project keeps plans, and stops. Other projects keep plans elsewhere; the skill discovers that layout instead of assuming this one.
+A fresh session reads that design, inspects this repo, writes the plan where **this** project keeps plans, and stops by default. An explicitly authorized workflow may continue after the required review. Other projects keep plans elsewhere; the skill discovers that layout instead of assuming this one.
 
 Plan content follows the contract in force. When the project's instructions name a plan contract or template, the plan uses that presentation; otherwise the shared `references/plan-contract.md` sets the minimum answers and the project's own conventions fill in the rest.
 
@@ -53,7 +53,7 @@ Plan content follows the contract in force. When the project's instructions name
 - Write or revise the design.
 - Encode a universal frontmatter schema, plan folder, test command, or git policy.
 - Duplicate `writing-plans` or any other planner the project already has.
-- Start implementation, or treat planning as permission to implement.
+- Treat a planning-only request as permission to implement. An authorized autonomous workflow uses a separate implementation-phase handoff after review.
 
 ## Install
 
@@ -78,4 +78,8 @@ Renders the synopsis and does nothing else.
 
 This entry writes a plan document. Implementation can instead use a reviewed design, an execution-ready issue, or a clear bounded request and plan its sequence in session through `start-implementation`. Choose a durable plan when dependencies, handoffs, risky effects, or sequencing need a recoverable record.
 
-When project rules require human approval, entry verifies the reviewed source revision, scope, approver, and approval reference using existing conventions. An agent-written status or passing model review is not approval. Planning also checks applicable product decisions and architecture constraints named by its source or project instructions; a consequential omission returns for reconciliation.
+Entry verifies the reviewed source revision, scope, review evidence, and actual authority using existing conventions. Personal human approval and readiness under explicitly delegated review are distinct. Agent-written status or a model verdict alone supplies neither; a retained human gate still needs the human. Planning also checks applicable product decisions and architecture constraints named by its source or project instructions; a consequential omission returns for reconciliation.
+
+## Phase scope and autonomy
+
+Human review and a stop at the phase boundary are the default. An explicit full or partial autonomous workflow can authorize the included reviews and handoffs. Complete the requested review, preserve retained human gates, and continue only within that authority and stopping point. Record agent review and delegated readiness as such, never as personal human approval. A request for this phase alone grants no later phase. Use existing project records; no new authorization form is required.
