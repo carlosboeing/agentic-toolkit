@@ -14,12 +14,36 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 | [`housekeeping`](housekeeping/) | `/housekeeping` | Compares local branches and worktrees with GitHub pull requests, and in `fix` mode removes only what a merge left behind |
 | [`penmark-comments`](penmark-comments/) | Automatic, or on request | Reviews a local Markdown file and, once you choose where the output goes, can write validated Penmark inline comments |
 | [`git-worktrees`](git-worktrees/) | Automatic | Sets the worktree location shared by all harnesses and the checks to run before changing branches |
+| [`start-brainstorm`](start-brainstorm/) | `/start-brainstorm` | Challenges an idea, compares options, and presents a brainstorm for review before technical design |
+| [`start-design`](start-design/) | `/start-design` | Writes a technical design from a reviewed brainstorm or clear brief and stops for review before planning |
 | [`start-planning`](start-planning/) | `/start-planning` | Starts an implementation plan from an approved design, keeping design and planning as separate steps |
-| [`start-implementation`](start-implementation/) | `/start-implementation` | Drives implementation from an approved plan (whole plan or one task) or direct small work from an execution-ready design or issue |
+| [`start-implementation`](start-implementation/) | `/start-implementation` | Drives an approved plan or direct work from a design, issue, or clear bounded request, with in-session planning when no plan document is needed |
 | [`capture-meeting`](capture-meeting/) | `/capture-meeting` | Turns a meeting recording, notes and related files into a checked project record |
 | [`externalize-deliverable`](externalize-deliverable/) | `/externalize-deliverable` | Makes a client-safe copy of an internal document, which a person must review before it is sent |
 
 Each skill's README covers its arguments, dependencies, install steps and design decisions.
+
+## Phase boundaries
+
+Choose phases according to uncertainty and recovery needs. Each selected authoring phase presents its result and stops for review. A later session starts from its source and current repository; a clear bounded request can itself be the source.
+
+| Phase | Input | Output and stop |
+|---|---|---|
+| `/start-brainstorm` | Idea or active brainstorm | Settled points, options, and open questions, presented for brainstorm review |
+| `/start-design` | Reviewed brainstorm and optional discovery, or a clear brief | Design against the shared or project contract, presented for design review |
+| `/start-planning` | Approved design | Implementation plan, presented for plan review |
+| `/start-implementation` | Approved plan or design, execution-ready issue, or clear bounded request | In-session sequence when no plan document exists, then verified work at the authorized delivery milestone |
+
+Discovery is optional research, including spikes, that returns evidence and uncertainty to a question. It grants no approval. Use existing review tools at authoring checkpoints and for the integrated implementation result. A model review does not grant required human approval.
+
+Examples of valid routes:
+
+- A substantial feature or MVP: brainstorm, optional discovery, design, durable plan, implementation, review.
+- A bounded feature: brainstorm, design, implementation with in-session planning, review.
+- A clear solution: design, optional durable plan, implementation, review.
+- A clear bug fix or small improvement: implementation with a brief in-session sequence, verification, review. No design, plan, or issue document is required solely to start.
+
+A reviewed design may suffice for implementation without a separate plan file. Add a durable plan when dependencies, handoffs, risky effects, or unresolved sequencing cannot be recovered adequately from the source and ordinary project records. Applicable product decisions and architecture constraints remain in force on every route. Human approval of a document and authorization to implement are checked separately; a direct implementation request supplies authorization for its bounded scope.
 
 ## Install one skill
 

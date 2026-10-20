@@ -2,6 +2,15 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-20: flexible lifecycle skills
+
+- **Skills:** add `/start-brainstorm` and `/start-design` as self-contained entry points. Brainstorming presents options, settled points, and open questions for review; design reads durable sources and current architecture, writes a complete draft, and stops before planning.
+- **Contract:** package a shared design quality contract beside `/start-design`, with project presentation overrides, proportional research, acceptance methods, visible blockers, and compact and substantial examples.
+- **Documentation:** document the four lifecycle entry points and review checkpoints and attribute adapted Matt Pocock techniques with MIT notices carried in each new skill directory. No upstream skill installation or chain call is required.
+- **Flexible entry:** permit a clear bounded fix or improvement without a design, plan, or issue document, and implementation from a reviewed design with in-session planning. Reconcile global phase instructions with optional durable plans.
+- **Decision context and approval:** identify applicable product and architecture decisions, account for their treatment in designs, and check actual human approval of the reviewed revision. Model review does not supply that approval.
+- **Packaging:** verify both skill entry points, the installed design contract, license notices, and OpenCode command wrappers in the disposable sync suite.
+
 ## 2026-10-03: consistent SDLC artifacts, first increment
 
 - **Delivery:** [PR 6](https://github.com/carlosboeing/agentic-toolkit/pull/6) integrates the shared plan quality contract, advisory plan checker, `/start-implementation` controller, and corrected progress and worktree guidance described in the September 24 entries.

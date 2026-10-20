@@ -73,3 +73,9 @@ The skill is a directory. Sync copies `SKILL.md` and `references/` together, so 
 ```
 
 Renders the synopsis and does nothing else.
+
+## Optional durable planning and approval
+
+This entry writes a plan document. Implementation can instead use a reviewed design, an execution-ready issue, or a clear bounded request and plan its sequence in session through `start-implementation`. Choose a durable plan when dependencies, handoffs, risky effects, or sequencing need a recoverable record.
+
+When project rules require human approval, entry verifies the reviewed source revision, scope, approver, and approval reference using existing conventions. An agent-written status or passing model review is not approval. Planning also checks applicable product decisions and architecture constraints named by its source or project instructions; a consequential omission returns for reconciliation.

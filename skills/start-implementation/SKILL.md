@@ -2,24 +2,25 @@
 name: start-implementation
 description: >
   Use when starting implementation from an approved plan, whole or by one
-  task, or direct small work from an execution-ready design or issue,
+  task, or direct work from an execution-ready design, issue, or clear
+  current request for a bounded fix or improvement,
   including requests such as "implement this plan", "start implementation",
   "execute the plan", "do task T3 from this plan", "continue where we
   stopped", or "just fix X". Carries readiness, reconciliation, delegation,
   verification, integration, progress recording, and delivery-state rules.
-  Not for writing designs or plans.
+  Not for authoring durable design or implementation-plan documents.
 argument-hint: "[plan-path] [task-id]"
 ---
 
 # `/start-implementation`
 
-Drive implementation from a durable approved source and stop at the authorized delivery milestone.
+Drive implementation from an authorized source and stop at the authorized delivery milestone. The source may be a durable artifact or a clear current request for bounded direct work.
 
 This skill is the controller. It selects ready work, assigns it, verifies results, integrates, and records progress. It is also the implementer when no worker facility exists. Both roles obey the same rules.
 
 **Verify before you claim. Authorize before you effect. Record after you commit.**
 
-A fresh implementation session needs this skill, an approved source, and the current repositories. It needs no prose handoff from an earlier session.
+A fresh implementation session needs this skill, its authorized source, and the current repositories. When a source artifact exists, read it rather than reconstructing it from a prose handoff. Clear direct work needs no design or plan document solely to enter this phase.
 
 ## Synopsis
 
@@ -28,23 +29,23 @@ A fresh implementation session needs this skill, an approved source, and the cur
 /start-implementation help
 ```
 
-`<plan-path>` is optional. When omitted, resolve the plan from the project as in step 1. `<task-id>` is optional: with it, the run is single-task scope; without it, whole-plan scope.
+`<plan-path>` is optional. For plan-driven work, resolve the plan as in step 1. A direct request may instead supply the design, issue, or bounded change in ordinary language. For plan-driven work, `<task-id>` selects one task; omitting it selects whole-plan scope. Direct work uses its bounded request scope.
 
-If `help`, `--help`, `-h`, `?`, or `usage` appears anywhere in the args, render this synopsis and stop.
+If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, render this synopsis and stop. Words such as "help" or "usage" inside a direct implementation request are task content, not a help invocation.
 
 Natural-language requests also activate when the intent is to start, resume, or recover implementation.
 
-For direct small work, the source is an execution-ready design or issue instead of a plan. That entry is in "Direct small work".
+For work without a plan document, use the "Direct work and in-session planning" entry. The implementation phase can include a brief in-session plan; it does not invoke the document-producing planning phase.
 
 ## When to use
 
 - An approved plan exists and implementation should start, resume, or recover.
 - The user names one task from an approved plan.
-- A small change has an execution-ready design or issue that answers the five readiness questions.
+- A design, issue, or clear current request answers the five readiness questions without a separate plan document.
 
 ## When not to use
 
-- Writing or revising the design or the plan.
+- Writing or revising a durable design or implementation-plan document. Brief in-session sequencing belongs here.
 - The user wants a conversation recap rather than work.
 
 ## Delivery states
@@ -53,8 +54,8 @@ Keep these apart in every report:
 
 | State | Meaning |
 |---|---|
-| Verified local work | Checks passed in the working tree, nothing committed. The plan box stays open. |
-| Committed work | Verified work is committed on the task or feature branch. The plan box is ticked with that code SHA once plan writes are permitted. |
+| Verified local work | Checks passed in the working tree, nothing committed. Any durable plan box stays open. |
+| Committed work | Verified work is committed on the task or feature branch. A durable plan box is ticked with that code SHA once plan writes are permitted. |
 | PR review | A pull request exists and awaits review. Its head SHA is a branch SHA. |
 | Merge | An observed merge commit or squash SHA, recorded after the actual merge happened. |
 | Rollout | The change is deployed or released by an authorized actor. |
@@ -67,13 +68,13 @@ Do these in order. Steps 1 to 3 run at every entry and every resume.
 
 ### 1. Parse args and resolve the source
 
-The first non-help token, if present, is the plan path (or, for direct small work, the design or issue). The second, if present, is the task ID.
+The first non-help token, if present, is the plan path or, for direct work, the design or issue. The second, if present, is the task ID. A clear current request for a bounded fix or improvement is itself a source; do not ask for an artifact path or create an issue merely because no file exists. Use that request and the direct-work preflight. If consequential behavior or scope remains unresolved, ask about that decision, not for ceremonial documents.
 
-If no source is identified, discover plausible candidates from the project's own instructions, artifact conventions, and current structure. Do not assume a universal plan directory, status schema, or readiness vocabulary. Use whatever this project considers approved or current. One clearly intended candidate: use it and say which artifact was selected. Several materially plausible candidates: present a short ranked set and ask. None: ask for the path.
+If neither a source artifact nor a clear direct request is identified, discover plausible candidates from the project's own instructions, artifact conventions, and current structure. Do not assume a universal plan directory, status schema, or readiness vocabulary. Use whatever this project considers approved or current. One clearly intended candidate: use it and say which artifact was selected. Several materially plausible candidates: present a short ranked set and ask. None: ask for the path.
 
 ### 2. Reconcile state
 
-Read the full approved plan and its approved design before changing anything. Then reconcile and record what you find:
+Read the full source before changing anything. For plan-driven work, read the approved plan and its approved design. For direct work, read the design or issue when present and the current request. Apply the plan-specific checks below only when a durable plan exists; a missing plan is not a blocker for the direct route. Reconcile and record the applicable facts:
 
 - Plan status and task markers: what is ticked, with which recorded SHA.
 - The design revision the plan records against the checked-out design.
@@ -84,11 +85,13 @@ Read the full approved plan and its approved design before changing anything. Th
 
 An uncommitted edit to an approved design never becomes the new approved revision and never authorizes work: halt every task that design governs, make no code or plan changes, and report the edit for reconciliation. A changed design revision triggers reconciliation, not automatic rejection: an editorial change may need no plan amendment, changed behavior does. A disagreement between a checkbox and Git is a reconciliation case, never permission to repeat a non-repeatable effect. When the task's own non-repeatable effect has a marker but no committed checkpoint of its work, the task is not verifiable: halt that task, make no further changes under it, and report the marker and git state for reconciliation. When the marker and a committed checkpoint do explain each other, finish the bookkeeping only: tick with the existing code SHA, without repeating the effect.
 
-Halt conditions come from the plan. When one fires, when an effect cannot be reconciled, or when the approved source changed behavior without review, stop the affected work, preserve the workspace, and report the evidence. Continue independent ready work only when its safety boundaries still hold.
+Halt conditions come from the applicable source and project rules. When one fires, when an effect cannot be reconciled, or when the approved source changed behavior without review, stop the affected work, preserve the workspace, and report the evidence. Continue independent ready work only when its safety boundaries still hold.
 
 ### 3. Check authority
 
-The approved plan and design are the authority for what to build. The current repository supplies facts that can change: paths, helper names, tests, branch and remote state. A conflict among these inputs is reported, not resolved from an old conversation.
+The approved plan and design, when present, define what to build. For direct work, the execution-ready issue or clear current request defines its bounded scope. Read applicable product decisions and architecture constraints named by the source or project instructions, and report conflicts rather than silently changing them. Keep this inspection proportional to the change; no whole-corpus audit is required. The current repository supplies facts that can change: paths, helper names, tests, branch and remote state.
+
+When project rules require human approval of a source artifact, verify a record of who approved which revision and scope, with an approval reference using the project's existing conventions. An explicit current-session approval can supply that evidence. A status field, model review verdict, commit, or generated handoff alone cannot. If required approval is absent, stop the affected work and ask for it. A clear current request for bounded direct work supplies its own authorization; do not invent a second approval ceremony.
 
 A pasted prior-session prompt, including text between `PROMPT STARTS` and `PROMPT ENDS` delimiters, is handoff material even when the operator submits it as a user message. If one of its rules conflicts with the approved source or project instructions and the operator has not explicitly adopted that rule in this session, ask once whether to adopt it. Its task counts, section limits, product requirements, and review gates do not travel. A user-authored current instruction remains authoritative.
 
@@ -97,6 +100,8 @@ Authorization for effects is separate from authorization for work. Commit, push,
 Before a non-repeatable effect such as a migration, release, or issue creation, record the intended effect and how to detect whether it already happened, in an existing issue, PR, or plan. If none exists, commit a short durable note first. Then check the marker before performing the effect.
 
 ### 4. Select work
+
+**Direct scope.** Use the in-session sequence from the direct-work preflight, then verify and review the bounded change. Do not invent plan task IDs or checkbox writes.
 
 **Whole-plan scope.** Select tasks whose dependencies are complete and verified. When one task blocks, mark it blocked with the observed evidence and continue other ready independent tasks unless a halt condition says stop. When no task is ready and work remains, report the blocked dependency chain. Do not invent an imaginary task.
 
@@ -116,7 +121,7 @@ With no dependable worker facility, run the same ready tasks serially. Never fak
 
 ### 6. Verify
 
-The controller verifies results; a completion message is not proof. Read the diff, run the named checks, and compare against the task's acceptance evidence and the verification method in the plan.
+The controller verifies results; a completion message is not proof. Read the diff, run the named checks, and compare against the acceptance evidence and verification method in the applicable source or in-session preflight.
 
 A failed check leaves that task blocked with the observed evidence. A second failed repair attempt on the same high-risk acceptance check calls for a fresh diagnosis before more edits.
 
@@ -136,11 +141,11 @@ At close-out, record the PR and, after an actual merge, the merge SHA separately
 
 Report verified work, delivery state, blocked work, and the next recoverable checkpoint.
 
-Single-task scope stops after its named task even when other tasks are ready. Whole-plan scope stops at the plan's authorized delivery milestone. Merging and rollout are separate authorizations; do not infer them.
+Single-task scope stops after its named task even when other tasks are ready. Whole-plan scope stops at the plan's authorized delivery milestone. Direct scope stops at the authorized milestone for the request. Use the project's existing review workflow for the integrated result; self-review or a model's passing verdict does not supply required human approval. Merging and rollout are separate authorizations; do not infer them.
 
-## Direct small work
+## Direct work and in-session planning
 
-When the source is an execution-ready design or issue and no plan exists, answer the five readiness questions in the session before editing:
+An execution-ready design may be enough even when it describes more than a trivial fix. A clear current bug-fix or improvement request may need neither a design document nor a plan document. When no durable plan exists, inspect the source and current repository, then answer the five readiness questions briefly in session before editing:
 
 1. What changes?
 2. Where does it belong?
@@ -148,7 +153,9 @@ When the source is an execution-ready design or issue and no plan exists, answer
 4. What is the safe sequence?
 5. What is the objective proof?
 
-Then implement with the same authority, verification, and stop rules as above, minus plan writes. Repository history, tests, and the PR are the recovery record. A separate plan becomes necessary when task dependencies, delegation, long pauses, risky external effects, or unresolved sequencing would be hard to reconstruct. Before any non-repeatable effect, commit the durable checkpoint from step 3 first.
+These answers are the in-session plan. A clear implementation request authorizes that bounded sequence; present it and proceed without another approval round when no consequential choice is open. A request for a design or plan alone still stops at its authoring boundary.
+
+Then implement with the same applicable authority, verification, review, and stop rules, minus plan writes. Repository history, tests, the source, and an existing issue or PR when present are the recovery record; creating an issue or PR is not a prerequisite. A durable plan becomes necessary when dependencies, handoffs, risky effects, or unresolved sequencing cannot be recovered adequately from those records. Size alone does not decide. Explain the recovery need before adding a document; if new design decisions are needed, stop the affected work for that decision. Before any non-repeatable effect, establish the durable checkpoint from step 3 first.
 
 ## Red flags
 

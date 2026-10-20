@@ -83,14 +83,15 @@ Every Markdown document inside a working-memory tree starts at byte 0 with a YAM
 
 ### SDLC phase checkpoints
 
-Brainstorm, design, plan, and implementation are distinct phases with explicit stops between them. Do not auto-advance.
+Choose phases according to uncertainty and recovery needs. Brainstorming, optional discovery, design, durable planning, implementation, and review can be combined without creating a document for every phase. Each selected authoring phase stops for its required review. Do not auto-advance.
 
-1. **Brainstorm:** Explore and challenge ideas. Ask whether to save a brainstorm doc and proceed to design. Stop.
-2. **Design:** Write the complete design document in one pass. Stop and ask for review, then commit and push.
-3. **Plan:** Write implementation plans on request. Stop and ask for review before implementing.
-4. **Implementation:** Execute against an approved plan.
+1. **Brainstorm:** Explore and challenge ideas. Present settled points and open questions. Follow project rules for saving, then stop for review.
+2. **Design:** Write the complete design document when one is needed. Stop for human review before approval or the next phase, then follow authorized Git handling.
+3. **Plan:** Write a durable implementation plan when requested or needed for dependencies, handoffs, or recovery. Stop for review before implementing.
+4. **Implementation:** Work from the approved plan or design, an execution-ready issue, or a clear current request for a bounded bug fix or improvement. Without a plan document, inspect current state and state the scope, invariants, sequence, and proof in session before editing. Do not require a design, plan, or issue solely to authorize clear direct work.
+5. **Review:** Use the project's existing review tools at the required checkpoints and for the integrated result. Model review and self-review do not grant human approval.
 
-Each phase stands alone for fresh sessions. Commit and push artifacts after each phase. Raise genuine forks instead of deciding silently.
+Keep applicable product decisions and architecture constraints visible in every selected phase. A human approval record identifies the source revision, scope, approver, and approval reference using existing project conventions; agent-written status alone is not approval. A clear direct request authorizes its bounded work without a second approval ritual. Each phase can start in a fresh session from its source and current repository. Persist artifacts and recovery context when required by the project or the work, and use authorized Git handling. Raise genuine forks instead of deciding silently.
 
 ### Plan granularity and review cadence
 

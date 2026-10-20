@@ -9,7 +9,6 @@ None at the moment.
 ## Next actions
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
-- **Phase skills for the earlier workflow.** Add `/start-brainstorm` and `/start-design` after the plan and implementation handoff trials, so each phase has an explicit entry point.
 - **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
 
 ## Future considerations
@@ -29,6 +28,8 @@ None at the moment.
 None at the moment.
 
 ## Recently shipped
+
+- **Flexible lifecycle skills (2026-10-20).** Add `/start-brainstorm`, `/start-design`, and the shared design quality contract. Permit bounded direct fixes and design-led implementation with in-session planning, preserve applicable product and architecture decisions, and distinguish human approval from model review.
 
 - **Consistent SDLC artifacts, first increment (2026-10-03).** [PR 6](https://github.com/carlosboeing/agentic-toolkit/pull/6) delivers the shared plan quality contract, `/start-planning` discovery and advisory checker, `/start-implementation` controller, and corrected progress and worktree guidance.
 

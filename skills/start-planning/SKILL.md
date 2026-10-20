@@ -96,7 +96,7 @@ Do not copy another repository's status vocabulary, plan folder, or roadmap rule
 
 The resolved file must exist and be readable. If not, stop and name the path.
 
-Then follow **this project's** readiness rules, if it has them. If the project says not to plan a draft, stop. If it marks a design superseded, stop and point at the replacement.
+Then follow **this project's** readiness rules, if it has them. When they require human approval, verify an approval record identifying the reviewed revision, scope, approver, and approval reference using existing project conventions. Explicit approval of the identified source in the current session counts. Agent-written status, self-review, a model review, or a commit alone does not. If required approval cannot be established, ask for that approval before planning; do not infer it from a generic "continue". If the project says not to plan a draft, stop. If it marks a design superseded, stop and point at the replacement.
 
 Those examples are how to follow a local rule. They are not a universal schema. A file with no status field is not unreadiness.
 
@@ -133,6 +133,7 @@ This skill only adds:
 
 - The plan contract resolved in step 2 is the output's quality bar. The planner's method still decides the prose.
 - Argue from the named design, not from previous-session chat.
+- Check the design against applicable product decisions and architecture constraints named by it or project instructions. Report an omitted or conflicting consequential decision for reconciliation before planning that part. Inspect relevant sources only.
 - Reconcile with current code. Work that already satisfies a requirement is verified, not re-planned. An intended change from current behaviour is planned work, not a contradiction. Do not silently reverse a settled design decision.
 - Surface true blockers only: missing prerequisites, mutually incompatible requirements, or a clash the design does not resolve.
 - Keep scope inside the design. Do not add product behaviour the design did not specify, unless the user explicitly instructs that change in this session.
