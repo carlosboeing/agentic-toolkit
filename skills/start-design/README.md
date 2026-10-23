@@ -52,4 +52,4 @@ This adaptation uses project-controlled artifacts and a design review stop. It d
 
 ## Phase scope and autonomy
 
-Human review and a stop at the phase boundary are the default. An explicit full or partial autonomous workflow can authorize the included reviews and handoffs. Complete the requested review, preserve retained human gates, and continue only within that authority and stopping point. Record agent review and delegated readiness as such, never as personal human approval. A request for this phase alone grants no later phase. Use existing project records; no new authorization form is required.
+Defaults and autonomous runs follow [Phase boundaries](../README.md#phase-boundaries).

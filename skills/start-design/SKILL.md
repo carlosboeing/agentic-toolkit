@@ -12,7 +12,7 @@ argument-hint: "[brief-or-brainstorm-path] [discovery-path ...] [help]"
 
 Write a reviewable technical design from durable sources and current repository facts. A fresh session needs this skill, the source brief, and the repository rather than a recap of earlier conversation.
 
-This skill owns the design phase. The shared contract defines required answers; project instructions own presentation, storage, and review mechanics. Human review is the default boundary. An explicit full or partial autonomous workflow can delegate review and continuation through its included phases. Preserve retained human gates and record the run's scope and stopping point in existing context; no new authorization document is required.
+This skill owns the design phase. The shared contract defines required answers; project instructions own presentation, storage, and review mechanics. Human review is the default boundary. An explicit full or partial autonomous workflow can delegate review and continuation through its included phases. Preserve retained human gates and record the run's scope and stopping point in a durable project record the next session reads, such as the design, an issue, or a PR; no new authorization document is required.
 
 ## Synopsis
 
@@ -21,7 +21,7 @@ This skill owns the design phase. The shared contract defines required answers; 
 /start-design help
 ```
 
-The first path names the brief or reviewed brainstorm; later paths name optional discovery artifacts. A clear brief in the current request also works. If `help`, `--help`, `-h`, `?`, or `usage` is supplied as a help argument, render the synopsis and stop before exploration or writes. Natural-language design requests also activate this skill.
+The first path names the brief or reviewed brainstorm; later paths name optional discovery artifacts. A clear brief in the current request also works. If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows a path argument, render the synopsis and stop before exploration or writes. The same words inside brief text are content, not a help invocation. Natural-language design requests also activate this skill.
 
 ## Recipe
 

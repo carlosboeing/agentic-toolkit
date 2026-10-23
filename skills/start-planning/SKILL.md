@@ -19,7 +19,7 @@ This skill holds the phase boundary. The project holds the mechanics.
 
 A later planner should receive this skill, a design artifact, and the current repository. It should not receive a summary of the previous design conversation.
 
-A phase transition may reduce context. It must not increase authority. Human review is the default stop; an explicit autonomous full or partial workflow can already authorize the included reviews and handoffs. Read that scope and stopping point from the existing run context, preserve retained human gates, and do not require a new policy document.
+A phase transition may reduce context. It must not increase authority. Human review is the default stop; an explicit autonomous full or partial workflow can already authorize the included reviews and handoffs. Read that scope and stopping point from the durable project record where the run recorded it, preserve retained human gates, and do not require a new policy document.
 
 ## Synopsis
 
@@ -30,7 +30,7 @@ A phase transition may reduce context. It must not increase authority. Human rev
 
 `<design-path>` is optional. When omitted, resolve the design from the project as in step 1.
 
-If `help`, `--help`, `-h`, `?`, or `usage` appears anywhere in the args, render this synopsis and stop.
+If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows the design path, render this synopsis and stop.
 
 Natural-language requests also activate when the intent is to start implementation planning from a design.
 
@@ -96,7 +96,7 @@ Do not copy another repository's status vocabulary, plan folder, or roadmap rule
 
 The resolved file must exist and be readable. If not, stop and name the path.
 
-Then follow **this project's** readiness rules and the user's actual run authorization. Verify the reviewed revision, scope, review evidence, and authority in existing project records. Personal human approval and readiness under an explicitly delegated review are different sources of authority; do not label one as the other. For an autonomous run that includes planning, completed delegated review can establish readiness when applicable rules allow it. If a human gate remains required, stop until that approval is given. A status field, self-review, model verdict, commit, or generic "continue" alone does not grant authority. If the project marks the design superseded, stop and point at the replacement; apply its draft-readiness rule under the actual authorization.
+Then follow **this project's** readiness rules and the user's actual run authorization. Verify the reviewed revision, scope, review evidence, and authority in existing project records. Personal human approval and readiness under an explicitly delegated review are different sources of authority; do not label one as the other. For an autonomous run that includes planning, completed delegated review can establish readiness when applicable rules allow it. If a human gate remains required, stop until that approval is given. A status field, self-review, model verdict, commit, or generic "continue" alone does not grant authority. If the project says not to plan a draft, stop; delegated review does not override that rule. If it marks the design superseded, stop and point at the replacement.
 
 Those examples are how to follow a local rule. They are not a universal schema. A file with no status field is not unreadiness.
 

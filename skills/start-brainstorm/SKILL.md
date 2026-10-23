@@ -12,7 +12,7 @@ argument-hint: "[idea or brainstorm-path] [help]"
 
 Explore the problem, challenge assumptions, and compare options. Present a brainstorm for review, with settled points and open questions a later designer can read.
 
-This skill owns the brainstorm phase. Project instructions own artifact location, metadata, and review mechanics. Human review is the default boundary. An explicit full or partial autonomous workflow can authorize review and continuation through its included phases, subject to any retained human gate. Record that scope and stopping point in existing run/task context; a phase-only request grants no later phase. This is an authorized handoff to the next phase, not permission to skip its work.
+This skill owns the brainstorm phase. Project instructions own artifact location, metadata, and review mechanics. Human review is the default boundary. An explicit full or partial autonomous workflow can authorize review and continuation through its included phases, subject to any retained human gate. Record that scope and stopping point in a durable project record the next session reads, such as the brainstorm, an issue, or a PR; a phase-only request grants no later phase. This is an authorized handoff to the next phase, not permission to skip its work.
 
 ## Synopsis
 
@@ -21,7 +21,7 @@ This skill owns the brainstorm phase. Project instructions own artifact location
 /start-brainstorm help
 ```
 
-If `help`, `--help`, `-h`, `?`, or `usage` is supplied as a help argument, render the synopsis and stop before exploration or writes. Ordinary question marks in an idea are not help arguments. Natural-language brainstorming requests also activate this skill.
+If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows a path argument, render the synopsis and stop before exploration or writes. The same words inside idea text are content, not a help invocation. Natural-language brainstorming requests also activate this skill.
 
 ## Recipe
 
