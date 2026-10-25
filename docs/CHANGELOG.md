@@ -2,6 +2,16 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-21: flexible lifecycle skills
+
+- **Skills:** add `/start-brainstorm` and `/start-design` as self-contained entry points. Brainstorming presents options, settled points, and open questions for review; design reads durable sources and current architecture, writes a complete draft, and reaches the applicable review checkpoint.
+- **Contract:** package a shared design quality contract beside `/start-design`, with project presentation overrides, proportional research, acceptance methods, visible blockers, and compact and substantial examples.
+- **Documentation:** document the four lifecycle entry points and review checkpoints and attribute adapted Matt Pocock techniques with MIT notices carried in each new skill directory. No upstream skill installation or chain call is required.
+- **Flexible entry:** write a document only when it records a decision worth keeping, needs review across people or sessions, or supports large, risky or complex work. Bounded work gets a short design in chat and an in-session plan. The agent states its route in one line, asks when unsure, and follows a route the user picks after one stated risk.
+- **Autonomy:** retain human review gates by default while allowing explicitly authorized full or partial autonomous workflows, with their included reviews, retained human gates, and stopping points. Record the run's authorization in a durable project record a fresh session can read. Commit drafts, and record review in `status` and `reviewed_by` with the accountable human's GitHub username, marking delegated agent review as such.
+- **Decision context and approval:** identify applicable product and architecture decisions, account for their treatment in designs, and establish the actual authority for the reviewed revision. Distinguish personal human approval from readiness under explicitly delegated review.
+- **Packaging:** verify both skill entry points, the installed design contract, license notices, and OpenCode command wrappers in the disposable sync suite.
+
 ## 2026-10-03: consistent SDLC artifacts, first increment
 
 - **Delivery:** [PR 6](https://github.com/carlosboeing/agentic-toolkit/pull/6) integrates the shared plan quality contract, advisory plan checker, `/start-implementation` controller, and corrected progress and worktree guidance described in the September 24 entries.
