@@ -50,6 +50,14 @@ The generated `copydesk:start` block in `instructions/CLAUDE.md` and `scripts/gi
 
 The upstream MIT license, copyright 2026 Matt Pocock, is retained in [start-brainstorm/LICENSE](skills/start-brainstorm/LICENSE) and [start-design/LICENSE](skills/start-design/LICENSE), so each installed directory carries its notice. [Upstream license](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/LICENSE).
 
+## Matt Pocock skills: tdd, research, handoff, diagnosing-bugs
+
+`skills/tdd/` and `skills/research/` are copies of the upstream skills from [mattpocock/skills at 5beb35b](https://github.com/mattpocock/skills/tree/5beb35b040e3de97e54fa9e386d7e42d15c295c2), checked 2026-10-25. `research` is unchanged. `tdd` has two edits that remove links to skills this toolkit does not ship; its README lists them. `skills/handoff/` adapts the upstream `handoff` skill: it saves to the project's working-memory notes location instead of a temporary directory. `skills/start-debugging/` adapts techniques from the upstream `diagnosing-bugs` skill. Each directory carries the upstream MIT license, copyright 2026 Matt Pocock. [Upstream license](https://github.com/mattpocock/skills/blob/5beb35b040e3de97e54fa9e386d7e42d15c295c2/LICENSE).
+
+## Superpowers: receiving-code-review, systematic-debugging, subagent prompts
+
+`skills/receiving-code-review/` is an unchanged copy of the upstream skill from [obra/superpowers at 2ce8aa1](https://github.com/obra/superpowers/tree/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b), checked 2026-10-25. `skills/start-debugging/` adapts rules from the upstream `systematic-debugging` skill. The prompt references in `skills/start-implementation/references/` are rewritten from the upstream `subagent-driven-development` prompt templates. Each of these directories carries the upstream MIT license, copyright 2025 Jesse Vincent. [Upstream license](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/LICENSE).
+
 ## CC BY 4.0 license text
 
 The following is the full license text retained by the upstream Contributor Covenant repository before its version 3 website redesign.
