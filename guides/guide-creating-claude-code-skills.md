@@ -394,6 +394,5 @@ That's a workable skill in well under 100 lines. Most useful skills are this siz
 - **Agent Skills standard** — `https://agentskills.io`. Skills follow this open standard, so the patterns travel to other AI tools.
 - **The `skill-creator` bundled skill** — invoke `/skill-creator` in Claude Code for a structured create-test-iterate workflow with eval scaffolding.
 - **`/learn`** — the working example this guide drew from. See `skills/learn/SKILL.md` and `skills/learn/README.md` in this repo for the full skill and its design notes.
-- **`superpowers:writing-skills`** — if you have the superpowers plugin installed, this skill captures additional discipline around skill design. Shares some DNA with this guide; emphasises eval-driven iteration more.
 
 Across all of these, one habit matters most: write the reason for each rule into the skill as you go. When you return to the skill months later, the reasons tell you which rules still apply.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Install, upgrade, and report Superpowers across every harness in the rotation.
+# Install, upgrade, remove, and report Superpowers across every harness in the rotation.
 #
 # Replaces superpowers-relink.sh. That script maintained symlinks from a canonical
 # checkout into each harness's private cache, and documented in its own header that
@@ -15,6 +15,7 @@
 #   install-superpowers.sh              report the resolved version per harness
 #   install-superpowers.sh status       same as above
 #   install-superpowers.sh install      install or upgrade where a CLI exists
+#   install-superpowers.sh uninstall    remove it where a CLI exists; print the manual steps
 #
 # Harnesses without a plugin CLI print the exact manual step rather than being skipped.
 
@@ -413,10 +414,93 @@ install_all() {
   return "$failed"
 }
 
+# The toolkit's own skills replace Superpowers, so this removes it. `install` stays as the
+# way back. Each harness runs even when an earlier one failed, and a harness is reported
+# as removed only when its own command succeeded or nothing was installed there.
+uninstall_claude() {
+  command -v claude >/dev/null 2>&1 || { echo "  claude: SKIP — CLI not in PATH"; return; }
+  if ! grep -q "\"$CLAUDE_PLUGIN\"[[:space:]]*:" \
+      "$HOME/.claude/plugins/installed_plugins.json" 2>/dev/null; then
+    echo "  claude: not installed"
+    return 0
+  fi
+  claude plugin uninstall "$CLAUDE_PLUGIN" >/dev/null 2>&1 \
+    || { echo "  claude: uninstall failed — run 'claude plugin uninstall $CLAUDE_PLUGIN' to see why"; return 1; }
+  echo "  claude: removed $CLAUDE_PLUGIN (Grok follows, because it reads this plugin tree)"
+}
+
+uninstall_codex() {
+  command -v codex >/dev/null 2>&1 || { echo "  codex: SKIP — CLI not in PATH"; return; }
+  if ! probe "$HOME/.codex/plugins/cache/superpowers-dev/superpowers/*/package.json" >/dev/null; then
+    echo "  codex: not installed"
+    return 0
+  fi
+  codex plugin remove superpowers@superpowers-dev >/dev/null 2>&1 \
+    || { echo "  codex: remove failed — run 'codex plugin remove superpowers@superpowers-dev' to see why"; return 1; }
+  echo "  codex: removed superpowers@superpowers-dev"
+}
+
+uninstall_antigravity() {
+  local failed=0
+  if command -v agy >/dev/null 2>&1; then
+    if [ -e "$HOME/.gemini/config/plugins/superpowers" ]; then
+      if agy plugin uninstall superpowers >/dev/null 2>&1; then
+        echo "  antigravity: removed superpowers"
+      else
+        echo "  antigravity: uninstall failed — run 'agy plugin uninstall superpowers' to see why"
+        failed=1
+      fi
+    else
+      echo "  antigravity: not installed"
+    fi
+  else
+    echo "  antigravity: SKIP — agy not in PATH"
+  fi
+  # A stale Gemini CLI import is a second copy that agy does not manage.
+  if [ -e "$HOME/.gemini/extensions/superpowers" ]; then
+    if command -v gemini >/dev/null 2>&1 && gemini extensions uninstall superpowers >/dev/null 2>&1; then
+      echo "  antigravity: removed the stale Gemini CLI import"
+    else
+      echo "  antigravity: remove the stale import at ~/.gemini/extensions/superpowers with 'gemini extensions uninstall superpowers'"
+      failed=1
+    fi
+  fi
+  return "$failed"
+}
+
+# Like install_opencode, this reports rather than rewriting a config file the user maintains.
+uninstall_opencode() {
+  command -v opencode >/dev/null 2>&1 || { echo "  opencode: SKIP — CLI not in PATH"; return; }
+  local config="$HOME/.config/opencode/opencode.json"
+  if [ -f "$config" ] && grep -q "superpowers" "$config"; then
+    echo "  opencode: remove the Superpowers entry from the plugin array in $config — there is no plugin CLI to do it"
+    return 1
+  fi
+  echo "  opencode: not declared"
+}
+
+uninstall_all() {
+  local failed=0
+  echo "Removing where a CLI exists"
+  uninstall_claude      || failed=1
+  uninstall_codex       || failed=1
+  uninstall_antigravity || failed=1
+  uninstall_opencode    || failed=1
+  echo
+  echo "Manual steps"
+  echo "  cursor: no plugin CLI. Remove Superpowers from the Cursor plugin UI."
+  echo "  kimi: TUI only. Run '/plugins' inside kimi and remove it, if installed."
+  echo
+  status
+  [ "$failed" -eq 0 ] || echo "One or more harnesses still have Superpowers. See the lines above." >&2
+  return "$failed"
+}
+
 # install exits nonzero when any harness failed, so CI and wrapper scripts can tell a
 # clean install from a partial one. The exit is explicit rather than left to `set -e`.
 case "${1:-status}" in
   status) status ;;
   install) install_all || exit 1 ;;
-  *) echo "usage: $(basename "$0") [status|install]" >&2; exit 2 ;;
+  uninstall) uninstall_all || exit 1 ;;
+  *) echo "usage: $(basename "$0") [status|install|uninstall]" >&2; exit 2 ;;
 esac

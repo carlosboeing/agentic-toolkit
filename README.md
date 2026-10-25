@@ -130,7 +130,7 @@ These directories mirror the harness's own layout under `~/.claude/`, so each it
 | [`instructions/`](instructions/) | The global instruction file shared by every harness | `~/.claude/CLAUDE.md`, as a link |
 | [`output-styles/`](output-styles/) | Output styles. Empty for now, because Plain English ships with CopyDesk. | `~/.claude/output-styles/<name>.md` |
 | [`rules/`](rules/) | Rule files a harness can load on every session. Not installed by default. | `~/.claude/rules/` |
-| [`plugins/`](plugins/) | An installer for the Superpowers plugin across harnesses | Each harness's own plugin system |
+| [`plugins/`](plugins/) | A script that reports or removes the Superpowers plugin across harnesses, which this toolkit's skills replace | Each harness's own plugin system |
 
 ### Read, copy or install into a project
 

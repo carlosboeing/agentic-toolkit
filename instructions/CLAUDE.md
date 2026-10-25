@@ -17,7 +17,6 @@ Instructions apply across Claude Code, Codex, Cursor, Gemini CLI, Antigravity, K
 - **Hook equivalents.** Rely on configured hooks and verify results. When absent, follow instructions manually.
 - **Tool equivalents.** Use harness-exposed tool equivalents while preserving intent.
 - **Fallbacks.** State fallbacks briefly when an instruction is unsupported, then proceed with the closest safe behavior.
-- **Superpowers bootstrap.** Session-start, resume, and compaction hooks must inject `using-superpowers`. Verify actual context before substantive work. If missing, manually activate the skill before responding.
 
 ## Pull-request reviews
 
@@ -60,7 +59,7 @@ Ask only for these: an action you cannot undo (delete, publish, merge, money, cr
 
 **Repair before replying.** A failed edit part-way through a sequence stops the line. Fix the half-applied state before you write the reply, never after it.
 
-**Before the first command that changes branch state:** run `git fetch`, run `git worktree list`, and confirm `.worktrees/` is git-ignored. More than one worktree means another session is live, so create a worktree rather than asking. The `git-worktrees` skill states the path convention `<repo>/.worktrees/<harness>/<branch>`, the harness segment names, and the two corrections to `superpowers:using-git-worktrees`.
+**Before the first command that changes branch state:** run `git fetch`, run `git worktree list`, and confirm `.worktrees/` is git-ignored. More than one worktree means another session is live, so create a worktree rather than asking. The `git-worktrees` skill states the path convention `<repo>/.worktrees/<harness>/<branch>`, the harness segment names, and how to create one.
 
 **Plan files record progress as it happens.** A commit cannot contain its own SHA. After a verified, authorized code commit, a following plan-repository commit ticks the task and records that code SHA: two repositories in a split setup, two commits in one repository. One controller owns plan writes, and only durable plans get this second write. Record the PR and merge SHA separately after an actual merge; never present a branch SHA as the merge SHA. A step ticked with no SHA, or unticked after its code shipped, shows a session that died mid-step.
 
@@ -99,7 +98,7 @@ Keep applicable product decisions and architecture constraints visible in every 
 
 Scale gate and task counts to artifact blast radius rather than skill defaults.
 
-- Prose and documentation plans default to ~3 tasks under `executing-plans` with one review gate on the integrated diff.
+- Prose and documentation plans default to ~3 tasks under `start-implementation` with one review gate on the integrated diff.
 - Escalate to more tasks or per-task review only when blast radius warrants it.
 - **Mark plan checkboxes as you execute.** Update `- [ ]` to `- [x]` in the durable plan file as each task finishes.
 

@@ -51,7 +51,7 @@ The hub is not tracked in Git. Reinstall third-party skills from their upstream 
 ### Linking rules
 
 - **Do link** instruction files, and whole harness skill directories that point at the hub.
-- **Do not link** plugin directories from a harness's cache, because their paths contain hashes that change. Do not link MCP configuration files, Superpowers twice, or anything from the hub out to another location. Links out of the hub bring back the drift the hub exists to prevent.
+- **Do not link** plugin directories from a harness's cache, because their paths contain hashes that change. Do not link MCP configuration files or anything from the hub out to another location. Links out of the hub bring back the drift the hub exists to prevent.
 - **Installers that copy a skill into every harness** only need the hub copy now, since every harness reads the hub.
 - **Antigravity's slash menu.** If skills do not appear under `/skills` in the Antigravity command-line tool, also link `~/.gemini/antigravity-cli/skills/`.
 
@@ -92,7 +92,6 @@ Kimi reads the shared `~/.agents/` directory natively, so the hub and the shared
 | MCP servers | Inherits servers configured for Claude Code. Declare others, such as Playwright with `--isolated` or Context7 with `Authorization = Bearer ${CONTEXT7_API_KEY}`, in `~/.grok/config.toml`. |
 | Hooks | Grok does not load Claude hooks. Register your own `PreToolUse` and `Stop` hooks under `~/.grok/hooks/`. See [Grok Build TUI hooks](../hooks/README.md#grok-build-tui). |
 | Plugins | Grok discovers Claude plugins. List the ones to turn off under `[plugins].disabled`, matching Claude Code. |
-| Superpowers | Uses Claude Code's plugin copy. Do not install a second one with `grok plugin install`. |
 
 ### OpenCode
 
@@ -105,7 +104,6 @@ Kimi reads the shared `~/.agents/` directory natively, so the hub and the shared
 | Hooks | JavaScript plugin modules in `~/.config/opencode/plugins/`. On 2.x a plugin default-exports a definition with `id` and `setup`, registers hooks with `ctx.tool.hook("execute.before", ...)`, and refuses a call by throwing. On 1.x the module returns a hooks map and `tool.execute.before` refuses by throwing. `tool.execute.after` cannot block on either. One module can serve both APIs with a dual entrypoint: `id` plus `setup` for 2.x, `server()` for 1.x from 1.18.29 |
 | Mermaid validation | `scripts/sync-toolkit.sh --harness` copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `plugins/validate-mermaid.ts`. Dual-API: OpenCode 2.x and 1.x from 1.18.29 |
 | Plugins | The `plugins` array (named `plugin` on 1.x) accepts npm and Git sources. Files placed in `plugins/` load without a configuration entry. |
-| Superpowers | `"plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]`. Do not use links, which upstream no longer supports. |
 | RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts`. Checked 2026-09-23: that file is V1-format and does not load on OpenCode 2.x, which reports `Plugin must export a default definition`; porting it is an RTK-side change |
 | Providers | `disabled_providers` turns off a provider that an environment variable enabled by accident |
 | Agents and commands | `~/.config/opencode/agent/<name>.md` and `command/<name>.md`, as Markdown with frontmatter. On 2.x the canonical command directory is `commands/`, and `command/` is still discovered |
@@ -116,7 +114,7 @@ For long unattended coding runs, process skills and automated checks matter most
 
 | Priority | Capability | Antigravity setup |
 |---|---|---|
-| 1 | Superpowers | Bundled at `~/.gemini/config/plugins/superpowers`. For a fresh install: `agy plugin install https://github.com/obra/superpowers` |
+| 1 | This toolkit's lifecycle skills | Already available through the hub link |
 | 2 | UI design skills (ui-ux-pro-max) | `npm i -g uipro-cli`, then `uipro init --ai antigravity` in the repository |
 | 3 | Context7 documentation lookup | MCP server in `mcp_config.json`, or `npx ctx7 setup --mcp --antigravity` |
 | 3 | claude-mem | MCP server in `mcp_config.json`, or `npx claude-mem install` |
@@ -127,14 +125,14 @@ For long unattended coding runs, process skills and automated checks matter most
 
 | Claude Code plugin | In Antigravity |
 |---|---|
-| superpowers | Official plugin, bundled. Fresh install: `agy plugin install https://github.com/obra/superpowers` |
+| superpowers | Not used; this toolkit's skills replace it. Remove it with `plugins/install-superpowers.sh uninstall`. |
 | ui-ux-pro-max | Official, through `uipro` |
 | context7 | Official MCP server: `npx ctx7 setup --mcp --antigravity` |
 | claude-mem | Official MCP server: `npx claude-mem install` |
 | playwright | Playwright MCP (`@playwright/mcp`) and the Playwright CLI (`@playwright/test`). Run the [shared smoke procedure](guide-browser-automation-mcp-vs-cli.md#shared-smoke-procedure). |
 | superpowers-chrome | Use chrome-devtools-plugin instead |
 | frontend-design | Import it with `agy plugin import claude`, or use the bundled copy in `~/.gemini/config/plugins/frontend-design` |
-| code-review, pr-review-toolkit, feature-dev | Use Superpowers' review, brainstorming and subagent skills instead |
+| code-review, pr-review-toolkit, feature-dev | Use this toolkit's `start-*` skills and `receiving-code-review` instead |
 | Skills from this repository | Already available through the hub link |
 | elements-of-style | Not available. It comes from a Claude Code plugin, not the hub. |
 | continual-learning (Cursor) | Not available. It depends on Cursor's hooks. |

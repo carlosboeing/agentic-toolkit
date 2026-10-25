@@ -26,7 +26,6 @@ What each supported AI coding harness can do, feature by feature, as recorded wh
 | Hooks that can block the agent | Yes, including after a tool runs | Not used by this toolkit | Not used by this toolkit | Before a tool runs, on stop and on prompt submit | Before a tool runs and on stop | Before a tool runs |
 | Hooks that can rewrite a tool call | Yes | Not used by this toolkit | Not used by this toolkit | No | Yes, before a tool runs | Yes, through a plugin |
 | RTK mode | Automatic hook | `rtk` prefix in instructions | `rtk` prefix in instructions | `rtk` prefix in instructions | `rtk` prefix in instructions | Automatic plugin |
-| Superpowers install | Plugin marketplace | Plugin marketplace | Bundled, or `agy plugin install` | `/plugins` marketplace | Reads Claude Code's plugins | `plugin` entry in `opencode.json` |
 | Headless resume | `claude --resume <id> --print` | `codex exec resume <id>` | `agy --conversation <id> --print` | `kimi --session <id> -p` | Not integrated | `opencode run --session <id>` |
 
 ## Claude Code
@@ -39,14 +38,14 @@ Reads `AGENTS.md` for instructions and `~/.agents/skills` for skills. `~/.codex/
 
 ## Antigravity
 
-Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/.gemini/config/skills`. The command-line tool also documents `~/.gemini/antigravity-cli/skills`, which the synchronizer does not link. Antigravity stops reading instructions after 24,023 characters. Some plugins, including Superpowers, come bundled. Models are chosen by hand with `/model`. See the [Antigravity model and quota guide](../guides/guide-agy-model-and-quota-selection.md).
+Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/.gemini/config/skills`. The command-line tool also documents `~/.gemini/antigravity-cli/skills`, which the synchronizer does not link. Antigravity stops reading instructions after 24,023 characters. Some plugins come bundled. Models are chosen by hand with `/model`. See the [Antigravity model and quota guide](../guides/guide-agy-model-and-quota-selection.md).
 
 ## Kimi Code (recorded 2026-07-28)
 
 - **Instructions and skills without extra setup.** Reads `~/.agents/AGENTS.md`, the project's `AGENTS.md` and `~/.agents/skills` natively.
 - **Hooks can block but not rewrite.** `PreToolUse`, `Stop` and `UserPromptSubmit` can block. `PostToolUse` only observes, and no hook can change a tool's input, so RTK runs through instructions.
 - **Headless resume.** `kimi --session session_<id> -p` approves actions automatically. Kimi has no registry of running sessions, and resuming a session that is open in the terminal sends the prompt into that live session, so `schedule-resume` warns about it.
-- **Plugins.** Superpowers installs from Kimi's plugin marketplace and updates through `/plugins`.
+- **Plugins.** Install from Kimi's plugin marketplace and update through `/plugins`.
 
 ## Grok Build TUI (recorded 2026-08-17)
 
@@ -54,7 +53,6 @@ Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/
 - **Its own hooks, not Claude's.** `PreToolUse` can deny and rewrite, and `Stop` can block. Loading Claude hook scripts is turned off. `PostToolUse` results never reach the model. See [Grok Build TUI hooks](../hooks/README.md#grok-build-tui).
 - **RTK through instructions.** There is no `rtk init` option for Grok.
 - **MCP servers.** Inherits servers configured for Claude Code, and declares others in `~/.grok/config.toml`.
-- **Superpowers.** Uses Claude Code's plugin copy. Do not install a second one.
 
 ## OpenCode (recorded 2026-09-23, versions 2.0.14 and 1.18.32)
 
@@ -62,7 +60,7 @@ Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/
 - **Skills and the `/` menu.** Version 1.18.x left skills out of its slash picker and offered a `/skills` browser instead (checked 1.18.21 on 2026-08-22), so the synchronizer writes one command file per skill into `~/.config/opencode/command/`, giving each skill a `/name` entry. OpenCode 2.x documents a `slash` frontmatter field that controls a skill's presence in interactive command catalogs. Both versions discover `command/`, which 2.x calls a legacy alias for `commands/`.
 - **Hooks are JavaScript plugins with two API shapes.** On 2.x a plugin default-exports a definition with `id` and `setup`, registers hooks with `ctx.tool.hook("execute.before", ...)`, and refuses a call by throwing. On 1.x the entrypoint returns a hooks map keyed `tool.execute.before`, and object entrypoints are supported from 1.18.29. `tool.execute.after` cannot block on either. One module serves both with a dual entrypoint: `id` plus `setup` for 2.x, `server()` for 1.x.
 - **RTK** installs its plugin with `rtk init -g --opencode`. Checked 2026-09-23: that plugin is V1-format and fails to load on OpenCode 2.x, which reports `Plugin must export a default definition`.
-- **Superpowers installs natively** from one `plugin` entry that points at the upstream Git repository. On 2.x the config key is `plugins`, and `plugin` is still accepted.
+- **Plugins** install from one `plugin` entry per package, npm or Git. On 2.x the config key is `plugins`, and `plugin` is still accepted.
 - **Model-dependent tool sets on 2.x.** Supported GPT models get the `patch` tool instead of `write` and `edit`, so a guard built on `write` and `edit` does not see their file writes (checked 2026-09-23).
 - **Headless resume.** `opencode run` accepts `--session`, `--continue`, `--fork`, `--dir` and `--auto`. `--fork` resumes into a copy, which avoids taking over a session that is still open.
 - **Worktrees** go outside the repository, under `~/.local/share/opencode/worktree/<project-id>/<branch>/` on 1.x. OpenCode 2.x adds a `worktree.directory` setting that moves the parent directory.
