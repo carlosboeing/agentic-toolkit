@@ -6,7 +6,7 @@ Plugin bundles and the tools that install them across harnesses. A plugin carrie
 
 | Entry | Purpose |
 |---|---|
-| [`install-superpowers.sh`](install-superpowers.sh) | Installs, upgrades and reports the version of [Superpowers](https://github.com/obra/superpowers) in every supported harness |
+| [`install-superpowers.sh`](install-superpowers.sh) | Reports, removes, installs or upgrades [Superpowers](https://github.com/obra/superpowers) in every supported harness |
 
 ## `install-superpowers.sh`
 
@@ -17,7 +17,12 @@ The script uses each harness's official install command, always pointing at the 
 ```
 ./plugins/install-superpowers.sh            # report the version per harness
 ./plugins/install-superpowers.sh install    # install or upgrade where a CLI exists
+./plugins/install-superpowers.sh uninstall  # remove it where a CLI exists
 ```
+
+### Removing Superpowers
+
+The toolkit's own skills now cover what Superpowers provided: the `start-*` lifecycle skills, `start-debugging`, `tdd`, and `receiving-code-review`. `uninstall` removes Superpowers through each harness's own command: `claude plugin uninstall`, `codex plugin remove`, and `agy plugin uninstall`, plus `gemini extensions uninstall` for a stale Gemini CLI import. Grok follows Claude Code. For OpenCode it names the config entry to delete, and for Cursor and Kimi Code it prints the manual step. It exits nonzero while any harness still has Superpowers, and ends with the status report. `install` stays as the way back.
 
 ### What each harness supports
 

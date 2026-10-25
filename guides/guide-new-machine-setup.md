@@ -24,7 +24,6 @@ How to set up the toolkit on a new macOS or Linux machine: the shared instructio
 | Local settings, such as `settings.json` | Not in Git, because they are specific to the machine | Step 3 |
 | Skills and hooks | This repository, copied into each harness by `scripts/sync-toolkit.sh` | Step 4 |
 | RTK and claude-mem | Installed separately | Step 5 |
-| Superpowers | Plugin marketplaces, driven by `plugins/install-superpowers.sh` | Step 6 |
 | OpenCode configuration | `~/.config/opencode/` | Step 7 |
 
 ```mermaid
@@ -32,7 +31,7 @@ flowchart TB
     Clone["1-2. Clone the toolkit"] --> Instructions["3. Link the global instructions"]
     Instructions --> Sync["4. Preview, then run sync-toolkit.sh"]
     Sync --> Tools["5. Install RTK and claude-mem"]
-    Tools --> Plugins["6. Install Superpowers and other tools"]
+    Tools --> Plugins["6. Set up other harnesses"]
     Plugins --> OpenCode["7. Configure OpenCode"]
     OpenCode --> Verify["Verify"]
 ```
@@ -105,7 +104,7 @@ The Headroom compression proxy is no longer used. See [ADR 0001](../docs/adrs/00
 
 ## 6. Plugins and other harnesses
 
-- **Superpowers.** Run [`plugins/install-superpowers.sh`](../plugins/install-superpowers.sh) to see the installed version in each harness, and `plugins/install-superpowers.sh install` to install or upgrade it.
+- **Superpowers.** Not used: this toolkit's skills replace it. On a machine that still has it, [`plugins/install-superpowers.sh`](../plugins/install-superpowers.sh) shows where, and `plugins/install-superpowers.sh uninstall` removes it.
 - **Kimi Code.** Install it with the official script, then run `kimi` and `/login`:
 
   ```bash
@@ -126,25 +125,19 @@ OpenCode's configuration lives in `~/.config/opencode/`. Do not make that direct
    ```
 
 2. Set `"lsp": true` in `opencode.json`. Without it, OpenCode turns off every language server. See the [OpenCode LSP documentation](https://opencode.ai/docs/lsp/), checked 2026-09-22.
-3. Add Superpowers as a plugin:
-
-   ```json
-   "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
-   ```
-
-4. Install language servers for TypeScript, Bash and YAML:
+3. Install language servers for TypeScript, Bash and YAML:
 
    ```bash
    npm install -g typescript-language-server typescript bash-language-server yaml-language-server
    ```
 
-5. Install RTK's OpenCode plugin:
+4. Install RTK's OpenCode plugin:
 
    ```bash
    rtk init -g --opencode
    ```
 
-6. Run `./scripts/sync-toolkit.sh --harness` again if you skipped OpenCode in step 4. It writes the command wrappers into `command/` and copies the Mermaid plugin to `plugins/validate-mermaid.ts`.
+5. Run `./scripts/sync-toolkit.sh --harness` again if you skipped OpenCode in step 4. It writes the command wrappers into `command/` and copies the Mermaid plugin to `plugins/validate-mermaid.ts`.
 
 ## Verify
 

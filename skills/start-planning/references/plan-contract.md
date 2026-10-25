@@ -26,6 +26,8 @@ The plan may express these answers in any headings or tables the project uses.
 
 ## Conditional detail rule
 
+A plan records decisions, not code. Its length follows the size of the design: a compact design gets a compact plan.
+
 Exact interfaces, commands, expected failures, independent verification, and mutation checks become required only when the change's failure mode warrants them. Everything else is optional detail.
 
 - For code changes, the verification method gives a runnable command, or names a concrete check and how the implementer discovers its command.

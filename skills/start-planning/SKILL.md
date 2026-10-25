@@ -13,13 +13,9 @@ argument-hint: "[design-path] [help]"
 
 Start implementation planning from a durable design artifact in a fresh session.
 
-This skill holds the phase boundary. The project holds the mechanics.
-
 **Prescribe what is invariant about the phase. Discover what is conventional about the project.**
 
-A later planner should receive this skill, a design artifact, and the current repository. It should not receive a summary of the previous design conversation.
-
-A phase transition may reduce context. It must not increase authority. Human review is the default stop; an explicit autonomous full or partial workflow can already authorize the included reviews and handoffs. Read that scope and stopping point from the durable project record where the run recorded it, preserve retained human gates, and do not require a new policy document.
+A later planner needs this skill, a design artifact, and the current repository, not a summary of the design conversation. A phase transition may reduce context; it must not increase authority. Human review is the default stop. An explicit autonomous full or partial workflow can already authorize the included reviews and handoffs: read its scope and stopping point from the durable project record where the run recorded it, and keep retained human gates.
 
 ## Synopsis
 
@@ -28,165 +24,84 @@ A phase transition may reduce context. It must not increase authority. Human rev
 /start-planning help
 ```
 
-`<design-path>` is optional. When omitted, resolve the design from the project as in step 1.
+`<design-path>` is optional; without it, resolve the design as in step 1. If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows the design path, render this synopsis and stop. Natural-language requests to plan from a design also activate this skill.
 
-If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows the design path, render this synopsis and stop.
-
-Natural-language requests also activate when the intent is to start implementation planning from a design.
-
-## When to use
-
-- A design exists, and planning should start without the previous design session.
-- The user names a design, clearly points at one, or asks to start planning without a path.
-
-## When not to use
-
-- Writing or revising the design.
-- Implementing or executing a plan.
-- The user wants a conversation recap rather than a plan.
+Not for writing or revising the design, implementing, or a conversation recap.
 
 ## Recipe
 
-Do these in order.
+### 1. Resolve the design
 
-### 1. Parse args and resolve the design
+Use the named or clearly identified design. Otherwise find candidates from the project's instructions, artifact conventions, and structure; do not assume a design directory, filename pattern, status schema, or readiness vocabulary. Rank by project-native signals first, recency second.
 
-The non-help token, if present, is the design path. If the user otherwise identifies a design artifact, use that.
-
-If no design is identified, discover plausible candidates from the project's own instructions, artifact conventions, and current structure. Do not assume a universal design directory, filename pattern, status/frontmatter schema, the word `approved`, or a particular readiness vocabulary. Use whatever this project considers ready or current for planning.
-
-Rank with project-native signals first. Recency may be a secondary signal.
-
-- **Explicit design** → use it.
-- **One clearly intended or current candidate** → use it and tell the user which artifact was selected.
-- **Multiple materially plausible candidates** → present a short ranked set and ask the user to choose. Include only enough to distinguish them (title/path, recency/date, and readiness/status where those exist).
-- **No plausible candidate** → ask for the design path.
-
-Do not guess between materially plausible designs. Do not invent a design-indexing convention for this skill.
+- One clearly intended candidate: use it and say which.
+- Several materially plausible: show a short ranked set (path, date, status) and ask.
+- None: ask for the design path.
 
 ### 2. Discover project conventions
 
-Read the project instructions the active harness already provides. Do not hard-code instruction-file names or a precedence order.
-
-From those instructions, and from artifacts they name, discover only what this phase needs:
+Read the project instructions the harness provides, and the artifacts they name, for what this phase needs:
 
 | Need | Look in |
 |---|---|
-| Planning methodology | A named planning skill; else `writing-plans` if available; else how this repo already writes plans |
-| Plan content contract | A project-named contract or template when project instructions name one; else the shared contract at `references/plan-contract.md` beside this skill's installed `SKILL.md` |
-| Where designs live | Working-memory / docs pointers; existing design files |
-| Where plans go | Explicit project/repository convention, then the selected planner's convention, then existing plan patterns |
-| What "ready to plan" means | The project's own approval, status, or review rules |
+| Planning method | A project-named planner or plan template; else the plan contract plus how this repository already writes plans |
+| Plan content contract | A project-named contract when one is named; else [references/plan-contract.md](references/plan-contract.md) beside this skill's installed `SKILL.md` |
+| Where plans go | Explicit project convention, then existing plan patterns |
+| What "ready to plan" means | The project's approval, status, or review rules |
 | Review after planning | The project's review workflow |
-| Git, tests, naming, frontmatter | Project instructions and the chosen planner. Never this skill. |
+| Git, tests, naming, frontmatter | Project instructions. Never this skill. |
 
-A generic planner default must not override an explicit project convention.
+The shared contract resolves relative to this skill's installed `SKILL.md`; never guess its path from another project's layout. A project-named contract extends the shared minimum and may replace its presentation, but cannot drop a minimum answer without an explicit, named project exception stating the recovery consequence. A missing optional pointer is not a blocker.
 
-The shared plan contract resolves relative to this skill's own installed `SKILL.md`, so every installed copy reads its own versioned contract. Never guess the path from another project's layout.
-
-A project-named contract extends the shared minimum and may replace its presentation. It cannot drop a shared minimum answer without an explicit, named project exception that states the recovery consequence. A missing optional project pointer is not a blocker: plan against the shared contract and the project's ordinary conventions.
-
-Recent plans are examples only. Read them after these sources, never as requirements.
-
-Ask only when the missing information is required to write a correct plan and cannot be resolved from project patterns or the planner. Do not invent a schema, filename pattern, frontmatter block, test command, or review ritual to fill a gap.
-
-Do not copy another repository's status vocabulary, plan folder, or roadmap rules into a project that does not use them.
+Recent plans are examples, read after these sources. Ask only when missing information is required for a correct plan and cannot be found. Do not invent a schema, filename pattern, frontmatter block, test command, or review ritual, and do not copy another repository's status vocabulary or plan folder.
 
 ### 3. Confirm the design is usable
 
-The resolved file must exist and be readable. If not, stop and name the path.
+The file must exist and be readable; if not, stop and name the path. If it is not the design to plan from, say what it is and stop.
 
-Then follow **this project's** readiness rules and the user's actual run authorization. Verify the reviewed revision, scope, review evidence, and authority in existing project records. Where the design uses frontmatter, read `status` and `reviewed_by`; the reviewed revision is the commit that set them. Personal human approval and readiness under an explicitly delegated review are different sources of authority; do not label one as the other. For an autonomous run that includes planning, completed delegated review can establish readiness when applicable rules allow it. If a human gate remains required, stop until that approval is given. A status field, self-review, model verdict, commit, or generic "continue" alone does not grant authority. If the project says not to plan a draft, stop; delegated review does not override that rule. If it marks the design superseded, stop and point at the replacement.
+Follow the project's readiness rules and the user's actual authorization. Where the design uses frontmatter, read `status` and `reviewed_by`; the reviewed revision is the commit that set them. Personal human approval and readiness under delegated review are different authorities; do not label one as the other. A retained human gate needs that human's approval. A status field, self-review, model verdict, commit, or generic "continue" alone grants nothing. If the project says not to plan a draft, stop; delegated review does not override that. If the design is superseded, stop and point at the replacement. A file with no status field is not unready.
+
+If the design cannot be planned without inventing decisions, name the holes and stop. Do not fill them from conversation.
 
 If the design is small enough for an in-session plan, say so once and recommend the implementation skill; write the plan if the user still wants one.
 
-Those examples are how to follow a local rule. They are not a universal schema. A file with no status field is not unreadiness.
-
-Universal stops, independent of schema:
-
-- The named file is not the design to plan from. Say what it is and stop.
-- The design cannot be planned without inventing missing decisions. Name the holes. Do not fill them from previous-session conversation.
-
-Do not generate a recap of the previous design conversation to make a weak design plannable.
-
 ### 4. Read and inspect
 
-Read the design in full. That file is the intended solution.
+Read the design in full; it is the intended solution. Inspect the code, tests, configuration, and other state the design materially implicates, including Git facts that affect decomposition. Keep inspection scoped.
 
-Inspect repository state **materially implicated by the design**. Use explicitly named paths where available. When the design describes components, behaviour, interfaces, or concepts without filenames, locate the relevant implementation and inspect the surrounding code, tests, configuration, generated artifacts, documentation, and other project state needed to plan correctly.
+Conversation, transcripts, and handoff prompts are not sources of requirements. Instructions the user gives in this session stay authoritative and may constrain the work; they do not silently override settled decisions unless the user says so. A pasted prior-session prompt is handoff material: if its rule conflicts with the design or project contract, ask once whether to adopt it. Its task counts, product requirements, and review gates do not travel.
 
-Keep inspection scoped to what materially affects the design. This is not permission for unrelated exploration.
+### 5. Write the plan
 
-Git facts that affect decomposition (dirty tree, current branch, files already present) are fair.
+The plan contract is the quality bar; the project's method and presentation decide the prose. A plan records decisions, not code: give exact interfaces or commands only where a failure mode needs them, and keep its length in proportion to the design.
 
-Previous-session conversation, transcripts, summaries, and handmade handoff prompts are not sources of requirements. Explicit instructions the user gives **in this planning session** remain authoritative under normal instruction precedence. They may constrain the session (for example, "plan the backend only"). They are not an excuse to reconstruct missing design decisions or to silently override settled ones, unless the user explicitly instructs that change.
+- Argue from the named design, and link it so an implementer can find it.
+- Check the design against the product and architecture decisions it or the project names; report an omitted or conflicting one before planning that part.
+- Reconcile with current code. Work already satisfying a requirement is verified, not re-planned. Do not reverse a settled decision silently.
+- Surface only true blockers: missing prerequisites, incompatible requirements, or a clash the design does not resolve.
+- Keep scope inside the design.
 
-A pasted prior-session prompt, including text between `PROMPT STARTS` and `PROMPT ENDS` delimiters, is handoff material even when the operator submits it as a user message. If one of its rules conflicts with the approved design or the project contract and the operator has not explicitly adopted that rule in this session, ask once whether to adopt it. Its task counts, section limits, product requirements, and review gates do not travel.
+Self-check:
 
-### 5. Plan with the project's methodology
-
-Activate the planner discovered in step 2.
-
-When that planner is Superpowers `writing-plans`: **REQUIRED SUB-SKILL:** use `writing-plans` for structure, task shape, and self-review. Do not paste its template into this skill.
-
-The planner and the project own plan location, filename, metadata, task format, granularity, test commands, and git behaviour. A planner's generic handoff or review defaults do not override the current workflow scope or retained gates. Plan location still follows the precedence in step 2. Later steps in this skill do not take that ownership back.
-
-This skill only adds:
-
-- The plan contract resolved in step 2 is the output's quality bar. The planner's method still decides the prose.
-- Argue from the named design, not from previous-session chat.
-- Check the design against applicable product decisions and architecture constraints named by it or project instructions. Report an omitted or conflicting consequential decision for reconciliation before planning that part. Inspect relevant sources only.
-- Reconcile with current code. Work that already satisfies a requirement is verified, not re-planned. An intended change from current behaviour is planned work, not a contradiction. Do not silently reverse a settled design decision.
-- Surface true blockers only: missing prerequisites, mutually incompatible requirements, or a clash the design does not resolve.
-- Keep scope inside the design. Do not add product behaviour the design did not specify, unless the user explicitly instructs that change in this session.
-- The plan must reference the design artifact so a later implementer can find it.
-- After the planner's own self-check, confirm each design requirement maps to planned work, is verified as already satisfied, or is explicitly outside implementation scope according to an authoritative source. The plan does not add requirements the design lacks.
-- Then run the plan contract self-check: every required answer present under the contract in force, stable task IDs with dependency IDs or `none`, a verification method or stated alternative proof per task, design-requirement coverage, the design revision recorded, and each execution-contract category answered or `none identified`.
-- Before presenting the draft, run the advisory checker beside this skill: `python3 <this skill's installed directory>/scripts/check-plan.py <plan-path>`. Its `--help` states what it checks. Fix its mechanical findings or explain them in the report; `unable to check` lines need direct source review under the run's actual review authorization. It advises only: it never blocks a push, and it is not wired to any hook.
+- Each design requirement maps to planned work, an unchanged invariant, or an authoritative exclusion. The plan adds no requirement.
+- Every contract answer is present: stable task IDs with dependency IDs or `none`, a verification method or stated alternative proof per task, the design revision, and each execution-contract category answered or `none identified`.
+- Run `python3 <this skill's installed directory>/scripts/check-plan.py <plan-path>`. Fix its mechanical findings or explain them. `unable to check` lines need direct review. The checker advises only.
 
 ### 6. Stop
 
-Write the plan using the location, metadata, and git handling from step 2 and the selected planner.
+Write the plan where step 2 says. Present the path and the plan's weakest handoff point.
 
-Complete the planning review checkpoint and stop by default.
+Follow the project's review workflow; without a delegated review, ask for human review and stop. An authorized autonomous workflow records the review evidence and hands off to the implementation skill without asking again, stopping at a retained gate or its requested endpoint. A planning-only request does not authorize implementation, and implementation always runs under its own phase skill.
 
-- Present the path and the plan's weakest handoff point.
-- Follow the project's review workflow. Without a delegated review, ask for human review and stop.
-- An explicit autonomous workflow may already authorize plan review and implementation. After the requested review, record its evidence and the authorization, then hand off to the project's implementation skill without asking again.
-- Preserve a retained human gate and the requested workflow endpoint. A planning-only request does not authorize implementation.
-- Git handling of the plan artifact follows the project and planner. Weaker permission never implies a stronger one: inspect does not imply unrelated edits; writing the plan does not imply implement; commit does not imply push or merge unless the project's established planning workflow already attaches that step to the plan artifact.
-
-Implementation is a separate phase, even when the same authorized autonomous run continues into it. Use its phase skill and reviewed plan rather than letting the planner implement implicitly.
-
-A generic planner's execution offer does not add authority. Omit it for a planning-only request; for an already authorized autonomous workflow, perform the scoped handoff after review.
+Weaker permission never implies a stronger one: inspecting does not allow unrelated edits, writing the plan does not allow implementing, and commit does not allow push or merge unless the project's planning workflow attaches that step to the plan.
 
 ## Red flags
 
-Stop and correct if you are about to:
-
-- Reconstruct requirements from the previous design chat instead of reading the file
-- Let a pasted kickoff prompt add requirements, task counts, or review gates
-- Reopen a settled design decision without an explicit current-session instruction
-- Hand off to implementation without an explicit request or workflow authorization
-- Duplicate the project's planner in this skill's voice
-- Apply another repo's plan folder, status words, roadmap sections, or frontmatter schema to a project that does not use them
-- Invent test commands, branch names, or review gates the project did not define
-- Infer a stronger action from a weaker one (inspect → unrelated edits; plan → implement; a git step the project did not attach to planning)
-- Let a generic planner default override an explicit project convention for where plans go
-
 | Excuse | Reality |
 |---|---|
-| "The design chat already decided X, it just isn't in the file" | Then it is not a settled requirement. Stop or ask. Do not smuggle it in. |
-| "I'll add frontmatter and a Spec header so the plan is complete" | Only if the project or planner already uses them. |
-| "writing-plans says offer execution" | The request determines authority. A planning-only run stops; an authorized autonomous run hands off after review using the plan file. |
-| "No status field, so I should refuse" | Missing schema is not unreadiness. Follow the project, or continue from the resolved file. |
-| "I'll update the roadmap, approve the design, and commit" | Only if the project already requires those writes for planning. |
-| "The user said plan it, so I can ignore the design's settled scope" | Current-session instructions may constrain. They do not silently override the design unless the user says so. |
-
-## Common mistakes
-
-- Treating this catalog's documentation layout as universal.
-- Using a kickoff prompt as a second spec.
-- Re-explaining the project's planner, then also calling that planner.
-- Asking the user to re-explain the design when the artifact is already in the repo.
-- Asking for a path when one clearly intended design is already discoverable.
+| "The design chat already decided X, it just isn't in the file" | Then it is not a settled requirement. Stop or ask. |
+| "I'll add frontmatter and a Spec header so the plan is complete" | Only if the project already uses them. |
+| "A planner default says offer execution" | The request decides authority. A planning-only run stops. |
+| "No status field, so I should refuse" | Missing schema is not unreadiness. |
+| "I'll update the roadmap, approve the design, and commit" | Only if the project requires those writes for planning. |
+| "The user said plan it, so I can ignore the design's scope" | Current instructions may constrain; they do not silently override the design. |

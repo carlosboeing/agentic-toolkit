@@ -57,7 +57,7 @@ Keep such global rules short and neutral across harnesses. Put the detailed work
 |---|---|---|
 | Claude Code | `CLAUDE.md` | Loaded at the start of every session |
 | Cursor | `AGENTS.md`, and often `CLAUDE.md` too | Loaded as workspace rules. With both files present, the content may load twice. |
-| Antigravity | `GEMINI.md` | Named through Superpowers' `contextFileName` setting. Antigravity's migration documentation also mentions `AGENTS.md`. |
+| Antigravity | `GEMINI.md` | The Superpowers extension also sets `contextFileName` to `GEMINI.md`; loading without that extension is not yet verified. Antigravity's migration documentation also mentions `AGENTS.md`. |
 | Codex | `AGENTS.md`. An `AGENTS.override.md` in the same directory takes precedence. | User instructions come from `~/.codex/AGENTS.md`, and project files are found along the path to the working directory. See [Codex instruction discovery](https://developers.openai.com/codex/guides/agents-md/). |
 | Kimi Code | `AGENTS.md` | Reads the project `AGENTS.md` and the shared `~/.agents/AGENTS.md` natively. An optional Kimi-only layer can go in `~/.kimi-code/AGENTS.md`. |
 | Grok Build TUI | `AGENTS.md` in the project, plus `~/.claude/CLAUDE.md` through its Claude compatibility setting | Do not add `~/.grok/AGENTS.md`. It would duplicate a file Grok already loads. |

@@ -783,11 +783,11 @@ You don't need all of these — pick what fits your workflow.
 
 ### 7.1 Workflow plugins (the chain itself)
 
-These directly implement the brainstorm → design → plan → implement → finish chain from §6.
+These implement or support the brainstorm → design → plan → implement → finish chain from §6.
 
 | Plugin | Provides | Used for |
 |---|---|---|
-| `superpowers` | `brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `finishing-a-development-branch`, `using-git-worktrees`, `verification-before-completion`, `systematic-debugging`, `requesting-code-review`, `receiving-code-review`, `test-driven-development`, `dispatching-parallel-agents` | The full SDLC workflow — `/brainstorm` opens a design session that produces a spec; `/writing-plans` turns it into an executable plan; `/executing-plans` walks through it; `/finishing-a-development-branch` wraps up. |
+| This toolkit's skills | `start-brainstorm`, `start-design`, `start-planning`, `start-implementation`, `start-debugging`, `tdd`, `receiving-code-review`, `git-worktrees` | The full SDLC workflow, installed by `scripts/sync-toolkit.sh` rather than a plugin. See the [skill catalog](../skills/README.md#phase-boundaries). |
 | `claude-md-management` | `claude-md-improver`, `revise-claude-md` | `/claude-md-improver` audits CLAUDE.md against quality criteria. `/revise-claude-md` updates it with end-of-session learnings. |
 | `commit-commands` | `/commit`, `/commit-push-pr`, `/clean_gone` | Conventional-commit-formatted commits, push + PR creation in one step, clean-up of stale branches. |
 
@@ -859,10 +859,9 @@ For routine agents (created via `/schedule`), MCP connectors expand what the age
 
 ### 7.8 Marketplaces
 
-Plugins come from marketplaces. Three to know:
+Plugins come from marketplaces. Two to know:
 
 - **`claude-plugins-official`** — Anthropic's official marketplace; most plugins above live here.
-- **`superpowers-marketplace`** — community-curated discipline skills (the canonical home of `superpowers`).
 - **Project-specific marketplaces** (e.g., `ui-ux-pro-max-skill`) — single-plugin marketplaces from individual authors.
 
 Manage via `/plugin` or the documented plugin CLI. Treat `~/.claude/plugins/installed_plugins.json` as generated state, not a hand-edited install manifest. Snapshot your installed set occasionally — versions and SHAs drift over time.
@@ -871,7 +870,7 @@ Manage via `/plugin` or the documented plugin CLI. Treat `~/.claude/plugins/inst
 
 If you only install three things:
 
-1. **`superpowers`** — for the workflow chain.
+1. **This toolkit's skills** — for the workflow chain, through `scripts/sync-toolkit.sh`.
 2. **`claude-md-management`** — to keep `CLAUDE.md` healthy.
 3. **`commit-commands`** — for clean commits.
 

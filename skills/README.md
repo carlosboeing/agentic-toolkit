@@ -17,9 +17,14 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 | [`start-brainstorm`](start-brainstorm/) | `/start-brainstorm` | Challenges an idea, compares options, and presents a brainstorm for review before technical design |
 | [`start-design`](start-design/) | `/start-design` | Writes a reviewable design from a reviewed brainstorm or clear brief |
 | [`start-planning`](start-planning/) | `/start-planning` | Starts an implementation plan from an approved design, keeping design and planning as separate steps |
+| [`start-debugging`](start-debugging/) | `/start-debugging` | Finds the root cause of a bug, failure or regression before any fix, with an investigate-only mode and a blameless incident review |
 | [`start-implementation`](start-implementation/) | `/start-implementation` | Drives an approved plan, or work with an in-session plan from a design, issue, or clear request, with in-session planning when no plan document is needed |
 | [`capture-meeting`](capture-meeting/) | `/capture-meeting` | Turns a meeting recording, notes and related files into a checked project record |
 | [`externalize-deliverable`](externalize-deliverable/) | `/externalize-deliverable` | Makes a client-safe copy of an internal document, which a person must review before it is sent |
+| [`tdd`](tdd/) | `/tdd`, or on request | Test-driven development as a red-to-green loop at seams agreed with you |
+| [`receiving-code-review`](receiving-code-review/) | Automatic | Checks each review comment against the code before acting on it, and pushes back on wrong ones |
+| [`research`](research/) | `/research` | Researches a question against primary sources and writes cited findings to a file |
+| [`handoff`](handoff/) | `/handoff` | Writes a handoff document into the project's working-memory notes for the next session |
 
 Each skill's README covers its arguments, dependencies, install steps and design decisions.
 
@@ -33,6 +38,7 @@ Write a document only when it adds value: it records a decision worth keeping, n
 | `/start-design` | Reviewed brainstorm and optional discovery, or a clear brief | Short design in chat for bounded work, or a design file against the shared or project contract, presented for review |
 | `/start-planning` | Approved design | Implementation plan, presented for plan review |
 | `/start-implementation` | Authoritative plan or design, execution-ready issue, or clear request | In-session plan when no plan document is needed, then verified work at the authorized delivery milestone |
+| `/start-debugging` | Bug, failure, flaky or slow behaviour | Confirmed root cause, then a fix through `/start-implementation`, or a report in investigate-only mode |
 
 Human review gates and a stop between phases are the default. An explicit full or partial autonomous workflow can authorize its included agent reviews and handoffs without another permission round at every phase. Preserve retained human gates and the requested endpoint. Record the run's authorization, scope, and stopping point in a durable project record the next session reads, using existing records rather than a new authorization form. Commit drafts too. Record review in `status` and `reviewed_by`: the accountable human's GitHub username, plus `(delegated to <model>, <harness>)` when that human did not read the document; an agent review is never a claim that the human personally reviewed the artifact. A phase-only request does not authorize subsequent phases.
 
@@ -43,6 +49,7 @@ Examples of valid routes, not an exhaustive list:
 - A substantial feature or MVP: brainstorm, optional discovery, design, durable plan, implementation, review.
 - A bounded feature: a short design in chat, implementation with an in-session plan, review.
 - A clear solution: design, optional durable plan, implementation, review.
+- A bug with an unknown cause: debugging, then implementation of the fix with an in-session plan.
 - A clear change, such as a documentation correction, dependency update, configuration change, fix, or improvement: implementation with an appropriate in-session plan, verification, and review. No design, plan, or issue document is required solely by category.
 
 A reviewed design may suffice for implementation without a separate plan file. Add a plan file when the document test calls for one. Applicable product decisions and architecture constraints remain in force on every route. Document readiness and authorization to implement are checked separately. A clear request authorizes its scope; an autonomous request can authorize several included phases and reviews. Neither invents authority for external effects beyond the request.

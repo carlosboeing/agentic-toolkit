@@ -49,6 +49,8 @@ Use [Install one skill](../README.md#install-one-skill) or the repository's sync
 
 Matt Pocock's [writing-for-agents](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/productivity/writing-for-agents/SKILL.md) informs the explicit completion conditions. [domain-modeling](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/engineering/domain-modeling/SKILL.md) informs terminology checks; [to-spec](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/engineering/to-spec/SKILL.md) informs acceptance through existing interfaces; [Design It Twice](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/engineering/codebase-design/DESIGN-IT-TWICE.md) informs conditional comparison of interfaces. Reviewed 2026-10-03.
 
+The sizing rule and the builder check, where a fresh worker reads the design as its builder and reports what it would have to guess, come from [Superpowers 7.0.0](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/RELEASE-NOTES.md).
+
 This adaptation uses project-controlled artifacts and a design review stop. It does not adopt automatic tracker publication, fixed user-story counts, compulsory glossary writes, or parallel workers. Upstream skills are not runtime dependencies. See [LICENSE](LICENSE) for the upstream MIT notice.
 
 ## Phase scope and autonomy

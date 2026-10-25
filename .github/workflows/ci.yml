@@ -39,6 +39,9 @@ jobs:
       - name: Run sync-toolkit test suite
         run: bash tests/test-sync-toolkit.sh
 
+      - name: Check skill sizes
+        run: bash tests/test-skill-size.sh
+
       - name: Run drift guard test suite
         run: bash git-hooks/drift-guard/test-housekeep.sh
 
