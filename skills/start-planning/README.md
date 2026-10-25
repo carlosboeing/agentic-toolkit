@@ -16,7 +16,7 @@ A new session can plan without the design conversation that came before it. The 
 2. Discovers this project's planning conventions from its instructions and existing files.
 3. Resolves the plan contract: a project-named contract or template when the project has one, else the shared `references/plan-contract.md` that ships beside `SKILL.md`.
 4. Inspects repository state materially implicated by the design.
-5. Delegates structure to the project's planner (`writing-plans` when that is what the project uses).
+5. Uses the project's own planner or plan template when it names one; otherwise the plan contract and the way the repository already writes plans.
 6. Writes a plan that answers the contract, checks it against the design, and completes the applicable review. It stops unless the authorized workflow already includes the implementation handoff.
 
 ```mermaid
@@ -57,7 +57,7 @@ Plan content follows the contract in force. When the project's instructions name
 
 - Write or revise the design.
 - Encode a universal frontmatter schema, plan folder, test command, or git policy.
-- Duplicate `writing-plans` or any other planner the project already has.
+- Duplicate a planner the project already has.
 - Treat a planning-only request as permission to implement. An authorized autonomous workflow uses a separate implementation-phase handoff after review.
 
 ## Install
@@ -88,3 +88,7 @@ Entry verifies the reviewed source revision, scope, review evidence, and actual 
 ## Phase scope and autonomy
 
 Defaults and autonomous runs follow [Phase boundaries](../README.md#phase-boundaries).
+
+## Sources
+
+The rule that a plan records decisions, not code, with length in proportion to the design, comes from [Superpowers 6.4.1](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/RELEASE-NOTES.md).

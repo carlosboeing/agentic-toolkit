@@ -41,7 +41,7 @@ Install the complete directory using [Install one skill](../README.md#install-on
 
 The discussion method draws on Matt Pocock's [grilling](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/productivity/grilling/SKILL.md) and [domain-modeling](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/engineering/domain-modeling/SKILL.md), reviewed 2026-10-03. [writing-for-agents](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/skills/productivity/writing-for-agents/SKILL.md) informs the completion conditions. This adaptation bounds questioning to brainstorm decisions, permits serial fact finding, and leaves glossary and ADR writes to project rules. The skill is self-contained and does not chain-call upstream skills. See [LICENSE](LICENSE) for the upstream MIT notice.
 
-Useful discussion techniques also appear in [Superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md). This skill keeps brainstorming separate from that workflow's design and planning handoff.
+Two rules come from Superpowers `brainstorming` in [7.0.0 and 7.0.1](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/RELEASE-NOTES.md): size the work in plain words, which the user can override, and ask which build choices the user wants to own, picking stated defaults for the rest. This skill keeps brainstorming separate from design and planning.
 
 ## Phase scope and autonomy
 
