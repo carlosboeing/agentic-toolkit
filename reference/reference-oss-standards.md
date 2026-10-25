@@ -44,14 +44,21 @@ No personal email anywhere. Contact is `https://github.com/carlosboeing` + priva
 
 ## 2. Workflows - pinned, least-privilege, stable gate
 
-| Rule | Value | Verified |
+Action pin policy:
+
+- **Immutable commit SHAs**: Every third-party action (`uses: <owner>/<repo>@...`) must pin a full 40-character commit SHA. Floating major tags (`@v4`, `@v7`) or branches (`@main`) are forbidden.
+- **Inline version comment**: Keep an inline `# vX.Y.Z` comment beside the SHA indicating the upstream release tag.
+- **Automated upgrades via Dependabot**: Dependabot (`package-ecosystem: "github-actions"` weekly) submits version upgrades with full SHAs and inline tag comments. Merging Dependabot action PRs is approved when CI passes.
+- **Baseline starter pins**: For initial repository scaffolding, use the baseline SHAs from the template below. Active repositories advance their SHAs as Dependabot PRs merge.
+
+| Action | Baseline Starter Pin | Source / Tag |
 |---|---|---|
-| `actions/checkout` | `3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` | `gh api repos/actions/checkout/git/refs/tags/v7.0.1` |
+| `actions/checkout` | `3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` | `v7.0.1` |
 | `actions/setup-node` | `820762786026740c76f36085b0efc47a31fe5020 # v7.0.0` | `v7.0.0` |
 | `actions/setup-python` | `5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0` | `v7.0.0` |
 | `actions/upload-artifact` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1` | `v7.0.1` |
 | `oven-sh/setup-bun` | `0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0` | `v2.2.0` |
-| Other pins | Keep `# vX.Y.Z` comment beside SHA | - |
+| Other actions | Full 40-character commit SHA with `# vX.Y.Z` comment | - |
 
 Workflow hygiene:
 
@@ -88,7 +95,7 @@ Classic branch protection `required_status_checks` `["required"]` is equivalent.
 ## 6. How to verify
 
 ```bash
-test -f SUPPORT.md && ! grep -q gmail CODE_OF_CONDUCT.md SECURITY.md && grep -q 3d3c42e .github/workflows/*.yml && grep -q required .github/workflows/*.yml
+test -f SUPPORT.md && ! grep -q gmail CODE_OF_CONDUCT.md SECURITY.md && ! grep -E 'uses: [a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+@(v[0-9]|main|master)' .github/workflows/*.yml && grep -q required .github/workflows/*.yml
 gh api repos/<owner>/<repo>/rulesets --jq '.[].rules[] | select(.type=="required_status_checks")'
 ```
 

@@ -35,7 +35,7 @@ Without `oss` or `private`, the skill reads the repository's visibility with `gh
 
 ## Rules it follows
 
-- It copies pinned commit SHAs from section 2 of the reference file and never generates one.
+- It ensures third-party action versions are pinned to full 40-character commit SHAs with inline `# vX.Y.Z` comments.
 - `required` is the only required status check. `fix` applies branch protection only after you confirm.
 - Public repositories contain no personal email address.
 
