@@ -9,6 +9,7 @@ All notable changes to this project are recorded here, newest first.
 - **Lifecycle skills:** size the work in plain words, ask which build choices the user wants to own, and run a builder check on designs. `/start-planning` uses the plan contract as its method instead of defaulting to `writing-plans`; plans record decisions, not code. `/start-implementation` adds worker, reviewer and re-review prompts, one whole-branch review before delivery, and a handoff to `/start-debugging`. The four lifecycle skills shrink from 7,877 to 5,345 words without dropping a permission or safety rule.
 - **Worktrees:** `git-worktrees` states its own creation procedure instead of correcting an upstream skill.
 - **Superpowers removal:** `plugins/install-superpowers.sh uninstall` removes Superpowers through each harness's own command and prints the manual steps. The global brief drops the Superpowers bootstrap rule, and guides and references stop telling readers to install it.
+- **Status after removal:** `install-superpowers.sh status` reports Claude Code as absent once `claude plugin uninstall` has run, instead of reading the version from the cache that the uninstall leaves behind.
 - **Tests:** CI fails when a `SKILL.md` reaches 20,000 bytes, the point where Claude Code cuts skills after compaction; `briefing` and `learn` are listed exceptions. The sync suite checks the new skills reach the hub.
 
 ## 2026-10-21: flexible lifecycle skills

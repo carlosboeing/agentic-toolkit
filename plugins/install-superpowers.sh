@@ -119,6 +119,13 @@ probe_claude() {
     probe "$path/package.json"
     return
   fi
+  # The cache outlives `claude plugin uninstall`, so a registry without the plugin means it
+  # is absent, whatever the cache still holds. The cache is read only with no registry.
+  if [ -f "$HOME/.claude/plugins/installed_plugins.json" ] \
+      && ! grep -q "\"$CLAUDE_PLUGIN\"[[:space:]]*:" "$HOME/.claude/plugins/installed_plugins.json"; then
+    echo "absent"
+    return
+  fi
   probe "$HOME/.claude/plugins/cache/superpowers-marketplace/superpowers/*/package.json" || echo "absent"
 }
 
