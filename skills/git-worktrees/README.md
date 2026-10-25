@@ -6,7 +6,7 @@ Sets one worktree convention for every AI coding harness, and the checks an agen
 
 - **Where worktrees go:** `<repo>/.worktrees/<harness>/<branch>`, with a fixed folder name for each harness.
 - **When a worktree is required:** if `git worktree list` shows more than one entry, another session may be active, so the agent creates a worktree instead of changing branches in place.
-- **Two corrections to the `superpowers:using-git-worktrees` skill,** applied here rather than by editing that upstream skill.
+- **How to create one:** fetch, check for other sessions, confirm the folder is ignored, and branch off `origin/main`.
 - **Harness notes,** including the VS Code `git.detectWorktrees` setting.
 
 ## Why it is a skill

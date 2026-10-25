@@ -61,6 +61,9 @@ See [Install one skill](../README.md#install-one-skill) in the skills catalog, o
 - The five readiness questions live in the skill so it stands alone: no separate implementation guide is needed to run work with an in-session plan.
 - When a durable plan exists, progress follows the two-commit sequence: the code commit first, then a plan commit that ticks the task and records the code SHA. One controller owns plan writes.
 - Delegation is checked against the live harness at run time. When no worker facility exists, the same tasks run serially instead of faking one.
+- Workers and reviewers get the prompts in [references/](references/): an implementer prompt, a task reviewer prompt, and a re-review prompt that checks fixes only. They are rewritten from the Superpowers [`subagent-driven-development`](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/subagent-driven-development) templates at `2ce8aa1`, under the MIT notice in [LICENSE](LICENSE).
+- One review of the whole branch runs before the delivery milestone, on the most capable model available, after [Superpowers 6.4.1](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/RELEASE-NOTES.md).
+- A fix with no known cause, or a second failed repair, goes to [`start-debugging`](../start-debugging/). Behaviour changes with a test seam follow [`tdd`](../tdd/).
 
 ## Phase scope and autonomy
 

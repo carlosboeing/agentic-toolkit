@@ -1,6 +1,6 @@
 ---
 name: git-worktrees
-description: Use before any command that changes branch state - git checkout -b, git switch -c, git worktree add - and when asked where a worktree goes, whether to branch in place, or how to recover a commit made on the wrong branch. States the cross-harness worktree path convention and the two corrections to superpowers:using-git-worktrees.
+description: Use before any command that changes branch state - git checkout -b, git switch -c, git worktree add - and when asked where a worktree goes, whether to branch in place, or how to recover a commit made on the wrong branch. States the cross-harness worktree path convention and the steps to create, check, and recover worktrees.
 ---
 
 # Git worktrees
@@ -35,12 +35,12 @@ Run `git worktree list` before any branch command. Run `git -C .workbench worktr
 
 If a commit goes to the wrong branch, confirm its content exists elsewhere before you drop it. Then rebase `--onto` the right base and push with `--force-with-lease`.
 
-## Two corrections to the `superpowers:using-git-worktrees` skill
+## Create one
 
-The upstream skill is a clone managed by `git pull`, so nobody patches it locally. Two of its steps are wrong for this setup.
-
-1. It builds `.worktrees/<branch>` with no harness segment. Always insert the segment: `.worktrees/<harness>/<branch>`.
-2. It says to commit `.gitignore` from the shared checkout when `.worktrees/` is unignored. Do not. Add the entry, create the worktree, and commit from inside it.
+1. Run `git fetch`, then `git worktree list`.
+2. Confirm `.worktrees/` is ignored, as above.
+3. Run `git worktree add -b <branch> .worktrees/<harness>/<branch> origin/main`, branching off `origin/main` rather than a local `main` that may have diverged.
+4. Work, test, and commit from inside the new worktree.
 
 ## Harness notes
 

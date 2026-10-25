@@ -4,11 +4,12 @@ description: >
   Use when starting implementation from an approved plan, whole or by one
   task, or work with an in-session plan from a design, issue, or clear
   current request, including requests such as "implement this plan",
-  "implement design X", "build X", "fix this bug", "start implementation",
-  "execute the plan", "do task T3 from this plan", "continue where we
-  stopped", or "just fix X". Carries readiness, reconciliation, delegation,
-  verification, integration, progress recording, and delivery-state rules.
-  Not for authoring durable design or implementation-plan documents.
+  "implement design X", "build X", "fix this bug" when its cause is known,
+  "start implementation", "execute the plan", "do task T3 from this plan",
+  "continue where we stopped", or "just fix X". Carries readiness,
+  reconciliation, delegation, verification, integration, progress recording,
+  and delivery-state rules. Not for authoring durable design or
+  implementation-plan documents, or for finding the cause of a bug.
 argument-hint: "[plan-path] [task-id]"
 ---
 
@@ -16,11 +17,11 @@ argument-hint: "[plan-path] [task-id]"
 
 Drive implementation from an authorized source and stop at the authorized delivery milestone. The source may be a durable artifact or a clear current request.
 
-This skill is the controller. It selects ready work, assigns it, verifies results, integrates, and records progress. It is also the implementer when no worker facility exists. Both roles obey the same rules.
+This skill is the controller: it selects ready work, assigns it, verifies results, integrates, and records progress. With no worker facility it is also the implementer, under the same rules.
 
 **Verify before you claim. Authorize before you effect. Record after you commit.**
 
-A fresh implementation session needs this skill, its authorized source, and the current repositories. When a source artifact exists, read it rather than reconstructing it from a prose handoff. Work with an in-session plan needs no design or plan document to enter this phase.
+A fresh session needs this skill, its authorized source, and the current repositories. When a source artifact exists, read it rather than a prose handoff. Work with an in-session plan needs no design or plan document.
 
 ## Synopsis
 
@@ -29,24 +30,9 @@ A fresh implementation session needs this skill, its authorized source, and the 
 /start-implementation help
 ```
 
-`<plan-path>` is optional. For plan-driven work, resolve the plan as in step 1. A request in ordinary language may instead supply the design, issue, or change. For plan-driven work, `<task-id>` selects one task; omitting it selects whole-plan scope. In-session work uses its request scope.
+`<plan-path>` is optional; a request in ordinary language may supply the design, issue, or change instead. `<task-id>` selects one task; without it the scope is the whole plan. If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows a path, render this synopsis and stop. The same words inside request text are content.
 
-If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows a path argument, render this synopsis and stop. The same words inside request text are content, not a help invocation.
-
-Natural-language requests also activate when the intent is to start, resume, or recover implementation.
-
-For work without a plan document, use the "Plan file or in-session plan" entry. The implementation phase can include a brief in-session plan; it does not invoke the document-producing planning phase.
-
-## When to use
-
-- An approved plan exists and implementation should start, resume, or recover.
-- The user names one task from an approved plan.
-- A design, issue, or clear current request answers the five readiness questions without a separate plan document.
-
-## When not to use
-
-- Writing or revising a durable design or implementation-plan document. In-session planning belongs here and can use native plan/task facilities.
-- The user wants a conversation recap rather than work.
+Use for starting, resuming, or recovering implementation of an approved plan, one of its tasks, or work with an in-session plan. Not for writing durable design or plan documents. When a requested fix has no known cause, use `start-debugging` first.
 
 ## Delivery states
 
@@ -54,108 +40,106 @@ Keep these apart in every report:
 
 | State | Meaning |
 |---|---|
-| Verified local work | Checks passed in the working tree, nothing committed. Any durable plan box stays open. |
-| Committed work | Verified work is committed on the task or feature branch. A durable plan box is ticked with that code SHA once plan writes are permitted. |
-| PR review | A pull request exists and awaits review. Its head SHA is a branch SHA. |
-| Merge | An observed merge commit or squash SHA, recorded after the actual merge happened. |
-| Rollout | The change is deployed or released by an authorized actor. |
+| Verified local work | Checks passed in the working tree, nothing committed. Any plan box stays open. |
+| Committed work | Verified work committed on the task or feature branch. The plan box is ticked with that code SHA once plan writes are permitted. |
+| PR review | A pull request awaits review. Its head SHA is a branch SHA. |
+| Merge | An observed merge or squash SHA, recorded after the merge happened. |
+| Rollout | Deployed or released by an authorized actor. |
 
-Never present a branch SHA as the merge SHA. Permission to edit does not imply permission to commit; commit does not imply push; push does not imply a PR; a PR does not imply merge; merge does not imply rollout. Do not infer permission to merge or deploy.
+Never present a branch SHA as the merge SHA. Edit does not imply commit; commit does not imply push; push does not imply a PR; a PR does not imply merge; merge does not imply rollout.
 
 ## Recipe
 
-Do these in order. Steps 1 to 3 run at every entry and every resume.
+Steps 1 to 3 run at every entry and every resume.
 
-### 1. Parse args and resolve the source
+### 1. Resolve the source
 
-When the first non-help token names an existing file, it is the plan path or, for in-session work, the design or issue, and the second token, if present, is the task ID. Otherwise the whole argument is a request. A clear current request is itself a source regardless of task category; do not ask for an artifact path or create an issue merely because no file exists. Use that request and the in-session preflight. If consequential behavior or scope remains unresolved, ask about that decision, not for ceremonial documents.
+When the first non-help token names an existing file, it is the plan, or for in-session work the design or issue, and the second token is the task ID. Otherwise the whole argument is the request. A clear current request is itself a source; do not ask for an artifact or create an issue because no file exists. If consequential behaviour or scope is unresolved, ask about that decision.
 
-If neither a source artifact nor a clear request is identified, discover plausible candidates from the project's own instructions, artifact conventions, and current structure. Do not assume a universal plan directory, status schema, or readiness vocabulary. Use whatever this project considers approved or current. One clearly intended candidate: use it and say which artifact was selected. Several materially plausible candidates: present a short ranked set and ask. None: ask for the path.
+With neither a source nor a clear request, find candidates from the project's instructions and conventions without assuming a plan directory or status vocabulary. One clear candidate: use it and say which. Several: show a short ranked set and ask. None: ask for the path.
 
 ### 2. Reconcile state
 
-Read the full source before changing anything. For plan-driven work, read the approved plan and its approved design. For in-session work, read the design or issue when present and the current request. Apply the plan-specific checks below only when a durable plan exists; a missing plan is not a blocker for the in-session route. Reconcile and record the applicable facts:
+Read the full source before changing anything: the plan and its approved design, or the design, issue, and request for in-session work. Then record:
 
-- Plan status and task markers: what is ticked, with which recorded SHA.
-- The design revision the plan records against the checked-out design.
-- Local and remote Git state of the code and plan repositories: uncommitted edits, unpushed commits, non-fast-forward histories.
-- Worktrees and task workspaces: who is working where.
-- Effect markers for effects that cannot safely be repeated.
-- Plan-writer ownership evidence: another writer's edits, commits, or pushes to the plan repository.
+- Plan status and task markers: what is ticked, with which SHA.
+- The design revision the plan records, against the checked-out design.
+- Local and remote Git state of the code and plan repositories: uncommitted edits, unpushed commits, diverged histories.
+- Worktrees: who is working where.
+- Markers for effects that cannot safely be repeated.
+- Evidence of another plan writer: edits, commits, or pushes to the plan repository.
 
-A change to a design after its authoritative review never silently becomes the reviewed revision: halt the affected work and reconcile that change before using it. An uncommitted design edit never becomes the reviewed revision. The reviewed revision is the commit that records the review, such as the commit setting `status` and `reviewed_by`; a committed draft is not reviewed. If that commit is missing, stop at the handoff and report it. A changed design revision triggers reconciliation, not automatic rejection: an editorial change may need no plan amendment, changed behavior does. A disagreement between a checkbox and Git is a reconciliation case, never permission to repeat a non-repeatable effect. When the task's own non-repeatable effect has a marker but no committed checkpoint of its work, the task is not verifiable: halt that task, make no further changes under it, and report the marker and git state for reconciliation. When the marker and a committed checkpoint do explain each other, finish the bookkeeping only: tick with the existing code SHA, without repeating the effect.
+The reviewed revision is the commit that records the review, such as the one setting `status` and `reviewed_by`. A committed draft is not reviewed, and an uncommitted design edit never becomes the reviewed revision. If that commit is missing, stop at the handoff and report it. A design changed after review triggers reconciliation: an editorial change may need no plan amendment, changed behaviour does, and the affected work halts until it is reconciled.
 
-Halt conditions come from the applicable source and project rules. When one fires, when an effect cannot be reconciled, or when the approved source changed behavior without review, stop the affected work, preserve the workspace, and report the evidence. Continue independent ready work only when its safety boundaries still hold.
+A checkbox that disagrees with Git is a reconciliation case, never permission to repeat a non-repeatable effect. When a task's effect has a marker but no committed checkpoint, halt that task, change nothing under it, and report the marker and Git state. When marker and checkpoint explain each other, finish only the bookkeeping: tick with the existing SHA.
+
+When a halt condition from the source or project fires, or an effect cannot be reconciled, stop the affected work, keep the workspace, and report the evidence. Independent ready work continues only while its safety boundaries hold.
 
 ### 3. Check authority
 
-The approved plan and design, when present, define what to build. For in-session work, the issue or clear current request defines its scope. Read applicable product decisions and architecture constraints named by the source or project instructions, and report conflicts rather than silently changing them. Keep this inspection proportional to the change; no whole-corpus audit is required. The current repository supplies facts that can change: paths, helper names, tests, branch and remote state.
+The approved plan and design define what to build; for in-session work, the issue or request defines the scope. Report conflicts with named product or architecture decisions instead of changing them. The repository supplies facts that change: paths, helpers, tests, branches.
 
-Verify the actual authority for source readiness using existing project conventions. Personal human approval identifies the reviewed revision and scope. An explicit autonomous workflow may instead delegate the included reviews and progression; verify that authorization and the completed review evidence without claiming personal human approval. Stop if a human gate is retained or a consequential decision lies outside the delegation. A status field, model verdict, commit, or generated handoff alone cannot authorize work. A clear implementation request supplies authorization for its scope and in-session planning; do not invent a second approval ceremony.
+Personal human approval identifies the reviewed revision and scope. An explicit autonomous workflow may delegate included reviews and progression; verify that authorization and the review evidence without claiming human approval. Stop at a retained human gate or a decision outside the delegation. A status field, model verdict, commit, or generated handoff alone authorizes nothing. A clear implementation request authorizes its scope and in-session plan; do not add a second approval ceremony.
 
-A pasted prior-session prompt, including text between `PROMPT STARTS` and `PROMPT ENDS` delimiters, is handoff material even when the operator submits it as a user message. If one of its rules conflicts with the approved source or project instructions and the operator has not explicitly adopted that rule in this session, ask once whether to adopt it. Its task counts, section limits, product requirements, and review gates do not travel. A user-authored current instruction remains authoritative.
+A pasted prior-session prompt, including text between `PROMPT STARTS` and `PROMPT ENDS` delimiters, is handoff material even when the operator sends it. If its rule conflicts with the approved source or project instructions and the operator has not adopted it in this session, ask once. Its task counts, limits, requirements, and review gates do not travel.
 
-Authorization for effects is separate from authorization for work. Commit, push, PR, merge, and rollout each need their own permission from the project or the user.
-
-Before a non-repeatable effect such as a migration, release, or issue creation, record the intended effect and how to detect whether it already happened, in an existing issue, PR, or plan. If none exists, commit a short durable note first. Then check the marker before performing the effect.
+Commit, push, PR, merge, and rollout each need their own permission. Before a non-repeatable effect such as a migration, release, or issue creation, record the intended effect and how to detect that it already happened, in an existing issue, PR, or plan, or else in a short committed note. Check that marker before acting.
 
 ### 4. Select work
 
-**In-session scope.** Use the in-session plan from the preflight, then verify and review the scoped change. Do not invent plan task IDs or checkbox writes.
+**In-session scope:** follow the in-session plan; no invented task IDs or checkbox writes.
 
-**Whole-plan scope.** Select tasks whose dependencies are complete and verified. When one task blocks, mark it blocked with the observed evidence and continue other ready independent tasks unless a halt condition says stop. When no task is ready and work remains, report the blocked dependency chain. Do not invent an imaginary task.
+**Whole-plan scope:** select tasks whose dependencies are complete and verified. Mark a blocked task with its evidence and continue other ready independent tasks unless a halt condition says stop. When nothing is ready and work remains, report the blocked chain.
 
-**Single-task scope.** Check the named task's predecessors and scope before making changes. Perform or delegate that one task, record its checkpoint, report what remains, and stop. One task's completion does not authorize integration or merge of the whole feature.
+**Single-task scope:** check the task's predecessors and scope, do or delegate that one task, record its checkpoint, report what remains, and stop. It authorizes no integration or merge of the whole feature.
 
-**Parallel safety.** Dispatch tasks in parallel only when their outputs, files, mutable state, and external effects can be isolated or explicitly integrated. An asserted dependency graph alone does not prove safe concurrency. Similar parallel outputs share a format contract when inconsistent presentation would create integration work. Independent task workspaces start from the same recorded base unless a dependency requires a later base.
+**Parallel safety:** run tasks in parallel only when their files, mutable state, and external effects are isolated or explicitly integrated; a dependency graph alone does not prove it. Parallel outputs that must look alike share a format contract. Independent workspaces start from one recorded base unless a dependency needs a later one.
 
 ### 5. Assign or execute
 
-Check the live harness for its actual worker facility (subagent tool, task tool, or none) and its write isolation. A documented nesting or delegation limit from another harness version is not policy.
+Check the live harness for its worker facility (subagent tool, task tool, or none) and its write isolation. Another harness's documented limits are not policy.
 
-A worker receives a bounded assignment: its task, the design decisions selected from the plan's coverage map, and direct source links to the files and tests involved. The assignment cannot add requirements; the worker can read the full design when needed. Each worker and each independent task uses its own workspace, per the `git-worktrees` skill.
+A worker gets a bounded assignment: its task, the design decisions the plan cites for it, and links to the files and tests involved. Use [references/implementer-prompt.md](references/implementer-prompt.md). The assignment adds no requirements. Each worker uses its own workspace, per the `git-worktrees` skill. A worker reports verified changes and proof; it never self-merges, pushes, or edits shared state.
 
-A worker reports verified changes and proof. It does not self-merge, push, or edit shared state. The controller alone assigns tasks, integrates results, updates the plan, and decides whether the run reached the authorized milestone.
+For a behaviour change with a test seam, the implementer follows the `tdd` skill.
 
-With no dependable worker facility, run the same ready tasks serially. Never fake a dispatch or a worker report.
+With no dependable worker facility, run the ready tasks serially. Never fake a dispatch or a worker report.
 
-### 6. Verify
+### 6. Verify and review
 
-The controller verifies results; a completion message is not proof. Read the diff, run the named checks, and compare against the acceptance evidence and verification method in the applicable source or in-session preflight.
+A completion message is not proof. Read the diff, run the named checks, and compare against the acceptance evidence and verification method in the source or in-session plan. With workers, have a fresh reviewer check each task using [references/task-reviewer-prompt.md](references/task-reviewer-prompt.md), and check fixes with [references/re-review-prompt.md](references/re-review-prompt.md).
 
-A failed check leaves that task blocked with the observed evidence. A second failed repair attempt on the same high-risk acceptance check calls for a fresh diagnosis before more edits.
+A failed check leaves the task blocked with its evidence. After a second failed repair of the same failure, or when a fix has no known cause, switch to `start-debugging`.
 
-Verification is not authorization. Verified but uncommitted work is reported as verified local work and the plan box stays open.
+Verification is not authorization: verified uncommitted work is reported as verified local work, and its plan box stays open.
 
 ### 7. Integrate and record progress
 
-One controller owns plan writes. Workers never write the plan.
+One controller owns plan writes; workers never write the plan. After a verified, authorized code commit, a following commit in the plan's repository ticks the task and records that code SHA: two repositories in a split setup, two commits in one repository. Only durable plans get this second write.
 
-A non-fast-forward push or an observed edit by another controller to the plan repository stops plan writes. Reconciliation of the histories and task state is a human decision: do not merge, rebase, or fast-forward competing history yourself. Freeze plan writes and report the evidence; nothing is ticked in the meantime. Code work continues only while the competing evidence is confined to the plan repository; a competing writer touching the code repository or its history halts that work too. An unrelated live worktree alone is not a competing writer.
+A non-fast-forward push or another controller's edit to the plan repository stops plan writes. Reconciling those histories is a human decision: do not merge, rebase, or fast-forward them yourself, and tick nothing meanwhile. Code work continues only while the competing changes stay in the plan repository. An unrelated live worktree is not a competing writer.
 
-The two-commit sequence: after the verified, authorized code commit, a following commit in the plan's repository ticks the task and records that code SHA. Two repositories in a split setup, two commits in one repository. The plan commit's own SHA does not go in the plan. Only tasks governed by a durable plan get this second write.
+Before the delivery milestone, run one review of the whole branch against the source, on the most capable model available.
 
-At close-out, record the PR and, after an actual merge, the merge SHA separately. Record nothing guessed: a squash-merge SHA is written only after the merge is observed.
+At close-out, record the PR and, after an observed merge, the merge SHA separately.
 
 ### 8. Stop
 
-Report verified work, delivery state, blocked work, and the next recoverable checkpoint.
-
-Single-task scope stops after its named task even when other tasks are ready. Whole-plan scope stops at the plan's authorized delivery milestone. In-session scope stops at the authorized milestone for the request. Use the project's existing review workflow for the integrated result; self-review or a model's passing verdict does not supply a retained human approval. After the implementation checkpoint, hand off to any later review phase already included in the authorized workflow. Merging and rollout are separate authorizations; do not infer them.
+Report verified work, delivery state, blocked work, and the next recoverable checkpoint. Single-task scope stops after its task even when others are ready. Whole-plan and in-session scope stop at the authorized milestone. Use the project's review workflow for the integrated result; self-review or a model verdict is not a retained human approval. Hand off to a later review phase only when the authorized workflow includes it.
 
 ## Plan file or in-session plan
 
-When the source is a design or request with no plan path, look for an existing plan for that design, in the project's plan location or the design's links. If one exists, use it.
+With a design or request and no plan path, first look for an existing plan for that design and use it.
 
-Otherwise choose. A plan file is needed when the work spans several sessions, involves several people or agents, has a step that cannot run twice, or needs a progress record that lasts. Large or complex work usually meets one of these; a bug fix, small feature, or documentation change usually does not.
+Otherwise choose. A plan file is needed when the work spans several sessions, involves several people or agents, has a step that cannot run twice, or needs a lasting progress record. A bug fix, small feature, or documentation change usually needs none.
 
 - Clear small work: state the route in one line, such as "No plan file: one-file fix, tests cover it", and proceed.
-- Unsure, or clearly large: ask one question, plan file or in-session plan, with a recommendation. When unsure, recommend the plan file.
-- The user chose the route: follow it. If a plan-file condition applies, state that risk once first.
+- Unsure, or clearly large: ask one question, plan file or in-session plan, with a recommendation; when unsure, recommend the plan file.
+- The user chose the route: follow it, stating once any plan-file condition that applies.
 
 If hidden complexity appears mid-task, stop, say so, and recommend a plan file.
 
-For an in-session plan, inspect the source and current repository and answer these before editing, using the harness's native plan or task tools or another proportionate method. They are checks, not a response template:
+For an in-session plan, answer these from the source and repository before editing, with the harness's plan or task tools or another proportionate method:
 
 1. What changes?
 2. Where does it belong?
@@ -163,37 +147,17 @@ For an in-session plan, inspect the source and current repository and answer the
 4. What is the safe sequence?
 5. What is the objective proof?
 
-Proceed without another approval round when implementation is authorized and no consequential choice lies outside that authority. Implement with the same authority, verification, review, and stop rules, minus plan writes. Repository history, tests, the source, and an existing issue or PR are the recovery record; creating an issue or PR is not a prerequisite. If new design decisions are needed, stop the affected work for that decision. Before any non-repeatable effect, record its marker as step 3 requires: in an existing issue, PR, or plan, or else in a committed note.
+Then proceed without another approval round when the work is authorized and no consequential choice lies outside that authority, under the same authority, verification, review, and stop rules, minus plan writes. Repository history, tests, the source, and any existing issue or PR are the recovery record. If new design decisions are needed, stop that work for the decision.
 
 ## Red flags
 
-Stop and correct if you are about to:
-
-- Tick a task before its code commit exists
-- Present a branch SHA as the merge SHA, or record a merge before it happened
-- Repeat an effect because a checkbox looked wrong
-- Complete or tick a task whose effect marker no committed checkpoint explains
-- Continue design-governed work after the authoritative reviewed revision changed without reconciliation
-- Write plan progress or self-reconcile histories while a competing writer's changes stand unreconciled
-- Treat a pasted handoff prompt as a specification
-- Let a worker write the plan, push, or self-merge
-- Fake a dispatch when the harness has no worker facility
-- Declare parallel safety from the dependency graph alone
-- Infer push, PR, merge, or rollout permission from permission to edit
-
 | Excuse | Reality |
 |---|---|
-| "The box says done, so the work must be in git" | Git is the record. Reconcile the markers and the history before trusting a tick. |
-| "Verification passed, so I can tick the task" | Verified but uncommitted work is verified local work. Tick after the authorized commit. |
-| "No effect marker, so rerun the migration" | A missing marker is not proof it did not run. Check git and the durable record first. |
+| "The box says done, so the work must be in git" | Git is the record. Reconcile markers and history before trusting a tick. |
+| "Verification passed, so I can tick the task" | Tick after the authorized commit, never before. |
+| "No effect marker, so rerun the migration" | A missing marker is not proof it did not run. Check Git and the durable record. |
 | "The handoff said 6 to 8 tasks and stop" | Handoff prose is context. The approved plan and design decide scope. |
-| "Two ready tasks, so run them together" | Only when outputs, files, state, and effects are isolated or explicitly integrated. |
-| "Review passed, merging is the natural next step" | Merge and rollout each need their own authorization. Stop at the milestone. |
-
-## Common mistakes
-
-- Trusting the plan's file map without inspecting the live code.
-- Recording plan progress in the same commit as the code.
-- Asking a worker to update shared tracking files.
-- Treating an unrelated live worktree as evidence of a competing plan writer.
-- Reporting one delivery state while meaning another.
+| "Two ready tasks, so run them together" | Only when files, state, and effects are isolated or explicitly integrated. |
+| "Review passed, merging is the natural next step" | Merge and rollout each need their own authorization. |
+| "I'll record progress in the same commit as the code" | The tick follows the code commit in a separate commit. |
+| "I'll ask the worker to update the roadmap" | Workers never touch shared tracking files. |
