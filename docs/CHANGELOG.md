@@ -2,6 +2,15 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-25: Superpowers parity and lifecycle skill trimming
+
+- **Debugging:** add `/start-debugging`. It builds a failing feedback loop before any theory, minimises the repro, tests 3 to 5 ranked falsifiable hypotheses with tagged logs, and hands the fix to `/start-implementation` with a regression test at a correct seam. It stops after a third failed fix, offers an investigate-only mode, and drafts a blameless incident review when real users are affected. Written from Matt Pocock's `diagnosing-bugs` and Superpowers `systematic-debugging`.
+- **Copied skills:** add `tdd`, `research` (Matt Pocock) and `receiving-code-review` (Superpowers), byte-identical to upstream apart from two link edits in `tdd`, with their MIT notices. Add `handoff`, adapted to save into the project's working-memory notes.
+- **Lifecycle skills:** size the work in plain words, ask which build choices the user wants to own, and run a builder check on designs. `/start-planning` uses the plan contract as its method instead of defaulting to `writing-plans`; plans record decisions, not code. `/start-implementation` adds worker, reviewer and re-review prompts, one whole-branch review before delivery, and a handoff to `/start-debugging`. The four lifecycle skills shrink from 7,877 to 5,345 words without dropping a permission or safety rule.
+- **Worktrees:** `git-worktrees` states its own creation procedure instead of correcting an upstream skill.
+- **Superpowers removal:** `plugins/install-superpowers.sh uninstall` removes Superpowers through each harness's own command and prints the manual steps. The global brief drops the Superpowers bootstrap rule, and guides and references stop telling readers to install it.
+- **Tests:** CI fails when a `SKILL.md` reaches 20,000 bytes, the point where Claude Code cuts skills after compaction; `briefing` and `learn` are listed exceptions. The sync suite checks the new skills reach the hub.
+
 ## 2026-10-21: flexible lifecycle skills
 
 - **Skills:** add `/start-brainstorm` and `/start-design` as self-contained entry points. Brainstorming presents options, settled points, and open questions for review; design reads durable sources and current architecture, writes a complete draft, and reaches the applicable review checkpoint.
