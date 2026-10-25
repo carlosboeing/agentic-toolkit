@@ -44,6 +44,12 @@ SOFTWARE.
 
 The generated `copydesk:start` block in `instructions/CLAUDE.md` and `scripts/githooks/commit-msg` originate from [carlosboeing/copydesk](https://github.com/carlosboeing/copydesk). The commit hook is byte-identical to [upstream at 0553163c3061b4a2db33ca7d8002ba3ba08374b7](https://github.com/carlosboeing/copydesk/blob/0553163c3061b4a2db33ca7d8002ba3ba08374b7/git-hooks/commit-msg), checked 2026-09-22. The generated block does not record its generator version; its marker is preserved. CopyDesk uses MIT, copyright 2026 Carlos Boeing, with the same full MIT text reproduced in the Penmark section above. [Upstream license](https://github.com/carlosboeing/copydesk/blob/0553163c3061b4a2db33ca7d8002ba3ba08374b7/LICENSE).
 
+## Matt Pocock phase-skill techniques
+
+`skills/start-brainstorm/` and `skills/start-design/` adapt discussion and authoring techniques from [mattpocock/skills at d81f3a1](https://github.com/mattpocock/skills/tree/d81f3a183412e71a5b1e84ca21bc1a35eea03a60), reviewed 2026-10-03. Their READMEs link the individual sources. Changes include bounded brainstorm questions, project-controlled artifact storage, serial execution support, conditional interface comparison, and separate brainstorm and design review stops. The upstream skills are not bundled or invoked.
+
+The upstream MIT license, copyright 2026 Matt Pocock, is retained in [start-brainstorm/LICENSE](skills/start-brainstorm/LICENSE) and [start-design/LICENSE](skills/start-design/LICENSE), so each installed directory carries its notice. [Upstream license](https://github.com/mattpocock/skills/blob/d81f3a183412e71a5b1e84ca21bc1a35eea03a60/LICENSE).
+
 ## CC BY 4.0 license text
 
 The following is the full license text retained by the upstream Contributor Covenant repository before its version 3 website redesign.

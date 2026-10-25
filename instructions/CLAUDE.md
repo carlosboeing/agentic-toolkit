@@ -83,14 +83,17 @@ Every Markdown document inside a working-memory tree starts at byte 0 with a YAM
 
 ### SDLC phase checkpoints
 
-Brainstorm, design, plan, and implementation are distinct phases with explicit stops between them. Do not auto-advance.
+**Document test:** write a document only when it adds value: it records a decision worth keeping, needs review across people or sessions, or supports large, risky or complex work (several sessions, several agents, a step that cannot run twice, or progress to track). Other work stays in chat: a short design, an approval only for a real choice, and an in-session plan. State the chosen route in one line. Ask when unsure, and prefer the heavier route then. Step up when hidden complexity appears. When the user picks the route, state a risk once, then follow it. A phase request invokes that phase.
 
-1. **Brainstorm:** Explore and challenge ideas. Ask whether to save a brainstorm doc and proceed to design. Stop.
-2. **Design:** Write the complete design document in one pass. Stop and ask for review, then commit and push.
-3. **Plan:** Write implementation plans on request. Stop and ask for review before implementing.
-4. **Implementation:** Execute against an approved plan.
+Do not auto-advance by default. An explicit request for a full or partial autonomous workflow authorizes progression through the included phases and requested agent reviews, except at a human gate the user or applicable instructions retain. Identify the scope and stopping point from the request, record the authorization in a durable project record the next session reads, such as the source artifact, an issue, a PR, or the plan, and proceed without asking again at every included transition. No new policy document or fixed phase list is required. A phase-only request or generic "continue" does not grant broader authority.
 
-Each phase stands alone for fresh sessions. Commit and push artifacts after each phase. Raise genuine forks instead of deciding silently.
+1. **Brainstorm:** Explore and challenge ideas. Present settled points and open questions. Save a file only when the document test calls for one.
+2. **Design:** Write a design file when requested or when the document test calls for one; otherwise present a short design in chat. Complete its applicable review before treating it as ready for the next phase.
+3. **Plan:** Write a plan file when requested or when the document test calls for one. In-session planning does not require this document-producing phase.
+4. **Implementation:** Work from the applicable source artifacts or a clear current request. Plan in session using the harness's native plan/task tools or another proportionate method. Check scope, constraints, order, and proof before editing; no fixed response template or separate document is required.
+5. **Review:** Use the project's review methods at the applicable checkpoints and for the integrated result. In an authorized autonomous run, agent review can satisfy a delegated gate. It never proves that a human personally reviewed the artifact.
+
+Keep applicable product decisions and architecture constraints visible in every selected phase. Distinguish personal human approval from readiness under delegated review. Record the source revision, scope, review evidence, and authorizing instruction using existing project conventions; agent-written status alone grants no authority. Stop for a retained human gate or a consequential choice outside the delegated scope. A clear implementation request authorizes its work and in-session plan without a second approval ritual. Each phase can start in a fresh session from its source, the durable record of run authorization, and current repository. Persist context when recovery needs it. Commit and push documents whenever a phase pauses or ends, draft or reviewed. The reviewer records the outcome in `status` and `reviewed_by`: the accountable human's GitHub username, plus `(delegated to <model>, <harness>)` when that human did not read the document; the commit that records it is the reviewed revision. A draft does not enter the next phase where the project forbids it. Raise genuine forks instead of deciding silently; record a fork decided under delegation with its reason. Autonomous phase progression authorizes no other commit, and no publication, merge, installation, or rollout beyond the actions actually included in the request. Do not ask again for actions already authorized.
 
 ### Plan granularity and review cadence
 

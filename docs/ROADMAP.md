@@ -9,7 +9,6 @@ None at the moment.
 ## Next actions
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
-- **Phase skills for the earlier workflow.** Add `/start-brainstorm` and `/start-design` after the plan and implementation handoff trials, so each phase has an explicit entry point.
 - **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
 
 ## Future considerations
@@ -18,6 +17,7 @@ None at the moment.
 - **`/init-project` skill.** One skill to scaffold a new project, fill an empty directory, or retrofit the documentation conventions onto an existing project.
 - **Distribution for tools that bundle agent files.** Package a command-line tool together with its skills, hooks and commands so users do not assemble the pieces by hand.
 - **Harness-agnostic memory.** [Selection guidance](../guides/guide-agent-memory-selection.md) and a [dated options comparison](../reference/reference-agent-memory-options.md) are documented. A trial of cheaper observers or local replacements remains open; verify capture, cross-harness recall and backup restoration before adopting one.
+- **Lifecycle skills: Superpowers parity and trimming.** Bring the Superpowers behaviour the lifecycle skills need into them, copy the standalone skills that have no counterpart, then uninstall Superpowers. Trim the lifecycle skills by trial on each harness.
 - **Template variants per project type.** Split the project templates when the needs of different project types diverge.
 
 ## Open questions
@@ -29,6 +29,8 @@ None at the moment.
 None at the moment.
 
 ## Recently shipped
+
+- **Flexible lifecycle skills (2026-10-21).** Add `/start-brainstorm`, `/start-design`, and the shared design quality contract. Select phases across task categories, use native in-session plans when appropriate, and support explicitly authorized autonomous workflows while preserving retained human gates and prior decisions.
 
 - **Consistent SDLC artifacts, first increment (2026-10-03).** [PR 6](https://github.com/carlosboeing/agentic-toolkit/pull/6) delivers the shared plan quality contract, `/start-planning` discovery and advisory checker, `/start-implementation` controller, and corrected progress and worktree guidance.
 

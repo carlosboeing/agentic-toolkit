@@ -95,6 +95,19 @@ _assert_symlink "spoke ~/.gemini/config/skills links to hub" "$MOCK_HOME/.gemini
 _assert_executable "claude hook validate-mermaid.sh is executable" "$MOCK_HOME/.claude/hooks/validate-mermaid.sh"
 _assert_file "opencode mermaid plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-mermaid.ts"
 
+# Phase skills must remain complete when copied to the hub and linked spokes.
+for phase_skill in start-brainstorm start-design; do
+  for installed_file in SKILL.md README.md LICENSE; do
+    cmp -s "$REPO_ROOT/skills/$phase_skill/$installed_file" "$MOCK_HUB/$phase_skill/$installed_file"
+    _assert "$phase_skill/$installed_file copied exactly to hub" 0 $?
+  done
+  _assert_file "$phase_skill command wrapper exists" "$MOCK_HOME/.config/opencode/command/$phase_skill.md"
+done
+cmp -s "$REPO_ROOT/skills/start-design/references/design-contract.md" "$MOCK_HOME/.agents/skills/start-design/references/design-contract.md"
+_assert "design contract reaches agents spoke unchanged" 0 $?
+cmp -s "$REPO_ROOT/skills/start-design/references/design-contract.md" "$MOCK_HOME/.gemini/config/skills/start-design/references/design-contract.md"
+_assert "design contract reaches Gemini spoke unchanged" 0 $?
+
 # Verify OpenCode command wrappers generated
 opencode_cmd_count="$(find "$MOCK_HOME/.config/opencode/command" -name "*.md" 2>/dev/null | wc -l | tr -d ' ')"
 if [ "$opencode_cmd_count" -gt 0 ]; then
