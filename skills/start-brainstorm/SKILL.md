@@ -2,8 +2,9 @@
 name: start-brainstorm
 description: >
   Use when starting or resuming brainstorming about an idea, problem, or
-  proposed change, including requests to explore options, challenge the
-  framing, or think through an approach before design. Not for writing a
+  proposed change, including requests such as "I want to add X", "what if
+  we", "should we", or "let's think through X", and requests to explore
+  options or challenge the framing before design. Not for writing a
   technical design, planning implementation, or implementing.
 argument-hint: "[idea or brainstorm-path] [help]"
 ---
@@ -27,7 +28,7 @@ If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of tho
 
 ### 1. Establish the brief and project conventions
 
-Use the current request as the idea or intent. If the user names an existing brainstorm, read it in full and identify what remains unresolved. If no idea or source is identified, look for project-native evidence of one clearly intended active brainstorm. Use that candidate and state which one you selected. If several are plausible, present a short ranked set and ask. If none exists, ask what problem the user wants to explore.
+Use the current request as the idea or intent. If it already states everything that matters, skip brainstorming: say so in one line and hand off to implementation. If the user names an existing brainstorm, read it in full and identify what remains unresolved. If no idea or source is identified, look for project-native evidence of one clearly intended active brainstorm. Use that candidate and state which one you selected. If several are plausible, present a short ranked set and ask. If none exists, ask what problem the user wants to explore.
 
 If a named source is missing or unreadable, stop and name the path instead of reconstructing it from conversation. Follow project rules for superseded artifacts. A draft can be resumed as a draft; its recommendations do not become reviewed decisions by being present in the file.
 
@@ -51,7 +52,7 @@ Completion: the problem, scope, credible options, and consequential choices are 
 
 ### 3. Record the brainstorm
 
-When project rules require a durable artifact, write it as the discussion develops in the project's location. Save one when the user requests it. When a fresh-session handoff would be useful and saving is optional, ask whether to save before creating the file. A short discussion may stay in chat.
+Save a file when project rules require one, the user asks, or the discussion records decisions worth keeping for later sessions or other people. Write it as the discussion develops in the project's location. Otherwise the brainstorm stays in chat.
 
 The brainstorm records the problem and audience, goal and exclusions, constraints and evidence, options with trade-offs, settled points with reasons, open questions, and any discovery links. Use the project's presentation and status rules. Mark a recommendation as a recommendation until accepted by the user or resolved under an explicit delegation; distinguish those sources of authority. Preserve existing decisions when resuming; record an explicit current-session change rather than silently rewriting the source.
 

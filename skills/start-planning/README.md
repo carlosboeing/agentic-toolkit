@@ -31,6 +31,8 @@ flowchart TB
     Scope -->|Yes| Handoff["Hand off to the implementation skill"]
 ```
 
+When the design is small enough for an in-session plan, it says so once and recommends implementation; it writes the plan if you still want one.
+
 It does not rebuild requirements from earlier design chat or reopen settled decisions without current authority. A planning-only request stops at plan review; an explicitly authorized autonomous run may complete that review and hand off to implementation.
 
 ## Example

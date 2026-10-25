@@ -1,6 +1,6 @@
 # start-design
 
-Writes a technical design from a reviewed brainstorm, optional discovery, or a clear brief. Use it in a fresh session to produce the design for review before implementation planning.
+Writes a technical design from a reviewed brainstorm, optional discovery, or a clear brief. Use it in a fresh session to produce the design for review before implementation planning. For bounded work it presents a short design in chat instead of a file.
 
 ## Usage
 
@@ -33,6 +33,7 @@ If later work disproves a consequential assumption, the affected work stops for 
 | Help argument | Show the synopsis without exploration or writes. |
 | Reviewed brainstorm and optional discovery paths | Read them in full; treat discovery as evidence, not approval. |
 | Clear brief without a brainstorm | Design from that brief; create no ceremonial brainstorm. |
+| Bounded work | Present a short design in chat, ask for approval of any real choice, then hand off to implementation; write no file. |
 | Several plausible source artifacts | Ask for a choice rather than treating the newest as authoritative. |
 | No status field | Follow project readiness rules; do not invent a universal schema. |
 | An optional project contract pointer is absent | Use the installed shared contract and ordinary project conventions. |

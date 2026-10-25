@@ -2,8 +2,9 @@
 name: start-design
 description: >
   Use when starting or revising a technical design from a reviewed brainstorm,
-  discovery findings, or a clear brief, including fresh-session requests to
-  write a design or start the design phase. Not for brainstorming an unclear
+  discovery findings, or a clear brief, including requests such as "design X",
+  "how should we build X", or "write a spec", and fresh-session requests to
+  start the design phase. Not for brainstorming an unclear
   problem, writing an implementation plan, or implementing.
 argument-hint: "[brief-or-brainstorm-path] [discovery-path ...] [help]"
 ---
@@ -59,6 +60,8 @@ Completion: consequential assumptions have evidence or explicit unresolved quest
 
 ### 4. Write the complete design
 
+Choose the form first. For bounded work, present a short design in chat: intent, approach, affected surfaces, and proof, in a few short paragraphs. Ask for approval when it contains a real choice, then hand off to the implementation skill with an in-session plan; write no file. Write a design file when the user asks, or when the work records a decision worth keeping, needs review across people or sessions, or is large, risky or complex. When unsure, write the file. If complexity appears later, step up to a file. The rest of this step applies to a design file.
+
 Write the design in one pass once the inputs are sufficient, using the contract and project presentation. Link the brainstorm, discovery, and applicable product or architecture records that supply decisions or evidence, or identify the current brief when no upstream artifact exists. Account for each consequential prior decision by stating how the design preserves it, proposes changing it, or excludes it from this change with a reason. Compact prose is enough; no mandatory table or new decision document is required. Record the selected approach, alternatives and trade-offs, architecture, consequential interfaces and invariants, failure behavior, acceptance criteria, and checked assumptions. Include diagrams when they make branching behavior or component boundaries easier to review.
 
 Use established project terms and concrete edge cases to expose ambiguous relationships. Keep file locations as current-state navigation hints. Include exact schemas or interface details when they fix a consequential contract; leave routine code choices to implementation. Create glossary or ADR artifacts only when project rules or the user require them.
@@ -73,7 +76,7 @@ Check every required contract answer. Compare the design against the source scop
 
 Present the design path and complete the applicable design review. By default ask for human review and stop. If an explicit autonomous workflow includes later phases and delegates this review, perform the requested review, record its evidence and run authority, and hand off to the next authorized phase skill without another permission round. Stop at a retained human gate, at the workflow's requested endpoint, or for a consequential choice outside the delegation. A design-only request does not authorize planning or implementation. The next phase uses the reviewed source and recorded authorization, not a generated recap.
 
-Git actions follow project rules and actual authorization; a retained review-before-commit gate stays in place. Writing a draft alone does not authorize commit, push, publication, or a later phase. Record the reviewed revision, scope, review evidence, and authority using existing project conventions. Distinguish a human's artifact approval from delegated readiness based on the user's autonomous request and completed review. Use project-native status only when its readiness rules are met, and never label delegated agent review as personal human approval.
+Git actions follow project rules and actual authorization; a retained review-before-commit gate stays in place. Writing a draft alone does not authorize commit, push, publication, or a later phase. Record the reviewed revision, scope, review evidence, and authority using existing project conventions. Commit drafts as project rules allow. Where the project uses frontmatter, record review in `status` and `reviewed_by`: the accountable human's GitHub username, plus `(delegated to <model>, <harness>)` when that human did not read the document, in one commit; that commit is the reviewed revision. Distinguish a human's artifact approval from delegated readiness based on the user's autonomous request and completed review. Use project-native status only when its readiness rules are met, and never label delegated agent review as personal human approval.
 
 If planning or implementation later disproves a consequential assumption, stop the affected work, record the evidence, amend the design, and obtain review of that amendment before changing the plan or code to follow it. Unaffected independent work may continue.
 

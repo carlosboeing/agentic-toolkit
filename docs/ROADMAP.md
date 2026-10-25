@@ -17,6 +17,7 @@ None at the moment.
 - **`/init-project` skill.** One skill to scaffold a new project, fill an empty directory, or retrofit the documentation conventions onto an existing project.
 - **Distribution for tools that bundle agent files.** Package a command-line tool together with its skills, hooks and commands so users do not assemble the pieces by hand.
 - **Harness-agnostic memory.** [Selection guidance](../guides/guide-agent-memory-selection.md) and a [dated options comparison](../reference/reference-agent-memory-options.md) are documented. A trial of cheaper observers or local replacements remains open; verify capture, cross-harness recall and backup restoration before adopting one.
+- **Lifecycle skills: Superpowers parity and trimming.** Bring the Superpowers behaviour the lifecycle skills need into them, copy the standalone skills that have no counterpart, then uninstall Superpowers. Trim the lifecycle skills by trial on each harness.
 - **Template variants per project type.** Split the project templates when the needs of different project types diverge.
 
 ## Open questions

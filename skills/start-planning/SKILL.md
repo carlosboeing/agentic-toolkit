@@ -96,7 +96,9 @@ Do not copy another repository's status vocabulary, plan folder, or roadmap rule
 
 The resolved file must exist and be readable. If not, stop and name the path.
 
-Then follow **this project's** readiness rules and the user's actual run authorization. Verify the reviewed revision, scope, review evidence, and authority in existing project records. Personal human approval and readiness under an explicitly delegated review are different sources of authority; do not label one as the other. For an autonomous run that includes planning, completed delegated review can establish readiness when applicable rules allow it. If a human gate remains required, stop until that approval is given. A status field, self-review, model verdict, commit, or generic "continue" alone does not grant authority. If the project says not to plan a draft, stop; delegated review does not override that rule. If it marks the design superseded, stop and point at the replacement.
+Then follow **this project's** readiness rules and the user's actual run authorization. Verify the reviewed revision, scope, review evidence, and authority in existing project records. Where the design uses frontmatter, read `status` and `reviewed_by`; the reviewed revision is the commit that set them. Personal human approval and readiness under an explicitly delegated review are different sources of authority; do not label one as the other. For an autonomous run that includes planning, completed delegated review can establish readiness when applicable rules allow it. If a human gate remains required, stop until that approval is given. A status field, self-review, model verdict, commit, or generic "continue" alone does not grant authority. If the project says not to plan a draft, stop; delegated review does not override that rule. If it marks the design superseded, stop and point at the replacement.
+
+If the design is small enough for an in-session plan, say so once and recommend the implementation skill; write the plan if the user still wants one.
 
 Those examples are how to follow a local rule. They are not a universal schema. A file with no status field is not unreadiness.
 

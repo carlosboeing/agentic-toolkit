@@ -16,15 +16,16 @@ The skill reads project conventions, inspects relevant facts, and asks decisions
 
 ## Output and review stop
 
-The result distinguishes accepted decisions, recommendations, assumptions, and open questions. It includes scope, alternatives, reasons, and evidence. Project rules control where artifacts go and their metadata. A short discussion can stay in chat unless the project requires a file.
+The result distinguishes accepted decisions, recommendations, assumptions, and open questions. It includes scope, alternatives, reasons, and evidence. Project rules control where artifacts go and their metadata.
 
-The skill presents the brainstorm for its applicable review and asks about saving only when that choice remains open. The next phase may skip discovery, design, or a plan document when its inputs suffice. A brainstorm-only request stops here; an authorized autonomous workflow may continue after the requested review. A recommendation or review verdict alone grants no authority.
+The skill presents the brainstorm for its applicable review. It saves a file only when project rules require one, you ask, or the discussion records decisions worth keeping; otherwise it stays in chat. The next phase may skip discovery, design, or a plan document when its inputs suffice. A brainstorm-only request stops here; an authorized autonomous workflow may continue after the requested review. A recommendation or review verdict alone grants no authority.
 
 ## Boundary examples
 
 | Request or state | Expected behavior |
 |---|---|
 | Help argument | Show the synopsis and perform no exploration or writes. |
+| The request already states everything that matters | Say so and hand off to implementation. |
 | An idea already states its audience and constraints | Use those facts; ask only about unresolved choices. |
 | A choice depends on another open choice | Wait for the prerequisite answer before asking the dependent question. |
 | A factual question can be answered from code | Inspect the code instead of asking the user to recall it. |
