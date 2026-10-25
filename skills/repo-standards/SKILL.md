@@ -1,7 +1,7 @@
 ---
 name: repo-standards
 description: |
-  Apply the repo house standard to any carlosboeing/* repo: check or fix community health files, pinned workflows, dependabot, and branch protection. Single source is reference/reference-oss-standards.md. Use when creating a new repo, promoting a private repo to public OSS, or auditing CI/governance drift. Deterministic - reads the reference, never generates pins.
+  Apply the repo house standard to any carlosboeing/* repo: check or fix community health files, pinned workflows, dependabot, and branch protection. Single source is reference/reference-oss-standards.md. Use when creating a new repo, promoting a private repo to public OSS, or auditing CI/governance drift. Verifies 40-character commit SHAs and inline tag comments.
 argument-hint: "[check|fix|scaffold] [oss|private] [path|name] [help]"
 ---
 
@@ -59,7 +59,7 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
 1. Read `<REPO_STANDARD_URL>` via `Read` on local `reference/reference-oss-standards.md` if available, else fetch URL.
 2. Resolve `visibility` (flag or auto-detect). State inference: `Visibility: oss (public repo)` or `Visibility: private (auto-detected)`.
 3. For `path`:
-   - Base (always): `grep -q 3d3c42e...` `8207627...` etc., `test -f` `CODEOWNERS`, `dependabot.yml`, `docs/` lifecycle; `required` gate present.
+   - Base (always): verify workflow actions use full 40-char commit SHAs with inline `# vX.Y.Z` comments (`! grep -E 'uses: [^@]+@(v[0-9]|main|master)'`), `test -f` `CODEOWNERS`, `dependabot.yml`, `docs/` lifecycle; `required` gate present.
    - Git hooks: for the repository and `.workbench` (when `.workbench/.git` exists):
      1. `core.hooksPath` unset, or set to anything other than `scripts/githooks` (`git config --get core.hooksPath`).
      2. `scripts/githooks/pre-push` missing or not executable (`test -x scripts/githooks/pre-push`).
@@ -78,7 +78,7 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
      - `git config core.hooksPath scripts/githooks`.
    - Missing `SUPPORT.md` or yml forms -> copy `templates/default-project/.github/ISSUE_TEMPLATE/*` and `templates/default-project/SUPPORT.md`, fill `<OWNER>`/`<REPO>` via `gh repo view --json nameWithOwner`.
    - Missing health files (oss only) -> copy `templates/default-project/CODE_OF_CONDUCT.md` etc., replace `<PROJECT_NAME>`.
-   - SHA drift -> `Edit` `replaceAll` to pinned SHAs from reference §2.
+   - Unpinned or floating action tags -> replace with full 40-char commit SHA and `# vX.Y.Z` comment (using baseline from reference §2 or resolving tag commit).
    - `gmail.com` found -> replace with `[@<OWNER>](https://github.com/<OWNER>)` + `security/advisories/new` per §5.
 3. Do not touch `dependabot.yml` `npm` if no `package.json`.
 4. Branch protection: `gh api .../rulesets` -> `["required"]` only after confirmation.
@@ -96,7 +96,7 @@ Prefer template copy over generation - deterministic.
 
 ## Rules
 
-- Never generate a SHA - read reference §2.
+- Action pins must be 40-char commit SHAs with inline `# vX.Y.Z` comments, never floating major tags or branch names.
 - Never write a personal email.
-- Verify before claiming done: `! grep -q gmail` and `grep -q 3d3c42e`.
+- Verify before claiming done: `! grep -q gmail` and no unpinned action tags in `.github/workflows/*.yml`.
 - Keep `CLAUDE.md` harness-neutral.

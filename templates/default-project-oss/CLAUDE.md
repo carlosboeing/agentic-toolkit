@@ -96,7 +96,7 @@ Conventional Commits format: `<type>(<scope>): <description>`. Types: `feat`, `f
 
 ## OSS house standard
 
-Before creating or editing `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/*`, `.github/dependabot.yml`, `.github/workflows/*`, `.github/CODEOWNERS`, or branch protection, read `reference/reference-oss-standards.md` in `agentic-toolkit` (or `https://github.com/carlosboeing/agentic-toolkit/blob/main/reference/reference-oss-standards.md`) and follow it verbatim. Pin SHAs as listed, use `https://github.com/<owner>/<repo>/security/advisories/new` + `@<owner>` contacts, no personal email. The `required` job is the only `required_status_checks` entry.
+Before creating or editing `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/*`, `.github/dependabot.yml`, `.github/workflows/*`, `.github/CODEOWNERS`, or branch protection, read `reference/reference-oss-standards.md` in `agentic-toolkit` (or `https://github.com/carlosboeing/agentic-toolkit/blob/main/reference/reference-oss-standards.md`) and follow it verbatim. Pin actions to full 40-character commit SHAs with `# vX.Y.Z` comments, keep updated via Dependabot, use `https://github.com/<owner>/<repo>/security/advisories/new` + `@<owner>` contacts, no personal email. The `required` job is the only `required_status_checks` entry.
 
 ## Where to look first
 
