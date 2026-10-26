@@ -10,6 +10,7 @@ None at the moment.
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
 - **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
+- **Privacy guard false positive.** The pre-commit pattern for macOS home paths ignores letter case, so example code with a lowercase `users` path segment is blocked. Make that match case-sensitive.
 
 ## Future considerations
 
@@ -19,6 +20,7 @@ None at the moment.
 - **Harness-agnostic memory.** [Selection guidance](../guides/guide-agent-memory-selection.md) and a [dated options comparison](../reference/reference-agent-memory-options.md) are documented. A trial of cheaper observers or local replacements remains open; verify capture, cross-harness recall and backup restoration before adopting one.
 - **Shrink `briefing` and `learn` below the skill size limit.** Both are listed exceptions in `tests/test-skill-size.sh`. Simplify `briefing` to Git, GitHub and the Project Map; drop `learn` from sync or stop the model from loading it on its own.
 - **Template variants per project type.** Split the project templates when the needs of different project types diverge.
+- **Unify plan-driven dispatch with the toolkit.** Open questions: plugin or platform, dispatch from plan files or issues, whether difficulty labels become required, and whether `check-plan.py` checks for dependency cycles.
 
 ## Open questions
 
@@ -26,7 +28,7 @@ None at the moment.
 
 ## Parked
 
-None at the moment.
+- **Deferred: retire `plugins/install-superpowers.sh`.** It stays as the rollback path until the per-harness skill trigger check passes and a stable period follows.
 
 ## Recently shipped
 
