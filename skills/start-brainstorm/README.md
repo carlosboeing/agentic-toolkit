@@ -25,7 +25,7 @@ The skill presents the brainstorm for its applicable review. It saves a file onl
 | Request or state | Expected behavior |
 |---|---|
 | Help argument | Show the synopsis and perform no exploration or writes. |
-| The request already states everything that matters | Say so and hand off to implementation. |
+| Clear request for implementation | Use implementation with an in-session plan; an explicit brainstorm request still gets exploration. |
 | An idea already states its audience and constraints | Use those facts; ask only about unresolved choices. |
 | A choice depends on another open choice | Wait for the prerequisite answer before asking the dependent question. |
 | A factual question can be answered from code | Inspect the code instead of asking the user to recall it. |
@@ -46,3 +46,5 @@ Two rules come from Superpowers `brainstorming` in [7.0.0 and 7.0.1](https://git
 ## Phase scope and autonomy
 
 Defaults and autonomous runs follow [Phase boundaries](../README.md#phase-boundaries).
+
+Exploration can stop or produce several initiatives. Promotion follows explicit intent or included autonomous scope. Identify one accepted-scope owner and link its rationale without automatically superseding the brainstorm. Research can precede or support exploration; deliberate product definition uses `start-requirements` when useful.

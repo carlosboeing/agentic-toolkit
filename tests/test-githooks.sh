@@ -91,6 +91,12 @@ test_staged_content() {
 _assert_eq "citing .workbench/2-design/example.md is refused" "refused" \
   "$(test_staged_content "note.md" "See .workbench/2-design/example.md for details.")"
 
+# Retain legacy citations above and cover each target lifecycle location.
+for lifecycle in 1-research 2-requirements 3-design 4-plans 5-reviews 6-retros 6-retros/lessons/workstream; do
+  _assert_eq "citing private target $lifecycle is refused" "refused" \
+    "$(test_staged_content "note.md" "See .workbench/$lifecycle/example.md for details.")"
+done
+
 # 3. Stage each remaining denied term
 _assert_eq "denied term 'agentic-toolkit-workbench' is refused" "refused" \
   "$(test_staged_content "note.md" "Pushed candidate to agentic-toolkit-workbench remote.")"

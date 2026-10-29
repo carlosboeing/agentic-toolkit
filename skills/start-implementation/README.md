@@ -1,6 +1,6 @@
 # start-implementation
 
-Drives implementation from an approved plan, whole or by one task, an execution-ready design or issue, or a clear current request for work whose scope and acceptance can be established. Work with an in-session plan can start without a design or plan document. One controller runs the phase: it selects ready work, delegates where the harness supports it, verifies results, integrates, and records progress. It stops at the authorized delivery milestone.
+Drives implementation from an approved plan, whole or by one task, an execution-ready design or issue, or a clear current request for work whose scope and acceptance can be established. Work with an in-session plan can start without a design or plan document. One controller runs the phase: it selects ready work, delegates where authorized and supported, verifies results, integrates, and records progress. It stops at the authorized delivery milestone.
 
 ## What it does
 
@@ -62,9 +62,11 @@ See [Install one skill](../README.md#install-one-skill) in the skills catalog, o
 - When a durable plan exists, progress follows the two-commit sequence: the code commit first, then a plan commit that ticks the task and records the code SHA. One controller owns plan writes.
 - Delegation is checked against the live harness at run time. When no worker facility exists, the same tasks run serially instead of faking one.
 - Workers and reviewers get the prompts in [references/](references/): an implementer prompt, a task reviewer prompt, and a re-review prompt that checks fixes only. They are rewritten from the Superpowers [`subagent-driven-development`](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/subagent-driven-development) templates at `2ce8aa1`, under the MIT notice in [LICENSE](LICENSE).
-- One review of the whole branch runs before the delivery milestone, on the most capable model available, after [Superpowers 6.4.1](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/RELEASE-NOTES.md).
+- One review of the whole branch runs before the delivery milestone, with depth and model choice proportionate to consequence and project rules. This adapts the final branch-review technique from [Superpowers 6.4.1](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/RELEASE-NOTES.md).
 - A fix with no known cause, or a second failed repair, goes to [`start-debugging`](../start-debugging/). Behaviour changes with a test seam follow [`tdd`](../tdd/).
 
 ## Phase scope and autonomy
 
 Defaults and autonomous runs follow [Phase boundaries](../README.md#phase-boundaries).
+
+Reviewed-commit and durable-plan marker checks apply only to artifacts and gates that exist. Request-only work still reconciles scope, constraints, current Git, and proof. Orchestrated dispatch requires known dependencies and a checked acyclic graph, plus separate concurrency and integration checks. Review remains integrated and proportional; serial self-review never claims independence.

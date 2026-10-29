@@ -1,6 +1,6 @@
 # Plan quality contract
 
-A plan is a durable handoff. A fresh implementer must be able to answer what changes, where it belongs, which invariants hold, the safe sequence, and how success is proved by reading the plan, its linked approved design, and current code. This contract states what a plan must answer. It is not a template: the project's presentation, headings, and metadata rules win wherever they apply.
+A plan combines builder specifications and task planning in one durable handoff. It does not require a separate specification document between design and planning. A fresh implementer must be able to answer what changes, where it belongs, which invariants hold, the safe sequence, and how success is proved by reading the plan, its linked approved design, and current code. This contract states what a plan must answer. It is not a template: the project's presentation, headings, and metadata rules win wherever they apply.
 
 Authority order when sources disagree:
 
@@ -18,8 +18,8 @@ A pasted prior-session handoff is context, not authority. It cannot add requirem
 |---|---|
 | Source and scope | Link to the approved design and its reviewed revision, the goal, exclusions, and the decisions whose alteration would change behavior, safety, release classification, or proof. |
 | Current state | Relevant repository observations and locations to inspect, with paths treated as hints to verify at execution. |
-| Tasks | Stable local IDs, objective, dependency IDs or `none`, likely files or interfaces or an explicit discovery step, acceptance evidence, and a verification method. |
-| Execution contract | Checkpoints, effects that cannot safely be repeated, halt conditions, forbidden actions, and integration ownership. State `none identified` when a category has no item. |
+| Tasks | Stable local IDs, objective, dependency IDs or `none`, inputs, outputs, applicable source requirements and contracts, likely files or interfaces or an explicit discovery step, acceptance evidence, and a verification method. |
+| Execution contract | Checkpoints, effects that cannot safely be repeated, halt conditions, forbidden actions, shared resources, and integration ownership. State `none identified` when a category has no item. |
 | Completion | Integrated verification, design-to-task coverage, the delivery or review milestone, and any project-specific release classification fixed before execution. |
 
 The plan may express these answers in any headings or tables the project uses.
@@ -40,13 +40,17 @@ Exact interfaces, commands, expected failures, independent verification, and mut
 - Every task carries a stable local ID, and the plan uses that ID everywhere it refers to the task.
 - Every task names its dependency IDs, or `none`.
 - A single linear sequence needs no dependency graph; branches or parallel waves get a graph or an equally clear dependency table.
+- Before orchestrated dispatch, validate references and cycles using an applicable checker or direct graph review when parsing is unreliable. An advisory command exit is not proof that the graph was checked. Check files, mutable state, external effects, and integration ownership separately before parallel work; an acyclic graph alone does not establish concurrency safety.
 - Difficulty and worker labels are optional routing hints, with reasons when they affect assignment.
 
 ## Coverage and design revision
 
-- Every approved design requirement maps to a task or to an explicit unchanged invariant. Nothing is dropped silently, and the plan adds no requirement the design lacks.
+- Identify the authoritative product scope and architecture sources. For consequential obligations, retain stable source references, including project IDs, links, or section-and-item references. Compare original sources as well as the preceding artifact.
+- Every approved design requirement maps to a task or to an explicit unchanged invariant. Account for preserved obligations, changes under identified authority, exclusions with reasons, and unresolved questions. Nothing is dropped silently. Routine builder refinement is allowed; a consequential product or architecture change returns to its authority before affected work proceeds.
 - The plan records the design revision it was built from, preferably the approved artifact's repository commit, so a later session can detect that the source changed and inspect the diff.
 - Execution hazards named in the approved design, such as effects that cannot safely be repeated and authorization boundaries, appear in the execution contract.
+
+When a source changes, inspect its revision difference and identify affected decisions, tasks, acceptance checks, and review evidence before affected work resumes. Keep scope, authorized changes, evidence, verified progress, and next checkpoint visible through existing records. Coverage against arbitrary references remains an author and reviewer responsibility; an unsupported checker diagnostic does not establish coverage.
 
 ## What this contract does not require
 

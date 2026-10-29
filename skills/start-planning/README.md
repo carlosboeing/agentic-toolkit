@@ -1,6 +1,6 @@
 # start-planning
 
-Starts an implementation plan from an approved design, in a fresh session. The skill keeps design and planning as separate steps. The project decides the details: where plans go, how they are named and reviewed, and which planning skill to use.
+Starts an implementation plan from an approved design, in a fresh session. It combines builder specifications and task planning; no mandatory spec phase sits between design and planning. The project decides the details: where plans go, how they are named and reviewed, and which planning skill to use.
 
 ## What it does
 
@@ -92,3 +92,5 @@ Defaults and autonomous runs follow [Phase boundaries](../README.md#phase-bounda
 ## Sources
 
 The rule that a plan records decisions, not code, with length in proportion to the design, comes from [Superpowers 6.4.1](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/RELEASE-NOTES.md).
+
+Tasks carry inputs, outputs, relevant contracts, source obligations, acceptance proof, dependencies, shared resources, and integration ownership. The advisory checker reports recognized cycles and unknown dependencies; unsupported syntax requires direct graph review before dispatch. An acyclic graph does not establish concurrency safety. Original product and architecture sources remain authoritative; arbitrary source-reference coverage requires author and reviewer judgment.

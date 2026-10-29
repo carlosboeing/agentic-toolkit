@@ -39,9 +39,11 @@ Declares where project-tracking information lives so the [`/briefing`](skills/br
 
 | Goes to `.workbench/` (private) | Goes here (public) |
 |---|---|
-| Lifecycle working memory: `0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/`, `notes/`, internal procedural guides | Code, tests, templates, skills, hooks, rules |
+| Lifecycle working memory: `0-brainstorms/`, `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/`, `6-retros/`, `notes/`; legacy layout retained during adoption, internal procedural guides | Code, tests, templates, skills, hooks, rules |
 | Working memory docs, retros, scratch notes, spikes, evaluation logs | Public documentation, reference catalogs, evergreen guides under `guides/` |
 | Anything about brand, company, naming strategy, or commercial direction | ADRs (`docs/adrs/`), `docs/ROADMAP.md`, `docs/CHANGELOG.md` |
+
+The target lifecycle layout above is published convention. Existing private records still use `1-discovery/`, `2-design/`, `3-plans/`, and `4-reviews/` until a separately authorized migration after merge, sync, and shared-session checks. Discover actual paths and types through the Project Map; neither folder names nor a newer document establish authority.
 
 The line is sharper than lifecycle-versus-product. **Anything about brand, company, naming strategy, or commercial direction — a hosted service, monetisation, pricing, company naming — is workbench-only even when it is a settled decision.** The public record covers the *what* of the toolkit: features, bug fixes, user-facing guides, and public architectural decisions. It never covers the *why* of private business or commercial strategy.
 
@@ -146,11 +148,11 @@ Heuristic for spotting a ship: the staged diff touches `skills/`, `plugins/`, `a
 Summary of the rules that bite most often:
 
 - **When `.workbench/` is present:**
-  - **When an initiative starts in conversation, write it down immediately.** Substantive new work creates `.workbench/0-brainstorms/<topic>.md` (`status: open`) AND a one-line pointer in ROADMAP `## Future considerations` or `## Next actions`. Don't wait for a commit prompt.
-  - **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter in `.workbench/2-design/` (`status: shipped`), AND the relevant evergreen state docs (per conventions guide §6.2 change discipline).
+  - **Preserve consequential decisions and recovery context.** Use a brainstorm for substantive exploration, an existing source for accepted scope, and the declared records for substantial handoffs. Clear changes can proceed from the request with an in-session plan. A phase or document is not required solely by category. Public ROADMAP pointers must obey the privacy rules.
+  - **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter in its actual declared design directory (`status: shipped`), AND the relevant evergreen state docs (per conventions guide §6.2 change discipline).
   - **Run `git` at repository root for public commits; run `git -C .workbench` for private commits.** Never cross-commit.
   - **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
-  - **Substantive audits or retros emerging from a conversation get saved** to `.workbench/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
+  - **Substantive audits or retros emerging from a conversation get saved** to the actual declared review directory, or the retrospective directory for process retros; the target locations are `5-reviews/` and `6-retros/`, with lessons captured in any phase before the session ends.
   - **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did — that includes flipping each touched lifecycle doc's own frontmatter `status` (design *and* plan move to `shipped` when they ship), not just the tracking files. If not, propose the missing writes inline.
   - **Plan checkboxes are the durable execution record.** When implementing a plan, mark its `- [ ]` steps `- [x]` as they land instead of tracking only in the session's todo tool — a fresh session resumes from the file, not from your todos.
 - **When `.workbench/` is absent (outside contributor):**

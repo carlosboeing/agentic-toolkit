@@ -5,15 +5,15 @@ description: >
   session and requests such as "write the plan from this design", "start
   planning this design", "start the planning phase", "create the implementation
   plan", "plan this design", or "start implementation planning". Use even when
-  no design path is given. Not for writing the design, and not for implementing.
+  no design path is given. Also use for builder specifications with tasks, acceptance
+  criteria, and dependencies from a usable design. Not for product-scope definition,
+  writing the technical design, or implementing.
 argument-hint: "[design-path] [help]"
 ---
 
 # `/start-planning`
 
-Start implementation planning from a durable design artifact in a fresh session.
-
-**Prescribe what is invariant about the phase. Discover what is conventional about the project.**
+Combine builder specifications and executable task planning from a usable design. No mandatory specification document or phase sits between design and planning. This skill produces a durable plan when requested or warranted; native in-session planning belongs within implementation.
 
 A later planner needs this skill, a design artifact, and the current repository, not a summary of the design conversation. A phase transition may reduce context; it must not increase authority. Human review is the default stop. An explicit autonomous full or partial workflow can already authorize the included reviews and handoffs: read its scope and stopping point from the durable project record where the run recorded it, and keep retained human gates.
 
@@ -69,7 +69,7 @@ If the design is small enough for an in-session plan, say so once and recommend 
 
 Read the design in full; it is the intended solution. Inspect the code, tests, configuration, and other state the design materially implicates, including Git facts that affect decomposition. Keep inspection scoped.
 
-Conversation, transcripts, and handoff prompts are not sources of requirements. Instructions the user gives in this session stay authoritative and may constrain the work; they do not silently override settled decisions unless the user says so. A pasted prior-session prompt is handoff material: if its rule conflicts with the design or project contract, ask once whether to adopt it. Its task counts, product requirements, and review gates do not travel.
+An explicit current request or accepted in-session agreement can own requirements. Transcripts and handoff summaries do not silently replace that owner or the authoritative product and architecture sources. Instructions the user gives in this session stay authoritative and may constrain the work; they do not silently override settled decisions unless the user says so. A pasted prior-session prompt is handoff material: if its rule conflicts with the design or project contract, ask once whether to adopt it. Its task counts, product requirements, and review gates do not travel.
 
 ### 5. Write the plan
 
@@ -84,8 +84,8 @@ The plan contract is the quality bar; the project's method and presentation deci
 Self-check:
 
 - Each design requirement maps to planned work, an unchanged invariant, or an authoritative exclusion. The plan adds no requirement.
-- Every contract answer is present: stable task IDs with dependency IDs or `none`, a verification method or stated alternative proof per task, the design revision, and each execution-contract category answered or `none identified`.
-- Run `python3 <this skill's installed directory>/scripts/check-plan.py <plan-path>`. Fix its mechanical findings or explain them. `unable to check` lines need direct review. The checker advises only.
+- Every contract answer is present: stable task IDs with dependency IDs or `none`, inputs, outputs, source obligations, relevant contracts, shared resources and integration ownership, a verification method or stated alternative proof per task, the design revision, and each execution-contract category answered or `none identified`.
+- Run `python3 <this skill's installed directory>/scripts/check-plan.py <plan-path>`. Fix its mechanical findings or explain them. `unable to check` lines need direct review. The checker advises only. Validate known references and cycles before orchestrated dispatch; directly review the graph if its format cannot be parsed. An acyclic graph alone does not establish safe concurrency. Coverage against arbitrary stable source references remains a direct author and reviewer check.
 
 ### 6. Stop
 
@@ -105,3 +105,11 @@ Weaker permission never implies a stronger one: inspecting does not allow unrela
 | "No status field, so I should refuse" | Missing schema is not unreadiness. |
 | "I'll update the roadmap, approve the design, and commit" | Only if the project requires those writes for planning. |
 | "The user said plan it, so I can ignore the design's scope" | Current instructions may constrain; they do not silently override the design. |
+
+## Intent, learning, and handoff
+
+Read applicable original product and architecture sources and relevant prior lessons, not just the preceding summary. For substantial work, preserve stable references to consequential obligations and account for each as preserved, changed under identified authority, excluded with a reason, or unresolved. Unresolved obligations or unauthorized changes block affected work. When sources change, inspect their revision differences and reconcile affected decisions, tasks, tests, and reviews before proceeding.
+
+Keep current scope, consequential changes and their authority, verified progress and evidence, unresolved decisions, and the next checkpoint visible in existing records. Capture reusable observations where encountered, with evidence, workaround and result, and confirmed cause or uncertainty. A short lesson can stay in the work record; a standalone lesson is useful for discovery, reuse, or concurrent writing. Avoid a lesson for every transient error.
+
+At completion, state the outcome and material gaps and recommend a next step when apparent. Explain whether the same session or a fresh one better serves context or review, and recommend human or independent review when consequence warrants it. Recommendations grant no authority. Stop at the requested endpoint or a retained human gate; continue only within explicit included workflow scope.

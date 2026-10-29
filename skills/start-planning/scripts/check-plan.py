@@ -6,7 +6,7 @@ Usage:
     python3 skills/start-planning/scripts/check-plan.py --help
 
 Reports mechanical omissions in a plan: missing frontmatter, a broken local
-design link, duplicate task IDs, unresolved dependency IDs, a task without
+design link, duplicate task IDs, unresolved dependency IDs, dependency cycles, a task without
 verification evidence, and absent design coverage. It advises, it never
 blocks: a report exits 0, and usage or file-read errors exit 2. A
 presentation the checker cannot parse is reported as `unable to check` for
@@ -31,7 +31,7 @@ TASK_BULLET = re.compile(
 )
 TASK_TABLE = re.compile(rf"^\|\s*(?P<id>{ID})\s*\|(?P<body>.*)$")
 TASK_BARE = re.compile(rf"^(?P<id>{ID})\s*[:—–-]\s+(?P<body>.*)$")
-DEP_PHRASE = re.compile(r"(?:depends\s+on|dependencies|dep)\s*[: ]\s*(?P<deps>[^.;|]*)", re.I)
+DEP_PHRASE = re.compile(r"(?:\bdepends\s+on\b\s*:?\s*|\b(?:dependencies|dep)\s*:\s*)(?P<deps>[^.;|]*)", re.I)
 VERIFICATION = re.compile(r"verif|proof|prove|test|check|assert|command", re.I)
 LINK = re.compile(r"\[[^\]]*\]\((?P<target>[^)\s]+)\)")
 
@@ -70,8 +70,17 @@ def parse_tasks(lines, requirement_ids):
     duplicates = []
     current = None
     mode = None
+    dependency_column = None
 
     for line in lines:
+        if line.lstrip().startswith("|"):
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            for index, cell in enumerate(cells):
+                if cell.lower() in {"depends on", "dependencies", "dep"}:
+                    dependency_column = index
+                    break
+        else:
+            dependency_column = None
         head = TASK_HEAD.match(line)
         inline = TASK_BULLET.match(line) or TASK_TABLE.match(line) or TASK_BARE.match(line)
         if head:
@@ -98,6 +107,9 @@ def parse_tasks(lines, requirement_ids):
                 display[nid] = tid
                 order.append(nid)
             blocks[nid].append(inline.group("body"))
+            if TASK_TABLE.match(line) and dependency_column is not None:
+                deps = cells[dependency_column] if dependency_column < len(cells) else ""
+                blocks[nid].append(f"Dependencies: {deps}.")
             current, mode = nid, "inline"
         elif current is not None:
             if not line.strip():
@@ -178,19 +190,52 @@ def check(path):
         findings.append(f"duplicate task ID {tid}")
 
     known = set(blocks)
+    graph = {nid: set() for nid in order}
     if not order:
         findings.append("unable to check: task list not recognized")
     else:
         for nid in order:
             block = " ".join(blocks[nid])
-            m = DEP_PHRASE.search(block)
-            if m:
-                for dep in ID_TOKEN.findall(m.group("deps")):
-                    if norm(dep) not in known and norm(dep) not in requirement_ids:
-                        findings.append(
-                            f"task {display[nid]}: unresolved dependency {dep}")
+            phrases = list(DEP_PHRASE.finditer(block))
+            if not phrases:
+                findings.append(f"unable to check: task {display[nid]} dependencies not recognized")
+            for match in phrases:
+                deps = match.group("deps")
+                tokens = ID_TOKEN.findall(deps)
+                residual = ID_TOKEN.sub("", deps)
+                residual = re.sub(r"\b(?:none|and)\b", "", residual, flags=re.I)
+                residual = re.sub(r"[\s,`*]+", "", residual)
+                if residual or (not tokens and not re.fullmatch(r"\s*none\s*", deps, re.I)):
+                    findings.append(f"unable to check: task {display[nid]} dependencies not recognized")
+                for dep in tokens:
+                    key = norm(dep)
+                    if key in known:
+                        graph[nid].add(key)
+                    elif key not in requirement_ids:
+                        findings.append(f"task {display[nid]}: unresolved dependency {dep}")
             if not VERIFICATION.search(block):
                 findings.append(f"task {display[nid]}: no verification evidence")
+
+    # Visit every component; a back edge identifies a cycle in the parsed graph.
+    visited, active, stack = set(), set(), []
+
+    def visit(nid):
+        if nid in active:
+            cycle = stack[stack.index(nid):] + [nid]
+            findings.append("dependency cycle: " + " -> ".join(display[t] for t in cycle))
+            return
+        if nid in visited:
+            return
+        active.add(nid)
+        stack.append(nid)
+        for dep in sorted(graph[nid]):
+            visit(dep)
+        stack.pop()
+        active.remove(nid)
+        visited.add(nid)
+
+    for nid in order:
+        visit(nid)
 
     if design_text is None:
         findings.append("unable to check: design coverage (no readable design link)")

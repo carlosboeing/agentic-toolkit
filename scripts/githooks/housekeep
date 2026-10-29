@@ -13,12 +13,11 @@
 
 set -uo pipefail
 
-# A lifecycle document is one file directly inside a lifecycle directory.
-# Anything nested deeper is a bundle or an assets folder, which the conventions
-# exempt: discovery bundle contents, assets/, imports/, notes/.
-LIFECYCLE_RE='(^|/)(0-brainstorms|1-discovery|2-design|3-plans|4-reviews|adrs)/[^/]+\.md$'
-VALID_STATUS='draft|approved|in-progress|shipped|resolved|superseded'
-LIFECYCLE_TYPE='brainstorm|research|discovery|design|plan|review|audit|retro|adr'
+# Check top-level lifecycle records in either layout, plus standalone lessons.
+# Other nested bundle contents and assets retain their metadata exemptions.
+LIFECYCLE_RE='(^|/)((0-brainstorms|1-discovery|1-research|2-requirements|2-design|3-design|3-plans|4-plans|4-reviews|5-reviews|6-retros|adrs)/[^/]+\.md|6-retros/lessons/[^/]+/[^/]+\.md)$'
+VALID_STATUS='draft|approved|in-progress|shipped|resolved|superseded|open|parked|abandoned'
+LIFECYCLE_TYPE='brainstorm|research|discovery|requirements|design|plan|review|audit|analysis|retro|lesson|adr'
 
 # --- helpers ----------------------------------------------------------------
 

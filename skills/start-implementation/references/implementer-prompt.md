@@ -5,7 +5,7 @@ The controller fills the bracketed fields and sends this to a fresh worker for o
 ```text
 You are implementing task [TASK_ID]: [TASK_NAME].
 
-Source: read the task in [PLAN_PATH] and the design decisions it cites in [DESIGN_PATH]. These define the work; this prompt adds no requirements.
+Source: read the task in [PLAN_PATH] and the original product and architecture sources and design decisions it cites in [DESIGN_PATH]. These define the work; this prompt adds no requirements.
 Workspace: [WORKSPACE_PATH], branch [BRANCH], base [BASE_SHA].
 Files and tests likely involved: [FILES]
 Verification: [VERIFICATION_METHOD]

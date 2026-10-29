@@ -43,7 +43,7 @@ If you don't use one of these (e.g., no formal tracker), set the value to
 
 ## `docs/` — the project's working memory
 
-`docs/` records how this project evolves: the lifecycle of each piece of work (brainstorm → design → plan → retro), the ongoing indexes that orient new readers (ROADMAP, CHANGELOG), and the persistent decisions that outlive any single phase (ADRs). Authored by whoever's working on the project — human, AI, or both — and structured so anyone can answer "what did we decide and why?" without archaeology. AI assistants reading it on session start is a benefit, not the purpose.
+`docs/` records how this project evolves: the lifecycle of each piece of work (selected exploration, research, requirements, design, planning, delivery, review, and learning), the ongoing indexes that orient new readers (ROADMAP, CHANGELOG), and the persistent decisions that outlive any single phase (ADRs). Authored by whoever's working on the project — human, AI, or both — and structured so anyone can answer "what did we decide and why?" without archaeology. AI assistants reading it on session start is a benefit, not the purpose.
 
 ```
 docs/
@@ -51,13 +51,18 @@ docs/
 ├── CHANGELOG.md            — what shipped, when
 ├── notes/                  — scratch, chat dumps, external research; loaded as session context
 ├── 0-brainstorms/          — pre-design ideas (worth-elaborating; one-liners go in ROADMAP)
-├── 1-discovery/            — research, spikes, comparative analyses
-├── 2-design/               — specs + designs (conflated, by intent)
-├── 3-plans/                — phased implementation plans
-├── 4-reviews/              — retros, audits, reviews, analyses
+├── 1-research/            — research, spikes, comparative analyses
+├── 2-requirements/         — optional product briefs and PRDs
+├── 3-design/               — technical solution and consequential contracts
+├── 4-plans/                — builder specifications and executable task plans
+├── 5-reviews/              — artifact reviews, audits, analyses
+├── 6-retros/               — optional process retrospectives
+│   └── lessons/            — lessons/<workstream>/, captured in any phase
 ├── adrs/                   — single-decision records (NNNN-title.md)
 └── guides/                 — internal procedural how-tos
 ```
+
+Create folders only when used. These responsibilities can be mixed and matched; no phase, document, session, or agent is required solely by change category. Existing projects can retain legacy `1-discovery/`, `2-design/`, `3-plans/`, and `4-reviews/` until an authorized migration updates links, installed compatibility, and active sessions together.
 
 For the canonical conventions, see the source: [`guide-project-structure-and-conventions.md`](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md).
 
@@ -66,11 +71,19 @@ For the canonical conventions, see the source: [`guide-project-structure-and-con
 - **Single source of truth.** One canonical place per question. ROADMAP is "what's next"; ADRs are decisions; `docs/system/` or `docs/architecture.md` is current state.
 - **Self-describing filenames.** Lifecycle artifacts: `YYYY-MM-DD-<topic>-<suffix>.md` (`-design.md`, `-plan.md`, `-retro.md`, etc.). ADRs: `NNNN-<short-title>.md`. UPPERCASE.md for front-page meta files (`README.md`, `LICENSE`, `CHANGELOG.md`, `ROADMAP.md`); lowercase / kebab-case for content (`architecture.md`, `services.md`).
 - **Always-current vs frozen-in-time.** `docs/system/`, `docs/guides/`, `docs/architecture.md` are evergreen — updated, not appended. Lifecycle docs (numbered phases) freeze with `status:` field once shipped.
-- **Status flow:** `draft` → `approved` → `shipped` → optionally `superseded` (linked via `superseded_by:` frontmatter). ADRs use `draft` → `approved` → `superseded`. Brainstorms use `open` → `parked` / `superseded` / `abandoned`.
-- **Mandatory frontmatter.** Every doc under `docs/` (except `notes/`, `assets/`, `imports/`, bundle-internal files, and README/ROADMAP/CHANGELOG) starts at byte 0 with a fenced YAML block. Lifecycle docs: `date`, `title`, `type` (brainstorm | research | design | plan | review | retro | adr), `status`, `authors`; optional `scope`, `reviewed_by`, `supersedes`, `superseded_by`, `related`. Evergreen docs: `title`, `type` (guide | architecture | system | reference), `authors`; optional `scope`, `last_reviewed`. Exact field names — `date` not `created`, `scope` not `tags`. See [guide §5.4](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md).
-- **Authorship.** `authors` is ordered and append-only: the human operator first (from `git config user.name`), then each contributing agent as `"<model> (<harness>)"` — e.g. `"claude-fable-5 (claude-code)"`, `"gpt-5.5-codex (codex)"`. Review passes go in `reviewed_by` (same grammar), never in `authors`.
+- **Status flow:** `draft` → `approved` → `shipped` → optionally `superseded` (linked via `superseded_by:` frontmatter). ADRs use `draft` → `approved` → `superseded`. Brainstorms use `open`, `parked`, `resolved`, `superseded`, or `abandoned`; promotion alone does not supersede useful rationale. Existing `in-progress` is accepted. A standalone lesson may remain `draft`, with actionable follow-ups tracked separately.
+- **Mandatory frontmatter.** Every doc under `docs/` (except `notes/`, `assets/`, `imports/`, bundle-internal files, and README/ROADMAP/CHANGELOG) starts at byte 0 with a fenced YAML block. Lifecycle docs: `date`, `title`, `type` (brainstorm | research | discovery | requirements | design | plan | review | audit | analysis | retro | lesson | adr), `status`, `authors`; optional `scope`, `reviewed_by`, `supersedes`, `superseded_by`, `related`. Evergreen docs: `title`, `type` (guide | architecture | system | reference), `authors`; optional `scope`, `last_reviewed`. Exact field names — `date` not `created`, `scope` not `tags`. See [guide §5.4](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md).
+- **Authorship.** `authors` is ordered and append-only: the human operator first (from `git config user.name`), then each contributing agent as `"<model> (<harness>)"` — e.g. `"claude-fable-5 (claude-code)"`, `"gpt-5.5-codex (codex)"`. Review passes go in `reviewed_by`, never in `authors`: the accountable human GitHub username, plus `(delegated to <model>, <harness>)` when that human did not read the artifact. The commit recording review is the reviewed revision.
 - **Change discipline.** When a design ships, the same commit (or commit series) updates `system/` (or `architecture.md`), adds a CHANGELOG entry, moves the ROADMAP item from In flight to Recently shipped, and flips frontmatter to `status: shipped`.
-- **Brainstorm graduation.** Crystallised brainstorms go to `2-design/` directly (or via `1-discovery/` if substantial research came out of it first). Status `superseded`, `superseded_by:` linked.
+- **Promotion and ownership.** Exploration can stop or produce several initiatives. Accepted scope belongs to a request, issue, brief within design, or separate PRD when useful. Promotion follows explicit intent or included autonomous authority. Link source rationale without automatically superseding it.
+
+## Selected workflow and authority
+
+Research supplies evidence and can support any phase. Requirements owns intended behavior, scope, and success; design owns the technical solution; planning combines builder specifications, tasks, acceptance proof, dependencies, and integration. No mandatory spec phase sits between design and planning. A reviewed design or clear request can support implementation with a native in-session plan.
+
+Stop at a phase-only boundary by default. An explicit autonomous scope can authorize included transitions and agent reviews without repeated gates; record its scope, stopping point, and retained human gates once in existing project records. A status field alone grants nothing. Distinguish personal human review from delegated readiness and local verification from commit, PR, merge, and rollout. External actions follow actual authorization.
+
+Keep original product and architecture sources visible. For substantial handoffs, preserve stable consequential references, account for preserved or authorized changed obligations, reasoned exclusions, and unresolved decisions, and inspect source differences for affected tasks, tests, and review evidence. Keep scope, authority, verified progress, evidence, and next checkpoint inspectable. Read relevant prior lessons and capture reusable observations with evidence and uncertainty during any phase. Draft lessons are excluded from delivery-work counts; owned follow-up tasks remain visible.
 
 ## Commits
 
@@ -82,16 +95,16 @@ Conventional Commits format: `<type>(<scope>): <description>`. Types: `feat`, `f
 - **Don't add features the user didn't ask for.** No speculative scaffolding, no premature abstractions.
 - **Don't suppress errors.** Surface failure modes plainly; don't fabricate success.
 - **No emojis in files** unless the user explicitly asks.
-- **Docs are for humans: structure + illustrations.** Headers, bullets, tables, Mermaid diagrams — not walls of prose. Anything visual (UX mockups, hi-fi concepts, screenshot examples) gets images: self-contained single-file HTML mockup in the doc's assets folder (e.g. `docs/2-design/assets/YYYY-MM-DD-topic/`), headless screenshots (light + dark when theming matters), HTML + PNGs committed together, PNGs embedded with relative links so they render on GitHub. See [guide §5.9](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md).
+- **Docs are for humans: structure + illustrations.** Headers, bullets, tables, Mermaid diagrams — not walls of prose. Anything visual (UX mockups, hi-fi concepts, screenshot examples) gets images: self-contained single-file HTML mockup in the doc's assets folder (e.g. `docs/3-design/assets/YYYY-MM-DD-topic/`), headless screenshots (light + dark when theming matters), HTML + PNGs committed together, PNGs embedded with relative links so they render on GitHub. See [guide §5.9](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md).
 
 ## Working-memory discipline (required for AI sessions)
 
 `docs/` is maintained primarily by AI agents. The [conventions guide §6.5](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md) enumerates the event triggers that require writes during a session — read it. Summary of the rules that bite most often:
 
-- **When an initiative starts in conversation, write it down immediately.** Substantive new work creates `docs/0-brainstorms/<topic>.md` (`status: open`) AND a one-line pointer in ROADMAP `## Future considerations` or `## Next actions`. Don't wait for a commit prompt.
+- **Preserve decisions and recovery context.** A document is useful for decisions worth keeping, review across people or sessions, or substantial coordination and recovery. Clear work can use the request or issue and an in-session plan without creating a brainstorm, design, or durable plan.
 - **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter (`status: shipped`), AND the relevant evergreen state docs (`docs/architecture.md`, or `docs/system/*` if used).
 - **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
-- **Substantive audits or retros emerging from a conversation get saved** to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md` before the session ends.
+- **Substantive audits or retros emerging from a conversation get saved** as artifact reviews under `docs/5-reviews/`, process retrospectives under `docs/6-retros/`, and reusable lessons where encountered before the session ends.
 - **Session-end check:** before ending a non-trivial session, verify ROADMAP / CHANGELOG / artifact statuses reflect what we just did. If not, propose the missing writes inline.
 
 ## OSS house standard

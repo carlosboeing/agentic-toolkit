@@ -157,12 +157,18 @@ These directories mirror the harness's own layout under `~/.claude/`, so each it
 | [`git-worktrees`](skills/git-worktrees/) | Sets where worktrees go and the checks to run before changing branches |
 | [`housekeeping`](skills/housekeeping/) | Finds branches and worktrees left behind by merged pull requests, and removes them on request |
 | [`start-brainstorm`](skills/start-brainstorm/) | Explores an idea and presents a brainstorm for review before technical design |
+| [`start-research`](skills/start-research/) | Investigates a question before or within any phase, without mandatory artifacts or agents |
+| [`start-requirements`](skills/start-requirements/) | Defines intended behavior and scope in an existing brief or an optional PRD |
 | [`start-design`](skills/start-design/) | Writes a reviewable design against a shared or project contract |
-| [`start-planning`](skills/start-planning/) | Starts an implementation plan from an approved design |
+| [`start-planning`](skills/start-planning/) | Combines builder specifications and executable task planning from a usable design |
 | [`start-implementation`](skills/start-implementation/) | Drives an authoritative plan or direct request, using in-session planning when no plan document is needed |
+| [`start-review`](skills/start-review/) | Coordinates project and specialist review against original intent and integrated behavior |
+| [`start-retrospective`](skills/start-retrospective/) | Synthesizes evidence and lessons into owned workflow improvements |
 | [`capture-meeting`](skills/capture-meeting/) | Turns a meeting recording and notes into a project record |
 | [`externalize-deliverable`](skills/externalize-deliverable/) | Makes a client-safe copy of an internal document, with a required human review |
 | [`oss-standards`](skills/oss-standards/) | Shortcut for `repo-standards` in open-source mode |
+
+Lifecycle responsibilities are selectable. A clear request can use implementation with an in-session plan and appropriate review; substantial work can preserve scope through requirements, technical design, and builder specifications. No mandatory PRD or intermediate spec phase is added. The [phase boundaries](skills/README.md#phase-boundaries) explain ownership, human and delegated review, and recovery.
 
 The [skills catalog](skills/README.md) lists each skill's commands, dependencies and install notes.
 

@@ -5,7 +5,7 @@ description: Use when a bug, failure, crash, flaky or slow behaviour, or perform
 
 # `/start-debugging`
 
-Find the root cause of a bug before any fix. A fix without a confirmed cause treats a symptom.
+Read the current request, applicable product and architecture constraints, and relevant prior lessons before investigating. Reconcile actual sources and Git state on resume. Find the root cause of a bug before any fix. A fix without a confirmed cause treats a symptom.
 
 ```text
 /start-debugging [description or path]
@@ -83,3 +83,11 @@ Before reporting done:
 ## 8. Incident review
 
 For an incident, draft a blameless review from [references/incident-review-template.md](references/incident-review-template.md) after the fix. Save it where the project keeps reviews; keep it private by default and redacted. Ask "how" questions about contributing factors instead of one chain of "why". When a factor is in the agent workflow, propose a fix to the skill that allowed it. Each action item becomes a tracker issue, created only with the user's permission.
+
+## Intent, learning, and handoff
+
+Read applicable original product and architecture sources and relevant prior lessons, not just the preceding summary. For substantial work, preserve stable references to consequential obligations and account for each as preserved, changed under identified authority, excluded with a reason, or unresolved. Unresolved obligations or unauthorized changes block affected work. When sources change, inspect their revision differences and reconcile affected decisions, tasks, tests, and reviews before proceeding.
+
+Keep current scope, consequential changes and their authority, verified progress and evidence, unresolved decisions, and the next checkpoint visible in existing records. Capture reusable observations where encountered, with evidence, workaround and result, and confirmed cause or uncertainty. A short lesson can stay in the work record; a standalone lesson is useful for discovery, reuse, or concurrent writing. Avoid a lesson for every transient error.
+
+At completion, state the outcome and material gaps and recommend a next step when apparent. Explain whether the same session or a fresh one better serves context or review, and recommend human or independent review when consequence warrants it. Recommendations grant no authority. Stop at the requested endpoint or a retained human gate; continue only within explicit included workflow scope.

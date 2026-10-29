@@ -1,12 +1,10 @@
 ---
 name: research
-description: Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.
+description: Compatibility entry for the explicit /research command. Use start-research for natural-language investigation requests.
 ---
 
-Spin up a **background agent** to do the research, so you keep working while it reads.
+# `/research`
 
-Its job:
+Follow the canonical `start-research` skill for this request, including its help behavior. Read it from the active harness's installed skill directory. In this source repository it is [../start-research/SKILL.md](../start-research/SKILL.md). If unavailable, report the missing dependency rather than fall back to the old compulsory background-agent and file workflow.
 
-1. Investigate the question against **primary sources** (official docs, source code, specs, first-party APIs), not a secondary write-up of them. Follow every claim back to the source that owns it.
-2. Write the findings to a single Markdown file, citing each claim's source.
-3. Save it where the repo already keeps such notes; match the existing convention, and if there is none, put it somewhere sensible and say where.
+The compatibility entry grants no additional phase, access, delegation, or delivery authority.

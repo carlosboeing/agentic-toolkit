@@ -14,7 +14,7 @@ It has three parts:
 
 | Check | Applies to | Rule |
 |---|---|---|
-| Lifecycle frontmatter | Markdown files in the push under `0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/` or `adrs/` | The file must start with a YAML frontmatter block containing `title`, `type` and `authors`. Lifecycle documents also need `date` and `status`. `status` must be one of `draft`, `approved`, `in-progress`, `shipped`, `resolved` or `superseded`. |
+| Lifecycle frontmatter | Markdown files in the push under `0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/`, the target `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/`, `6-retros/`, or `adrs/`, plus standalone `6-retros/lessons/<workstream>/*.md` | The file must start with a YAML frontmatter block containing `title`, `type` and `authors`. Lifecycle documents also need `date` and `status`. `status` must be one of `draft`, `approved`, `in-progress`, `shipped`, `resolved`, `superseded`, `open`, `parked`, or `abandoned`. |
 | Shipped roadmap lines | Lines added under `Recently shipped` in `ROADMAP.md` that link to lifecycle documents | Each linked document must have `status: shipped`. |
 | Changelog pairing (opt-in) | Pushes containing `feat`, `fix` or `perf` commits | The push must also change `CHANGELOG.md`. Turn this on by creating `scripts/githooks/drift-guard.on`. |
 
@@ -31,6 +31,8 @@ flowchart TB
     CL -- "No" --> Block
     CL -- "Yes" --> Allow
 ```
+
+The lifecycle types include `requirements`, `lesson`, and `analysis`, with historical `discovery` retained. Nested standalone lessons are checked; raw bundle contents and assets remain exempt. A lesson can stay `draft` without representing incomplete delivery work.
 
 ## Modes
 

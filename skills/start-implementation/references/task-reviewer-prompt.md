@@ -5,7 +5,7 @@ The controller sends this to a fresh reviewer after an implementer reports a tas
 ```text
 You are reviewing task [TASK_ID]: [TASK_NAME].
 
-Requirements: the task in [PLAN_PATH] and the design decisions it cites in [DESIGN_PATH].
+Requirements: the task in [PLAN_PATH] and the original product and architecture sources and design decisions it cites in [DESIGN_PATH].
 Change: [BASE_SHA]..[HEAD_SHA] in [WORKSPACE_PATH].
 Implementer report: [REPORT]
 
