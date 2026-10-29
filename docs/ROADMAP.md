@@ -20,7 +20,7 @@ None at the moment.
 - **Harness-agnostic memory.** [Selection guidance](../guides/guide-agent-memory-selection.md) and a [dated options comparison](../reference/reference-agent-memory-options.md) are documented. A trial of cheaper observers or local replacements remains open; verify capture, cross-harness recall and backup restoration before adopting one.
 - **Shrink `briefing` and `learn` below the skill size limit.** Both are listed exceptions in `tests/test-skill-size.sh`. Simplify `briefing` to Git, GitHub and the Project Map; drop `learn` from sync or stop the model from loading it on its own.
 - **Template variants per project type.** Split the project templates when the needs of different project types diverge.
-- **Unify plan-driven dispatch with the toolkit.** Open questions: plugin or platform, dispatch from plan files or issues, whether difficulty labels become required, and whether `check-plan.py` checks for dependency cycles.
+- **Unify plan-driven dispatch with the toolkit.** Open questions: plugin or platform, dispatch from plan files or issues, whether difficulty labels become required, and which additional dispatch checks belong beyond the advisory cycle diagnostics.
 
 ## Open questions
 
@@ -31,6 +31,8 @@ None at the moment.
 - **Deferred: retire `plugins/install-superpowers.sh`.** It stays as the rollback path until the per-harness skill trigger check passes and a stable period follows.
 
 ## Recently shipped
+
+- **Composable lifecycle workflow (2026-10-29).** Add research, requirements, review, and retrospective entry skills. Preserve optional phases and documents, combine builder specifications with planning, trace consequential source obligations, and support target and legacy layouts. Automated checks cover graph diagnostics and metadata compatibility; cross-harness behavior remains for real use.
 
 - **Superpowers parity and lifecycle skill trimming (2026-10-25).** Add `/start-debugging` with a blameless incident review, copy `tdd`, `receiving-code-review` and `research`, adapt `handoff`, and merge the remaining Superpowers ideas into the lifecycle skills, which are now shorter. Add an `uninstall` mode to the Superpowers installer and drop the docs that required it.
 

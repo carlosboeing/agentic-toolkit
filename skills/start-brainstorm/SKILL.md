@@ -32,7 +32,7 @@ Use the current request as the idea. If the user names a brainstorm, read it in 
 
 Read the project instructions and the resources they name: where brainstorms go, when a file is required, and how review and Git work. Resolve a missing required convention before writing; a missing optional pointer does not block discussion.
 
-Size the work in plain words in one line, such as "a small change: I'll describe it and do it" or "a larger change: worth exploring options first". The user can override the size. If the request already states everything that matters, do not brainstorm: say what you will do and hand off to implementation. If hidden complexity appears later, step up and say so.
+Size the work in plain words in one line, such as "a small change: I'll describe it and do it" or "a larger change: worth exploring options first". The user can override the size. If a clear request asks for implementation rather than exploration, use implementation with an in-session plan. An explicit brainstorm request still gets exploration and stops at its boundary unless a broader workflow is authorized. If hidden complexity appears later, step up and say so.
 
 State the intended outcome, who needs it, constraints, and observable success. Separate the user's statements from your assumptions. Find facts in the repository or primary sources before asking for them.
 
@@ -46,7 +46,7 @@ Ask only questions whose prerequisites are settled; group independent ones. Give
 
 Challenge whether the proposed solution addresses the actual problem. Compare materially different options, including a smaller change or no change when credible, and recommend one. Test ambiguous terms and edge cases with concrete scenarios.
 
-Research consequential uncertainty in proportion. Discovery returns findings and sources; it approves nothing. A prototype or probe with changes or external effects needs its own scope and authorization.
+Research consequential uncertainty in proportion. Use `start-research` when investigation needs its own procedure. Research can precede brainstorming or support it, returns findings and sources, and approves nothing. A prototype or probe with changes or external effects needs its own scope and authorization.
 
 Completion: the problem, scope, options, and consequential choices are settled or explicitly open. Design-level questions can stay open.
 
@@ -60,6 +60,8 @@ A pasted prior-session kickoff is context. If its rule conflicts with a reviewed
 
 Completion: a fresh reader can tell accepted decisions, recommendations, assumptions, and open questions apart.
 
+A brainstorm may stop without becoming a feature or produce several initiatives. Promotion to accepted product scope follows an explicit user decision or included autonomous authority. Identify the scope owner: request, issue, brief within design, or separate PRD when its value warrants one. Use `start-requirements` for deliberate product definition when needed. Link resulting artifacts and preserve exploration and rationale rather than automatically marking the brainstorm superseded.
+
 ### 4. Review and stop
 
 Check the brainstorm against the brief: each consequential assumption has evidence or an open question, and alternatives and exclusions are clear. Present the path, or the in-chat brainstorm, and the decisions that still need review.
@@ -67,3 +69,13 @@ Check the brainstorm against the brief: each consequential assumption has eviden
 By default stop after presenting. An autonomous workflow that includes later phases continues to the next phase skill after the requested review, unless a retained human gate or a decision outside the delegation blocks it. Record review evidence and delegated decisions without claiming personal human approval.
 
 Git actions follow project rules and explicit authorization. Writing or reviewing a brainstorm does not approve it or grant commit, push, publication, or later-phase permission.
+
+## Context and boundaries
+
+Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. Create directories only when used. On resume, reconcile source revisions, Git state, checkpoints, and authority.
+
+Read original product and architecture sources and relevant prior lessons. For substantial work, retain stable consequential references and account for preserved obligations, authorized changes, reasoned exclusions, and unresolved decisions. Reconcile source differences with affected work and reviews; block unresolved or unauthorized consequential changes. Keep scope, authority, verified progress, evidence, unresolved decisions, and next checkpoint visible in existing records. A small change can keep this context in session.
+
+Stop at a phase-only boundary. Explicit autonomous scope can include transitions and delegated reviews; record its scope, retained human gates, and endpoint once when recovery needs it. Stop at retained human gates or consequential choices outside that scope. Agent review never proves personal human approval, and status alone grants no authority. External effects follow actual authorization.
+
+Capture reusable lessons with context, evidence, workaround and result, and confirmed cause or uncertainty, in an existing record or a standalone file when useful. Avoid logging every transient error. End with the outcome, material gaps, and next step. Recommend the same or a fresh session, and human or independent review, when context and consequence warrant it. Recommendations authorize no later phase.

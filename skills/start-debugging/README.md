@@ -23,3 +23,5 @@ Written from two skills, both under the MIT License (see [LICENSE](LICENSE)):
 - Superpowers [`systematic-debugging`](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/systematic-debugging/SKILL.md) at `2ce8aa1`: no fix before root cause, comparison with a working case, and the stop after three failed fixes.
 
 The incident review follows common blameless postmortem practice. Contributing factors are asked as "how" questions, after John Allspaw's [The Infinite Hows](https://www.kitchensoap.com/2014/11/14/the-infinite-hows-or-the-dangers-of-the-five-whys/), rather than one five-whys chain. The toolkit adds the incident classification, investigate-only mode, and the handoffs to `start-implementation` and `start-design`.
+
+Read relevant prior lessons and original product and architecture constraints. Capture reusable diagnostic observations with evidence and uncertainty during investigation. Incident review retains its existing method; a selected retrospective may synthesize process improvements without duplicating the incident report.

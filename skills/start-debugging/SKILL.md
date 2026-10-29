@@ -5,7 +5,7 @@ description: Use when a bug, failure, crash, flaky or slow behaviour, or perform
 
 # `/start-debugging`
 
-Find the root cause of a bug before any fix. A fix without a confirmed cause treats a symptom.
+Read the current request, applicable product and architecture constraints, and relevant prior lessons before investigating. Reconcile actual sources and Git state on resume. Find the root cause of a bug before any fix. A fix without a confirmed cause treats a symptom.
 
 ```text
 /start-debugging [description or path]
@@ -83,3 +83,13 @@ Before reporting done:
 ## 8. Incident review
 
 For an incident, draft a blameless review from [references/incident-review-template.md](references/incident-review-template.md) after the fix. Save it where the project keeps reviews; keep it private by default and redacted. Ask "how" questions about contributing factors instead of one chain of "why". When a factor is in the agent workflow, propose a fix to the skill that allowed it. Each action item becomes a tracker issue, created only with the user's permission.
+
+## Context and boundaries
+
+Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. Create directories only when used. On resume, reconcile source revisions, Git state, checkpoints, and authority.
+
+Read original product and architecture sources and relevant prior lessons. For substantial work, retain stable consequential references and account for preserved obligations, authorized changes, reasoned exclusions, and unresolved decisions. Reconcile source differences with affected work and reviews; block unresolved or unauthorized consequential changes. Keep scope, authority, verified progress, evidence, unresolved decisions, and next checkpoint visible in existing records. A small change can keep this context in session.
+
+Stop at a phase-only boundary. Explicit autonomous scope can include transitions and delegated reviews; record its scope, retained human gates, and endpoint once when recovery needs it. Stop at retained human gates or consequential choices outside that scope. Agent review never proves personal human approval, and status alone grants no authority. External effects follow actual authorization.
+
+Capture reusable lessons with context, evidence, workaround and result, and confirmed cause or uncertainty, in an existing record or a standalone file when useful. Avoid logging every transient error. End with the outcome, material gaps, and next step. Recommend the same or a fresh session, and human or independent review, when context and consequence warrant it. Recommendations authorize no later phase.

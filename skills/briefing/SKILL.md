@@ -282,39 +282,51 @@ For each "what's the project's structure?" question that Declared did not declar
 |---|---|---|---|
 | Where's the roadmap? | Use `Roadmap` field | `docs/ROADMAP.md` (canonical) → `ROADMAP.md` (root) | Note in footer; skip roadmap section |
 | Where's the changelog? | Use `Changelog` field | `docs/CHANGELOG.md` (canonical) → `CHANGELOG.md` (root) | Note in footer; skip changelog references |
-| Where are lifecycle artifacts? | Use `Working memory` field | If `docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all exist → canonical layout (lifecycle dirs are `docs/[0-9]-*` plus `docs/adrs/`). Else if any `docs/*/*.md` has `status:` frontmatter → use those dirs as discovered working memory. | Note in footer; skip lifecycle drafts in output |
-| What `status:` values mean "in flight"? | (not declared) | If canonical layout detected: `draft`, `open`, `approved`. | Any `status:` not in `{shipped, superseded, abandoned, closed, done, resolved}` — including `active`, which reads terminal but isn't. Split those on `type:` per [Statuses that look terminal but aren't](#statuses-that-look-terminal-but-arent) |
+| Where are lifecycle artifacts? | Use `Working memory` field | If a recognized target or legacy lifecycle directory contains typed frontmatter → canonical layout (lifecycle dirs are `docs/[0-9]-*` plus `docs/adrs/`). Else if any `docs/*/*.md` has `status:` frontmatter → use those dirs as discovered working memory. | Note in footer; skip lifecycle drafts in output |
+| What `status:` values mean "in flight"? | (not declared) | If canonical layout detected: `draft`, `open`, `approved`, `in-progress`; exclude `type: lesson` from delivery-work counts. | Any `status:` not in `{shipped, superseded, abandoned, closed, done, resolved}` — including `active`, which reads terminal but isn't. Split those on `type:` per [Statuses that look terminal but aren't](#statuses-that-look-terminal-but-arent) |
 | Which ROADMAP section means "in flight"? | (not declared) | If canonical detected: `## In flight` (per §6.3 of the canonical guide). | Case-insensitive match for headings containing `in flight`, `in progress`, `now`, `doing`, `wip` |
 | Where are ADRs? | (not declared) | `docs/adrs/NNNN-*.md` (canonical) → `docs/6-adrs/`, `docs/architecture/decisions/`, `decisions/`, `adr/` | Not surfaced |
 
 When probing the lifecycle for-loop, prefer the canonical glob if detected; otherwise list what was actually found:
 
 ```bash
-# Canonical-conventions glob (used when Default paths detects the canonical layout).
-# Emits "status|type|path" so the type-based split can happen in one pass —
-# reading status alone can't tell an open review from a current brand guide.
-for d in docs/[0-9]-* docs/adrs; do
-  [ -d "$d" ] || continue
-  find "$d" -maxdepth 1 -name '*.md' 2>/dev/null | while read -r f; do
-    st=$(awk 'NR<=15 && /^status:/ {sub(/^status:[[:space:]]*/,""); print; exit}' "$f")
-    ty=$(awk 'NR<=15 && /^type:/   {sub(/^type:[[:space:]]*/,"");   print; exit}' "$f")
-    [ -n "$st" ] && echo "$st|${ty:-untyped}|$f"
+# Set WM_ROOT to the resolved Working memory location before running this block.
+# A missing value or directory must not silently produce an empty inventory.
+wm_root="${WM_ROOT:?set to the resolved Working memory root}"
+[ -d "$wm_root" ] || { printf 'Working memory directory not found: %s\n' "$wm_root" >&2; exit 1; }
+{
+  for d in "$wm_root"/[0-9]-* "$wm_root"/adrs; do
+    [ -d "$d" ] || continue
+    find "$d" -maxdepth 1 -name '*.md' 2>/dev/null
   done
+  # Standalone lessons are not raw bundle contents; do not recurse into assets.
+  if [ -d "$wm_root/6-retros/lessons" ]; then
+    find "$wm_root/6-retros/lessons" -mindepth 2 -maxdepth 2 -name '*.md'
+  fi
+} | while IFS= read -r f; do
+  awk -v path="$f" '
+    NR == 1 { if ($0 != "---") exit; next }
+    $0 == "---" { if (st != "") print st "|" (ty == "" ? "untyped" : ty) "|" path; exit }
+    /^status:/ { st=$0; sub(/^status:[[:space:]]*/, "", st); gsub(/["\047]/, "", st) }
+    /^type:/ { ty=$0; sub(/^type:[[:space:]]*/, "", ty); gsub(/["\047]/, "", ty) }
+  ' "$f"
 done | sort
 ```
 
 In a multi-repo workspace, run this per repo — a workspace root that gitignores its subdirectories holds no working memory of its own, and the drafts all live one level down.
 
-The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`, `1-discovery`, `2-design`, `3-plans`, `4-reviews`) and any project-specific extensions (e.g. `5-guides`, `6-adrs` in some sister repos). `docs/adrs` is also probed because the canonical convention places ADRs there without a number prefix.
+The glob `docs/[0-9]-*` covers the canonical numbered prefixes (`0-brainstorms`, `1-research`, `2-requirements`, `3-design`, `4-plans`, `5-reviews`, `6-retros`) and legacy `1-discovery`, `2-design`, `3-plans`, `4-reviews` and any project-specific extensions (e.g. `5-guides`, `6-adrs` in some sister repos). `docs/adrs` is also probed because the canonical convention places ADRs there without a number prefix.
 
-**zsh portability note:** if you write a follow-up command that extracts the `status:` value into a shell variable, **do not name the variable `status`** — it's read-only in zsh (it holds the last command's exit code). Use `st`, `state`, or similar instead. The canonical block above is safe because it uses `grep -l '^status:'` (file listing only); the trap is in ad-hoc rewrites that read the value.
+**zsh portability note:** if you write a follow-up command that extracts the `status:` value into a shell variable, **do not name the variable `status`** — it's read-only in zsh (it holds the last command's exit code). Use `st`, `state`, or similar instead. The canonical block above uses `st` safely; the trap is in ad-hoc rewrites that read the value.
 
 #### Statuses that look terminal but aren't
 
 `active`, `current`, `living` and similar words read like "settled" but are not in the terminal set, so they count as unresolved. In practice projects use them for two different things, and the discriminator is the doc's `type`, not its status:
 
-- **Lifecycle artifacts** — `review`, `design`, `plan`, `brainstorm`, `handoff`, `note`, `research`. An `active` review is an open review. These belong in the inventory.
+- **Lifecycle artifacts** — `review`, `audit`, `analysis`, `design`, `plan`, `requirements`, `brainstorm`, `handoff`, `note`, `research`, `discovery`, `retro`. An `active` review is an open review. These belong in the inventory.
 - **Evergreen docs** — `guide`, `reference`, `policy`, `architecture`, `template`, or no `type` at all. `active` here means "current and in use", not "in progress". A brand guide is never going to be finished.
+
+**Continuous lessons** use `type: lesson`. They may remain `draft` and are excluded from delivery-work and unresolved-draft counts at every depth, including `deep`. State the count, for example "2 lessons excluded from delivery-work counts". Relevant lessons remain available to working phases. A separate actionable follow-up in the authoritative task or tracker remains visible; a lesson's status never hides that task.
 
 Read both `status:` and `type:` in the same pass, and split on `type`. **Excluding the evergreen ones is correct; excluding them silently is not.** State the filter and its count in one line under the table — "5 evergreen prompts and guides excluded" — so the reader can audit the judgement instead of trusting it.
 
@@ -359,7 +371,7 @@ This check is invoked specifically by the `/briefing sources` mode (and used to 
 | 1 | `## Project Map` section in `<instructions-file>` | `grep -i -E '^## Project (Map&#124;Context)' <instructions-file>` (case-insensitive — tolerates the deprecated `## Project Context` name and lowercase variants) |
 | 2 | `docs/ROADMAP.md` exists | filesystem probe |
 | 3 | `docs/CHANGELOG.md` exists | filesystem probe |
-| 4 | Lifecycle dirs present (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` at minimum) | filesystem probe; require all three |
+| 4 | Target or legacy lifecycle directory with typed frontmatter present | filesystem and frontmatter probe; folders are created only when used |
 | 5 | Status frontmatter used in lifecycle artifacts | `grep -l '^status:' docs/*/*.md` returns ≥ 1 |
 | 6 | ROADMAP uses canonical sections (`## In flight`, `## Next actions`, `## Recently shipped` at minimum) | grep on roadmap; require all three |
 | 7 | ADRs at `docs/adrs/NNNN-*.md` | filesystem probe with name pattern |
@@ -514,7 +526,7 @@ When the user's `<instructions-file>` or another global rule mandates a closing-
 
 **Findings:** Everything worth knowing that is not itself an action. Risks and blockers render as facts ("Task 7's remaining items all write to a live repository; neither review gate has been reached") — the response to them, if one is needed, is a bullet in the close. Stale frontmatter statuses get flagged inline, not silently corrected — a design whose plan shipped while it still says `approved` is the project's bookkeeping to fix, not the briefing's. Structural gaps, stale work to triage (old PRs, ancient stashes, forgotten branches), risky operations needed, and conventions worth a later decision land here as bullets. **Not for:** suggestions about adopting `## Project Map`, canonical conventions, or anything else about enriching future briefings — that's setup content, and it lives exclusively in `★ About this briefing` bullet 2 and the `/briefing sources` view.
 
-**Findings — the draft inventory, and the collapse rule.** An unresolved doc is **actionable** when any of these hold: (1) it is referenced from the roadmap's in-flight or next-actions sections; (2) it was modified within the last 30 days; (3) it carries an explicit question or decision for the reader. Actionable docs render as table rows with the project's own status vocabulary (`draft`, `open`, `wip`, `ready-for-review`, `active`), never a normalised one, plus a one-line "waiting on". Everything else collapses into grouped count lines that name the groups and carry the escape hatch — "6 parked brainstorms, 3 June drafts — `/briefing deep` for the full list". Statuses like `active` count as unresolved, and evergreen docs (`guide`, `reference`, `policy`, `template`, or no type) stay excluded under the `type`-based split in [Statuses that look terminal but aren't](#statuses-that-look-terminal-but-arent), with the count stated. Every filter and every collapse states its count — an unstated exclusion and an accidental omission look identical from the reader's side. `/briefing deep` renders every unresolved row, no collapse.
+**Findings — the draft inventory, and the collapse rule.** An unresolved doc is **actionable** when any of these hold: (1) it is referenced from the roadmap's in-flight or next-actions sections; (2) it was modified within the last 30 days; (3) it carries an explicit question or decision for the reader. Actionable docs render as table rows with the project's own status vocabulary (`draft`, `open`, `wip`, `ready-for-review`, `active`), never a normalised one, plus a one-line "waiting on". Everything else collapses into grouped count lines that name the groups and carry the escape hatch — "6 parked brainstorms, 3 June drafts — `/briefing deep` for the full list". Statuses like `active` count as unresolved, and evergreen docs (`guide`, `reference`, `policy`, `template`, or no type) stay excluded under the `type`-based split in [Statuses that look terminal but aren't](#statuses-that-look-terminal-but-arent), with the count stated. Exclude `type: lesson` separately and state its count; actionable follow-up tasks remain visible. Every filter and every collapse states its count — an unstated exclusion and an accidental omission look identical from the reader's side. `/briefing deep` renders every unresolved row, no collapse.
 
 **Recommendations and next steps:** Always present. This section is advisory, not a dump — it steers, it doesn't just list. Open with a short paragraph stating the recommended direction: what to do first, why, and how the signal tags shaped the order. Then a numbered list in priority order (`1.`, `2.`, `3.`, …): an imperative action, one line of steering (why this priority, what to watch, a suggestion where useful), and a clickable path. The list is numbered so the reader can reply by number ("do 1 and 3") — keep the numbers stable within one briefing. Items that earn it carry one bold signal tag up front — **Urgent** (time-sensitive, something going stale or a window closing), **Quick win** (minutes of effort, real value, nothing depends on it), **Blocking** (name what it unblocks) — and the priority order is derived from those signals: urgent first, then blocking, quick wins early when nearly free, everything else by judged value. Most items carry no tag; a tag is a claim the steering line must back up. Decisions render as `Decide:` items naming the options, with a lean where the evidence supports one; rule 2 binds hardest here, because a decision the reader can't understand is a decision they can't make. This section is the only place the ask lives — when genuinely nothing waits, the paragraph says so and the single numbered item points at the roadmap's top item. Don't pad it.
 
@@ -842,7 +854,7 @@ Pre-fill rules per field:
 - **Roadmap** — Probe `docs/ROADMAP.md` → `ROADMAP.md` (root) → Default paths prose inference (markdown links to `*roadmap*.md`) → `none`.
 - **Changelog** — Probe `docs/CHANGELOG.md` → `CHANGELOG.md` (root) → Default paths prose inference (markdown links to `*changelog*.md`) → `none`.
 - **Architecture** — Probe `docs/architecture.md` → `docs/system/` → Default paths prose inference (markdown links to `*architecture*.md`) → `none`.
-- **Working memory** — Canonical layout (`docs/0-brainstorms/`, `docs/2-design/`, `docs/3-plans/` all present) → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`. (Prose inference skipped — directory inference is too low signal.)
+- **Working memory** — Target or legacy lifecycle directory containing typed frontmatter → `docs/`. Else any directory containing `status:` frontmatter files → use that. Else `none`. (Prose inference skipped — directory inference is too low signal.)
 - **Other** — Pre-suggest bullets based on detections: non-canonical working-memory layouts (e.g. `docs/plans/` with date-prefixed files), test-artefact directories (e.g. `tmp/tst_*`), custom scripts in `bin/` or `scripts/`. If nothing notable, leave a `<placeholder>` line.
 
 When a value comes from prose inference, mark it in the proposal output with `(inferred from <instructions-file>)` or `(inferred from README.md)` so the user understands the source before they confirm.
@@ -862,7 +874,7 @@ Existing-section updates use the same `AskUserQuestion` rendering for per-field 
 | Roadmap | Canonical path (`docs/ROADMAP.md`, `ROADMAP.md`) | Prose-inferred, default `none` |
 | Changelog | Canonical path | Prose-inferred, default `none` |
 | Architecture | Canonical path (`docs/architecture.md`, `docs/system/`) | Prose-inferred, default `none` (especially when `<instructions-file>`/README mentions architecture documentation in prose but the path didn't match `*architecture*.md` / `*arch*.md` — e.g. `docs/5-guides/PROJECT.md`) |
-| Working memory | Canonical layout detected (`docs/0-brainstorms/` + `docs/2-design/` + `docs/3-plans/` all present) | `status:` frontmatter fallback (acceptable but flag the user so they can confirm or narrow), default `none` |
+| Working memory | Target or legacy lifecycle directory containing typed frontmatter | `status:` frontmatter fallback (acceptable but flag the user so they can confirm or narrow), default `none` |
 | Other | (none — see below) | Any auto-suggested bullet describing transitional / uncertain state (e.g. systems being replaced, gitignored runtime, branches with unmerged commits that touch the artifact) |
 
 The model is the judge — if a detection looks shaky for project-specific reasons not enumerated above (e.g. the canonical path was found but contains conflicting evidence), prompt anyway. The bias is toward asking when in doubt; per-field prompts are cheap.

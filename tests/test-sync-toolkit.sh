@@ -96,8 +96,11 @@ _assert_executable "claude hook validate-mermaid.sh is executable" "$MOCK_HOME/.
 _assert_file "opencode mermaid plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-mermaid.ts"
 
 # Phase skills must remain complete when copied to the hub and linked spokes.
-for phase_skill in start-brainstorm start-design start-debugging start-implementation tdd receiving-code-review research handoff; do
+for phase_skill in start-brainstorm start-research start-requirements start-design start-planning start-debugging start-implementation start-review start-retrospective tdd receiving-code-review research handoff; do
   for installed_file in SKILL.md README.md LICENSE; do
+    case "$phase_skill/$installed_file" in
+      start-planning/LICENSE|start-requirements/LICENSE|start-review/LICENSE|start-retrospective/LICENSE) continue ;;
+    esac
     cmp -s "$REPO_ROOT/skills/$phase_skill/$installed_file" "$MOCK_HUB/$phase_skill/$installed_file"
     _assert "$phase_skill/$installed_file copied exactly to hub" 0 $?
   done
@@ -107,7 +110,7 @@ cmp -s "$REPO_ROOT/skills/start-design/references/design-contract.md" "$MOCK_HOM
 _assert "design contract reaches agents spoke unchanged" 0 $?
 cmp -s "$REPO_ROOT/skills/start-design/references/design-contract.md" "$MOCK_HOME/.gemini/config/skills/start-design/references/design-contract.md"
 _assert "design contract reaches Gemini spoke unchanged" 0 $?
-for ref_file in start-debugging/references/incident-review-template.md start-implementation/references/implementer-prompt.md tdd/tests.md tdd/mocking.md; do
+for ref_file in start-planning/references/plan-contract.md start-planning/scripts/check-plan.py start-debugging/references/incident-review-template.md start-implementation/references/implementer-prompt.md tdd/tests.md tdd/mocking.md; do
   cmp -s "$REPO_ROOT/skills/$ref_file" "$MOCK_HUB/$ref_file"
   _assert "$ref_file copied exactly to hub" 0 $?
 done

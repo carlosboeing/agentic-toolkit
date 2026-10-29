@@ -2,6 +2,14 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-29: composable lifecycle workflow
+
+- Add `/start-research`, `/start-requirements`, `/start-review`, and `/start-retrospective`. Keep `/research` as a compatibility entry, with adapted provenance and MIT notices.
+- Distinguish accepted requirements from delivered scope. Identify one owner of accepted product scope, preserve original intent and architecture obligations across handoffs, and reconcile changed sources with affected work. Planning combines builder specifications, acceptance proof, tasks, dependencies, and integration without a mandatory intermediate spec document.
+- Preserve selectable phases, optional documents, context kept in session for small work, native in-session plans, authorized autonomous progression, and retained human gates. Clarify artifact-specific review checks and proportionate integrated review without claiming agent review as personal human approval.
+- Publish the target lifecycle layout with distinct requirements, review, and retrospective locations and continuous lessons. Support legacy layouts and historical document types; keep draft lessons out of delivery-work counts while retaining actionable follow-ups. New records use existing locations until an authorized migration; existing projects are not migrated automatically.
+- Extend advisory graph checks for self-dependencies and cycles, preserving newline-separated fields, ignoring ordinary dependency prose, and reporting unsupported formats honestly. Align metadata validation, templates, packaging checks, and public documentation. Briefing scans the declared working-memory root and stops if it is missing. Mechanical checks and reader walkthroughs do not establish runtime reliability across harnesses.
+
 ## 2026-10-25: Superpowers parity and lifecycle skill trimming
 
 - **Debugging:** add `/start-debugging`. It builds a failing feedback loop before any theory, minimises the repro, tests 3 to 5 ranked falsifiable hypotheses with tagged logs, and hands the fix to `/start-implementation` with a regression test at a correct seam. It stops after a third failed fix, offers an investigate-only mode, and drafts a blameless incident review when real users are affected. Written from Matt Pocock's `diagnosing-bugs` and Superpowers `systematic-debugging`.

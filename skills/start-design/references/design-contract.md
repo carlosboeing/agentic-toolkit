@@ -1,6 +1,6 @@
 # Design quality contract
 
-A design is the behavioral source for later planning and implementation. It must let a fresh reader understand the problem, chosen solution, consequential contracts, proof, and remaining uncertainty. This contract defines required answers, not a Markdown template.
+A design owns the technical solution for later planning and implementation. An upstream accepted brief or PRD owns product requirements when present; otherwise identify the accepted brief within the design or current request. It must let a fresh reader understand the problem, chosen solution, consequential contracts, proof, and remaining uncertainty. This contract defines required answers, not a Markdown template.
 
 ## Authority and presentation
 
@@ -13,7 +13,7 @@ An explicit current-session user instruction can narrow scope or change a decisi
 | Problem and audience | The problem, who needs the result, and observable improvement. |
 | Goals and exclusions | Intended outcomes and explicit limits on the work. |
 | Constraints and current state | Relevant existing behavior, dependencies, policies, and restrictions. Verify navigation hints against current code. |
-| Sources and prior decisions | Links to the brief, brainstorm, discovery, and applicable product or architecture records that supply decisions or evidence. Identify a current brief when there is no upstream artifact. Account for consequential prior decisions as preserved, proposed for change, or outside this change with a reason. |
+| Sources and prior decisions | Links to the requirements owner, brainstorm, research, and applicable product or architecture records that supply decisions or evidence. Identify a current brief when there is no upstream artifact. Account for consequential prior decisions as preserved, changed under identified authority, outside this change with a reason, or unresolved. Unresolved obligations or unauthorized consequential changes block affected work. |
 | Options and decision | Credible alternatives, the selected approach, and the trade-offs that explain the choice. |
 | Architecture and contracts | Component responsibilities and relationships, consequential interfaces, invariants, and compatibility obligations. Exact detail is required when it fixes behavior or safety. |
 | Failure behavior | Relevant errors, partial failures, recovery, and their observable effect. Scale this to the actual change. |
@@ -29,6 +29,12 @@ Research is proportional to uncertainty. Verify platform, API, security, perform
 For software, identify the interface through which acceptance can be observed. Prefer an existing interface and explain any new one needed for proof. For documentation or process changes, name a concrete alternative such as a reader walkthrough. The design defines what must be proved; the plan later fixes execution tasks and commands.
 
 Compare materially different interface choices when the choice changes caller obligations or has substantial cost to reverse. Routine naming, helper structure, and incidental file choices can remain with implementation. Diagrams are useful when they clarify branching flows or component boundaries; neither a diagram nor a fixed number of alternatives is mandatory.
+
+## Preserve intent across handoffs
+
+For substantial work, retain stable references to consequential requirements and architecture constraints in their authoritative sources. Compare with those original sources as well as the preceding artifact; summaries alone do not establish fidelity. Link the accounting above and acceptance evidence to those references without copying a competing specification. Checks must express intended outcomes and important adverse cases, not merely implementation assumptions.
+
+When a source changes, inspect its revision difference and identify affected design decisions, tasks, tests, and review evidence. Reconcile affected work before proceeding. Existing records must let a human inspect the current scope, consequential changes and authority, progress and evidence, unresolved decisions, and next checkpoint. A small change can provide this context in session.
 
 ## Review and amendments
 

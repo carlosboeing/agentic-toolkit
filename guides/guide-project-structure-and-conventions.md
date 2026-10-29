@@ -52,7 +52,7 @@ There's exactly one place to look for any given question:
 - "What's the current state of the system?" → `README.md`'s `## Architecture`, or `docs/architecture.md` (or `docs/architecture/`) once it overflows
 - "What's queued / in flight / shipped?" → `docs/ROADMAP.md`
 - "What did we decide and why?" → `docs/adrs/NNNN-*.md`
-- "What was the design for X?" → `docs/2-design/YYYY-MM-DD-X-design.md`
+- "What was the design for X?" → `docs/3-design/YYYY-MM-DD-X-design.md`
 - "How do I do Y?" → `docs/guides/Y-guide.md`
 
 **No `TODO.md`** — its overlap with ROADMAP creates drift. The ROADMAP itself has a "Next actions" section.
@@ -73,19 +73,19 @@ The folder reinforces the type; the filename suffix is the durable marker.
 Two distinct doc shapes:
 
 - **Always-current** docs (`docs/architecture.md`, `docs/guides/`, `docs/adrs/`, single-file evergreen content at `docs/` root) describe how things ARE right now. They get updated, not appended. No `status:` field — they're always "current" by definition (ADRs use `superseded` only when replaced).
-- **Lifecycle** docs (`docs/0-brainstorms/` through `docs/4-reviews/`) describe a moment in time. They get a `status:` field (`draft`, `approved`, `shipped`, `superseded`, `abandoned`) and rarely get edited after they ship. New work generates new lifecycle docs.
+- **Lifecycle** docs (`docs/0-brainstorms/` through `docs/6-retros/`) describe a moment in time. They get a `status:` field using the vocabulary in §5.5 and rarely get edited after they ship. New work generates new lifecycle docs.
 
 Confusing the two leads to "the design says X but the system does Y" drift.
 
 ### 2.4 Mandatory frontmatter for machine-readability
 
-Every doc inside `docs/` carries YAML frontmatter with at least `type`, `status` (lifecycle docs only), `authors`, and `scope`. This lets AI agents and shell scripts query the corpus cheaply: "show me approved designs touching networking" becomes `grep -l "scope:.*network" docs/2-design/ | xargs grep -l "status: approved"`. The `authors` field also answers "which agent (or human) wrote this?" — load-bearing when several harnesses work the same corpus. Full schemas, exemptions, and format rules: §5.4.
+Every doc inside `docs/` carries YAML frontmatter with at least `type`, `status` (lifecycle docs only), `authors`, and `scope`. This lets AI agents and shell scripts query the corpus cheaply: "show me approved designs touching networking" becomes `grep -l "scope:.*network" docs/3-design/ | xargs grep -l "status: approved"`. The `authors` field also answers "which agent (or human) wrote this?" — load-bearing when several harnesses work the same corpus. Full schemas, exemptions, and format rules: §5.4.
 
 ### 2.5 Stage-first lifecycle, numbered for clarity
 
 Folders fall into three groups by *what kind of content lives there*, and only the lifecycle group gets numbered:
 
-- **Lifecycle phases (numbered, ordered by workflow):** `0-brainstorms/` through `4-reviews/`. Numbers reflect workflow position; `ls docs/` shows the lifecycle in order.
+- **Lifecycle phases (numbered, ordered by workflow):** `0-brainstorms/` through `6-retros/`. Numbers reflect workflow position; `ls docs/` shows the lifecycle in order.
 - **Evergreen reference (plain names, alphabetical):** `adrs/`, `guides/`. No workflow position to encode — names describe what they hold.
 - **Scratch / informal (plain name):** `notes/`. Not a phase; not evergreen reference; just a home for chat dumps and external research.
 - **Standing indexes / single-file evergreen (UPPERCASE or lowercase at root):** `ROADMAP.md`, `CHANGELOG.md`, optional `architecture.md`.
@@ -95,7 +95,12 @@ Project-specific evergreen folders (`prompts/`, `art/`, etc.) are plain-named, N
 ```mermaid
 graph LR
     subgraph "Lifecycle phases (numbered, ordered)"
-        B[0-brainstorms] --> D[1-discovery] --> Des[2-design] --> P[3-plans] --> R[4-reviews]
+        B[0-brainstorms] -.-> D[1-research]
+        D -.-> Req[2-requirements]
+        Req -.-> Des[3-design]
+        Des -.-> P[4-plans]
+        P -.-> R[5-reviews]
+        R -.-> Retro[6-retros]
     end
     subgraph "Evergreen reference (plain names)"
         ADR[adrs]
@@ -111,7 +116,11 @@ graph LR
     end
 ```
 
-New work flows along the lifecycle chain; not every initiative touches every stage.
+These are selectable responsibilities, not a required chain. Brainstorming can stop at exploration. Research can precede brainstorming or support any phase. Requirements defines accepted scope; design chooses the technical solution; planning combines builder specifications and task ordering. Implementation, review, debugging, and retrospective use the selected sources. No phase requires its own file, session, or agent solely because it appears in this structure.
+
+Write a document when it preserves a decision, supports review across people or sessions, or enables coordination or recovery for substantial work. Otherwise use the current request, an existing issue, and an in-session plan as appropriate. State the selected route once. Create folders only when used.
+
+Existing projects may still use `1-discovery/`, `2-design/`, `3-plans/`, and `4-reviews/`. Discover the declared Project Map and actual artifact types before assuming numbered paths. The bundled validators support both layouts. A migration must update live links, metadata, discovery, hooks, and project instructions together, after installed compatibility and active-session checks. Preserve historical types and evidence; never renumber another project automatically.
 
 ### 2.6 ADRs as first-class single-decision records
 
@@ -119,7 +128,7 @@ Architecture decisions live as individual files (`NNNN-short-title.md`, where `N
 
 ### 2.7 Brainstorm-then-graduate
 
-Exploratory thinking isn't scratch — it's a first-class artifact in `docs/0-brainstorms/`. As ideas crystallise, they graduate up the chain (brainstorm → discovery → design). Parked decisions stay as brainstorms with `status: parked` so they're not lost.
+Exploratory thinking isn't scratch — it's a first-class artifact in `docs/0-brainstorms/`. Promotion establishes a delivery scope under an explicit user decision or authorized workflow. One brainstorm can produce several initiatives or none. Link resulting requirements and designs without automatically superseding useful exploration or rationale. Parked decisions stay as brainstorms with `status: parked` so they're not lost.
 
 ---
 
@@ -141,11 +150,14 @@ Exploratory thinking isn't scratch — it's a first-class artifact in `docs/0-br
 │   ├── notes/                     # scratch, chat dumps, external research, snippets
 │   │
 │   ├── 0-brainstorms/             # pre-design ideas (worth-elaborating; one-liners → ROADMAP)
-│   ├── 1-discovery/               # research, spikes, comparative analyses
-│   ├── 2-design/                  # specs + designs (one per initiative)
+│   ├── 1-research/                # research, spikes, comparative analyses
+│   ├── 2-requirements/            # optional durable briefs and PRDs
+│   ├── 3-design/                  # technical designs
 │   │   └── assets/                # attachments for these docs (§5.10)
-│   ├── 3-plans/                   # phased implementation plans
-│   ├── 4-reviews/                 # retros, audits, reviews, analyses
+│   ├── 4-plans/                   # builder specifications and task plans
+│   ├── 5-reviews/                 # artifact reviews, audits, analyses
+│   ├── 6-retros/                  # process retrospectives
+│   │   └── lessons/              # lessons/<workstream>/, captured in any phase
 │   │
 │   ├── adrs/                      # single-decision records (NNNN-title.md)
 │   └── guides/                    # internal procedural how-tos
@@ -175,6 +187,8 @@ In open-source or public projects where the code and public documentation are sh
 - **Project Map routing:** The project brief (`CLAUDE.md` / `AGENTS.md`) sets `Working memory: .workbench/` so AI assistants route working-memory artifacts to the private repository automatically.
 - **Contributor route:** Outside contributors who do not have access to `.workbench/` use standard public mechanisms: issues, pull requests, and public ADRs (`docs/adrs/`), without creating lifecycle folders under `docs/`.
 - **Commit boundaries:** Local pre-commit hooks prevent accidentally committing `.workbench` gitlinks, internal paths, or private material into the public repository. Commits inside `.workbench/` are made with `git -C .workbench` and never touch public history.
+
+The example above retains legacy directory names. New projects use the target layout in §3; existing clones keep their actual paths until compatible tools are installed and an authorized migration updates live references and shared sessions together.
 
 ---
 
@@ -231,7 +245,7 @@ Date-grouped record of what shipped, when. Most recent first. Each entry referen
 - DOCP enabled, RAM at 3200 MT/s, memtest 3 passes clean
 - SVM enabled
 - IPv6 audit: TCP/UDP firewalled (D-23)
-- See [docs/4-reviews/2026-04-28-foundation-retro.md], [docs/3-plans/2026-04-25-foundation-plan.md].
+- See [docs/6-retros/2026-04-28-foundation-retro.md], [docs/4-plans/2026-04-25-foundation-plan.md].
 ```
 
 ### 4.2 `docs/architecture.md` (or `docs/architecture/`) — always-current architecture
@@ -260,18 +274,27 @@ Lower quality bar than the other lifecycle folders, but content here is *deliber
 Frontmatter `status:`
 - `open` — actively being explored
 - `parked` — deferred for later (with notes on what would unpark it)
-- `superseded` — graduated to discovery/design (link in `superseded_by:`)
+- `resolved` — exploration concluded; link any resulting initiatives
+- `superseded` — actually replaced by another record, with `superseded_by:`
 - `abandoned` — explicitly not pursuing
 
-When a brainstorm crystallises, it graduates up the chain — typically to `2-design/` directly, or via `1-discovery/` if substantial research came out of it first.
+When exploration is promoted, identify the accepted scope owner: the request, issue, brief within a design, or separate PRD. Link the exploration and evidence. A new delivery artifact does not invalidate its source rationale.
 
-### 4.4 `docs/1-discovery/` — authoritative research artifacts
+### 4.4 `docs/1-research/` — authoritative research artifacts
 
 Where research reports, comparative analyses, and option-space writeups live. Content with a thesis (not just exploratory thoughts).
 
 Examples: "Comparison of self-hosted photo platforms" (informs the photo-platform design), "Analysis of restic vs borg vs duplicacy" (informs the backup-strategy design), "Survey of vector databases" (informs the memory-rag design).
 
 Frontmatter `status:` follows the standard lifecycle (`draft → approved → superseded`).
+
+### 4.4.1 `docs/2-requirements/` — accepted product scope
+
+Use a separate brief or PRD only when its decision, review, or recovery value warrants one. Requirements may already belong to a clear request or issue; a bounded feature may keep a short accepted brief in its design. Identify one authoritative scope owner, with links to exploration and evidence.
+
+Record the problem, audience, outcome, selected scope, priorities, exclusions, journeys, observable requirements and acceptance scenarios, constraints, success criteria, and unresolved consequential questions. Creating this record does not authorize implementation. Give consequential obligations stable references that design, planning, and review can preserve.
+
+Requirements status follows `draft → approved → in-progress → shipped`, omitting `in-progress` when no execution checkpoint needs it. Approval accepts scope; it does not prove delivery. Mark a historical brief or PRD `shipped` only when its accepted scope is delivered and verified, alongside the applicable design and plan records. Partially delivered scope stays approved or in progress. A Recently shipped line that links an approved PRD is correctly refused; link the delivered change record or mark the fully delivered PRD shipped. A maintained current product specification remains distinct from that historical change record.
 
 ### 4.5 `docs/notes/` — scratch, imports, external research
 
@@ -290,34 +313,31 @@ File naming: `YYYY-MM-DD-<topic>.md`. Subdirs optional (e.g., `notes/imports/`).
 
 No frontmatter required — `notes/` is informal by design. If you want to track origin, add a comment at the top of the file pointing at the source.
 
-### 4.6 `docs/2-design/` — Low-level designs (LLDs)
+### 4.6 `docs/3-design/` — technical designs
 
-One design doc per initiative. The "why" behind a piece of work — architecture, decisions, tradeoffs.
+Design owns architecture, component responsibilities, consequential interfaces, failure behavior, and technical trade-offs. An upstream accepted brief or PRD owns product requirements when present; otherwise identify the brief in the design or request. High-level or low-level detail follows consequence, not a mandatory template.
 
 Each design typically has: summary, goals, non-goals, architecture (with Mermaid diagrams where helpful), decisions (linked to relevant ADRs), open questions, future considerations.
 
 Frontmatter `status:`: `draft → approved → shipped → superseded`.
 
-### 4.7 `docs/3-plans/` — Implementation plans
+### 4.7 `docs/4-plans/` — Implementation plans
 
-One plan per initiative, matching a design by topic stem. The "how" — phased implementation steps with verification and rollback per phase.
+A durable plan combines builder specifications and task ordering: stable task IDs, source obligations, inputs, outputs, contracts, acceptance proof, dependencies, shared resources, and integration ownership. No intermediate spec document is required. A reviewed design can instead support implementation with a native in-session plan when a separate file adds no value. PM tools are optional; declare which record owns definitions and progress before synchronizing another representation.
 
 Frontmatter `status:` matches the design's lifecycle.
 
-### 4.8 `docs/4-reviews/` — Retros, audits, reviews, analyses
+### 4.8 `docs/5-reviews/` — artifact reviews, audits, analyses
 
-Post-execution or evaluative writeups. Anything that looks back at what happened or audits current state. The folder name is an umbrella; the file suffix names the specific kind:
+Reviews assess fidelity to intent, correctness, architecture, usability, and readiness at applicable checkpoints and on the integrated result. Use `-review.md`, `-audit.md`, or `-analysis.md` to identify the report. Existing specialist methods supply the review; the entry skill coordinates them. Personal human approval, review under delegation, and a serial self-check are different evidence.
 
-| Suffix | Meaning |
-|---|---|
-| `-retro.md` | Retrospective on a shipped piece of work |
-| `-audit.md` | Systematic check (security, dependency, code health) |
-| `-review.md` | General review (quarterly, system, dependency) |
-| `-analysis.md` | Analytical writeup (competitive, framework, etc.) |
+### 4.8.1 `docs/6-retros/` — process retrospectives and continuous lessons
 
-A retro typically has: summary, outcomes, what worked, what surprised, what to do differently, follow-ups. Audits and analyses follow domain-specific shapes; the common thread is "looking back / measuring against a target."
+Retrospectives use `-retro.md` and assess how work was done, with evidence, limitations, and owned follow-ups. They are optional, not a required postscript to every change. Incident reviews can retain the project's existing review location.
 
-Frontmatter `status:` is typically `shipped` (these are written after the fact).
+Capture reusable lessons in the encountering phase, not only after delivery. A short observation can stay in an existing record. When separate discovery or concurrent writing warrants a file, use `6-retros/lessons/<workstream>/YYYY-MM-DD-topic-lesson.md` with `type: lesson`. Record context, evidence, workaround and result, confirmed cause or uncertainty, and what later work should learn. Concurrent writers use separate files. A raw lesson can remain `draft` without becoming unfinished delivery work; briefing excludes lessons from delivery-work counts and reports their count. Actionable follow-ups belong in the authoritative task or tracker.
+
+Read relevant prior lessons before repeating similar work. Retrospectives synthesize lessons, source changes, execution evidence, and review findings without inventing telemetry. Assign an owner and disposition to follow-ups, then check adopted improvements in later work. Consolidation preserves links to raw evidence and grants no automatic deletion, global configuration, or installation authority.
 
 ### 4.9 `docs/guides/` — Internal procedural how-tos
 
@@ -389,15 +409,18 @@ Project-specific. Adapt to your needs:
 |---|---|---|
 | `notes/` | `YYYY-MM-DD-<topic>.md` (or freeform) | `2026-05-12-claude-design-chat.md` |
 | `0-brainstorms/` | `YYYY-MM-DD-<topic>.md` | `2026-05-01-quarterly-ipv6-rescan-routine.md` |
-| `1-discovery/` | `YYYY-MM-DD-<topic>-research.md` (or `-analysis.md`, `-spike.md`) | `2026-05-10-photo-platform-research.md` |
-| `2-design/` | `YYYY-MM-DD-<topic>-design.md` | `2026-04-25-storage-architecture-design.md` |
-| `3-plans/` | `YYYY-MM-DD-<topic>-plan.md` | `2026-04-25-storage-architecture-plan.md` |
-| `4-reviews/` | `YYYY-MM-DD-<topic>-{retro,audit,review,analysis}.md` | `2026-04-28-foundation-retro.md` |
+| `1-research/` | `YYYY-MM-DD-<topic>-research.md` (or `-analysis.md`, `-spike.md`) | `2026-05-10-photo-platform-research.md` |
+| `2-requirements/` | `YYYY-MM-DD-<topic>-prd.md` | `2026-05-10-photo-platform-prd.md` |
+| `3-design/` | `YYYY-MM-DD-<topic>-design.md` | `2026-04-25-storage-architecture-design.md` |
+| `4-plans/` | `YYYY-MM-DD-<topic>-plan.md` | `2026-04-25-storage-architecture-plan.md` |
+| `5-reviews/` | `YYYY-MM-DD-<topic>-{audit,review,analysis}.md` | `2026-04-28-foundation-review.md` |
+| `6-retros/` | `YYYY-MM-DD-<topic>-retro.md` | `2026-04-28-foundation-retro.md` |
+| `6-retros/lessons/<workstream>/` | `YYYY-MM-DD-<topic>-lesson.md` | `2026-04-28-retry-lesson.md` |
 | `guides/` | `<topic>-guide.md` (no date) | `bios-update-guide.md` |
 | `adrs/` | `<NNNN>-<short-title>.md` | `0023-ipv6-enabled-eero-firewall.md` |
 | `architecture.md` / `architecture/` | `<aspect>.md` (no date) | `architecture.md`, `architecture/network.md` |
 
-**Why date prefixes on lifecycle docs:** sorts chronologically (`ls 2-design/` shows the design history in order); answers "when was this written?" without opening the file; future versions of the same topic don't collide on filenames.
+**Why date prefixes on lifecycle docs:** sorts chronologically (`ls 3-design/` shows the design history in order); answers "when was this written?" without opening the file; future versions of the same topic don't collide on filenames.
 
 **Why no date prefix on evergreen:** these get UPDATED, not appended. The git log shows when content changed; the filename should reflect what the doc IS, not when it was created.
 
@@ -432,17 +455,17 @@ All `docs/*.md` files carry YAML frontmatter, with the exemptions listed below. 
 - The frontmatter block starts **at byte 0** with a `---` fence line and closes with a second `---` fence. `status:` lines written as plain text under the H1 are pseudo-frontmatter — invisible to every parser and to `grep`-based corpus queries.
 - **Core field names are a closed vocabulary**: `date`, `title`, `type`, `status`, `scope`, `authors`, `reviewed_by`, `supersedes`, `superseded_by`, `related`, `last_reviewed`. Don't substitute synonyms — `date` not `created`, `scope` not `tags`, `authors` not `owner`. Extra project-specific fields are allowed, but never as a synonym for a core field.
 
-**Schema A — lifecycle and decision docs** (`0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/`, `adrs/`):
+**Schema A — lifecycle and decision docs** (`0-brainstorms/`, `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/`, `6-retros/` including standalone lessons, legacy lifecycle directories, and `adrs/`):
 
 ```yaml
 ---
 date: 2026-05-12
 title: "Install Plex"
-type: design                       # design | plan | retro | review | research | adr | brainstorm
-status: draft                      # draft | approved | shipped | superseded | abandoned (or open/parked for brainstorms)
+type: design                       # brainstorm | research | discovery | requirements | design | plan | review | audit | analysis | retro | lesson | adr
+status: draft                      # draft | approved | in-progress | shipped | resolved | superseded | open | parked | abandoned
 authors: ["Jane Doe", "claude-fable-5 (claude-code)"]  # see "Authorship" below
 scope: [containers, network]       # optional, multi-valued tags
-reviewed_by: []                    # optional — review passes, same entry grammar as authors
+reviewed_by: []                    # optional, accountable human GitHub username, with delegation qualifier when applicable
 supersedes:                        # optional, path of doc this replaces
 superseded_by:                     # optional, path of doc replacing this
 related: []                        # optional, paths to related docs
@@ -465,7 +488,7 @@ last_reviewed: 2026-05-12          # optional — deliberate "I confirmed this i
 
 - First entry: the human operator, taken from `git config user.name` (matters in multi-person projects — it says whose session produced the doc).
 - Then each contributing agent as `"<model> (<harness>)"` — e.g. `"claude-fable-5 (claude-code)"`, `"gpt-5.5-codex (codex)"`, `"gemini-3.1-pro (agy)"`. Use the real model id, not just the harness name, so multi-model work stays distinguishable.
-- Append on authoring or substantial rewrite; don't append for typo fixes. Review passes (the "one agent designs, another reviews" flow) are recorded in `reviewed_by` with the same entry grammar, never in `authors`.
+- Append on authoring or substantial rewrite; don't append for typo fixes. Review passes are recorded in `reviewed_by`, never in `authors`: the accountable human's GitHub username, plus `(delegated to <model>, <harness>)` when that human did not read the artifact. The commit recording that outcome is the reviewed revision. Agent review never proves personal human review.
 - Frontmatter is the source of truth for doc authorship, not git: commits batch multiple docs, and the committing session/harness often isn't the writing one. Git `Co-Authored-By` trailers are corroboration only.
 - Backfilling old docs: don't fabricate authorship — omit `authors` (or use `authors: [unknown]`); backfill only the fields you can state accurately.
 
@@ -476,21 +499,25 @@ last_reviewed: 2026-05-12          # optional — deliberate "I confirmed this i
 - Project-level docs (`README.md`, `CLAUDE.md`, `CHANGELOG.md`, `ROADMAP.md`) — well-known by name.
 - **Public user docs are out of scope entirely** (e.g. a public repo's end-user `docs/`): they may carry their own project standard, including none. Don't add agent attribution there unless the project says to.
 
-The bundled [drift-guard](../git-hooks/drift-guard/) currently accepts only `draft`, `approved`, `in-progress`, `shipped`, `resolved`, and `superseded`. The `open`, `parked`, and `abandoned` values described in this guide are not accepted by that hook. Reconcile the project's chosen vocabulary with its hook before enabling the gate; this documentation does not change hook behavior.
+The bundled [drift-guard](../git-hooks/drift-guard/) accepts the nine statuses listed above in both layouts. Existing `type: discovery` and `type: analysis` remain valid. Standalone nested lessons receive lifecycle checks; other nested bundle contents and assets retain their exemptions. Install compatible hooks before adopting the new layout; documentation edits do not update installed copies.
 
 ### 5.5 Status semantics
 
 For lifecycle docs:
 
 - `draft` — being written or pending review
-- `approved` — accepted; ready to plan/implement
+- `approved` — accepted under the applicable review authority; actual authorization to proceed is checked separately
+- `in-progress` — execution underway
+- `resolved` — exploration or investigation concluded
+- `open` — exploration or a question remains active
+- `parked` — deferred with a condition for resuming
 - `shipped` — implementation done; relevant evergreen docs (`architecture.md`, `system/*`, etc.) updated; CHANGELOG entry exists
 - `superseded` — replaced by a newer doc (must set `superseded_by:` path)
 - `abandoned` — explicitly not pursuing; kept as historical record
 
 **ADR exception:** ADRs don't ship. Their lifecycle is `draft → approved → superseded`.
 
-**Brainstorm exception:** brainstorms use `open`, `parked`, `superseded`, `abandoned` — they don't get "approved" because crystallised brainstorms graduate to a different folder.
+**Brainstorm exception:** exploration can remain `open`, become `parked`, conclude as `resolved`, or be `abandoned`. Use `superseded` only when another record replaces it, not simply because a design exists. Lessons may stay `draft`; actionable work is tracked separately.
 
 ### 5.6 Conventional Commits
 
@@ -503,7 +530,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`
 ```
 feat(plex): install Plex container with Tailscale exit
 
-Closes LLD: docs/2-design/2026-05-12-install-plex-design.md
+Closes LLD: docs/3-design/2026-05-12-install-plex-design.md
 Updates docs/architecture.md (or system/containers.md, system/network.md if you use system/).
 ```
 
@@ -513,11 +540,13 @@ Updates docs/architecture.md (or system/containers.md, system/network.md if you 
 graph TD
     A[Idea] --> B{Crystallised?}
     B -->|No| A
-    B -->|Yes, research| C[1-discovery]
-    B -->|Yes, design| D[2-design]
-    D --> E[3-plans]
+    B -->|Yes, research| C[1-research]
+    B -->|Yes, design| D[3-design]
+    D -.-> E[4-plans]
     E --> F[Implementation]
-    F --> G[4-reviews]
+    D --> F
+    Request[Clear request] --> F
+    F --> G[5-reviews]
     F --> H[system/* updated]
 ```
 
@@ -614,7 +643,7 @@ Docs in `docs/` — designs, plans, brainstorms, discovery, reviews, retros — 
 
 **Illustrate, don't just describe.** When a doc discusses anything visual — UI/UX mockups, hi-fi concepts, screenshot examples, before/after comparisons — embed images:
 
-1. Build a **self-contained single-file HTML mockup** (inline CSS, no build step, no external files) in the doc's `assets/` set — e.g. `docs/2-design/assets/2026-07-31-<topic>/concept.html`, per §5.10. Single-file keeps it git-native, openable in any browser, and editable by AI in one pass. Include a light/dark toggle when theming is part of the design.
+1. Build a **self-contained single-file HTML mockup** (inline CSS, no build step, no external files) in the doc's `assets/` set — e.g. `docs/3-design/assets/2026-07-31-<topic>/concept.html`, per §5.10. Single-file keeps it git-native, openable in any browser, and editable by AI in one pass. Include a light/dark toggle when theming is part of the design.
 2. **Screenshot it headlessly** with Playwright or a similar tool, one PNG per state or theme that matters. If Playwright MCP blocks `file://` URLs, start it with `--allow-unrestricted-file-access` (see the [browser automation guide](guide-browser-automation-mcp-vs-cli.md)) rather than running a local web server.
 3. **Commit HTML and PNGs together** and embed the PNGs in the doc with relative links so they render on GitHub. The PNG is what the doc shows; the HTML is the editable source of truth and doubles as a visual spec for implementation.
 
@@ -627,7 +656,7 @@ Docs accumulate things that aren't Markdown: rendered mockups and their HTML sou
 **One folder name, one subfolder per set.** Not `mockups/` for one kind and `assets/` for another — a single name, with each artifact set getting its own subfolder:
 
 ```
-docs/2-design/assets/
+docs/3-design/assets/
 ├── 2026-07-31-terminal-rendering-evidence/
 │   ├── README.md
 │   └── altscreen-probe.py
@@ -641,7 +670,7 @@ docs/2-design/assets/
 
 | Location | Subfolder name | Why |
 |---|---|---|
-| Numbered lifecycle dirs (`0-brainstorms/` … `4-reviews/`) | `<YYYY-MM-DD>-<slug>/` | The doc is a dated point-in-time record, so its attachments are frozen with it |
+| Numbered lifecycle dirs (`0-brainstorms/` … `6-retros/`) | `<YYYY-MM-DD>-<slug>/` | The doc is a dated point-in-time record, so its attachments are frozen with it |
 | Evergreen dirs (`guides/`, `adrs/`, `docs/` root) | `<slug>/` | These docs get updated rather than appended (§2.3), and so do their attachments |
 
 That rule exists to protect the record. A design doc dated 2026-07-31 embeds a diagram showing what was proposed *then*. If that file kept evolving in place, the doc would silently start illustrating a design it never described — the artifact would drift out from under the prose that references it.
@@ -663,18 +692,26 @@ That rule exists to protect the record. A design doc dated 2026-07-31 embeds a d
 ```mermaid
 graph LR
     Idea[New idea] --> Brainstorm[0-brainstorms/]
-    Brainstorm --> Discovery[1-discovery/<br/>research artifact]
-    Brainstorm --> Design[2-design/<br/>LLD]
+    Brainstorm --> Discovery[1-research/<br/>research artifact]
+    Brainstorm --> Design[3-design/<br/>LLD]
     Discovery --> Design
-    Design --> Plan[3-plans/<br/>implementation plan]
+    Design --> Plan[4-plans/<br/>implementation plan]
     Plan --> Build[Implementation]
-    Build --> Retro[4-reviews/<br/>retro/audit/review]
+    Build --> Review[5-reviews/<br/>artifact review]
+    Review -.-> Retro[6-retros/<br/>process retrospective]
+    Request[Clear request] --> Build
+    Design --> Build
+    Discovery -.-> Requirements[2-requirements/<br/>accepted scope]
+    Requirements --> Design
+    ResearchFirst[Research question] --> Discovery
+    Build -.-> Debug[Debugging]
+    Debug --> Build
     Build --> SystemUpdate[architecture.md or system/* updated]
     Build --> Changelog[CHANGELOG entry]
     Build --> Roadmap[ROADMAP updated]
 ```
 
-Not every piece of work touches every stage. A small fix might skip brainstorm and discovery, going directly to design (or skipping design too if it's a one-line change). A multi-month initiative might cycle through multiple plans and reviews.
+Not every piece of work touches every stage. Any clear authorized change can use implementation with an in-session plan and appropriate review. A design can suffice without a durable plan; size categories alone require no document. A multi-month initiative might cycle through multiple plans and reviews. Stop at a phase-only boundary by default. Explicit full or partial autonomous scope can authorize included transitions and reviews; record that scope once, preserve retained human gates, and never claim delegated review as personal human approval. Recommendations alone authorize nothing.
 
 ### 6.2 Change discipline
 
@@ -732,14 +769,9 @@ This is the three-way semantic split PEP, KEP, and most mature proposal-tracking
 
 **Truncation rule for Recently shipped.** Keep the last 10 entries OR the last 90 days, whichever is shorter. Older shipped items live only in `CHANGELOG.md` (the long-term record). The ROADMAP's purpose is forward-leaning navigation, not historical archive.
 
-### 6.4 Brainstorm graduation
+### 6.4 Brainstorm promotion
 
-- A brainstorm becomes a research artifact (in `1-discovery/`) when it produces a referenceable thesis with a recommendation.
-- A brainstorm becomes a design (in `2-design/`) when it crystallises into a concrete proposal for a piece of work.
-- A brainstorm becomes a parked decision (status `parked` in `0-brainstorms/`) when it's deferred — with notes on what would unpark it. Surface in ROADMAP's `## Parked` section with the `Deferred:` prefix.
-- A brainstorm becomes abandoned (status `abandoned`) when explicitly not pursuing — kept as historical record so the question doesn't get re-asked. Surface in ROADMAP's `## Parked` section with the `Declined:` prefix.
-
-Link via `superseded_by:` frontmatter when a brainstorm graduates.
+Promotion follows an explicit user decision or authorized workflow scope. It can produce no initiative, one, or several. Research supplies evidence and does not itself approve scope. A separate Requirements phase or PRD is useful when product definition needs deliberate decisions; otherwise a clear request, issue, or brief within design can own accepted scope. Link that owner to the brainstorm and research. Do not set `superseded_by:` unless a record actually replaces the exploration.
 
 ### 6.5 AI-agent update triggers (working-memory discipline)
 
@@ -749,21 +781,21 @@ This convention assumes AI coding agents (Claude Code, Codex, etc.) are primary 
 
 | Event | Required write |
 |---|---|
-| Agreed to start a substantial new initiative not yet in `docs/` | Create `docs/0-brainstorms/YYYY-MM-DD-<topic>.md` with `status: open`. Add one-line pointer to ROADMAP `## Future considerations` (or `## Next actions` if ready to start). |
-| Brainstorm crystallises into a design during conversation | Create `docs/2-design/YYYY-MM-DD-<topic>-design.md` with `status: draft`. Move ROADMAP pointer from Future considerations / Next actions → `## Drafts (pending review)`. Set brainstorm `status: superseded`, `superseded_by: <design-path>`. |
+| Agreed to start a substantial new initiative not yet in `docs/` | Capture the applicable source artifact during the session when the document test calls for it, using a brainstorm for exploration and the accepted scope owner for delivery. Add or update one ROADMAP line in the appropriate section. In a public/private split, restate the public-safe work without naming or linking private sources. |
+| Brainstorm crystallises into a design during conversation | Create `docs/3-design/YYYY-MM-DD-<topic>-design.md` with `status: draft`. Move ROADMAP pointer from Future considerations / Next actions → `## Drafts (pending review)`. Link the design and accepted scope owner to the brainstorm; preserve still-applicable exploration and rationale. |
 | Design approved | Flip frontmatter `status: approved`. Move ROADMAP pointer from Drafts → `## Next actions` (or `## In flight` if starting immediately). |
 | Implementation begins | Move ROADMAP pointer to `## In flight`. |
 | Implementation ships | Per §6.2 change discipline: flip design + plan to `status: shipped`; update evergreen state docs; add CHANGELOG entry; move ROADMAP pointer to `## Recently shipped`. All in the same commit (or commit series). |
 | Work parked / deferred | Flip artifact frontmatter to `status: parked` (or `abandoned` / `superseded`). Move ROADMAP pointer to `## Parked` with the appropriate prefix. |
 | New unresolved decision identified | Add to ROADMAP `## Open questions` with the question stated as a question. |
 | Open question resolved | Remove from `## Open questions`. The resolved decision lands in an ADR (`docs/adrs/<NNNN>-<title>.md`) or in a design's "Decisions" section. |
-| Substantive audit, retro, or analysis emerges from a conversation | Save to `docs/4-reviews/YYYY-MM-DD-<topic>-{audit,retro,review,analysis}.md`. Don't let the work evaporate at session end. |
+| Substantive audit, retro, or analysis emerges from a conversation | Save artifact reviews and analyses under `docs/5-reviews/`, process retrospectives under `docs/6-retros/`, and reusable lessons in the encountering phase (§4.8.1). Don't let the work evaporate at session end. |
 
 **Session-end check.** Before ending a session in which we made non-trivial decisions, discovered convention gaps, agreed on changes, or did substantive evaluative work, the agent should explicitly verify:
 
 1. Has every status change in this session been written to the relevant artifact's frontmatter?
 2. Does ROADMAP accurately reflect what's now In flight / Drafts / Next actions / Parked?
-3. Did anything emerge that should be in `0-brainstorms/`, `4-reviews/`, or as an ADR but isn't?
+3. Did anything emerge that needs an exploration, review, retrospective, lesson, or ADR record but lacks one?
 4. Is CHANGELOG up to date with shipped work?
 5. Does every working-memory doc created or substantially edited this session have valid frontmatter per §5.4 — fenced at byte 0, core field names, `authors` naming the human plus the agent?
 
@@ -892,7 +924,7 @@ npx degit github:carlosboeing/agentic-toolkit/templates/default-project <new-pro
 cp -r <path-to-repo>/templates/default-project <new-project-path>
 ```
 
-The template ships with `CLAUDE.md`, `README.md`, `.gitignore`, and the full `docs/` skeleton (lifecycle phases + evergreen + standing indexes). `system/` and `architecture.md` are NOT scaffolded — they're created on demand when README's `## Architecture` section overflows.
+The template ships with `CLAUDE.md`, `README.md`, `.gitignore`, standing tracking files, and a small set of empty starter directories. These placeholders require no artifacts; create additional lifecycle and evergreen directories only when used. `system/` and `architecture.md` are NOT scaffolded — they're created on demand when README's `## Architecture` section overflows.
 
 ### Step 2: Substitute placeholders
 
@@ -914,9 +946,9 @@ Use Conventional Commits from day one:
 git init && git add . && git commit -m "chore: bootstrap repo with project structure conventions"
 ```
 
-### Step 4: Use `0-brainstorms/` for the first piece of exploratory work
+### Step 4: Select the route for the work
 
-Resist the urge to skip straight to a design doc. Even if you have a clear plan, capturing the brainstorm gives you the artifact to look back at, and dogfoods the convention so it sticks.
+Explore an unclear idea; implement a clear authorized request with an in-session plan and appropriate review. Use durable sources only when their decision, review, or recovery value warrants them. A folder convention is not a requirement to create a brainstorm, design, or plan.
 
 ### Step 5: Build the muscle
 
@@ -924,7 +956,7 @@ The convention only works if you actually follow it. Specifically:
 
 - When you make a decision worth remembering, write an ADR.
 - When you ship something, update evergreen state (`architecture.md` or `system/*`), `CHANGELOG`, and `ROADMAP` in the same commit.
-- When you have an exploratory thought, capture it in `0-brainstorms/`, even briefly.
+- When exploration produces decisions worth preserving, capture them in `0-brainstorms/`.
 
 Six months in, the structure pays off — you can answer "what did we decide and why?" by reading the ADRs, "what's the current state?" by reading `architecture.md` (or `system/*`), "what's next?" by reading ROADMAP. Without the convention, all three answers require archaeology.
 
@@ -933,8 +965,8 @@ Six months in, the structure pays off — you can answer "what did we decide and
 If you can't or don't want to use the template, scaffold by hand:
 
 ```bash
-mkdir -p docs/{notes,0-brainstorms,1-discovery,2-design,3-plans,4-reviews,adrs,guides}
-touch docs/{notes,0-brainstorms,1-discovery,2-design,3-plans,4-reviews,adrs,guides}/.gitkeep
+mkdir -p docs
+# Create the selected lifecycle directory when its first artifact needs it.
 touch docs/ROADMAP.md docs/CHANGELOG.md
 # Then write README.md, CLAUDE.md, .gitignore by hand (or copy from your last project).
 ```
@@ -949,9 +981,9 @@ The conventions earn their value in how artifacts cross-reference each other. Th
 
 The full lifecycle of a single piece of work — a hardware upgrade, a service migration, a feature rollout — looks like:
 
-- **Design** in `2-design/` lays out the architecture, options considered, and chosen approach. `status: draft` while in flight, `status: shipped` once done.
-- **Plan** in `3-plans/` references the design and breaks it into phased steps with verification criteria, effort estimates (S/M/L), risks, and the smallest viable first step.
-- **Retro** in `4-reviews/` (optional, written after) captures what worked, what surprised, and follow-ups that came out of the work.
+- **Design** in `3-design/` lays out the architecture, options considered, and chosen approach. `status: draft` while in flight, `status: shipped` once done.
+- **Plan** in `4-plans/` references the design and breaks it into phased steps with verification criteria, effort estimates (S/M/L), risks, and the smallest viable first step.
+- **Retro** in `6-retros/` (optional, written after) captures what worked, what surprised, and follow-ups that came out of the work.
 - **ADRs** in `adrs/` capture decisions made during the work — usually 1–4 per initiative, sometimes zero. Each ADR is single-decision; supersedes/superseded-by relationships are explicit.
 - **Evergreen state updates** land in the same commit that ships the work — `docs/architecture.md` (or `docs/architecture/*`), or `docs/system/*` if the project uses operational state docs.
 - **CHANGELOG entry** dated, referencing the design and (if applicable) retro.
@@ -998,13 +1030,19 @@ Identify which of these apply:
 - `docs/6-adrs/` exists → rename to `docs/adrs/` (Step 10.2)
 - `docs/system/` exists with multiple files → keep, or split per §4.2 (depends on content)
 - `docs/system/architecture.md` only → flatten to `docs/architecture.md`
-- `docs/notes/` missing → create (Step 10.3)
-- `docs/0-brainstorms/` missing → create (Step 10.3)
+- `docs/notes/` missing → create when notes need it (Step 10.3)
+- A selected lifecycle directory is missing → create when its first artifact needs it (Step 10.3)
 - ADRs use `D-N-` or `YYYY-MM-DD-NNN-` patterns → standardise to `NNNN-` (Step 10.4)
 - `BACKLOG.md` instead of `ROADMAP.md` → rename or document the alias
-- Misplaced evergreen content (`VISION.md`, `gdd.md`, `BestPractices.md` in `1-discovery/`) → relocate to `docs/` root or appropriate evergreen folder (Step 10.5)
+- Misplaced evergreen content (`VISION.md`, `gdd.md`, `BestPractices.md` in `1-research/`) → relocate to `docs/` root or appropriate evergreen folder (Step 10.5)
 
 ### 10.2 Folder renames
+
+For the lifecycle transition, map `1-discovery/` to `1-research/`, `2-design/` to `3-design/`, `3-plans/` to `4-plans/`, and review records from `4-reviews/` to `5-reviews/`. Classify retrospective records by content and type for `6-retros/`; move exclusive attachments with their owner and retain shared evidence with corrected links. Create requirements and standalone lesson directories only when used. Retain historical `discovery`, `research`, and `analysis` types. Classify requirements and lessons temporarily stored in legacy directories by their types before a whole-directory move; route them to `2-requirements/` and `6-retros/lessons/<workstream>/` respectively.
+
+Before any authorized migration, inventory records and existing link failures, check collisions and concurrent writers, and rehearse on a disposable copy. Verify installed tools support both layouts and active sessions no longer depend on the old paths. Record the base revision, intended mapping, and completion marker. Update live navigation, frontmatter relationships, templates, and project instructions together. Compare inventories and link results; accept no migration-caused loss or failure. Preserve historical transcripts, review authority, and evidence. A source-tree edit is not proof of installed compatibility.
+
+The older evergreen renames below apply only when those source directories exist:
 
 ```bash
 git mv docs/5-guides docs/guides
@@ -1013,12 +1051,9 @@ git mv docs/6-adrs docs/adrs
 
 Update any cross-references in CLAUDE.md, README.md, ROADMAP.md, CHANGELOG.md, and per-doc frontmatter `related:` fields.
 
-### 10.3 Add missing folders
+### 10.3 Add folders when used
 
-```bash
-mkdir -p docs/notes docs/0-brainstorms
-touch docs/notes/.gitkeep docs/0-brainstorms/.gitkeep
-```
+Create the selected artifact's directory when writing its first useful record. An absent brainstorm, requirements, design, plan, or retrospective directory is not a workflow defect. Do not seed every phase or manufacture documents to fill the structure.
 
 ### 10.4 ADR naming standardisation
 
@@ -1044,11 +1079,11 @@ grep -rl "D-[0-9]" .
 
 ### 10.5 Relocate misplaced evergreen content
 
-Audit `docs/1-discovery/` for files that aren't actually research artifacts (no thesis, no recommendation):
+Audit `docs/1-research/` for files that aren't actually research artifacts (no thesis, no recommendation):
 
 - `VISION.md`, `*-vision.md` → consider top-level `VISION.md` (front-page meta) or `docs/vision.md` (content)
 - `*-gdd.md`, `*-game-design.md` → `docs/gdd.md` (or `docs/architecture.md` if game-design IS the architecture)
-- `*-best-practices.md`, `*-analysis.md` (without research basis) → `docs/best-practices.md` or `docs/4-reviews/`
+- `*-best-practices.md`, `*-analysis.md` (without research basis) → `docs/best-practices.md` or `docs/5-reviews/`
 
 ### 10.6 Update CLAUDE.md and verify
 
@@ -1074,7 +1109,7 @@ As the canonical conventions evolve, re-run this procedure. The `/init-project` 
 ## 11. Notes for adoption
 
 - **Don't try to backfill everything at once.** Adopt the structure for new work; let old docs sit until they're touched. Forced migration is a tax that often kills adoption.
-- **The numbered prefixes aren't sacred for evergreen content.** Lifecycle phases are numbered (`0-brainstorms/` through `4-reviews/`); evergreen folders (`adrs/`, `guides/`) are plain-named. If you prefer all-named folders (`brainstorms/`, `designs/`, etc.) and accept losing the workflow ordering that `ls` gives you, the rest of the convention still works.
+- **The numbered prefixes aren't sacred for evergreen content.** Lifecycle phases are numbered (`0-brainstorms/` through `6-retros/`); evergreen folders (`adrs/`, `guides/`) are plain-named. If you prefer all-named folders (`brainstorms/`, `designs/`, etc.) and accept losing the workflow ordering that `ls` gives you, the rest of the convention still works.
 - **`system/agents.md`** isn't in the standard set above — add it (or omit it) based on whether your project will have ongoing agent / automation work worth tracking.
 - **Cadence of `last_reviewed:` updates** is a judgment call. For docs that age slowly (BIOS update guide), every 6–12 months is fine. For high-churn docs (current container roster), you might bump it whenever you ship.
 - **Single-person vs team:** the conventions are designed for solo work but scale to small teams. For larger teams, you'd add review processes, ownership, and probably a more formal status flow — but the file shapes stay useful.

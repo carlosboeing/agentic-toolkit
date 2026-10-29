@@ -25,7 +25,7 @@ When architecture.md itself outgrows one file, promote to docs/architecture/over
 .
 ├── CLAUDE.md           — Claude Code session brief
 ├── README.md           — this file
-├── docs/               — project's working memory (brainstorms, designs, plans, retros, ADRs, ROADMAP, CHANGELOG)
+├── docs/               — project's working memory (selected lifecycle records, lessons, ADRs, ROADMAP, CHANGELOG)
 └── ...                 — project-specific code, configs, scripts (add as needed)
 ```
 
@@ -36,6 +36,8 @@ This project follows [`guide-project-structure-and-conventions.md`](https://gith
 - One canonical place per question (ROADMAP for "what's next", ADRs for decisions, etc.).
 - Conventional Commits for git (`<type>(<scope>): <description>`).
 - Self-describing filenames: lifecycle artifacts dated, evergreen content named for what it is.
+
+Lifecycle responsibilities are selectable. A clear request can use an in-session implementation plan and review; a design, durable plan, or separate PRD is used when requested or useful for decisions, review, or recovery. See the project brief for ownership and authority.
 
 ## License
 

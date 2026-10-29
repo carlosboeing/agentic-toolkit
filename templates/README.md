@@ -55,10 +55,12 @@ default-project/
     ├── CHANGELOG.md       empty changelog
     ├── notes/             scratch notes and research
     ├── 0-brainstorms/     early ideas
-    ├── 1-discovery/       research, spikes and analyses
-    ├── 2-design/          specifications and designs
-    ├── 3-plans/           implementation plans
-    ├── 4-reviews/         retrospectives, audits and reviews
+    ├── 1-research/       research, spikes and analyses
+    ├── 2-requirements/    optional briefs and PRDs, created when used
+    ├── 3-design/          technical designs
+    ├── 4-plans/           builder specifications and task plans
+    ├── 5-reviews/         artifact reviews, audits and analyses
+    ├── 6-retros/          optional retrospectives and lessons, created when used
     ├── adrs/              architecture decision records (NNNN-title.md)
     └── guides/            internal how-to guides
 ```
@@ -78,3 +80,5 @@ default-project-oss/
 ```
 
 The templates leave out `docs/system/` and `docs/architecture.md`. Add them when the README's architecture section outgrows a page, as the conventions guide describes.
+
+Lifecycle paths describe where useful artifacts belong; they impose no sequence or document requirement. New requirements and retrospective directories are created when first used. Existing projects retain their declared layouts until an authorized migration updates links, instructions, and installed tools together; copying a template does not migrate an existing project.

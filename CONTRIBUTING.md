@@ -24,7 +24,7 @@ flowchart TB
 
 - **Discuss larger changes in an issue first.** For a significant architecture decision, propose an ADR in `docs/adrs/`.
 - **Keep changes to public files:** skills, hooks, rules, documentation, guides, references, templates, scripts and tests.
-- **Do not add planning folders** such as `docs/0-brainstorms/`, `docs/1-discovery/`, `docs/2-design/`, `docs/3-plans/` or `docs/4-reviews/`. The issue and pull request hold the discussion.
+- **Do not add planning folders** such as `docs/0-brainstorms/`, `docs/1-discovery/`, `docs/2-design/`, `docs/3-plans/` or `docs/4-reviews/`, or the target `docs/1-research/`, `docs/2-requirements/`, `docs/3-design/`, `docs/4-plans/`, `docs/5-reviews/`, and `docs/6-retros/`. The issue and pull request hold the discussion.
 
 ## Branches
 

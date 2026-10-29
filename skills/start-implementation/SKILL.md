@@ -69,7 +69,9 @@ Read the full source before changing anything: the plan and its approved design,
 - Markers for effects that cannot safely be repeated.
 - Evidence of another plan writer: edits, commits, or pushes to the plan repository.
 
-The reviewed revision is the commit that records the review, such as the one setting `status` and `reviewed_by`. A committed draft is not reviewed, and an uncommitted design edit never becomes the reviewed revision. If that commit is missing, stop at the handoff and report it. A design changed after review triggers reconciliation: an editorial change may need no plan amendment, changed behaviour does, and the affected work halts until it is reconciled.
+Apply artifact review and revision checks only to the durable sources and gates that actually exist. Request-only work needs no reviewed commit or plan markers; still reconcile scope, constraints, Git state, and proof.
+
+The reviewed revision is the commit that records the review, such as the one setting `status` and `reviewed_by`. A committed draft is not reviewed, and an uncommitted design edit never becomes the reviewed revision. If a required durable-source review commit is missing, stop that handoff and report it. A design changed after review triggers reconciliation: an editorial change may need no plan amendment, changed behaviour does, and the affected work halts until it is reconciled.
 
 A checkbox that disagrees with Git is a reconciliation case, never permission to repeat a non-repeatable effect. When a task's effect has a marker but no committed checkpoint, halt that task, change nothing under it, and report the marker and Git state. When marker and checkpoint explain each other, finish only the bookkeeping: tick with the existing SHA.
 
@@ -93,17 +95,19 @@ Commit, push, PR, merge, and rollout each need their own permission. Before a no
 
 **Single-task scope:** check the task's predecessors and scope, do or delegate that one task, record its checkpoint, report what remains, and stop. It authorizes no integration or merge of the whole feature.
 
+Before orchestrated dispatch, validate dependency references and cycles using a reliable applicable checker, or direct graph review if parsing cannot establish the graph. Report unknown or invalid parts and block affected dispatch. An advisory exit code does not establish validation. Difficulty can inform routing; model selection belongs in configuration.
+
 **Parallel safety:** run tasks in parallel only when their files, mutable state, and external effects are isolated or explicitly integrated; a dependency graph alone does not prove it. Parallel outputs that must look alike share a format contract. Independent workspaces start from one recorded base unless a dependency needs a later one.
 
 ### 5. Assign or execute
 
-Check the live harness for its worker facility (subagent tool, task tool, or none) and its write isolation. Another harness's documented limits are not policy.
+Delegate only within user scope; available tools alone do not authorize agents or parallel work. Check the live harness for its worker facility (subagent tool, task tool, or none) and its write isolation. Another harness's documented limits are not policy.
 
 A worker gets a bounded assignment: its task, the design decisions the plan cites for it, and links to the files and tests involved. Use [references/implementer-prompt.md](references/implementer-prompt.md). The assignment adds no requirements. Each worker uses its own workspace, per the `git-worktrees` skill. A worker reports verified changes and proof; it never self-merges, pushes, or edits shared state.
 
 For a behaviour change with a test seam, the implementer follows the `tdd` skill.
 
-With no dependable worker facility, run the ready tasks serially. Never fake a dispatch or a worker report.
+When delegation is not authorized or no dependable worker facility exists, run the ready tasks serially. Never fake a dispatch or a worker report.
 
 ### 6. Verify and review
 
@@ -119,7 +123,7 @@ One controller owns plan writes; workers never write the plan. After a verified,
 
 A non-fast-forward push or another controller's edit to the plan repository stops plan writes. Reconciling those histories is a human decision: do not merge, rebase, or fast-forward them yourself, and tick nothing meanwhile. Code work continues only while the competing changes stay in the plan repository. An unrelated live worktree is not a competing writer.
 
-Before the delivery milestone, run one review of the whole branch against the source, on the most capable model available.
+Before the delivery milestone, run one review of the whole branch against the source, with depth and model choice proportionate to consequence and project requirements. Retain any stronger project review requirement; a serial self-check is not independent review.
 
 At close-out, record the PR and, after an observed merge, the merge SHA separately.
 
@@ -161,3 +165,13 @@ Then proceed without another approval round when the work is authorized and no c
 | "Review passed, merging is the natural next step" | Merge and rollout each need their own authorization. |
 | "I'll record progress in the same commit as the code" | The tick follows the code commit in a separate commit. |
 | "I'll ask the worker to update the roadmap" | Workers never touch shared tracking files. |
+
+## Context and boundaries
+
+Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. Create directories only when used. On resume, reconcile source revisions, Git state, checkpoints, and authority.
+
+Read original product and architecture sources and relevant prior lessons. For substantial work, retain stable consequential references and account for preserved obligations, authorized changes, reasoned exclusions, and unresolved decisions. Reconcile source differences with affected work and reviews; block unresolved or unauthorized consequential changes. Keep scope, authority, verified progress, evidence, unresolved decisions, and next checkpoint visible in existing records. A small change can keep this context in session.
+
+Stop at a phase-only boundary. Explicit autonomous scope can include transitions and delegated reviews; record its scope, retained human gates, and endpoint once when recovery needs it. Stop at retained human gates or consequential choices outside that scope. Agent review never proves personal human approval, and status alone grants no authority. External effects follow actual authorization.
+
+Capture reusable lessons with context, evidence, workaround and result, and confirmed cause or uncertainty, in an existing record or a standalone file when useful. Avoid logging every transient error. End with the outcome, material gaps, and next step. Recommend the same or a fresh session, and human or independent review, when context and consequence warrant it. Recommendations authorize no later phase.

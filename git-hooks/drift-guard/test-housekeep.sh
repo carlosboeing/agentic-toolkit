@@ -49,12 +49,38 @@ git -C "$R" add -A && git -C "$R" commit -q -m "docs: bad"
 ( cd "$R" && "$HOOK_DIR/housekeep" check --push "main~1" "main" ) >/dev/null 2>&1
 _assert "missing status fails" 1 $?
 
-# --- status outside the six fails ---
-sed -i.bak 's/^type: design$/type: design\nstatus: open/' "$R/docs/2-design/2026-09-04-bad.md"
+# --- undocumented status fails ---
+sed -i.bak 's/^type: design$/type: design\nstatus: mystery/' "$R/docs/2-design/2026-09-04-bad.md"
 rm -f "$R/docs/2-design/2026-09-04-bad.md.bak"
 git -C "$R" add -A && git -C "$R" commit -q -m "docs: still bad"
 ( cd "$R" && "$HOOK_DIR/housekeep" check --push "main~1" "main" ) >/dev/null 2>&1
-_assert "status outside the six fails" 1 $?
+_assert "undocumented status fails" 1 $?
+
+# --- both layouts, lifecycle types, and documented statuses ---
+for hook in "$HOOK_DIR/housekeep" "$HOOK_DIR/../../scripts/githooks/housekeep"; do
+  hook_label="$(basename "$(dirname "$hook")")"
+  for case in '1-discovery discovery' '1-research research' '2-requirements requirements' '3-design design' '4-plans plan' '5-reviews analysis' '6-retros retro' '6-retros/lessons/workstream lesson'; do
+    read -r directory doctype <<< "$case"
+    mkdir -p "$R/docs/$directory"
+    for status in draft approved in-progress shipped resolved superseded open parked abandoned; do
+      printf -- '---\ndate: 2026-10-29\ntitle: Compatible record\ntype: %s\nstatus: %s\nauthors: ["C"]\n---\n' "$doctype" "$status" > "$R/docs/$directory/check.md"
+      git -C "$R" add -A && git -C "$R" commit -q -m "docs: metadata case"
+      ( cd "$R" && "$hook" check --push "main~1" main ) >/dev/null 2>&1
+      _assert "$hook_label accepts $directory $doctype $status" 0 $?
+    done
+    printf -- '---\ndate: 2026-10-29\ntitle: Missing status\ntype: %s\nauthors: ["C"]\n---\n' "$doctype" > "$R/docs/$directory/check.md"
+    git -C "$R" add -A && git -C "$R" commit -q -m "docs: missing lifecycle status"
+    ( cd "$R" && "$hook" check --push "main~1" main ) >/dev/null 2>&1
+    _assert "$hook_label checks $directory status" 1 $?
+  done
+  for directory in 3-design/assets/mockup 5-reviews/bundle 6-retros/assets/run 6-retros/lessons/workstream/assets/run; do
+    mkdir -p "$R/docs/$directory"
+    printf '# Evidence without metadata for %s\n' "$hook_label" > "$R/docs/$directory/raw.md"
+    git -C "$R" add -A && git -C "$R" commit -q -m "docs: attachment"
+    ( cd "$R" && "$hook" check --push "main~1" main ) >/dev/null 2>&1
+    _assert "$hook_label exempts $directory" 0 $?
+  done
+done
 
 # --- a published doc outside a lifecycle dir is ignored ---
 printf '# Usage\n\nno frontmatter here\n' > "$R/docs/usage.md"
@@ -154,6 +180,20 @@ printf '# Roadmap\n\n## Recently shipped\n\n- [A](adrs/0001-a.md)\n' > "$C/docs/
 git -C "$C" add -A && git -C "$C" commit -q -m "docs: ship A"
 ( cd "$C" && "$HOOK_DIR/housekeep" check --push "main~1" "main" ) >/dev/null 2>&1
 _assert "an approved ADR under Recently shipped passes" 0 $?
+
+# --- accepted requirements do not prove delivered scope ---
+mkdir -p "$C/docs/2-requirements"
+for hook in "$HOOK_DIR/housekeep" "$HOOK_DIR/../../scripts/githooks/housekeep"; do
+  for prd_state in approved shipped; do
+    printf -- '---\ndate: 2026-10-29\ntitle: Product scope\ntype: requirements\nstatus: %s\nauthors: ["C"]\n---\n' "$prd_state" > "$C/docs/2-requirements/prd.md"
+    printf '# Roadmap\n\n## Recently shipped\n\n- [PRD %s](2-requirements/prd.md)\n' "$prd_state" > "$C/docs/ROADMAP.md"
+    git -C "$C" add -A && git -C "$C" commit -q -m "docs: requirements delivery"
+    expected=1
+    [ "$prd_state" = shipped ] && expected=0
+    ( cd "$C" && "$hook" check --push "main~1" main ) >/dev/null 2>&1
+    _assert "Recently shipped requires delivered PRD scope ($prd_state)" "$expected" $?
+  done
+done
 
 # --- a nested bundle or assets file is out of scope ---
 mkdir -p "$R/docs/2-design/assets/x"

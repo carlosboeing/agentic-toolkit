@@ -6,6 +6,7 @@ Run with: python3 -m unittest discover -s tests -p 'test_plan_checker.py'
 
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -41,6 +42,112 @@ class PlanCheckerTests(unittest.TestCase):
         for forbidden in ("task count", "heading", "command in every task",
                           "failing test"):
             self.assertNotIn(forbidden, result.stdout)
+
+    def test_self_dependency_reported_without_blocking(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n- T1: Check graph. Depends on: T1. Verification: test.\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("dependency cycle: T1 -> T1", result.stdout)
+
+    def test_cycle_in_a_disconnected_component_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n"
+                            "- T1: Check root. Depends on: none. Verification: test.\n"
+                            "- T2: Check second. Depends on: T3. Verification: test.\n"
+                            "- T3: Check third. Depends on: T2. Verification: test.\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("dependency cycle: T2 -> T3 -> T2", result.stdout)
+
+    def test_unrecognized_dependencies_are_not_treated_as_validated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n"
+                            "- T1: Check first. Depends on: previous stage. Verification: test.\n"
+                            "- T2: Check second. Verification: test.\n"
+                            "- T3: Check third. Depends on: T2 and external approval. Verification: test.\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("unable to check: task T1 dependencies", result.stdout)
+        self.assertIn("unable to check: task T2 dependencies", result.stdout)
+        self.assertIn("unable to check: task T3 dependencies", result.stdout)
+
+    def test_dependency_table_cycle_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n"
+                            "| Task | Objective | Depends on | Verification |\n"
+                            "|---|---|---|---|\n"
+                            "| T1 | first | T2 | test |\n"
+                            "| T2 | second | T1 | test |\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("dependency cycle: T1 -> T2 -> T1", result.stdout)
+
+    def test_valid_dependency_table_has_no_graph_findings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n"
+                            "| Task | Objective | Depends on | Verification |\n"
+                            "|---|---|---|---|\n"
+                            "| T1 | Check self-dependencies when parsed | none | test |\n"
+                            "| T2 | second | T1 | test |\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("dependency cycle", result.stdout)
+        self.assertNotIn("dependencies not recognized", result.stdout)
+        self.assertNotIn("unresolved dependency", result.stdout)
+
+    def test_newline_separated_fields_need_no_periods(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n"
+                            "### T1: Build parser\n"
+                            "Depends on: none\n"
+                            "Verification: unit test\n"
+                            "### T2: Check parser\n"
+                            "Depends on T1\n"
+                            "Verification: integration test\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("dependencies not recognized", result.stdout)
+        self.assertNotIn("unresolved dependency", result.stdout)
+
+    def test_depends_on_in_prose_is_not_a_dependency_declaration(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n"
+                            "### T1: Check cache\n"
+                            "Depends on: none.\n"
+                            "Cache correctness depends on the TTL.\n"
+                            "Verification: unit test\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("dependencies not recognized", result.stdout)
+        self.assertNotIn("unresolved dependency", result.stdout)
+
+    def test_common_empty_dependency_cells_are_accepted(self):
+        for empty in ("—", "-", "n/a"):
+            with self.subTest(empty=empty), tempfile.TemporaryDirectory() as tmp:
+                plan = Path(tmp) / "plan.md"
+                plan.write_text("---\ntype: plan\n---\n"
+                                "| Task | Objective | Depends on | Verification |\n"
+                                "|---|---|---|---|\n"
+                                f"| T1 | Check parser | {empty} | test |\n")
+                result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0)
+                self.assertNotIn("dependencies not recognized", result.stdout)
 
     # One labeled omission per mechanical finding class
 
