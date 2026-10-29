@@ -106,6 +106,49 @@ class PlanCheckerTests(unittest.TestCase):
         self.assertNotIn("dependencies not recognized", result.stdout)
         self.assertNotIn("unresolved dependency", result.stdout)
 
+    def test_newline_separated_fields_need_no_periods(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n"
+                            "### T1: Build parser\n"
+                            "Depends on: none\n"
+                            "Verification: unit test\n"
+                            "### T2: Check parser\n"
+                            "Depends on T1\n"
+                            "Verification: integration test\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("dependencies not recognized", result.stdout)
+        self.assertNotIn("unresolved dependency", result.stdout)
+
+    def test_depends_on_in_prose_is_not_a_dependency_declaration(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text("---\ntype: plan\n---\n"
+                            "### T1: Check cache\n"
+                            "Depends on: none.\n"
+                            "Cache correctness depends on the TTL.\n"
+                            "Verification: unit test\n")
+            result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("dependencies not recognized", result.stdout)
+        self.assertNotIn("unresolved dependency", result.stdout)
+
+    def test_common_empty_dependency_cells_are_accepted(self):
+        for empty in ("—", "-", "n/a"):
+            with self.subTest(empty=empty), tempfile.TemporaryDirectory() as tmp:
+                plan = Path(tmp) / "plan.md"
+                plan.write_text("---\ntype: plan\n---\n"
+                                "| Task | Objective | Depends on | Verification |\n"
+                                "|---|---|---|---|\n"
+                                f"| T1 | Check parser | {empty} | test |\n")
+                result = subprocess.run([sys.executable, str(CHECKER), str(plan)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0)
+                self.assertNotIn("dependencies not recognized", result.stdout)
+
     # One labeled omission per mechanical finding class
 
     def test_missing_frontmatter_reported(self):

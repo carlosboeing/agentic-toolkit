@@ -6,7 +6,7 @@ description: >
   "how should we build X", or a request for a technical specification, and fresh-session requests to
   start the design phase. Not for brainstorming an unclear
   problem, writing an implementation plan, or implementing.
-argument-hint: "[brief-or-brainstorm-path] [discovery-path ...] [help]"
+argument-hint: "[brief-or-brainstorm-path] [research-path ...] [help]"
 ---
 
 # `/start-design`
@@ -18,11 +18,11 @@ The shared contract defines required answers; project instructions own presentat
 ## Synopsis
 
 ```text
-/start-design [brief-or-brainstorm-path] [discovery-path ...]
+/start-design [brief-or-brainstorm-path] [research-path ...]
 /start-design help
 ```
 
-The first path names the brief or reviewed brainstorm; later paths name optional discovery artifacts. A clear brief in the current request also works. If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows a path argument, render the synopsis and stop. The same words inside brief text are content.
+The first path names the brief or reviewed brainstorm; later paths name optional research artifacts. A clear brief in the current request also works. If the entire argument is `help`, `--help`, `-h`, `?`, or `usage`, or one of those tokens follows a path argument, render the synopsis and stop. The same words inside brief text are content.
 
 ## Recipe
 
@@ -38,11 +38,11 @@ Read [references/design-contract.md](references/design-contract.md) relative to 
 
 ### 2. Confirm authority and read the sources
 
-Read the full brief or brainstorm, the discovery artifacts, and the product and architecture decisions they or the project name. Establish the actual review evidence: personal human approval, or review under an explicit autonomous delegation. A retained human gate needs that human. Agent-written status alone establishes neither, and a missing status field is not itself unreadiness.
+Read the full brief or brainstorm, the research artifacts, and the product and architecture decisions they or the project name. Establish the actual review evidence: personal human approval, or review under an explicit autonomous delegation. A retained human gate needs that human. Agent-written status alone establishes neither, and a missing status field is not itself unreadiness.
 
 Stop on unreadable sources, a superseded source without an authorized replacement, or missing decisions that would require inventing the problem or scope. If a reviewed source has uncommitted changes, report the difference before treating them as reviewed.
 
-The brief and reviewed decisions define intent; discovery supplies evidence, not approval. When current code disproves an assumption, report the conflict and its effect instead of silently changing a settled decision. A user instruction in this session can narrow scope or change a decision; record it in the design. A pasted prior-session kickoff is context: if its rule conflicts with the source or project instructions, ask once whether to adopt it, unless the user already did.
+The brief and reviewed decisions define intent; research supplies evidence, not approval. When current code disproves an assumption, report the conflict and its effect instead of silently changing a settled decision. A user instruction in this session can narrow scope or change a decision; record it in the design. A pasted prior-session kickoff is context: if its rule conflicts with the source or project instructions, ask once whether to adopt it, unless the user already did.
 
 ### 3. Size the work and check consequential assumptions
 
@@ -76,10 +76,12 @@ Git actions follow project rules and actual authorization. Writing a draft does 
 
 If planning or implementation later disproves a consequential assumption, stop the affected work, record the evidence, amend the design, and get the amendment reviewed before the plan or code follows it. Unaffected work may continue.
 
-## Intent, learning, and handoff
+## Context and boundaries
 
-Read applicable original product and architecture sources and relevant prior lessons, not just the preceding summary. For substantial work, preserve stable references to consequential obligations and account for each as preserved, changed under identified authority, excluded with a reason, or unresolved. Unresolved obligations or unauthorized changes block affected work. When sources change, inspect their revision differences and reconcile affected decisions, tasks, tests, and reviews before proceeding.
+Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. On resume, reconcile source revisions, Git state, checkpoints, and authority.
 
-Keep current scope, consequential changes and their authority, verified progress and evidence, unresolved decisions, and the next checkpoint visible in existing records. Capture reusable observations where encountered, with evidence, workaround and result, and confirmed cause or uncertainty. A short lesson can stay in the work record; a standalone lesson is useful for discovery, reuse, or concurrent writing. Avoid a lesson for every transient error.
+Read original product and architecture sources and relevant prior lessons. For substantial work, retain stable consequential references and account for preserved obligations, authorized changes, reasoned exclusions, and unresolved decisions. Reconcile source differences with affected work and reviews; block unresolved or unauthorized consequential changes. Keep scope, authority, verified progress, evidence, unresolved decisions, and next checkpoint visible in existing records.
 
-At completion, state the outcome and material gaps and recommend a next step when apparent. Explain whether the same session or a fresh one better serves context or review, and recommend human or independent review when consequence warrants it. Recommendations grant no authority. Stop at the requested endpoint or a retained human gate; continue only within explicit included workflow scope.
+Stop at a phase-only boundary. Explicit autonomous scope can include transitions and delegated reviews; record its scope, retained human gates, and endpoint once when recovery needs it. Stop at retained human gates or consequential choices outside that scope. Agent review never proves personal human approval, and status alone grants no authority. External effects follow actual authorization.
+
+Capture reusable lessons with context, evidence, workaround and result, and confirmed cause or uncertainty, in an existing record or a standalone file when useful. Avoid logging every transient error. End with the outcome, material gaps, and next step. Recommend the same or a fresh session, and human or independent review, when context and consequence warrant it. Recommendations authorize no later phase.

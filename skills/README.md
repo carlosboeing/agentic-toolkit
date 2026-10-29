@@ -42,7 +42,7 @@ Write a document only when it adds value: it records a decision worth keeping, n
 | `/start-research` | Question, uncertainty, or existing evidence | Findings, sources, gaps, and decision implications; a report only when useful |
 | `/start-requirements` | Idea, research, brief, or request | Identified scope owner and intended outcomes; optional brief or PRD |
 | `/start-design` | Accepted brief or PRD, reviewed exploration, research, or clear request | Short design in chat for bounded work, or a design file against the shared or project contract, presented for review |
-| `/start-planning` | Approved design | Implementation plan, presented for plan review |
+| `/start-planning` | Usable design under project readiness rules | Implementation plan, presented for plan review |
 | `/start-implementation` | Authoritative plan or design, execution-ready issue, or clear request | In-session plan when no plan document is needed, then verified work at the authorized delivery milestone |
 | `/start-review` | Artifact, change, or delivery scope | Findings and review evidence using applicable specialists; truthful review authority |
 | `/start-retrospective` | Lessons, source changes, execution and review evidence | Process assessment and owned follow-ups, separate from readiness review |

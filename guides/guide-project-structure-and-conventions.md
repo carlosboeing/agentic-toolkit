@@ -73,7 +73,7 @@ The folder reinforces the type; the filename suffix is the durable marker.
 Two distinct doc shapes:
 
 - **Always-current** docs (`docs/architecture.md`, `docs/guides/`, `docs/adrs/`, single-file evergreen content at `docs/` root) describe how things ARE right now. They get updated, not appended. No `status:` field — they're always "current" by definition (ADRs use `superseded` only when replaced).
-- **Lifecycle** docs (`docs/0-brainstorms/` through `docs/6-retros/`) describe a moment in time. They get a `status:` field (`draft`, `approved`, `shipped`, `superseded`, `abandoned`) and rarely get edited after they ship. New work generates new lifecycle docs.
+- **Lifecycle** docs (`docs/0-brainstorms/` through `docs/6-retros/`) describe a moment in time. They get a `status:` field using the vocabulary in §5.5 and rarely get edited after they ship. New work generates new lifecycle docs.
 
 Confusing the two leads to "the design says X but the system does Y" drift.
 
@@ -293,6 +293,8 @@ Frontmatter `status:` follows the standard lifecycle (`draft → approved → su
 Use a separate brief or PRD only when its decision, review, or recovery value warrants one. Requirements may already belong to a clear request or issue; a bounded feature may keep a short accepted brief in its design. Identify one authoritative scope owner, with links to exploration and evidence.
 
 Record the problem, audience, outcome, selected scope, priorities, exclusions, journeys, observable requirements and acceptance scenarios, constraints, success criteria, and unresolved consequential questions. Creating this record does not authorize implementation. Give consequential obligations stable references that design, planning, and review can preserve.
+
+Requirements status follows `draft → approved → in-progress → shipped`, omitting `in-progress` when no execution checkpoint needs it. Approval accepts scope; it does not prove delivery. Mark a historical brief or PRD `shipped` only when its accepted scope is delivered and verified, alongside the applicable design and plan records. Partially delivered scope stays approved or in progress. A Recently shipped line that links an approved PRD is correctly refused; link the delivered change record or mark the fully delivered PRD shipped. A maintained current product specification remains distinct from that historical change record.
 
 ### 4.5 `docs/notes/` — scratch, imports, external research
 
@@ -779,7 +781,7 @@ This convention assumes AI coding agents (Claude Code, Codex, etc.) are primary 
 
 | Event | Required write |
 |---|---|
-| Agreed to start a substantial new initiative not yet in `docs/` | Preserve the applicable source artifact when the document test calls for it, using a brainstorm for exploration and the accepted scope owner for delivery. Add one-line pointer to ROADMAP `## Future considerations` (or `## Next actions` if ready to start). |
+| Agreed to start a substantial new initiative not yet in `docs/` | Capture the applicable source artifact during the session when the document test calls for it, using a brainstorm for exploration and the accepted scope owner for delivery. Add or update one ROADMAP line in the appropriate section. In a public/private split, restate the public-safe work without naming or linking private sources. |
 | Brainstorm crystallises into a design during conversation | Create `docs/3-design/YYYY-MM-DD-<topic>-design.md` with `status: draft`. Move ROADMAP pointer from Future considerations / Next actions → `## Drafts (pending review)`. Link the design and accepted scope owner to the brainstorm; preserve still-applicable exploration and rationale. |
 | Design approved | Flip frontmatter `status: approved`. Move ROADMAP pointer from Drafts → `## Next actions` (or `## In flight` if starting immediately). |
 | Implementation begins | Move ROADMAP pointer to `## In flight`. |
@@ -1036,7 +1038,7 @@ Identify which of these apply:
 
 ### 10.2 Folder renames
 
-For the lifecycle transition, map `1-discovery/` to `1-research/`, `2-design/` to `3-design/`, `3-plans/` to `4-plans/`, and review records from `4-reviews/` to `5-reviews/`. Classify retrospective records by content and type for `6-retros/`; move exclusive attachments with their owner and retain shared evidence with corrected links. Create requirements and standalone lesson directories only when used. Retain historical `discovery`, `research`, and `analysis` types.
+For the lifecycle transition, map `1-discovery/` to `1-research/`, `2-design/` to `3-design/`, `3-plans/` to `4-plans/`, and review records from `4-reviews/` to `5-reviews/`. Classify retrospective records by content and type for `6-retros/`; move exclusive attachments with their owner and retain shared evidence with corrected links. Create requirements and standalone lesson directories only when used. Retain historical `discovery`, `research`, and `analysis` types. Classify requirements and lessons temporarily stored in legacy directories by their types before a whole-directory move; route them to `2-requirements/` and `6-retros/lessons/<workstream>/` respectively.
 
 Before any authorized migration, inventory records and existing link failures, check collisions and concurrent writers, and rehearse on a disposable copy. Verify installed tools support both layouts and active sessions no longer depend on the old paths. Record the base revision, intended mapping, and completion marker. Update live navigation, frontmatter relationships, templates, and project instructions together. Compare inventories and link results; accept no migration-caused loss or failure. Preserve historical transcripts, review authority, and evidence. A source-tree edit is not proof of installed compatibility.
 

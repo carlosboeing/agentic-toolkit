@@ -290,8 +290,10 @@ For each "what's the project's structure?" question that Declared did not declar
 When probing the lifecycle for-loop, prefer the canonical glob if detected; otherwise list what was actually found:
 
 ```bash
-# Use the resolved Working memory root, docs/ only when that is its location.
-wm_root=docs
+# Set WM_ROOT to the resolved Working memory location before running this block.
+# A missing value or directory must not silently produce an empty inventory.
+wm_root="${WM_ROOT:?set to the resolved Working memory root}"
+[ -d "$wm_root" ] || { printf 'Working memory directory not found: %s\n' "$wm_root" >&2; exit 1; }
 {
   for d in "$wm_root"/[0-9]-* "$wm_root"/adrs; do
     [ -d "$d" ] || continue

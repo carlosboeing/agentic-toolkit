@@ -1,7 +1,10 @@
 ---
 name: start-review
 description: >
-  Start the review phase or coordinate an integrated review of lifecycle artifacts and delivered behavior against intent. Select applicable project and specialist review methods. Targeted local Markdown review uses penmark-comments, ordinary code review uses the harness review capability, and received findings use receiving-code-review. Not a replacement for CrossRev review-loop skills.
+  Use when starting the review phase or coordinating an integrated review of
+  lifecycle artifacts and delivered behavior against intent. Not for a targeted
+  document or code review, received findings, or a review-loop assignment that
+  already has a specialist method.
 argument-hint: "[artifact, change, or delivery scope] [help]"
 ---
 
@@ -27,14 +30,12 @@ For an entire help argument (`help`, `--help`, `-h`, `?`, `usage`), show the syn
 5. Report actionable findings with location, consequence, and a concrete correction. Distinguish blockers, lesser findings, and untested areas. Save a report or inline comments only when requested or the document test and project rules warrant it. Review authorization alone does not authorize fixes, publication of comments, or merging.
 6. Record the reviewed revision, scope, evidence, authorizing instruction, and outcome in existing project conventions. Personal human review requires that human's review; delegated readiness needs actual delegation and completed review. Changes after review require proportionate reconciliation and re-review of affected behavior. A pass count, status field, model verdict, or merge alone grants no authority.
 
-## Context, authority, and completion
+## Context and boundaries
 
-Project instructions own location, metadata, review, and Git rules. Use the declared working-memory location and actual artifact types, including legacy layouts; do not create folders until needed. Read relevant prior lessons and applicable product and architecture sources. On resume, reconcile source revisions, uncommitted work, Git checkpoints, and current authorization rather than trust a recap or status alone.
+Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. On resume, reconcile source revisions, Git state, checkpoints, and authority.
 
-A phase-only request stops at its boundary. Explicit full or partial autonomous scope can authorize included transitions and delegated reviews; record the scope, retained human gates, and stopping point once in an existing durable project record when recovery needs one. Personal human approval and readiness under delegated review are different. Use the project's review evidence and accountable reviewer convention; never claim the human read an artifact merely because an agent reviewed it. Commit, push, publication, installation, and other effects follow actual authorization and project rules.
+Read original product and architecture sources and relevant prior lessons. For substantial work, retain stable consequential references and account for preserved obligations, authorized changes, reasoned exclusions, and unresolved decisions. Reconcile source differences with affected work and reviews; block unresolved or unauthorized consequential changes. Keep scope, authority, verified progress, evidence, unresolved decisions, and next checkpoint visible in existing records.
 
-For substantial handoffs, compare consequential obligations with their original authoritative sources as well as the preceding artifact. Retain stable references and account for preserved obligations, authorized changes, exclusions with reasons, and unresolved decisions. Inspect source revision differences and reconcile affected downstream work and reviews before proceeding. Keep scope, authority, verified progress, evidence, unresolved decisions, and next checkpoint visible through existing records. A small change can keep this context in session.
+Stop at a phase-only boundary. Explicit autonomous scope can include transitions and delegated reviews; record its scope, retained human gates, and endpoint once when recovery needs it. Stop at retained human gates or consequential choices outside that scope. Agent review never proves personal human approval, and status alone grants no authority. External effects follow actual authorization.
 
-Capture reusable observations where encountered, with context, evidence, workaround and result, confirmed cause or uncertainty, and implications for later work. Use an existing record or a separate lesson when its discovery or concurrent writing value warrants it. Do not record every transient tool error as a permanent rule.
-
-End with the result, material gaps, and a proportionate next-step recommendation. Explain whether the same session or a fresh session better fits context and review needs, and recommend independent or human review when consequence warrants it. A recommendation authorizes no later phase. Stop for retained human gates, the requested endpoint, or consequential decisions outside delegated scope.
+Capture reusable lessons with context, evidence, workaround and result, and confirmed cause or uncertainty, in an existing record or a standalone file when useful. Avoid logging every transient error. End with the outcome, material gaps, and next step. Recommend the same or a fresh session, and human or independent review, when context and consequence warrant it. Recommendations authorize no later phase.

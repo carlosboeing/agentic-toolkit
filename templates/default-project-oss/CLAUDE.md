@@ -101,7 +101,7 @@ Conventional Commits format: `<type>(<scope>): <description>`. Types: `feat`, `f
 
 `docs/` is maintained primarily by AI agents. The [conventions guide §6.5](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-project-structure-and-conventions.md) enumerates the event triggers that require writes during a session — read it. Summary of the rules that bite most often:
 
-- **Preserve decisions and recovery context.** A document is useful for decisions worth keeping, review across people or sessions, or substantial coordination and recovery. Clear work can use the request or issue and an in-session plan without creating a brainstorm, design, or durable plan.
+- **Preserve decisions and recovery context.** A document is useful for decisions worth keeping, review across people or sessions, or substantial coordination and recovery. Clear work can use the request or issue and an in-session plan without creating a brainstorm, design, or durable plan. Capture required records during the session. Add or update one ROADMAP line for a substantial initiative; keep private sources out of public tracking.
 - **Status changes propagate.** When a design ships, the same commit updates ROADMAP (move to `## Recently shipped`), CHANGELOG, the design's frontmatter (`status: shipped`), AND the relevant evergreen state docs (`docs/architecture.md`, or `docs/system/*` if used).
 - **Parked work goes to ROADMAP `## Parked`** with `Deferred:` / `Declined:` / `Superseded:` prefix (per §6.3 vocabulary).
 - **Substantive audits or retros emerging from a conversation get saved** as artifact reviews under `docs/5-reviews/`, process retrospectives under `docs/6-retros/`, and reusable lessons where encountered before the session ends.

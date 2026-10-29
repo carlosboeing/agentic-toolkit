@@ -181,6 +181,20 @@ git -C "$C" add -A && git -C "$C" commit -q -m "docs: ship A"
 ( cd "$C" && "$HOOK_DIR/housekeep" check --push "main~1" "main" ) >/dev/null 2>&1
 _assert "an approved ADR under Recently shipped passes" 0 $?
 
+# --- accepted requirements do not prove delivered scope ---
+mkdir -p "$C/docs/2-requirements"
+for hook in "$HOOK_DIR/housekeep" "$HOOK_DIR/../../scripts/githooks/housekeep"; do
+  for prd_state in approved shipped; do
+    printf -- '---\ndate: 2026-10-29\ntitle: Product scope\ntype: requirements\nstatus: %s\nauthors: ["C"]\n---\n' "$prd_state" > "$C/docs/2-requirements/prd.md"
+    printf '# Roadmap\n\n## Recently shipped\n\n- [PRD %s](2-requirements/prd.md)\n' "$prd_state" > "$C/docs/ROADMAP.md"
+    git -C "$C" add -A && git -C "$C" commit -q -m "docs: requirements delivery"
+    expected=1
+    [ "$prd_state" = shipped ] && expected=0
+    ( cd "$C" && "$hook" check --push "main~1" main ) >/dev/null 2>&1
+    _assert "Recently shipped requires delivered PRD scope ($prd_state)" "$expected" $?
+  done
+done
+
 # --- a nested bundle or assets file is out of scope ---
 mkdir -p "$R/docs/2-design/assets/x"
 printf '# Evidence\n\nno frontmatter\n' > "$R/docs/2-design/assets/x/README.md"

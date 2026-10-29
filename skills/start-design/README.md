@@ -6,7 +6,7 @@ Writes a technical design from a product brief or PRD, reviewed exploration, res
 
 ```text
 /start-design path/to/brainstorm.md
-/start-design path/to/brainstorm.md path/to/discovery.md
+/start-design path/to/brainstorm.md path/to/research.md
 /start-design help
 ```
 
@@ -31,7 +31,7 @@ If later work disproves a consequential assumption, the affected work stops for 
 | Request or state | Expected behavior |
 |---|---|
 | Help argument | Show the synopsis without exploration or writes. |
-| Reviewed brainstorm and optional discovery paths | Read them in full; treat discovery as evidence, not approval. |
+| Reviewed brainstorm and optional research paths | Read them in full; treat research as evidence, not approval. |
 | Clear brief without a brainstorm | Design from that brief; create no ceremonial brainstorm. |
 | Bounded work | Present a short design in chat, use applicable review for real choices, then stop for a design-only request or continue within existing implementation or autonomous authority; write a file only when requested or warranted. |
 | Several plausible source artifacts | Ask for a choice rather than treating the newest as authoritative. |

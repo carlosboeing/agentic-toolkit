@@ -31,7 +31,10 @@ TASK_BULLET = re.compile(
 )
 TASK_TABLE = re.compile(rf"^\|\s*(?P<id>{ID})\s*\|(?P<body>.*)$")
 TASK_BARE = re.compile(rf"^(?P<id>{ID})\s*[:—–-]\s+(?P<body>.*)$")
-DEP_PHRASE = re.compile(r"(?:\bdepends\s+on\b\s*:?\s*|\b(?:dependencies|dep)\s*:\s*)(?P<deps>[^.;|]*)", re.I)
+DEP_PHRASE = re.compile(
+    rf"(?:\bdepends[ \t]+on[ \t]*(?::[ \t]*|(?=(?:none|{ID})\b))"
+    r"|\b(?:dependencies|dep)[ \t]*:[ \t]*)(?P<deps>[^.;|\n]*)", re.I
+)
 VERIFICATION = re.compile(r"verif|proof|prove|test|check|assert|command", re.I)
 LINK = re.compile(r"\[[^\]]*\]\((?P<target>[^)\s]+)\)")
 
@@ -109,6 +112,8 @@ def parse_tasks(lines, requirement_ids):
             blocks[nid].append(inline.group("body"))
             if TASK_TABLE.match(line) and dependency_column is not None:
                 deps = cells[dependency_column] if dependency_column < len(cells) else ""
+                if deps.strip().lower() in {"—", "-", "n/a"}:
+                    deps = "none"
                 blocks[nid].append(f"Dependencies: {deps}.")
             current, mode = nid, "inline"
         elif current is not None:
@@ -195,7 +200,7 @@ def check(path):
         findings.append("unable to check: task list not recognized")
     else:
         for nid in order:
-            block = " ".join(blocks[nid])
+            block = "\n".join(blocks[nid])
             phrases = list(DEP_PHRASE.finditer(block))
             if not phrases:
                 findings.append(f"unable to check: task {display[nid]} dependencies not recognized")

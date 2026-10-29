@@ -4,6 +4,8 @@ All notable changes to this project are recorded here, newest first.
 
 ## 2026-10-29: composable lifecycle workflow
 
+- Review corrections preserve newline-separated plan fields, avoid dependency findings from ordinary prose, clarify interim record routing and PRD delivery status, scan the resolved working-memory root, and shorten consistent guidance across phase skills.
+
 - Add `/start-research`, `/start-requirements`, `/start-review`, and `/start-retrospective`. Keep `/research` as a compatibility entry, with adapted provenance and MIT notices.
 - Identify one owner of accepted product scope, preserve original intent and architecture obligations across handoffs, and reconcile changed sources with affected work. Planning combines builder specifications, acceptance proof, tasks, dependencies, and integration without a mandatory intermediate spec document.
 - Preserve selectable phases, optional documents, native in-session plans, authorized autonomous progression, and retained human gates. Clarify artifact-specific review checks and proportionate integrated review without claiming agent review as personal human approval.
