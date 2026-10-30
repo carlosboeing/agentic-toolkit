@@ -10,6 +10,7 @@ None at the moment.
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
 - **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
+- **Resume an interrupted session in any harness.** When a usage limit stops a session mid-task, build a short summary from its transcript and the live repository state, then continue in a fresh session of the same or another harness without a handoff document. A prototype carried a plan-driven Codex task into Antigravity; the design comes next.
 - **Privacy guard false positive.** The pre-commit pattern for macOS home paths ignores letter case, so example code with a lowercase `users` path segment is blocked. Make that match case-sensitive.
 
 ## Future considerations
