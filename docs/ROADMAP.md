@@ -33,6 +33,8 @@ None at the moment.
 
 ## Recently shipped
 
+- **Lifecycle frontmatter migration (2026-10-31).** Define `created` and `updated` dates, retain legacy input compatibility, and add a reusable metadata migration CLI with preview, explicit apply and Git-based date recovery. Preserve content and review provenance; install compatible validators before adopting the schema.
+
 - **Composable lifecycle workflow (2026-10-29).** Add research, requirements, review, and retrospective entry skills. Preserve optional phases and documents, combine builder specifications with planning, trace consequential source obligations, and support target and legacy layouts. Automated checks cover graph diagnostics and metadata compatibility; cross-harness behavior remains for real use.
 
 - **Superpowers parity and lifecycle skill trimming (2026-10-25).** Add `/start-debugging` with a blameless incident review, copy `tdd`, `receiving-code-review` and `research`, adapt `handoff`, and merge the remaining Superpowers ideas into the lifecycle skills, which are now shorter. Add an `uninstall` mode to the Superpowers installer and drop the docs that required it.

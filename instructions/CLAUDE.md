@@ -78,7 +78,7 @@ Ask only for these: an action you cannot undo (delete, publish, merge, money, cr
 
 ### Documentation frontmatter (working-memory docs)
 
-Every Markdown document inside a working-memory tree starts at byte 0 with a YAML frontmatter block. The pre-push gate fails the push when one is wrong. `authors` is append-only: the human operator first, then each contributing agent as `"<model> (<harness>)"`. For the two field schemas, the closed status vocabulary and the exemptions, read sections 5.4 and 6.3 of `agentic-toolkit/guides/guide-project-structure-and-conventions.md`.
+Every Markdown document inside a working-memory tree starts at byte 0 with a YAML frontmatter block. Use the project's active metadata schema. New or migrated lifecycle records use `created` and `updated`; deploy compatible validators before adoption, preserving original dates and review provenance. The pre-push gate fails the push when one is wrong. `authors` is append-only: the human operator first, then each contributing agent as `"<model> (<harness>)"`. For the two field schemas, the closed status vocabulary and the exemptions, read sections 5.4 and 6.3 of `agentic-toolkit/guides/guide-project-structure-and-conventions.md`.
 
 ### SDLC phase checkpoints
 

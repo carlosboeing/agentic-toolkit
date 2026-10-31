@@ -453,15 +453,16 @@ All `docs/*.md` files carry YAML frontmatter, with the exemptions listed below. 
 **Format rules** (these bite in practice — see the 2026-07-24 audit):
 
 - The frontmatter block starts **at byte 0** with a `---` fence line and closes with a second `---` fence. `status:` lines written as plain text under the H1 are pseudo-frontmatter — invisible to every parser and to `grep`-based corpus queries.
-- **Core field names are a closed vocabulary**: `date`, `title`, `type`, `status`, `scope`, `authors`, `reviewed_by`, `supersedes`, `superseded_by`, `related`, `last_reviewed`. Don't substitute synonyms — `date` not `created`, `scope` not `tags`, `authors` not `owner`. Extra project-specific fields are allowed, but never as a synonym for a core field.
+- **Core field names are a closed vocabulary**: `created`, `updated`, `title`, `type`, `status`, `scope`, `authors`, `reviewed_by`, `supersedes`, `superseded_by`, `related`, `last_reviewed`. Legacy `date` remains readable as the original document date during migration. New and migrated lifecycle records use `created` and `updated`. Existing projects keep their actively declared schema until compatible validators and local conventions are deployed. Use `scope`, not `tags`, and `authors`, not `owner`. Extra project-specific fields are allowed without replacing core fields.
 
 **Schema A — lifecycle and decision docs** (`0-brainstorms/`, `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/`, `6-retros/` including standalone lessons, legacy lifecycle directories, and `adrs/`):
 
 ```yaml
 ---
-date: 2026-05-12
+created: "2026-05-12"
+updated: "2026-05-12"
 title: "Install Plex"
-type: design                       # brainstorm | research | discovery | requirements | design | plan | review | audit | analysis | retro | lesson | adr
+type: design                       # brainstorm | research | requirements | design | plan | review | audit | analysis | retro | lesson | adr
 status: draft                      # draft | approved | in-progress | shipped | resolved | superseded | open | parked | abandoned
 authors: ["Jane Doe", "claude-fable-5 (claude-code)"]  # see "Authorship" below
 scope: [containers, network]       # optional, multi-valued tags
@@ -471,6 +472,10 @@ superseded_by:                     # optional, path of doc replacing this
 related: []                        # optional, paths to related docs
 ---
 ```
+
+**Dates.** `created` is the original document date and stays fixed. Set both fields to the creation date for a new lifecycle record. Advance `updated` when content, decisions, status, or execution progress changes. Folder moves, link repairs, and schema normalization preserve the pre-migration update date. Use calendar dates in `YYYY-MM-DD` form; quoted values keep their interpretation consistent across YAML readers. `updated` must not precede `created`.
+
+Backfill a missing `updated` from the last recorded Git author date at a fixed pre-migration revision. This is an edit-history baseline, not proof of a substantive change. Preserve an existing valid update value. A missing history or conflicting date needs an explicit resolution; never substitute the migration date. Review provenance still identifies the reviewed revision, and `last_reviewed` remains a separate deliberate accuracy check. Evergreen records can use these date fields when useful; their schema does not require them. Saved event logs, raw evidence, and informal notes retain their own formats.
 
 **Schema B — evergreen docs** (`architecture.md`, `architecture/`, optional `system/`, `guides/`, single-file evergreen at `docs/` root):
 
@@ -499,7 +504,7 @@ last_reviewed: 2026-05-12          # optional — deliberate "I confirmed this i
 - Project-level docs (`README.md`, `CLAUDE.md`, `CHANGELOG.md`, `ROADMAP.md`) — well-known by name.
 - **Public user docs are out of scope entirely** (e.g. a public repo's end-user `docs/`): they may carry their own project standard, including none. Don't add agent attribution there unless the project says to.
 
-The bundled [drift-guard](../git-hooks/drift-guard/) accepts the nine statuses listed above in both layouts. Existing `type: discovery` and `type: analysis` remain valid. Standalone nested lessons receive lifecycle checks; other nested bundle contents and assets retain their exemptions. Install compatible hooks before adopting the new layout; documentation edits do not update installed copies.
+The bundled [drift-guard](../git-hooks/drift-guard/) accepts the nine statuses in both layouts. Canonical lifecycle dates require valid `created` and `updated` values in order. Legacy `date` input remains accepted; when both creation fields exist they must agree. Legacy `type: discovery` remains readable and the migration normalizes it to `research`; `analysis` remains a canonical type. Standalone nested lessons receive lifecycle checks, with other nested bundle contents and assets exempt. The hook checks supported fields rather than validating every YAML construct. Install compatible hooks before migrating records; documentation edits do not update installed copies.
 
 ### 5.5 Status semantics
 
@@ -1038,9 +1043,26 @@ Identify which of these apply:
 
 ### 10.2 Folder renames
 
-For the lifecycle transition, map `1-discovery/` to `1-research/`, `2-design/` to `3-design/`, `3-plans/` to `4-plans/`, and review records from `4-reviews/` to `5-reviews/`. Classify retrospective records by content and type for `6-retros/`; move exclusive attachments with their owner and retain shared evidence with corrected links. Create requirements and standalone lesson directories only when used. Retain historical `discovery`, `research`, and `analysis` types. Classify requirements and lessons temporarily stored in legacy directories by their types before a whole-directory move; route them to `2-requirements/` and `6-retros/lessons/<workstream>/` respectively.
+For the lifecycle transition, map `1-discovery/` to `1-research/`, `2-design/` to `3-design/`, `3-plans/` to `4-plans/`, and review records from `4-reviews/` to `5-reviews/`. Classify retrospective records by content and type for `6-retros/`; move exclusive attachments with their owner and retain shared evidence with corrected links. Create requirements and standalone lesson directories only when used. Normalize legacy `discovery` metadata to `research` during the frontmatter step; retain other types and frozen historical evidence. Classify requirements and lessons temporarily stored in legacy directories by their types before a whole-directory move; route them to `2-requirements/` and `6-retros/lessons/<workstream>/` respectively.
 
 Before any authorized migration, inventory records and existing link failures, check collisions and concurrent writers, and rehearse on a disposable copy. Verify installed tools support both layouts and active sessions no longer depend on the old paths. Record the base revision, intended mapping, and completion marker. Update live navigation, frontmatter relationships, templates, and project instructions together. Compare inventories and link results; accept no migration-caused loss or failure. Preserve historical transcripts, review authority, and evidence. A source-tree edit is not proof of installed compatibility.
+
+The migration includes the frontmatter step. From a toolkit checkout, preview the selected working-memory root, then apply the same command with `--apply` after reconciling its Git state:
+
+```bash
+python3 scripts/migrate-frontmatter.py --root <working-memory-root>
+python3 scripts/migrate-frontmatter.py --root <working-memory-root> --apply
+```
+
+The script handles top-level lifecycle records in either layout, ADRs, and standalone nested lessons. It renames `date` to `created`, preserves or backfills `updated`, and normalizes the legacy research type. It preserves prose, comments, other metadata and file modes, and leaves notes, assets and bundled outputs untouched. It supports the conventional single-line date/type scalars and stops on ambiguous, duplicate or conflicting fields before writing. It makes no commits, installs no hooks, and performs no folder moves. A second run produces no further edits.
+
+Run this step before mechanical folder edits when possible. If folders have already moved, supply the captured pre-migration commit and a JSON map of old-to-current paths, relative to the working-memory root:
+
+```bash
+python3 scripts/migrate-frontmatter.py --root <working-memory-root> --source-revision <pre-migration-commit> --path-map <mapping.json>
+```
+
+For example, `{"2-design/example.md": "3-design/example.md"}` lets history lookup use the old path. If mechanical folder edits are already committed and later content or progress updates must count, use the current source revision with repeatable `--ignore-revision <mechanical-commit>` arguments. This skips only the named commits during date lookup, follows renames, and retains later genuine edits. Review each ignored commit; do not exclude changes to decisions or execution evidence. The report identifies the selected source commit for each backfilled date. Preview reports the resolved source revision and proposed dates. Keep the source revision and path map with the migration record, and preserve existing update values on reruns. Only apply to a clean selected working-memory tree after compatible tools are available.
 
 The older evergreen renames below apply only when those source directories exist:
 
