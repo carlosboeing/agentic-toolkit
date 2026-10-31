@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-01: migration kickoff instructions
+
+- Add copyable preview and apply prompts, fresh-session instructions, bounded batch selection examples and dated harness/model recommendations to the migration runbook. Distinguish routing recommendations from measured migration results and retain installation and publication boundaries.
+
 ## 2026-10-31: lifecycle migration entry
 
 - Add a requested migration skill and runbook for one project or an explicitly selected batch. Keep classification decisions separate from deterministic execution and retain public/private repository boundaries.

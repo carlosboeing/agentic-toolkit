@@ -33,6 +33,8 @@ None at the moment.
 
 ## Recently shipped
 
+- **Migration kickoff instructions (2026-11-01).** Save fresh-session preview and continuation prompts, bounded batch selection instructions, and dated harness/model guidance in the migration runbook.
+
 - **Lifecycle migration entry (2026-10-31).** Add a requested skill, runbook and manifest-driven runner for single-project or selected-batch adoption, with disposable previews, staged apply, preservation checks and per-project recovery state.
 
 - **Briefing document recency (2026-10-31).** Use lifecycle `updated` dates with Git-history fallback for draft actionability, document staleness and ADR ordering. Preserve briefing-log event dates and report unknown recency.
