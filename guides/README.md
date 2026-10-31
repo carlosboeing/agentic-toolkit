@@ -8,6 +8,7 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 
 | Guide | Use it to |
 |---|---|
+| [`guide-lifecycle-migration.md`](guide-lifecycle-migration.md) | Migrate lifecycle records in one project or a selected batch using explicit mappings and preservation checks |
 | [`guide-new-machine-setup.md`](guide-new-machine-setup.md) | Set up the shared instructions, skill hub, hooks, plugins and OpenCode configuration on a new machine |
 | [`guide-rtk-setup.md`](guide-rtk-setup.md) | Install RTK and choose between automatic hooks and explicit `rtk` prefixes for each harness |
 | [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) | Install and check claude-mem session memory |

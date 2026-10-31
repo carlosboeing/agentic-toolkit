@@ -96,10 +96,10 @@ _assert_executable "claude hook validate-mermaid.sh is executable" "$MOCK_HOME/.
 _assert_file "opencode mermaid plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-mermaid.ts"
 
 # Phase skills must remain complete when copied to the hub and linked spokes.
-for phase_skill in start-brainstorm start-research start-requirements start-design start-planning start-debugging start-implementation start-review start-retrospective tdd receiving-code-review research handoff; do
+for phase_skill in start-brainstorm start-research start-requirements start-design start-planning start-debugging start-implementation start-review start-retrospective migrate-lifecycle tdd receiving-code-review research handoff; do
   for installed_file in SKILL.md README.md LICENSE; do
     case "$phase_skill/$installed_file" in
-      start-planning/LICENSE|start-requirements/LICENSE|start-review/LICENSE|start-retrospective/LICENSE) continue ;;
+      start-planning/LICENSE|start-requirements/LICENSE|start-review/LICENSE|start-retrospective/LICENSE|migrate-lifecycle/LICENSE) continue ;;
     esac
     cmp -s "$REPO_ROOT/skills/$phase_skill/$installed_file" "$MOCK_HUB/$phase_skill/$installed_file"
     _assert "$phase_skill/$installed_file copied exactly to hub" 0 $?
