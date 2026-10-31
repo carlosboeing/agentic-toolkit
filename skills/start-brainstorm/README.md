@@ -18,7 +18,7 @@ The skill reads project conventions, inspects relevant facts, and asks decisions
 
 The result distinguishes accepted decisions, recommendations, assumptions, and open questions. It includes scope, alternatives, reasons, and evidence. Project rules control where artifacts go and their metadata.
 
-The skill presents the brainstorm for its applicable review. It saves a file only when project rules require one, you ask, or the discussion records decisions worth keeping; otherwise it stays in chat. The next phase may skip discovery, design, or a plan document when its inputs suffice. A brainstorm-only request stops here; an authorized autonomous workflow may continue after the requested review. A recommendation or review verdict alone grants no authority.
+The skill presents the brainstorm for its applicable review. It saves useful exploration of a vague new product or capability in a brainstorm. Other discussions get a file when project rules require one, you ask, or a decision is worth keeping. An explicit lighter route wins. Before technical design of new capability work, `start-requirements` clarifies and persists accepted product scope; exploration can also stop without promotion. The next phase may skip discovery, design, or a plan document when its inputs suffice. A brainstorm-only request stops here; an authorized autonomous workflow may continue after the requested review. A recommendation or review verdict alone grants no authority.
 
 ## Boundary examples
 

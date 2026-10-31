@@ -88,9 +88,9 @@ Do not auto-advance by default. An explicit request for a full or partial autono
 
 Select responsibilities to fit the work; no phase, document, separate session, or agent is mandatory solely by change category.
 
-1. **Brainstorm:** Explore ideas and alternatives. Exploration can stop or produce several initiatives. Promotion needs explicit intent or included autonomous scope; preserve useful rationale.
+1. **Brainstorm:** Explore ideas and alternatives. Exploration can stop or produce several initiatives. For a vague new idea, clarify intent with focused questions and persist useful exploration in a brainstorm. Promotion needs explicit intent or included autonomous scope; preserve useful rationale.
 2. **Research:** Investigate uncertainty before or within any phase. Use proportionate evidence and applicable capabilities; report gaps and obtain missing access or action authority.
-3. **Requirements:** Identify one owner of accepted scope, behavior, priorities, exclusions, and success. A request or issue can suffice; a brief within design or separate PRD is conditional.
+3. **Requirements:** Identify one owner of accepted scope, behavior, priorities, exclusions, and success. For new product, feature, or capability work, use `start-requirements` to clarify consequential gaps and persist a brief or PRD before technical design; reuse an existing authoritative record. Ask only questions sources do not answer. Routine clear changes may use the request, issue, or session; honor an explicit lighter route. No extra approval ceremony is implied.
 4. **Design:** Choose the technical solution and consequential contracts. Use a short design in chat or a file when requested or warranted. Apply the relevant review before downstream work.
 5. **Plan:** Combine builder specifications, acceptance proof, tasks, dependencies, and integration responsibilities when a durable plan is requested or warranted. No intermediate spec phase is required.
 6. **Implementation:** Work from applicable sources or a clear request. Plan in session using native tools or another proportionate method. Check scope, constraints, order, and proof before editing; no separate document or fixed response template is required.

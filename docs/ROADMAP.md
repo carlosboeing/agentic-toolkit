@@ -33,6 +33,8 @@ None at the moment.
 
 ## Recently shipped
 
+- **Lifecycle folders and requirements capture (2026-11-01).** Keep all seven numbered folders visible in templates and migrations, clarify and persist new capability requirements before technical design, and add a requirements quality contract with examples. Routine clear changes retain the lightweight route.
+
 - **Migration kickoff instructions (2026-11-01).** Save fresh-session preview and continuation prompts, bounded batch selection instructions, and dated harness/model guidance in the migration runbook.
 
 - **Lifecycle migration entry (2026-10-31).** Add a requested skill, runbook and manifest-driven runner for single-project or selected-batch adoption, with disposable previews, staged apply, preservation checks and per-project recovery state.

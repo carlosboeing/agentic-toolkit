@@ -37,7 +37,7 @@ git init && git add . && git commit -m "chore: bootstrap repo with project struc
 
 ## Apply the conventions to an existing project
 
-See "Retrofitting an existing project" in the [conventions guide](../guides/guide-project-structure-and-conventions.md). It is a manual procedure for now.
+See "Retrofitting an existing project" in the [conventions guide](../guides/guide-project-structure-and-conventions.md). Use the [migration skill and runbook](../guides/guide-lifecycle-migration.md) for a selected project or batch.
 
 ## What the templates contain
 
@@ -56,11 +56,11 @@ default-project/
     ├── notes/             scratch notes and research
     ├── 0-brainstorms/     early ideas
     ├── 1-research/       research, spikes and analyses
-    ├── 2-requirements/    optional briefs and PRDs, created when used
+    ├── 2-requirements/    product briefs and PRDs
     ├── 3-design/          technical designs
     ├── 4-plans/           builder specifications and task plans
     ├── 5-reviews/         artifact reviews, audits and analyses
-    ├── 6-retros/          optional retrospectives and lessons, created when used
+    ├── 6-retros/          optional retrospective records and lessons
     ├── adrs/              architecture decision records (NNNN-title.md)
     └── guides/            internal how-to guides
 ```
@@ -81,4 +81,4 @@ default-project-oss/
 
 The templates leave out `docs/system/` and `docs/architecture.md`. Add them when the README's architecture section outgrows a page, as the conventions guide describes.
 
-Lifecycle paths describe where useful artifacts belong; they impose no sequence or document requirement. New requirements and retrospective directories are created when first used. Existing projects retain their declared layouts until an authorized migration updates links, instructions, and installed tools together; copying a template does not migrate an existing project.
+Lifecycle paths describe where useful artifacts belong; they impose no sequence or document requirement. All seven numbered lifecycle folders exist, with `.gitkeep` in empty folders. Nested asset and lesson folders remain on demand. Existing projects retain their declared layouts until an authorized migration updates links, instructions, and installed tools together; copying a template does not migrate an existing project.

@@ -11,7 +11,7 @@ argument-hint: "[brief-or-brainstorm-path] [research-path ...] [help]"
 
 # `/start-design`
 
-Develop a reviewable technical solution from a clear request or applicable sources and current repository facts. An upstream accepted brief or PRD owns product scope when present; otherwise identify the brief within the design or request. A fresh session needs this skill, the source brief, and the repository, not a recap of earlier conversation.
+Develop a reviewable technical solution from clear requirements and current repository facts. An upstream accepted brief or PRD owns product scope. For new product or capability work, use `start-requirements` to clarify and persist missing requirements before technical design. Routine clear changes may identify the brief within the design or request; honor an explicit lighter route. Existing accepted requirements within historical designs remain usable. A fresh session needs this skill, the source brief, and the repository, not a recap of earlier conversation.
 
 The shared contract defines required answers; project instructions own presentation, storage, and review mechanics. Human review is the default boundary. An explicit full or partial autonomous workflow can delegate review and continuation through its included phases, except at a retained human gate; record its scope and stopping point in a durable project record the next session reads, such as the design, an issue, or a PR.
 
@@ -43,6 +43,10 @@ Read the full brief or brainstorm, the research artifacts, and the product and a
 Stop on unreadable sources, a superseded source without an authorized replacement, or missing decisions that would require inventing the problem or scope. If a reviewed source has uncommitted changes, report the difference before treating them as reviewed.
 
 The brief and reviewed decisions define intent; research supplies evidence, not approval. When current code disproves an assumption, report the conflict and its effect instead of silently changing a settled decision. A user instruction in this session can narrow scope or change a decision; record it in the design. A pasted prior-session kickoff is context: if its rule conflicts with the source or project instructions, ask once whether to adopt it, unless the user already did.
+
+Before technical design, identify the requirements owner and any unresolved product choices. A vague new idea needs `start-brainstorm` and a persisted exploration; a clear new product or capability needs `start-requirements` and a persisted brief, unless a sufficient authoritative record already exists or the user selects a lighter route. Ask targeted questions before designing behavior the sources do not settle. An explicit design request includes clarifying and recording its missing inputs; it does not authorize unrelated exploration, implementation, or a new approval ceremony. If an explicit stopping point or retained gate prevents that prerequisite work, name the gap and stop.
+
+When design exposes a new product choice, distinguish it from the technical recommendation. Resolve it with the user or within recorded delegation, update the same requirements owner, and reconcile affected design and acceptance criteria. Do not quietly grow scope or create a second authoritative brief. Existing approved designs do not need retrospective extraction solely to satisfy this rule.
 
 ### 3. Size the work and check consequential assumptions
 
@@ -78,7 +82,7 @@ If planning or implementation later disproves a consequential assumption, stop t
 
 ## Context and boundaries
 
-Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. Create directories only when used. On resume, reconcile source revisions, Git state, checkpoints, and authority.
+Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. Follow the project's folder scaffold; empty lifecycle folders do not require artifacts or phase execution. On resume, reconcile source revisions, Git state, checkpoints, and authority.
 
 Read original product and architecture sources and relevant prior lessons. For substantial work, retain stable consequential references and account for preserved obligations, authorized changes, reasoned exclusions, and unresolved decisions. Reconcile source differences with affected work and reviews; block unresolved or unauthorized consequential changes. Keep scope, authority, verified progress, evidence, unresolved decisions, and next checkpoint visible in existing records. A small change can keep this context in session.
 

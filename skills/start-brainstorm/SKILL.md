@@ -52,7 +52,7 @@ Completion: the problem, scope, options, and consequential choices are settled o
 
 ### 3. Record the brainstorm
 
-Save a file when project rules require one, the user asks, or the discussion records decisions worth keeping. Otherwise the brainstorm stays in chat.
+For a vague new product, feature, or capability that needs exploration, save a brainstorm with the useful context, alternatives, answers, and open questions. For other work, save a file when project rules require one, the user asks, or the discussion records decisions worth keeping; otherwise it stays in chat. An explicit user choice of a lighter route wins.
 
 The brainstorm records the problem and audience, goal and exclusions, constraints and evidence, options with trade-offs, settled points with reasons, open questions, and discovery links. A recommendation stays marked as one until the user accepts it or it is resolved under an explicit delegation. When resuming, record an explicit current-session change instead of rewriting the source silently.
 
@@ -60,7 +60,7 @@ A pasted prior-session kickoff is context. If its rule conflicts with a reviewed
 
 Completion: a fresh reader can tell accepted decisions, recommendations, assumptions, and open questions apart.
 
-A brainstorm may stop without becoming a feature or produce several initiatives. Promotion to accepted product scope follows an explicit user decision or included autonomous authority. Identify the scope owner: request, issue, brief within design, or separate PRD when its value warrants one. Use `start-requirements` for deliberate product definition when needed. Link resulting artifacts and preserve exploration and rationale rather than automatically marking the brainstorm superseded.
+A brainstorm may stop without becoming a feature or produce several initiatives. Promotion to accepted product scope follows an explicit user decision or included autonomous authority. Identify the scope owner: request, issue, brief within design, or separate PRD when its value warrants one. For a new product or capability being promoted, use `start-requirements` to clarify remaining product questions and persist a brief or PRD before technical design, reusing an existing sufficient requirements record. Routine clear changes may keep requirements in the request, issue, or session. Promotion still follows the actual phase boundary and authorization; recording exploration does not itself authorize the next phase. Link resulting artifacts and preserve exploration and rationale rather than automatically marking the brainstorm superseded.
 
 ### 4. Review and stop
 
@@ -72,7 +72,7 @@ Git actions follow project rules and explicit authorization. Writing or reviewin
 
 ## Context and boundaries
 
-Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. Create directories only when used. On resume, reconcile source revisions, Git state, checkpoints, and authority.
+Use project conventions for storage, metadata, review, and Git actions. Discover actual locations and types, including legacy layouts. Follow the project's folder scaffold; empty lifecycle folders do not require artifacts or phase execution. On resume, reconcile source revisions, Git state, checkpoints, and authority.
 
 Read original product and architecture sources and relevant prior lessons. For substantial work, retain stable consequential references and account for preserved obligations, authorized changes, reasoned exclusions, and unresolved decisions. Reconcile source differences with affected work and reviews; block unresolved or unauthorized consequential changes. Keep scope, authority, verified progress, evidence, unresolved decisions, and next checkpoint visible in existing records. A small change can keep this context in session.
 

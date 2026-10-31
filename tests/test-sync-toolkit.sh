@@ -110,7 +110,7 @@ cmp -s "$REPO_ROOT/skills/start-design/references/design-contract.md" "$MOCK_HOM
 _assert "design contract reaches agents spoke unchanged" 0 $?
 cmp -s "$REPO_ROOT/skills/start-design/references/design-contract.md" "$MOCK_HOME/.gemini/config/skills/start-design/references/design-contract.md"
 _assert "design contract reaches Gemini spoke unchanged" 0 $?
-for ref_file in start-planning/references/plan-contract.md start-planning/scripts/check-plan.py start-debugging/references/incident-review-template.md start-implementation/references/implementer-prompt.md tdd/tests.md tdd/mocking.md; do
+for ref_file in start-requirements/references/requirements-contract.md start-planning/references/plan-contract.md start-planning/scripts/check-plan.py start-debugging/references/incident-review-template.md start-implementation/references/implementer-prompt.md tdd/tests.md tdd/mocking.md; do
   cmp -s "$REPO_ROOT/skills/$ref_file" "$MOCK_HUB/$ref_file"
   _assert "$ref_file copied exactly to hub" 0 $?
 done
