@@ -78,7 +78,7 @@ Check with `agy plugin list`, `/skills` in a session, and `ls ~/.agents/skills/`
 | Skills | `~/.agents/skills/`, read natively, plus `.agents/skills/` and `.kimi-code/skills/` per project. Add `~/.kimi-code/skills/` only for a skill that is specific to Kimi. |
 | Instructions | `~/.agents/AGENTS.md` and the project `AGENTS.md`, read natively. An optional Kimi-only layer goes in `~/.kimi-code/AGENTS.md`. |
 | MCP servers | `~/.kimi-code/mcp.json`, and `.kimi-code/mcp.json` per project. Manage them with `/mcp-config`. |
-| Hooks | `[[hooks]]` in `~/.kimi-code/config.toml`. Only `PreToolUse`, `Stop` and `UserPromptSubmit` can block, and no hook can change a tool's input. |
+| Hooks | `[[hooks]]` in `~/.kimi-code/config.toml`. What each event can do is in [harness hooks](../reference/reference-harness-hooks.md). |
 | Headless runs | `kimi --session session_<id> -p`, which approves actions automatically. `-p` rejects `--yolo` and `--auto`. |
 
 Kimi reads the shared `~/.agents/` directory natively, so the hub and the shared instruction file cover it without extra setup. Check with `ls ~/.agents/skills/`, `/plugins info <name>` and `kimi doctor`.
@@ -90,7 +90,7 @@ Kimi reads the shared `~/.agents/` directory natively, so the hub and the shared
 | Skills | `~/.claude/skills`, through `[compat.claude] skills = true`. Do not create `~/.grok/skills`. |
 | Instructions | `~/.claude/CLAUDE.md`, through `[compat.claude] agents = true`, and the project `AGENTS.md` natively. Do not create `~/.grok/AGENTS.md`. |
 | MCP servers | Inherits servers configured for Claude Code. Declare others, such as Playwright with `--isolated` or Context7 with `Authorization = Bearer ${CONTEXT7_API_KEY}`, in `~/.grok/config.toml`. |
-| Hooks | Grok does not load Claude hooks. Register your own `PreToolUse` and `Stop` hooks under `~/.grok/hooks/`. See [Grok Build TUI hooks](../hooks/README.md#grok-build-tui). |
+| Hooks | Grok does not load Claude hooks. Register your own under `~/.grok/hooks/`. See [Grok Build TUI hooks](../hooks/README.md#grok-build-tui) and [harness hooks](../reference/reference-harness-hooks.md). |
 | Plugins | Grok discovers Claude plugins. List the ones to turn off under `[plugins].disabled`, matching Claude Code. |
 
 ### OpenCode
@@ -101,7 +101,7 @@ Kimi reads the shared `~/.agents/` directory natively, so the hub and the shared
 | Instructions | `AGENTS.md`, read natively at user and project level; the global file is `~/.config/opencode/AGENTS.md`. OpenCode 2.x recognizes `AGENTS.md` only: the `CLAUDE.md` fallback is gone, and the `instructions` config array is accepted but not loaded |
 | Configuration | `~/.config/opencode/opencode.json`. `~/.opencode/` holds only the program. |
 | MCP servers | The `mcp` block in `opencode.json`. `enabled: false` turns off a server inherited from a parent configuration. |
-| Hooks | JavaScript plugin modules in `~/.config/opencode/plugins/`. On 2.x a plugin default-exports a definition with `id` and `setup`, registers hooks with `ctx.tool.hook("execute.before", ...)`, and refuses a call by throwing. On 1.x the module returns a hooks map and `tool.execute.before` refuses by throwing. `tool.execute.after` cannot block on either. One module can serve both APIs with a dual entrypoint: `id` plus `setup` for 2.x, `server()` for 1.x from 1.18.29 |
+| Hooks | JavaScript plugin modules in `~/.config/opencode/plugins/`. On 2.x a plugin default-exports a definition with `id` and `setup`; on 1.x the module returns a hooks map. One module can serve both APIs with a dual entrypoint: `id` plus `setup` for 2.x, `server()` for 1.x from 1.18.29. What each hook can do is in [harness hooks](../reference/reference-harness-hooks.md) |
 | Mermaid validation | `scripts/sync-toolkit.sh --harness` copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `plugins/validate-mermaid.ts`. Dual-API: OpenCode 2.x and 1.x from 1.18.29 |
 | Plugins | The `plugins` array (named `plugin` on 1.x) accepts npm and Git sources. Files placed in `plugins/` load without a configuration entry. |
 | RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts`. Checked 2026-09-23: that file is V1-format and does not load on OpenCode 2.x, which reports `Plugin must export a default definition`; porting it is an RTK-side change |

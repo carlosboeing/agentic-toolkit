@@ -17,14 +17,21 @@ related:
 
 What each supported AI coding harness can do, feature by feature, as recorded when each harness was integrated with this toolkit. Product behavior changes between releases, so check the dates below and the product's own documentation before relying on a row. For installation steps, see the [new-machine setup guide](../guides/guide-new-machine-setup.md) and the [plugin parity guide](../guides/guide-harness-plugin-parity.md).
 
+This map is the index of harness capabilities. Where a capability has its own reference, a row summarizes it and links there, and the detail file holds the dated facts and sources:
+
+| Capability | Detail reference |
+|---|---|
+| Hooks: configuration, blocking, added context, rewriting tool calls, payloads | [Harness hooks](reference-harness-hooks.md), nine harnesses, checked 2026-10-31 |
+
 ## At a glance
 
 | Capability | Claude Code | Codex | Antigravity | Kimi Code | Grok Build TUI | OpenCode |
 |---|---|---|---|---|---|---|
 | Global instructions | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` | `~/.gemini/GEMINI.md` | `~/.agents/AGENTS.md` | `~/.claude/CLAUDE.md` through Claude compatibility | `~/.config/opencode/AGENTS.md` |
 | Skills directory | `~/.claude/skills` (the hub) | `~/.agents/skills` | `~/.gemini/config/skills` | `~/.agents/skills` | The hub, through Claude compatibility | The hub and `~/.agents/skills` |
-| Hooks that can block the agent | Yes, including after a tool runs | Not used by this toolkit | Not used by this toolkit | Before a tool runs, on stop and on prompt submit | Before a tool runs and on stop | Before a tool runs |
-| Hooks that can rewrite a tool call | Yes | Not used by this toolkit | Not used by this toolkit | No | Yes, before a tool runs | Yes, through a plugin |
+| Hooks that can block the agent ([detail](reference-harness-hooks.md)) | Yes, including after a tool runs | Yes, before a tool runs, on prompt submit and on stop | Before a tool runs, and on stop | Before a tool runs, on stop and on prompt submit | Before a tool runs; stop is disputed | Before a tool runs |
+| Hooks that can rewrite a tool call ([detail](reference-harness-hooks.md)) | Yes | Yes, before a tool runs | Yes, before a tool runs | No | Disputed | Yes, through a plugin |
+| Hooks that add context on each prompt ([detail](reference-harness-hooks.md)) | Yes | Yes | Yes, before each model call | Disputed | Not documented | Through a plugin, on 1.x |
 | RTK mode | Automatic hook | `rtk` prefix in instructions | `rtk` prefix in instructions | `rtk` prefix in instructions | `rtk` prefix in instructions | Automatic plugin |
 | Headless resume | `claude --resume <id> --print` | `codex exec resume <id>` | `agy --conversation <id> --print` | `kimi --session <id> -p` | Not integrated | `opencode run --session <id>` |
 
@@ -43,14 +50,14 @@ Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/
 ## Kimi Code (recorded 2026-07-28)
 
 - **Instructions and skills without extra setup.** Reads `~/.agents/AGENTS.md`, the project's `AGENTS.md` and `~/.agents/skills` natively.
-- **Hooks can block but not rewrite.** `PreToolUse`, `Stop` and `UserPromptSubmit` can block. `PostToolUse` only observes, and no hook can change a tool's input, so RTK runs through instructions.
+- **Hooks can block but not rewrite**, so RTK runs through instructions. See [harness hooks](reference-harness-hooks.md).
 - **Headless resume.** `kimi --session session_<id> -p` approves actions automatically. Kimi has no registry of running sessions, and resuming a session that is open in the terminal sends the prompt into that live session, so `schedule-resume` warns about it.
 - **Plugins.** Install from Kimi's plugin marketplace and update through `/plugins`.
 
 ## Grok Build TUI (recorded 2026-08-17)
 
 - **Instructions and skills without extra setup.** Its Claude compatibility setting loads `~/.claude/CLAUDE.md` and the skill hub.
-- **Its own hooks, not Claude's.** `PreToolUse` can deny and rewrite, and `Stop` can block. Loading Claude hook scripts is turned off. `PostToolUse` results never reach the model. See [Grok Build TUI hooks](../hooks/README.md#grok-build-tui).
+- **Its own hooks, not Claude's.** Loading Claude hook scripts is turned off. What each event can do is in [harness hooks](reference-harness-hooks.md), and installation is in [Grok Build TUI hooks](../hooks/README.md#grok-build-tui).
 - **RTK through instructions.** There is no `rtk init` option for Grok.
 - **MCP servers.** Inherits servers configured for Claude Code, and declares others in `~/.grok/config.toml`.
 
