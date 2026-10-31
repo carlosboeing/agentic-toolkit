@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-31: briefing document recency
+
+- Resolve document recency from frontmatter `updated`, falling back to Git author history with rename following. Never use filesystem modification times; report missing or invalid recency explicitly. Keep saved briefing logs on their event-date schema.
+
 ## 2026-10-31: lifecycle frontmatter migration
 
 - Define `created` and `updated` for lifecycle records, with legacy `date` input accepted during transition. Keep review dates and review authority distinct from edit dates.
