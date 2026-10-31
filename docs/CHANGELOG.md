@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-31: briefing document recency
+
+- Resolve document recency from frontmatter `updated`, falling back to Git author history with rename following. Never use filesystem modification times; report missing or invalid recency explicitly. Keep saved briefing logs on their event-date schema.
+
 ## 2026-10-31: harness hooks reference
 
 - Add `reference/reference-harness-hooks.md` for Claude Code, Codex, Gemini CLI, Antigravity, Kimi Code, Grok Build, OpenCode, Cursor and Muse Code: configuration and trust, blocking, added context, rewriting tool calls, payload keys and session ID fields, which event does each common job, failure behavior, and open questions.

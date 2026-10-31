@@ -33,6 +33,8 @@ None at the moment.
 
 ## Recently shipped
 
+- **Briefing document recency (2026-10-31).** Use lifecycle `updated` dates with Git-history fallback for draft actionability, document staleness and ADR ordering. Preserve briefing-log event dates and report unknown recency.
+
 - **Harness hooks reference (2026-10-31).** Record hook facts for nine harnesses in one dated reference: configuration and trust, which events can block, add context or rewrite a tool call, payloads, failure behavior, and open questions where documentation and records disagree. The capability map becomes the index of detail references, and the hooks catalog gains a process for writing and porting hooks.
 
 - **Lifecycle frontmatter migration (2026-10-31).** Define `created` and `updated` dates, retain legacy input compatibility, and add a reusable metadata migration CLI with preview, explicit apply and Git-based date recovery. Preserve content and review provenance; install compatible validators before adopting the schema.
