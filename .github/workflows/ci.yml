@@ -48,11 +48,8 @@ jobs:
       - name: Run schedule-resume test suite
         run: sh skills/schedule-resume/tests/run-tests.sh
 
-      - name: Run relative links unit tests
-        run: python3 -m unittest discover -s tests -p 'test_relative_links.py'
-
-      - name: Run plan checker unit tests
-        run: python3 -m unittest discover -s tests -p 'test_plan_checker.py'
+      - name: Run Python unit tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
 
       - name: Check relative links across public Markdown
         run: python3 scripts/check-relative-links.py

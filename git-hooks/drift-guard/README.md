@@ -14,7 +14,7 @@ It has three parts:
 
 | Check | Applies to | Rule |
 |---|---|---|
-| Lifecycle frontmatter | Markdown files in the push under `0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/`, the target `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/`, `6-retros/`, or `adrs/`, plus standalone `6-retros/lessons/<workstream>/*.md` | The file must start with a YAML frontmatter block containing `title`, `type` and `authors`. Lifecycle documents also need `date` and `status`. `status` must be one of `draft`, `approved`, `in-progress`, `shipped`, `resolved`, `superseded`, `open`, `parked`, or `abandoned`. |
+| Lifecycle frontmatter | Markdown files in the push under `0-brainstorms/`, `1-discovery/`, `2-design/`, `3-plans/`, `4-reviews/`, the target `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/`, `6-retros/`, or `adrs/`, plus standalone `6-retros/lessons/<workstream>/*.md` | The file must start with a YAML frontmatter block containing `title`, `type` and `authors`. Lifecycle documents use `created`, `updated` and `status`. Dates must be valid `YYYY-MM-DD` values with `updated` on or after `created`. Legacy `date` remains accepted when `created` is absent; both creation fields must agree when present together. `status` must be one of `draft`, `approved`, `in-progress`, `shipped`, `resolved`, `superseded`, `open`, `parked`, or `abandoned`. |
 | Shipped roadmap lines | Lines added under `Recently shipped` in `ROADMAP.md` that link to lifecycle documents | Each linked document must have `status: shipped`. |
 | Changelog pairing (opt-in) | Pushes containing `feat`, `fix` or `perf` commits | The push must also change `CHANGELOG.md`. Turn this on by creating `scripts/githooks/drift-guard.on`. |
 
@@ -33,6 +33,8 @@ flowchart TB
 ```
 
 The lifecycle types include `requirements`, `lesson`, and `analysis`, with historical `discovery` retained. Nested standalone lessons are checked; raw bundle contents and assets remain exempt. A lesson can stay `draft` without representing incomplete delivery work.
+
+Preview and apply metadata migration with the [frontmatter migration script](../../scripts/migrate-frontmatter.py), following the [migration procedure](../../guides/guide-project-structure-and-conventions.md#102-folder-renames). Deploy the compatible hook first. The check validates supported fields and does not parse all YAML syntax.
 
 ## Modes
 

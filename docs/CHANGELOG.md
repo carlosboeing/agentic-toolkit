@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-31: lifecycle frontmatter migration
+
+- Define `created` and `updated` for lifecycle records, with legacy `date` input accepted during transition. Keep review dates and review authority distinct from edit dates.
+- Add a frontmatter migration CLI with preview, explicit apply, a fixed Git source revision, historical path mapping, and explicit mechanical-commit exclusions. Preserve prose, comments, other metadata, file modes and existing update dates; normalize the legacy research type and stop on conflicting or unsupported fields.
+- Check canonical calendar dates and ordering in both hook copies while preserving legacy layouts and metadata. Include migration tests in the existing CI unit-test discovery.
+
 ## 2026-10-29: composable lifecycle workflow
 
 - Add `/start-research`, `/start-requirements`, `/start-review`, and `/start-retrospective`. Keep `/research` as a compatibility entry, with adapted provenance and MIT notices.
