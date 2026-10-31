@@ -12,6 +12,8 @@ import tempfile
 from check_relative_links import extract_links_from_content
 
 FRONTMATTER = Path(__file__).with_name("migrate-frontmatter.py")
+LIFECYCLE_FOLDERS = ("0-brainstorms", "1-research", "2-requirements", "3-design",
+                     "4-plans", "5-reviews", "6-retros")
 
 
 def command(repo, *args, input=None):
@@ -118,7 +120,17 @@ def build(repo, entry, temporary):
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_bytes(raw)
         dst.chmod(mode)
+    if memory is not None:
+        for folder in LIFECYCLE_FOLDERS:
+            directory = path_at(clone, str(Path(memory) / folder))
+            directory.mkdir(parents=True, exist_ok=True)
+            if not any(directory.iterdir()):
+                (directory / ".gitkeep").touch()
     command(clone, "add", "-A")
+    if memory is not None:
+        for folder in LIFECYCLE_FOLDERS:
+            if not command(clone, "ls-files", "--", str(Path(memory) / folder)).strip():
+                raise ValueError("lifecycle folder is ignored or has no tracked content: " + folder)
     final_files = set(command(clone, "ls-files", "-z").decode().split("\0")) - {""}
     new_failures = broken_links(clone, final_files, {target: source for source, target in moves.items()}) - before_links
     if new_failures:
@@ -126,7 +138,8 @@ def build(repo, entry, temporary):
     tree = command(clone, "write-tree").decode().strip()
     patch = command(clone, "diff", "--cached", "--binary", "--full-index", revision)
     changed = command(clone, "diff", "--cached", "--name-status", "--find-renames", revision).decode()
-    return revision, tree, patch, changed, metadata["changed_count"]
+    additions = command(clone, "diff", "--cached", "--diff-filter=A", "--name-only", "-z", revision).decode().split("\0")
+    return revision, tree, patch, changed, metadata["changed_count"], [name for name in additions if name]
 
 
 def migrate(entry, manifest_parent, apply):
@@ -143,7 +156,7 @@ def migrate(entry, manifest_parent, apply):
     if command(repo, "rev-parse", "--show-toplevel").decode().strip() != str(repo):
         raise ValueError("repo must name the repository root")
     with tempfile.TemporaryDirectory(prefix="lifecycle-migration-") as directory:
-        revision, tree, patch, changed, count = build(repo, entry, Path(directory))
+        revision, tree, patch, changed, count, additions = build(repo, entry, Path(directory))
         result = {"repo": str(repo), "source_revision": revision, "target_tree": tree,
                   "metadata_changes": count, "changes": changed, "patch": patch.decode()}
         head = command(repo, "rev-parse", "HEAD").decode().strip()
@@ -159,7 +172,7 @@ def migrate(entry, manifest_parent, apply):
         # Check live path collisions, including ignored files and linked parents.
         for name in list(entry.get("moves", {})) + [edit["path"] for edit in entry.get("edits", [])]:
             path_at(repo, name)
-        for target in entry.get("moves", {}).values():
+        for target in set(entry.get("moves", {}).values()) | set(additions):
             dst = path_at(repo, target)
             if dst.exists() and target not in entry.get("moves", {}):
                 raise ValueError("live destination exists, possibly ignored: " + target)

@@ -369,7 +369,7 @@ This check is invoked specifically by the `/briefing sources` mode (and used to 
 | 1 | `## Project Map` section in `<instructions-file>` | `grep -i -E '^## Project (Map&#124;Context)' <instructions-file>` (case-insensitive — tolerates the deprecated `## Project Context` name and lowercase variants) |
 | 2 | `docs/ROADMAP.md` exists | filesystem probe |
 | 3 | `docs/CHANGELOG.md` exists | filesystem probe |
-| 4 | Target or legacy lifecycle directory with typed frontmatter present | filesystem and frontmatter probe; folders are created only when used |
+| 4 | Target or legacy lifecycle directory with typed frontmatter present | filesystem and frontmatter probe; empty scaffold folders alone do not establish active work or methodology adoption |
 | 5 | Status frontmatter used in lifecycle artifacts | `grep -l '^status:' docs/*/*.md` returns ≥ 1 |
 | 6 | ROADMAP uses canonical sections (`## In flight`, `## Next actions`, `## Recently shipped` at minimum) | grep on roadmap; require all three |
 | 7 | ADRs at `docs/adrs/NNNN-*.md` | filesystem probe with name pattern |

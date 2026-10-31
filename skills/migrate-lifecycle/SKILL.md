@@ -24,7 +24,7 @@ Inventory files, modes, links, assets and existing reference failures. Preserve 
 
 Propose an explicit file mapping. Folder numbers do not establish document meaning. Use type and content to separate requirements, technical designs, reviews, retrospectives and evergreen material. Raise consequential ambiguity; do not guess approval, status or product scope. Keep original types except the supported `discovery` to `research` alias. Move attachments with their owner only when exclusive; retain shared evidence with repaired links. Preserve frozen transcripts, historical paths and review provenance.
 
-Build only the required reference edits and project-instruction changes. Avoid blind repository-wide replacement. Classify live navigation separately from historical examples. New requirements or lesson directories exist only when records need them.
+Build only the required reference edits and project-instruction changes. Avoid blind repository-wide replacement. Classify live navigation separately from historical examples. For each declared working-memory root, create all seven numbered lifecycle folders, adding `.gitkeep` to empty folders. Their presence requires no phase or artifact. Nested lesson and asset folders remain on demand. Do not create lifecycle folders in a public tree whose working memory belongs elsewhere.
 
 ## Rehearse, apply and recover
 

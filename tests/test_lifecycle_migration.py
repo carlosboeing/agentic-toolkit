@@ -8,6 +8,45 @@ SCRIPT = Path(__file__).resolve().parents[1] / "scripts/migrate-lifecycle.py"
 
 
 class MigrationCLI(unittest.TestCase):
+    def test_scaffold_only_supports_private_root_and_refuses_ignored_or_linked_targets(self):
+        for scenario in ["private-root", "ignored-folder", "linked-parent", "ignored-placeholder"]:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                repo = root / "project"
+                repo.mkdir()
+                def git(*args):
+                    return subprocess.check_output(["git", "-C", str(repo), *args])
+                git("init", "-q")
+                git("config", "user.name", "Fixture")
+                git("config", "user.email", "fixture@example.invalid")
+                (repo / "README.md").write_text("Keep existing content.\n")
+                if scenario == "ignored-folder":
+                    (repo / ".gitignore").write_text("2-requirements/\n")
+                elif scenario == "linked-parent":
+                    (repo / ".gitignore").write_text("2-requirements\n")
+                    (repo / "2-requirements").symlink_to(root, target_is_directory=True)
+                elif scenario == "ignored-placeholder":
+                    (repo / ".gitignore").write_text("2-requirements/.gitkeep\n")
+                    (repo / "2-requirements").mkdir()
+                    (repo / "2-requirements/.gitkeep").write_text("Do not overwrite.\n")
+                git("add", ".")
+                git("-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture")
+                manifest = root / "manifest.json"
+                manifest.write_text(json.dumps({"projects": [{
+                    "repo": str(repo), "revision": git("rev-parse", "HEAD").decode().strip(), "memory": "."
+                }]}))
+                result = subprocess.run(["python3", str(SCRIPT), "--manifest", str(manifest), "--apply"], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0 if scenario == "private-root" else 1, result.stdout + result.stderr)
+                if scenario == "private-root":
+                    for folder in ["0-brainstorms", "1-research", "2-requirements", "3-design", "4-plans", "5-reviews", "6-retros"]:
+                        self.assertEqual((repo / folder / ".gitkeep").read_bytes(), b"")
+                else:
+                    self.assertEqual(git("status", "--porcelain"), b"")
+                    self.assertFalse((repo / "0-brainstorms").exists())
+                self.assertEqual((repo / "README.md").read_text(), "Keep existing content.\n")
+                if scenario == "ignored-placeholder":
+                    self.assertEqual((repo / "2-requirements/.gitkeep").read_text(), "Do not overwrite.\n")
+
     def test_preview_apply_and_repeat_preserve_history_and_asset(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -50,6 +89,9 @@ class MigrationCLI(unittest.TestCase):
             self.assertTrue(migrated.read_bytes().endswith(b'Keep the decision.\n'))
             self.assertEqual((repo / "docs/3-design/asset.bin").read_bytes(), asset)
             self.assertEqual((repo / "README.md").read_text(), "See docs/3-design/example.md\n")
+            for folder in ["0-brainstorms", "1-research", "2-requirements", "4-plans", "5-reviews", "6-retros"]:
+                self.assertEqual((repo / "docs" / folder / ".gitkeep").read_bytes(), b"")
+            self.assertFalse((repo / "docs/3-design/.gitkeep").exists())
             self.assertEqual(run("--apply")["state"], "already-applied")
             git("-c", "core.hooksPath=/dev/null", "commit", "-qm", "migration")
             self.assertEqual(run("--apply")["state"], "already-applied")

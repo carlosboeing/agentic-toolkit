@@ -118,7 +118,7 @@ graph LR
 
 These are selectable responsibilities, not a required chain. Brainstorming can stop at exploration. Research can precede brainstorming or support any phase. Requirements defines accepted scope; design chooses the technical solution; planning combines builder specifications and task ordering. Implementation, review, debugging, and retrospective use the selected sources. No phase requires its own file, session, or agent solely because it appears in this structure.
 
-Write a document when it preserves a decision, supports review across people or sessions, or enables coordination or recovery for substantial work. Otherwise use the current request, an existing issue, and an in-session plan as appropriate. State the selected route once. Create folders only when used.
+Write a document when it preserves a decision, supports review across people or sessions, or enables coordination or recovery for substantial work. Otherwise use the current request, an existing issue, and an in-session plan as appropriate. State the selected route once. Create all seven numbered lifecycle folders in the declared working-memory root, with `.gitkeep` in empty folders. Their presence requires no document or phase; nested asset and lesson directories remain on demand.
 
 Existing projects may still use `1-discovery/`, `2-design/`, `3-plans/`, and `4-reviews/`. Discover the declared Project Map and actual artifact types before assuming numbered paths. The bundled validators support both layouts. A migration must update live links, metadata, discovery, hooks, and project instructions together, after installed compatibility and active-session checks. Preserve historical types and evidence; never renumber another project automatically.
 
@@ -290,9 +290,9 @@ Frontmatter `status:` follows the standard lifecycle (`draft → approved → su
 
 ### 4.4.1 `docs/2-requirements/` — accepted product scope
 
-Use a separate brief or PRD only when its decision, review, or recovery value warrants one. Requirements may already belong to a clear request or issue; a bounded feature may keep a short accepted brief in its design. Identify one authoritative scope owner, with links to exploration and evidence.
+For a new product, feature, or capability, clarify and persist product requirements before technical design. Use `start-brainstorm` for a vague idea and retain a brainstorm document with useful exploration, alternatives, and open questions. When intent is clear, use `start-requirements` directly or after exploration to ask focused questions and write a brief or PRD in `2-requirements/`. Reuse an existing authoritative requirements record rather than duplicate it. Exploration can stop without promotion. Routine fixes, documentation, dependency updates, and other clear small changes can keep requirements in a request, issue, or session; honor an explicit lighter route. Identify one authoritative scope owner, with links to exploration and evidence.
 
-Record the problem, audience, outcome, selected scope, priorities, exclusions, journeys, observable requirements and acceptance scenarios, constraints, success criteria, and unresolved consequential questions. Creating this record does not authorize implementation. Give consequential obligations stable references that design, planning, and review can preserve.
+Record the problem, audience, outcome, selected scope, priorities, exclusions, journeys, observable requirements and acceptance scenarios, constraints, success criteria, and unresolved consequential questions. Creating this record does not authorize implementation. Give consequential obligations stable references that design, planning, and review can preserve. Use the [requirements quality contract](../skills/start-requirements/references/requirements-contract.md) for the required answers and a suggested structure. The [design contract](../skills/start-design/references/design-contract.md) and [plan contract](../skills/start-planning/references/plan-contract.md) define their corresponding boundaries. These contracts allow project-specific headings and proportional detail.
 
 Requirements status follows `draft → approved → in-progress → shipped`, omitting `in-progress` when no execution checkpoint needs it. Approval accepts scope; it does not prove delivery. Mark a historical brief or PRD `shipped` only when its accepted scope is delivered and verified, alongside the applicable design and plan records. Partially delivered scope stays approved or in progress. A Recently shipped line that links an approved PRD is correctly refused; link the delivered change record or mark the fully delivered PRD shipped. A maintained current product specification remains distinct from that historical change record.
 
@@ -315,7 +315,7 @@ No frontmatter required — `notes/` is informal by design. If you want to track
 
 ### 4.6 `docs/3-design/` — technical designs
 
-Design owns architecture, component responsibilities, consequential interfaces, failure behavior, and technical trade-offs. An upstream accepted brief or PRD owns product requirements when present; otherwise identify the brief in the design or request. High-level or low-level detail follows consequence, not a mandatory template.
+Design owns architecture, component responsibilities, consequential interfaces, failure behavior, and technical trade-offs. An upstream accepted brief or PRD owns product requirements when present; for new product or capability work, establish that owner before design. Existing accepted briefs within historical designs remain valid. Routine clear changes can identify the brief in their request or design. High-level or low-level detail follows consequence, not a mandatory template.
 
 Each design typically has: summary, goals, non-goals, architecture (with Mermaid diagrams where helpful), decisions (linked to relevant ADRs), open questions, future considerations.
 
@@ -929,7 +929,7 @@ npx degit github:carlosboeing/agentic-toolkit/templates/default-project <new-pro
 cp -r <path-to-repo>/templates/default-project <new-project-path>
 ```
 
-The template ships with `CLAUDE.md`, `README.md`, `.gitignore`, standing tracking files, and a small set of empty starter directories. These placeholders require no artifacts; create additional lifecycle and evergreen directories only when used. `system/` and `architecture.md` are NOT scaffolded — they're created on demand when README's `## Architecture` section overflows.
+The template ships with `CLAUDE.md`, `README.md`, `.gitignore`, standing tracking files, and a small set of empty starter directories. All seven numbered lifecycle folders are included, with `.gitkeep` in empty folders. These placeholders require no artifacts or phase execution. Create nested asset, lesson and evergreen directories when needed. `system/` and `architecture.md` are NOT scaffolded — they're created on demand when README's `## Architecture` section overflows.
 
 ### Step 2: Substitute placeholders
 
@@ -1045,7 +1045,7 @@ Identify which of these apply:
 
 ### 10.2 Folder renames
 
-For the lifecycle transition, map `1-discovery/` to `1-research/`, `2-design/` to `3-design/`, `3-plans/` to `4-plans/`, and review records from `4-reviews/` to `5-reviews/`. Classify retrospective records by content and type for `6-retros/`; move exclusive attachments with their owner and retain shared evidence with corrected links. Create requirements and standalone lesson directories only when used. Normalize legacy `discovery` metadata to `research` during the frontmatter step; retain other types and frozen historical evidence. Classify requirements and lessons temporarily stored in legacy directories by their types before a whole-directory move; route them to `2-requirements/` and `6-retros/lessons/<workstream>/` respectively.
+For the lifecycle transition, map `1-discovery/` to `1-research/`, `2-design/` to `3-design/`, `3-plans/` to `4-plans/`, and review records from `4-reviews/` to `5-reviews/`. Classify retrospective records by content and type for `6-retros/`; move exclusive attachments with their owner and retain shared evidence with corrected links. Create all seven numbered lifecycle folders with `.gitkeep` in empty folders. Create nested standalone lesson directories only when used. Normalize legacy `discovery` metadata to `research` during the frontmatter step; retain other types and frozen historical evidence. Classify requirements and lessons temporarily stored in legacy directories by their types before a whole-directory move; route them to `2-requirements/` and `6-retros/lessons/<workstream>/` respectively.
 
 Before any authorized migration, inventory records and existing link failures, check collisions and concurrent writers, and rehearse on a disposable copy. Verify installed tools support both layouts and active sessions no longer depend on the old paths. Record the base revision, intended mapping, and completion marker. Update live navigation, frontmatter relationships, templates, and project instructions together. Compare inventories and link results; accept no migration-caused loss or failure. Preserve historical transcripts, review authority, and evidence. A source-tree edit is not proof of installed compatibility.
 
@@ -1075,9 +1075,9 @@ git mv docs/6-adrs docs/adrs
 
 Update any cross-references in CLAUDE.md, README.md, ROADMAP.md, CHANGELOG.md, and per-doc frontmatter `related:` fields.
 
-### 10.3 Add folders when used
+### 10.3 Keep the lifecycle scaffold visible
 
-Create the selected artifact's directory when writing its first useful record. An absent brainstorm, requirements, design, plan, or retrospective directory is not a workflow defect. Do not seed every phase or manufacture documents to fill the structure.
+Create `0-brainstorms/`, `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/` and `6-retros/` in the declared working-memory root, including empty folders with `.gitkeep`. Bootstrap templates and authorized migrations supply this scaffold. Do not create it in the public tree when working memory lives in a separate private repository. Folder presence requires no phase, approval, or document. Create nested lesson and asset directories only when used; never manufacture documents to fill the structure.
 
 ### 10.4 ADR naming standardisation
 

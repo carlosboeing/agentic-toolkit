@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-01: lifecycle folders and requirements capture
+
+- Include all seven numbered lifecycle folders in bootstrap templates and migration previews/applications, with `.gitkeep` in empty folders. Retain working-memory routing, collision checks and idempotent reruns. Folder presence requires no phase or artifact.
+- Clarify vague new ideas through recorded brainstorming, and persist new capability requirements before technical design. Ask focused questions about consequential gaps, reuse existing authoritative records, preserve explicit lighter routes and avoid retrospective paperwork for approved work.
+- Add a requirements quality contract with suggested structure and examples, alongside the existing design and plan contracts. Keep product scope changes traceable to the same owner without adding a separate specification phase or approval ceremony.
+
 ## 2026-11-01: migration kickoff instructions
 
 - Add copyable preview and apply prompts, fresh-session instructions, bounded batch selection examples and dated harness/model recommendations to the migration runbook. Distinguish routing recommendations from measured migration results and retain installation and publication boundaries.

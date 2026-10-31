@@ -1,6 +1,6 @@
 # Design quality contract
 
-A design owns the technical solution for later planning and implementation. An upstream accepted brief or PRD owns product requirements when present; otherwise identify the accepted brief within the design or current request. It must let a fresh reader understand the problem, chosen solution, consequential contracts, proof, and remaining uncertainty. This contract defines required answers, not a Markdown template.
+A design owns the technical solution for later planning and implementation. For new product or capability work, an upstream persisted brief or PRD owns product requirements before technical design, unless the user explicitly selects a lighter route. Reuse existing accepted requirements, including briefs within historical designs. Routine clear changes may identify the accepted brief within the design or current request. Clarify consequential product gaps before designing their solution and update the same requirements owner when authorized scope changes. It must let a fresh reader understand the problem, chosen solution, consequential contracts, proof, and remaining uncertainty. This contract defines required answers, not a Markdown template.
 
 ## Authority and presentation
 
