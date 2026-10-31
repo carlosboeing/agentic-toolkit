@@ -6,6 +6,14 @@ All notable changes to this project are recorded here, newest first.
 
 - Resolve document recency from frontmatter `updated`, falling back to Git author history with rename following. Never use filesystem modification times; report missing or invalid recency explicitly. Keep saved briefing logs on their event-date schema.
 
+## 2026-10-31: harness hooks reference
+
+- Add `reference/reference-harness-hooks.md` for Claude Code, Codex, Gemini CLI, Antigravity, Kimi Code, Grok Build, OpenCode, Cursor and Muse Code: configuration and trust, blocking, added context, rewriting tool calls, payload keys and session ID fields, which event does each common job, failure behavior, and open questions.
+- Make the capability map the index of detail references. Fill in its Codex and Antigravity hook rows and add a row for context added on each prompt.
+- Point the hooks catalog and the plugin parity guide at the reference instead of restating hook facts. Add a process to "Writing a hook": read the row, re-check stale sources, probe, adapt per harness, and write findings back.
+- Record that Grok's documentation names `PreToolUse` as its only blocking event, which disputes this repository's 2026-08-17 record.
+- Point the global brief at the reference before a hook is created or ported.
+
 ## 2026-10-31: lifecycle frontmatter migration
 
 - Define `created` and `updated` for lifecycle records, with legacy `date` input accepted during transition. Keep review dates and review authority distinct from edit dates.

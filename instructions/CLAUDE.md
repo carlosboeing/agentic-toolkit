@@ -14,7 +14,7 @@ Instructions apply across Claude Code, Codex, Cursor, Gemini CLI, Antigravity, K
 
 - **Project instructions first.** Project-level `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md` override these preferences.
 - **Skill equivalents.** Claude `Skill` maps to the active harness skill mechanism. In Codex, read `SKILL.md` before acting. In Gemini/Agy, use skill activation. In Kimi Code, use native `Skill` tool or `/skill:<name>` (`~/.agents/skills/`).
-- **Hook equivalents.** Rely on configured hooks and verify results. When absent, follow instructions manually.
+- **Hook equivalents.** Rely on configured hooks and verify results. When absent, follow instructions manually. Before creating or porting a harness hook, read `reference/reference-harness-hooks.md` in your local agentic-toolkit clone.
 - **Tool equivalents.** Use harness-exposed tool equivalents while preserving intent.
 - **Fallbacks.** State fallbacks briefly when an instruction is unsupported, then proceed with the closest safe behavior.
 
