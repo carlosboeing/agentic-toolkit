@@ -29,6 +29,16 @@ The CopyDesk writing-style hook that used to live here now ships with [CopyDesk]
 
 ## Writing a hook
 
+Before you write a hook, port one to another harness, or rely on an existing one in a new way:
+
+1. **Read the harness's rows** in the [harness hooks reference](../reference/reference-harness-hooks.md), including the date checked and the open questions.
+2. **Re-check the source** when the row is older than about 60 days, when the installed version has a new major or minor release, or when the row is marked unchecked.
+3. **Probe the behavior you depend on** on the installed version, such as whether a blocked prompt or added context actually reaches the agent. Documentation and observed behavior sometimes disagree.
+4. **Keep one core script.** Add a small input adapter and output adapter per harness for key style, session ID field and output format, rather than a copy per harness.
+5. **Write findings back** to the reference, with the date, the installed version and the source, and resolve or add an open question.
+
+The rules for this repository's hooks:
+
 - **One directory per hook.** Put the script at `hooks/<name>/<name>.sh` with a README covering its purpose, requirements, settings fragment and failure behavior.
 - **Fail open.** If a required tool is missing or the payload cannot be parsed, exit `0`. A hook that blocks every write because its validator is missing does more harm than no hook.
 - **Exit fast when there is nothing to check.** A `PostToolUse` hook on `Write|Edit` runs on every file the agent touches, so skip irrelevant files within milliseconds.
@@ -36,14 +46,7 @@ The CopyDesk writing-style hook that used to live here now ships with [CopyDesk]
 
 ## Other harnesses
 
-Hook support differs between harnesses, so a hook written for Claude Code does not always carry over.
-
-| Harness | Hook mechanism | Can a hook block the agent? |
-|---|---|---|
-| Claude Code | Shell commands registered in `settings.json` | Yes, including after a tool runs (`PostToolUse`) |
-| OpenCode | JavaScript plugin modules in `~/.config/opencode/plugins/` | Yes, before a tool runs, by throwing an error |
-| Kimi Code | `[[hooks]]` entries in `~/.kimi-code/config.toml` | Only on `PreToolUse`, `Stop` and `UserPromptSubmit`. No hook can rewrite tool input. |
-| Grok Build TUI | Hooks in `~/.grok/hooks/` or `~/.grok/config.toml` | On `PreToolUse` and `Stop`. `PostToolUse` results are ignored. |
+Hook support differs between harnesses, so a hook written for Claude Code does not always carry over. The [harness hooks reference](../reference/reference-harness-hooks.md) records, for nine harnesses, where hooks are configured, which events can block, add context or rewrite a tool call, and which event does a common job on each. The sections below cover how this repository's hooks are installed on harnesses other than Claude Code.
 
 ### OpenCode
 
@@ -57,7 +60,7 @@ Kimi Code's `PostToolUse` event can only observe, so a validator that reports af
 
 Two separate settings matter on Grok.
 
-1. **Grok's own hooks are enabled.** Register them in `~/.grok/hooks/*.json` or under `[hooks]` in `~/.grok/config.toml`. `PreToolUse` can deny or rewrite a tool call, and `Stop` can block and send a reason back to the model. The hook payload uses camelCase keys, such as `toolInput` instead of `tool_input`. Grok maps some Claude tool names to its own, for example `Bash` to `run_terminal_command` and `Edit`, `Write` and `MultiEdit` to `search_replace`. Check the live tool names before relying on a mapping. Grok's file-creation tool is `write`, which is not in the published mapping table.
+1. **Grok's own hooks are enabled.** Register them in `~/.grok/hooks/*.json` or under `[hooks]` in `~/.grok/config.toml`. This repository recorded on 2026-08-17 that `PreToolUse` can deny or rewrite a tool call and that `Stop` can block and send a reason back to the model; Grok's current documentation names `PreToolUse` as the only blocking event, so probe before relying on either (see the reference's open questions). The hook payload uses camelCase keys, such as `toolInput` instead of `tool_input`. Grok maps some Claude tool names to its own, for example `Bash` to `run_terminal_command` and `Edit`, `Write` and `MultiEdit` to `search_replace`. Check the live tool names before relying on a mapping. Grok's file-creation tool is `write`, which is not in the published mapping table.
 2. **Grok does not load Claude hooks.** With `[compat.claude] hooks = false`, Grok ignores `~/.claude/settings.json` and plugin `hooks.json` files. Claude hook scripts would also fail open on Grok, because they expect snake_case keys.
 
 Grok ignores the output and exit code of `PostToolUse` hooks, so the model never sees their result. A check that must reach the model belongs in `Stop`, or in `PreToolUse` if it can run before the tool does.
