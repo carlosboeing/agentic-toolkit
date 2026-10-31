@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-10-31: lifecycle migration entry
+
+- Add a requested migration skill and runbook for one project or an explicitly selected batch. Keep classification decisions separate from deterministic execution and retain public/private repository boundaries.
+- Add a manifest-driven runner with disposable rehearsal, preview by default, explicit staged apply, exact file moves and counted replacements, metadata conversion, source checks and target-tree verification. Continue independent batch entries when one is blocked; recognize exact reruns.
+- Refuse unsafe paths, collisions, changed sources, unknown manifest fields and provenance edits. Compare supported Markdown references against the baseline; bare-text and custom metadata references still need integrated review. No installation or publication is automatic.
+
 ## 2026-10-31: briefing document recency
 
 - Resolve document recency from frontmatter `updated`, falling back to Git author history with rename following. Never use filesystem modification times; report missing or invalid recency explicitly. Keep saved briefing logs on their event-date schema.

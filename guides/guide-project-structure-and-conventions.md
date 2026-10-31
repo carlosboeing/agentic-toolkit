@@ -1019,7 +1019,9 @@ The doc you're reading is an example of an evergreen how-to in `guides/`. Evergr
 
 ## 10. Retrofitting an existing project
 
-Projects that follow earlier versions of these conventions (or partial conventions) can be migrated. Manual procedure below; automation deferred to a future `/init-project` skill that detects starting state and applies the appropriate diff.
+For single-project and selected-batch lifecycle adoption, use the [migration entry point and runbook](guide-lifecycle-migration.md).
+
+Projects that follow earlier versions of these conventions (or partial conventions) can be migrated. The runner automates explicit mappings and metadata changes; project classification and the broader retrofit steps below still need judgment. Automatic project detection and bootstrapping remain future `/init-project` work.
 
 ### 10.1 Detect current state
 

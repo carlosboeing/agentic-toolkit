@@ -33,6 +33,8 @@ None at the moment.
 
 ## Recently shipped
 
+- **Lifecycle migration entry (2026-10-31).** Add a requested skill, runbook and manifest-driven runner for single-project or selected-batch adoption, with disposable previews, staged apply, preservation checks and per-project recovery state.
+
 - **Briefing document recency (2026-10-31).** Use lifecycle `updated` dates with Git-history fallback for draft actionability, document staleness and ADR ordering. Preserve briefing-log event dates and report unknown recency.
 
 - **Harness hooks reference (2026-10-31).** Record hook facts for nine harnesses in one dated reference: configuration and trust, which events can block, add context or rewrite a tool call, payloads, failure behavior, and open questions where documentation and records disagree. The capability map becomes the index of detail references, and the hooks catalog gains a process for writing and porting hooks.
