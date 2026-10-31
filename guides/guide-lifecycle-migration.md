@@ -10,6 +10,60 @@ Use the same procedure for one or many projects. Work serially and record each p
 
 A nested private repository is a separate Git target. Migrate its working-memory records there and public instructions in their owning repository. Never combine them in one commit or put private source references in public tracking.
 
+## Start in a fresh session
+
+1. Open a coding harness in the target project's repository root. It needs local file access, a terminal, Git and Python 3. Use the model guidance at the end of this runbook.
+2. Replace `<toolkit-checkout>` in the prompt with the absolute path to your toolkit source checkout. The source checkout supplies the runbook and scripts even when the skill is loaded from the shared hub.
+3. Paste the preview prompt below. Skill invocation syntax differs across harnesses; the ordinary-language request and explicit source paths provide the same starting instructions.
+4. Review the proposed mapping, unresolved classifications and verification results. The preview must leave target project files unchanged. If a dirty tree or incompatible validator blocks application, resolve that condition before proceeding.
+5. Apply only after the preview is acceptable. Use the continuation prompt below in the same session, or provide the saved manifest and preview paths to a fresh session.
+
+### Copyable preview prompt
+
+Replace the path placeholder before pasting.
+
+════ PROMPT STARTS BELOW THIS LINE ════
+
+Use the migrate-lifecycle skill to prepare a migration preview for the project in the current directory.
+
+Toolkit source checkout: `<toolkit-checkout>`.
+
+Read the skill from that checkout at `skills/migrate-lifecycle/SKILL.md` and follow `guides/guide-lifecycle-migration.md`. If the harness has already loaded the installed skill, still use the checkout for the runbook and scripts.
+
+For each selected project, read its instructions, Project Map, Git state and actual documentation structure. Include lifecycle folders, YAML frontmatter, live references and project instructions. Preserve product decisions, document bodies except approved reference repairs, original dates, review provenance, historical evidence, assets and existing uncommitted work. Identify ignored evidence that needs separate handling.
+
+Work serially. Inspect and propose an explicit mapping; raise ambiguous classifications instead of guessing. Use the deterministic runner to rehearse against a fixed source revision in a disposable copy. Check installed validator compatibility. Keep the manifest and preview in an appropriate private location outside the target repository; ask for that location if none is established.
+
+Show the proposed changes, verification results, blockers and unresolved decisions. Give me the saved manifest and preview paths so another session can resume.
+
+Stop after the preview. Do not edit the selected projects, install validators, change global configuration, commit, push or open a PR.
+
+════ PROMPT ENDS ABOVE THIS LINE ════
+
+The delimiters are not part of the prompt.
+
+### Select several projects or discover a bounded batch
+
+For named projects, replace the preview prompt's first sentence with: "Use the migrate-lifecycle skill to prepare migration previews for these project roots: `<project-root-1>`, `<project-root-2>`." Keep the rest of the prompt. Each repository, including a private companion when present, gets its own manifest entry and result.
+
+For all projects under a directory, replace that sentence with: "Discover candidate projects only beneath `<search-root>`. Show me the deduplicated repository list and exclusions, then wait for my selection before preparing previews." This first step discovers the scope. It does not authorize migration of every repository it finds. Once selected, preview serially; report blocked projects and continue independent ones.
+
+### Continue from an accepted preview
+
+Fill in the saved paths, including when you start a new session. This prompt authorizes local application and staging, not commits or publication.
+
+════ PROMPT STARTS BELOW THIS LINE ════
+
+Follow the migrate-lifecycle skill and runbook in `<toolkit-checkout>`. Apply the reviewed migration described by `<manifest-path>` and `<preview-path>` to the projects listed there.
+
+Verify the fixed source revisions and current Git state again. If the source or proposed mapping changed, or compatible validators are not installed, stop the affected project and explain what needs resolution. Do not silently expand the reviewed scope.
+
+Run serially. Apply and stage the rehearsed changes, verify preservation and references, and confirm a repeat is a no-op. Report each project's result and any blockers. Do not install validators, change global configuration, commit, push or open a PR.
+
+════ PROMPT ENDS ABOVE THIS LINE ════
+
+The delimiters are not part of the prompt.
+
 ## Establish the baseline
 
 Read project instructions and the Project Map. Do not assume `docs/` or a numbered folder identifies the active working-memory root. Inspect dirty files, local and remote commits, worktrees and other writers. Keep incompatible sessions read-only during application.
@@ -107,4 +161,19 @@ Record real commits after they exist. Publication and installation remain separa
 
 ## Choose a model by the remaining judgment
 
-A budget model can follow an explicit mapping and deterministic commands. Use a stronger model or human input for ambiguous classification and unexpected failures. Verify one representative project before broad batch use. No particular provider, model, or harness is required, and mechanical checks do not prove agent reliability.
+The scripts perform the mechanical changes. The agent still needs to interpret project instructions, distinguish historical evidence from live references, classify mixed documents, prepare an exact mapping and respond correctly to failures. A command runner alone does not supply that judgment.
+
+These are recommendations for this workflow, not measured migration benchmarks:
+
+| Situation | Suggested harness/model | Reason and escalation |
+|---|---|---|
+| First pilot or a project with mixed document types | Claude Code with current Sonnet, such as Sonnet 5.5 | Start with enough reasoning capacity to assess classification and preservation. Use the first preview to learn whether the next projects are routine. |
+| Conventional layout, or routine execution of a settled mapping | Antigravity with Gemini 3.8 Flash at Medium thinking | A candidate for using a separate capacity pool on repeatable tool work. Check one representative result before using it for a batch. |
+| You prefer OpenCode | OpenCode with a configured model you have used successfully for repository tool use; use Sonnet for ambiguous inspection or a budget model for settled mappings | OpenCode is the harness; the chosen provider/model determines reasoning and cost. Do not assume every configured model follows the skill equally well. |
+| Conflicting authority, unclear classification, unexplained failures or possible content loss | Escalate to a stronger reasoning model, such as Opus 5.5 in Claude Code, or ask the operator | Resolve the specific uncertainty before changing more files. A routine migration does not need the strongest model throughout. |
+
+A cheaper model can be sufficient once the mapping is explicit, but it must still read failures and respect the stop conditions. Use ordinary reasoning for routine execution; increase effort or model capability when actual ambiguity appears. Do not choose a budget model merely because the batch is large: each project's interpretation still needs checking. Switching models does not change the required verification or authorize parallel workers.
+
+Model availability checked 2026-10-31: [Antigravity's model list](https://antigravity.google/docs/models) includes Gemini 3.8 Flash and thinking choices; [Claude Code model configuration](https://support.claude.com/en/articles/11940350-claude-code-model-configuration) lists Sonnet and Opus 5.5; [Claude's model guidance](https://support.claude.com/en/articles/14552983-models-usage-and-limits-in-claude-code) distinguishes routine work from harder reasoning. [OpenCode's model documentation](https://opencode.ai/docs/models) explains provider/model selection. Check the active model picker and account limits before running; this guide does not establish your cheapest option or remaining quota.
+
+Keep model selection outside the migration skill and manifest. See the [general routing guide](guide-ai-model-and-effort-routing.md) for capability, privacy and quota trade-offs. No end-to-end comparison of these models on this migration has been performed.
