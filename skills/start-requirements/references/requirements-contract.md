@@ -2,11 +2,15 @@
 
 A brief or PRD owns intended behavior, scope and success. It gives technical design and later review a stable product source. This contract is for agents and humans clarifying a new product or capability; it defines required answers with a suggested structure, not a fixed-length form.
 
+## Default presentation
+
+Use the [requirements template](requirements-template.md) for a durable document unless the project supplies its own. Keep its familiar section order where applicable; combine short sections and omit irrelevant ones without losing required answers. Write standalone technical prose. Keep source baseline and actual work authority in concise `Document control` bullets, and dated material decisions or review evidence in `Document history`. Frontmatter remains the canonical current status and attribution. Preserve stable IDs, source revisions and review provenance. Detailed transcripts and run logs belong in linked records. A template creates no document or approval obligation.
+
 ## Clarify before designing
 
 Read the request, exploration, research and existing product decisions first. Ask about consequential gaps rather than run a fixed questionnaire. Useful questions concern who needs the outcome, the problem being solved, supported journeys, priorities, exclusions, observable success, failure expectations and constraints. Do not ask questions the sources already answer. Record unresolved questions and the work they block; do not hide assumptions in apparently accepted requirements.
 
-A vague idea uses brainstorming to compare alternatives and preserve useful context. Exploration can stop without delivery. A clear new product or capability can start at requirements. Persist the resulting brief before technical design, reusing an existing sufficient requirements owner. Routine clear fixes, documentation, dependency changes and small improvements can keep scope in the request, issue or session. Honor a user-selected lighter route.
+A vague idea uses brainstorming to compare alternatives and preserve useful context. Exploration can stop without delivery. A clear new product or capability can start at requirements. Normally persist the resulting brief before technical design, reusing a sufficient requirements owner. Architecture-led or feasibility-led work may start with a provisional design, then derive and clarify requirements from original intent and constraints and reconcile the design before affected delivery planning or implementation. Routine clear fixes, documentation, dependency changes and small improvements can keep scope in the request, issue or session. Honor a user-selected lighter route.
 
 ## Suggested structure and required answers
 
@@ -23,7 +27,7 @@ Use the project's frontmatter and naming rules. A compact brief can combine head
 | Open questions and assumptions | What remains unknown, evidence and uncertainty, who must resolve it and which downstream work it blocks. |
 | Decisions and changes | Meaningful clarifications, authorized scope changes and links to affected design, tasks or review evidence. Do not turn every conversation into a log. |
 
-A useful requirement states the actor or situation, required behavior and observable result. Avoid arbitrary requirement counts, mandatory user-story syntax or an exhaustive task list. Research findings are evidence; they do not establish acceptance. Architecture belongs to [design](../../start-design/references/design-contract.md); builder tasks, dependencies and integration belong to [planning](../../start-planning/references/plan-contract.md).
+Use an `ID | Requirement | Acceptance criteria` table by default. Each acceptance cell summarizes a concrete expected result; an external criterion ID alone is insufficient. Link longer named scenarios below the table. Preserve historical IDs and label technical constraints in extractions; add source or priority columns only when useful. A useful requirement states the actor or situation, required behavior and observable result. Avoid arbitrary requirement counts, mandatory user-story syntax or an exhaustive task list. Research findings are evidence; they do not establish acceptance. Architecture belongs to [design](../../start-design/references/design-contract.md); builder tasks, dependencies and integration belong to [planning](../../start-planning/references/plan-contract.md).
 
 ## Ownership and amendments
 
@@ -33,18 +37,67 @@ An extracted historical brief must identify its source revisions and extraction 
 
 Review and progression follow project rules and actual authorization. No new approval ceremony, issue hierarchy or standalone planning document is implied. A phase-only request stops at its boundary. An authorized autonomous workflow can continue through included responsibilities, retaining its human gates. Record acceptance separately from delivery.
 
-## Compact example
+## Examples
 
-This synthetic brief illustrates sufficient answers, not accepted repository scope.
+The following synthetic excerpts use the default headings. Apply project metadata from the template for an actual document; these excerpts establish no accepted repository scope.
 
-**Problem and scope.** Support staff need to export the currently filtered customer list for their weekly audit. The request owns scope. Include the visible filter and current user's permissions; exclude scheduled exports and new integrations. Product selection and ordering already exist and remain unchanged.
+### Compact brief
 
-**Requirements and acceptance.** R1: exported rows match the current filter and permissions. Check with two filters and a user who cannot see one matching customer. R2: the export identifies each column and preserves the displayed values. Check an empty result and values containing commas or line breaks. R3: an export failure gives a useful error and offers no apparently complete partial file. Check an interrupted export through the user-facing action.
+```markdown
+# Export the filtered customer list
 
-**Constraints and questions.** Existing access rules apply. The supported output format remains a product question until the operator selects it; that decision blocks format-dependent technical design. No architecture or task decomposition is chosen here.
+## Summary
 
-## Substantial example
+Support staff need a downloadable copy of the current customer list for a weekly audit.
 
-This synthetic outline illustrates a larger PRD without adding a separate specification phase.
+## Scope and non-goals
 
-A support team needs interrupted bulk imports to continue without duplicate customer records. The product owner selects restartable imports, excludes background scheduling and replacing the destination, and requires existing access rules and audit retention. R1 requires previously accepted records to remain visible after interruption. R2 requires a resumed import not to create duplicates. R3 requires rejected records to remain identifiable with reasons. R4 requires an operator to distinguish partial progress, completion and failure. Acceptance covers interruption, an ambiguous last response, invalid input and an unauthorized operator. Whether corrected input may resume the same import remains an explicit product question. Checkpoints, idempotency mechanisms, persistence schemas and task order are technical design and planning decisions, not assumptions hidden in this PRD.
+Include the current filter and existing permissions. Exclude scheduled exports and new integrations.
+
+## Requirements and acceptance criteria
+
+| ID | Requirement | Acceptance criteria |
+|---|---|---|
+| R1 | Export the filtered rows within the user's permissions. | Different filters produce corresponding rows; a restricted matching customer is excluded. |
+| R2 | Preserve column labels and displayed values. | An empty result retains labels; commas and line breaks survive export. |
+| R3 | Report a failed export without offering a partial file as complete. | An interrupted export shows failure and no apparently complete download. |
+
+## Assumptions and open questions
+
+Output format requires a product decision before format-dependent design. Existing access rules remain binding.
+```
+
+### Substantial brief
+
+```markdown
+# Resume interrupted customer imports
+
+## Summary
+
+Support staff need imports to resume after interruption without duplicate records.
+
+## Goals and success criteria
+
+Resume work while preserving accepted records and identifying rejected input. Volume and time targets require agreement before capacity-dependent design.
+
+## Scope and non-goals
+
+Prioritize the existing import journey. Exclude scheduling and replacing the destination.
+
+## Requirements and acceptance criteria
+
+| ID | Requirement | Acceptance criteria |
+|---|---|---|
+| R1 | Preserve accepted records after interruption. | Previously accepted records remain available after interruption. |
+| R2 | Avoid duplicates when an import resumes. | Retrying after an ambiguous response creates no duplicate customer. |
+| R3 | Identify rejected input and its reason. | Invalid records remain identifiable with rejection reasons. |
+| R4 | Distinguish partial progress, completion and failure. | An operator can identify each state through the import interface. |
+
+## Quality requirements and constraints
+
+Existing access rules and audit retention apply. No persistence schema or deduplication mechanism is selected here.
+
+## Assumptions and open questions
+
+Whether corrected input can resume the same import remains unresolved and blocks that portion of design.
+```

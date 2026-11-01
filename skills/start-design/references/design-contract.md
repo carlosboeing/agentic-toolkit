@@ -1,6 +1,10 @@
 # Design quality contract
 
-A design owns the technical solution for later planning and implementation. For new product or capability work, an upstream persisted brief or PRD owns product requirements before technical design, unless the user explicitly selects a lighter route. Reuse existing accepted requirements, including briefs within historical designs. Routine clear changes may identify the accepted brief within the design or current request. Clarify consequential product gaps before designing their solution and update the same requirements owner when authorized scope changes. It must let a fresh reader understand the problem, chosen solution, consequential contracts, proof, and remaining uncertainty. This contract defines required answers, not a Markdown template.
+A design owns the technical solution for later planning and implementation. Requirements-first is the normal product route. For architecture-led or feasibility-led work, a provisional design may precede the requirements brief; derive and clarify requirements, then reconcile the same design before affected delivery planning or implementation. The early design establishes no accepted product scope. Honor an explicit lighter route. Reuse existing accepted requirements, including briefs within historical designs. Routine clear changes may identify the accepted brief within the design or current request. Clarify consequential product gaps before designing their solution and update the same requirements owner when authorized scope changes. It must let a fresh reader understand the problem, chosen solution, consequential contracts, proof, and remaining uncertainty. This contract defines required answers, not a Markdown template.
+
+## Default presentation
+
+Use the [design template](design-template.md) for a durable document unless the project supplies its own. Keep its familiar section order where applicable; combine short sections and omit irrelevant ones without losing required answers. Write standalone technical prose. Keep source baseline and actual work authority in concise `Document control` bullets, and dated material decisions or review evidence in `Document history`. Frontmatter remains the canonical current status and attribution. Preserve stable IDs, source revisions and review provenance. Detailed transcripts and run logs belong in linked records. A template creates no document or approval obligation.
 
 ## Authority and presentation
 
@@ -46,12 +50,68 @@ Approval fixes the behavioral boundary, not incidental file hints. If later work
 
 ## Examples
 
-These synthetic examples show different scopes. They are not required layouts or repository facts.
+These synthetic excerpts use the default headings at different depths. Project metadata and source evidence must be supplied for a real artifact.
 
-### Compact local change
+### Compact design
 
-> A maintainer needs the configuration error to identify the rejected key. The current parser reports only "invalid configuration". The brief is the issue's request to add the key name; values and credentials remain excluded. Adding the key to the existing diagnostic is preferable to a new validation command because it preserves the current invocation and exit status. The parser returns the key with the existing error, and the CLI prints it without printing the value. A malformed file still follows the existing parse-error path. Check acceptance by invoking the CLI with an unknown key containing a secret value: the key appears, the value does not, and the exit status is unchanged. The current parser and CLI error path were inspected; no external platform assumption or open question remains.
+```markdown
+# Identify invalid configuration keys
 
-### Substantial architectural change
+## Summary
 
-> Operators need interrupted export jobs to resume without duplicate records. The reviewed brief and discovery describe an append-only destination that supports an idempotency key; those artifacts are linked in the actual design. Scope covers export recovery, excluding destination replacement. Current jobs restart from the beginning. Compare restart-only export, destination deduplication, and a local checkpoint plus destination idempotency; select the third to bound recovery reads while keeping duplicate prevention at the write interface. The exporter persists the last acknowledged record and reuses a stable key when retrying an unacknowledged write. A checkpoint may lag an acknowledged write but must never precede acknowledgment. Lost responses retry with the same key; a corrupt checkpoint stops the job with a recovery diagnostic. Acceptance covers a disconnect before acknowledgment, a lost response after acknowledgment, and checkpoint corruption through the existing export interface. Cite the destination's current idempotency documentation and a disposable duplicate-write probe. Retention of keys remains an open capacity question that blocks the long-running-job portion; recheck that limit before planning it.
+Include the rejected key in the existing diagnostic without revealing its value.
+
+## Context and requirements
+
+The parser currently reports only that configuration is invalid. The issue requires the key name and excludes values and credentials.
+
+## Proposed design
+
+The parser returns the key through the existing error object. The CLI prints the name without its value. Malformed files retain the existing parse-error path.
+
+## Alternatives and rationale
+
+Prefer the existing diagnostic to a new command because it preserves invocation and exit behavior.
+
+## Verification strategy
+
+Invoke the CLI with an unknown key containing a secret value. Verify the key appears, the value does not, and the exit status is unchanged.
+
+## Risks and open questions
+
+The parser and CLI error path were inspected. No consequential open question remains.
+```
+
+### Substantial design
+
+```markdown
+# Resume interrupted export jobs
+
+## Summary
+
+Resume exports without duplicate destination records.
+
+## Context and requirements
+
+The brief requires recovery while retaining an append-only destination. Research confirms idempotency-key support. Destination replacement is excluded.
+
+## Proposed design
+
+Persist the last acknowledged record. Retry an unacknowledged write with the same idempotency key. A checkpoint may lag acknowledgment but must never precede it. Corrupt checkpoints stop execution with a recovery diagnostic.
+
+## Alternatives and rationale
+
+Compare restarting every export, destination-only deduplication, and local checkpoints with destination idempotency. Select the third to limit recovery reads while handling ambiguous responses.
+
+## Quality and compatibility considerations
+
+The destination's idempotency semantics and key-retention limits constrain recovery. Link current documentation and the authorized disposable probe.
+
+## Verification strategy
+
+Check disconnects before acknowledgment, lost responses after acknowledgment and checkpoint corruption through the existing export interface.
+
+## Risks and open questions
+
+Key-retention capacity remains unresolved and blocks the long-running-job portion. Recheck it before planning that work.
+```

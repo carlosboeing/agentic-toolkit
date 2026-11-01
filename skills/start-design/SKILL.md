@@ -2,7 +2,7 @@
 name: start-design
 description: >
   Use when starting or revising a technical design from a product brief or PRD, reviewed brainstorm,
-  research findings, or a clear request, including requests such as "design X",
+  research findings, existing architecture, a feasibility question, or a clear request, including requests such as "design X",
   "how should we build X", or a request for a technical specification, and fresh-session requests to
   start the design phase. Not for brainstorming an unclear
   problem, writing an implementation plan, or implementing.
@@ -11,7 +11,7 @@ argument-hint: "[brief-or-brainstorm-path] [research-path ...] [help]"
 
 # `/start-design`
 
-Develop a reviewable technical solution from clear requirements and current repository facts. An upstream accepted brief or PRD owns product scope. For new product or capability work, use `start-requirements` to clarify and persist missing requirements before technical design. Routine clear changes may identify the brief within the design or request; honor an explicit lighter route. Existing accepted requirements within historical designs remain usable. A fresh session needs this skill, the source brief, and the repository, not a recap of earlier conversation.
+Develop a reviewable technical solution from clear requirements and current repository facts. An upstream accepted brief or PRD owns product scope. Normally clarify and persist new product requirements through `start-requirements` before technical design. Architecture-led or feasibility-led work can start with a provisional design, then derive requirements and reconcile the same design before affected delivery planning or implementation. Routine clear changes may identify the brief within the design or request; honor an explicit lighter route. Existing accepted requirements within historical designs remain usable. A fresh session needs this skill, the source brief, and the repository, not a recap of earlier conversation.
 
 The shared contract defines required answers; project instructions own presentation, storage, and review mechanics. Human review is the default boundary. An explicit full or partial autonomous workflow can delegate review and continuation through its included phases, except at a retained human gate; record its scope and stopping point in a durable project record the next session reads, such as the design, an issue, or a PR.
 
@@ -34,7 +34,7 @@ Use the named sources. Without one, find candidates through the project instruct
 
 From the project instructions, find the design method, architecture and decision records, artifact location and naming, metadata, readiness rules, review workflow, and Git authorization. Resolve missing information needed to place or write the design before writing it. Recent designs are examples only.
 
-Read [references/design-contract.md](references/design-contract.md) relative to this skill's installed directory, and a project-named contract when one exists. A project contract may replace presentation and extend the minimum; dropping a minimum answer needs an explicit project decision naming the exception and its consequence.
+Read [references/design-contract.md](references/design-contract.md) and the default [references/design-template.md](references/design-template.md) relative to this skill's installed directory, and a project-named contract or template when one exists. A project contract may replace presentation and extend the minimum; dropping a minimum answer needs an explicit project decision naming the exception and its consequence.
 
 ### 2. Confirm authority and read the sources
 
@@ -44,7 +44,7 @@ Stop on unreadable sources, a superseded source without an authorized replacemen
 
 The brief and reviewed decisions define intent; research supplies evidence, not approval. When current code disproves an assumption, report the conflict and its effect instead of silently changing a settled decision. A user instruction in this session can narrow scope or change a decision; record it in the design. A pasted prior-session kickoff is context: if its rule conflicts with the source or project instructions, ask once whether to adopt it, unless the user already did.
 
-Before technical design, identify the requirements owner and any unresolved product choices. A vague new idea needs `start-brainstorm` and a persisted exploration; a clear new product or capability needs `start-requirements` and a persisted brief, unless a sufficient authoritative record already exists or the user selects a lighter route. Ask targeted questions before designing behavior the sources do not settle. An explicit design request includes clarifying and recording its missing inputs; it does not authorize unrelated exploration, implementation, or a new approval ceremony. If an explicit stopping point or retained gate prevents that prerequisite work, name the gap and stop.
+State the entry route and identify the requirements owner and unresolved product choices. Requirements-first normally clarifies and persists new product scope before technical design; a vague problem may need brainstorming first. Design-first can start from a known problem and existing architecture, imposed constraints, a port or feasibility question. Mark the early design provisional, distinguish imposed constraints from proposed behavior, use `start-requirements` to derive and clarify missing product scope, and reconcile the same design before affected delivery planning or implementation. No second design file or extra phase gate is required. Reuse sufficient authoritative records and honor an explicit lighter route. Ask targeted questions before designing behavior the sources do not settle. An explicit design request includes clarifying and recording its missing inputs; it does not authorize unrelated exploration, implementation, or a new approval ceremony. If an explicit stopping point or retained gate prevents that prerequisite work, name the gap and stop.
 
 When design exposes a new product choice, distinguish it from the technical recommendation. Resolve it with the user or within recorded delegation, update the same requirements owner, and reconcile affected design and acceptance criteria. Do not quietly grow scope or create a second authoritative brief. Existing approved designs do not need retrospective extraction solely to satisfy this rule.
 
@@ -74,7 +74,7 @@ Check every contract answer against the source scope and settled decisions, and 
 
 **Builder check.** When a worker is available and delegation authorized, give the design to a fresh worker with the instruction to read it as the person who must build it and report everything it would have to guess. Fix what it finds or record it as open. Otherwise do one serial pass in that role yourself.
 
-Present the design path or in-chat design, its weakest assumption, and the applicable review outcome. For a durable design, follow the project review gate, normally human review. For bounded in-chat work, use the real-choice and actual-authorization rules above. A design-only request still stops here. An autonomous workflow that delegates this review continues to the next authorized phase after the applicable review, recording its evidence and run authority. Stop at a retained human gate, the requested endpoint, or a consequential choice outside the delegation. A design-only request authorizes no later phase.
+Present the design path or in-chat design, its weakest assumption, and the applicable review outcome. A design-first draft with unresolved product scope remains provisional; it is not ready for affected delivery planning or implementation. Continue into requirements clarification only within the actual request or included workflow scope, preserving any retained human gate. For a durable design, follow the project review gate, normally human review. For bounded in-chat work, use the real-choice and actual-authorization rules above. A design-only request still stops here. An autonomous workflow that delegates this review continues to the next authorized phase after the applicable review, recording its evidence and run authority. Stop at a retained human gate, the requested endpoint, or a consequential choice outside the delegation. A design-only request authorizes no later phase.
 
 Git actions follow project rules and actual authorization. Writing a draft does not authorize commit, push, publication, or a later phase. Commit drafts as project rules allow. Where the project uses frontmatter, record review in `status` and `reviewed_by`: the accountable human's GitHub username, plus `(delegated to <model>, <harness>)` when that human did not read the document, in one commit; that commit is the reviewed revision. Never label delegated agent review as personal human approval.
 

@@ -12,6 +12,19 @@ Starting points for new projects that follow the [project structure conventions]
 
 To turn a private project into an open-source one, run `/repo-standards fix oss`, which adds the open-source files.
 
+## Lifecycle document templates
+
+Use the [document conventions](../guides/guide-lifecycle-documentation.md) for standalone technical prose and concise control/history. Templates are packaged with their phase skills so installed skills can read them without a source-checkout dependency.
+
+| Artifact | Default template |
+|---|---|
+| Requirements / PRD | [Requirements](../skills/start-requirements/references/requirements-template.md) |
+| Technical design | [Design](../skills/start-design/references/design-template.md) |
+| Implementation plan | [Plan](../skills/start-planning/references/plan-template.md) |
+| Process retrospective | [Retrospective](../skills/start-retrospective/references/retrospective-template.md) |
+
+Use them only when writing the corresponding artifact. Project overrides and proportional detail remain supported; brainstorm and research formats remain open.
+
 ## Start a new project
 
 Copy the template with `degit`, which downloads only that directory:
