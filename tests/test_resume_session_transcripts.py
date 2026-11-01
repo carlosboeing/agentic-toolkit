@@ -201,6 +201,21 @@ class FormatTests(ProjectCase):
         self.assertFalse(self.show("claude", CLAUDE_ID, "--all").stdout.startswith("This summary is "))
 
 
+class WorktreeSessionTests(ProjectCase):
+    def test_a_plan_edited_in_a_worktree_keeps_its_session_signal(self):
+        self.sb.write(self.project, {".gitignore": ".worktrees/\n"})
+        self.sb.commit(self.project, "ignore worktrees")
+        worktree = self.project / ".worktrees" / "codex" / "feat" / "x"
+        self.sb.git(self.project, "worktree", "add", "-q", "-b", "feat/x", str(worktree))
+        records = claude_records(worktree, self.base)
+        claude_transcript(self.sb, self.project, CLAUDE_ID, records)
+        result = self.show("claude", CLAUDE_ID)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        top = result.stdout.split("### 1.", 1)[1].split("\n", 3)
+        self.assertIn(".worktrees/codex/feat/x/docs/plans/rollout.md", top[0])
+        self.assertIn("written or edited by the session", "\n".join(top))
+
+
 class VerdictTests(unittest.TestCase):
     def test_zero_counts_are_not_failures(self):
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "resume-session" / "scripts"))

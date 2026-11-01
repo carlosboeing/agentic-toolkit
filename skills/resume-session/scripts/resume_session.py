@@ -289,9 +289,22 @@ def pull_request(location, branch):
 
 # ---------------------------------------------------------------- documents
 
-def is_document(path):
+def is_document(path, base=None):
+    """A document by suffix, outside excluded folders. Exclusions apply to the part of
+    the path inside its repository (or `base`), so a worktree under `.worktrees/`, or a
+    project inside a folder named `build`, still counts."""
     path = Path(path)
-    return path.suffix.lower() in DOC_SUFFIXES and not (set(path.parts) & SKIP_DIRS)
+    if path.suffix.lower() not in DOC_SUFFIXES:
+        return False
+    if path.is_absolute():
+        if base is None:
+            top = toplevel(path.parent) if path.parent.is_dir() else None
+            base = Path(top) if top else None
+        try:
+            path = path.relative_to(base) if base else Path(path.name)
+        except ValueError:
+            path = Path(path.name)
+    return not (set(path.parts[:-1]) & SKIP_DIRS)
 
 
 def read_text(path):
@@ -426,10 +439,19 @@ def git_documents(location, ctx):
             out = git_out(location, "diff", "--name-only", base, "HEAD") or ""
             found.update(out.splitlines())
     uncommitted = set()
-    status = git_out(location, "status", "--porcelain", "-uall") or ""
-    for line in status.splitlines():
-        path = line[3:].split(" -> ")[-1].strip('"')
-        uncommitted.add(path)
+    # NUL-delimited and unstripped: a row such as " M path" starts with a space, and a
+    # rename's old path follows it as its own entry.
+    code, status = git(location, "status", "--porcelain", "-z", "-uall")
+    entries = status.split("\0") if code == 0 else []
+    index = 0
+    while index < len(entries):
+        entry = entries[index]
+        index += 1
+        if len(entry) < 4:
+            continue
+        uncommitted.add(entry[3:])
+        if entry[0] in "RC":
+            index += 1
     found.update(uncommitted)
     log = git_out(location, "log", f"--since={ctx.since.isoformat()}", "--name-only", "--format=") or ""
     found.update(p for p in log.splitlines() if p)
@@ -658,7 +680,7 @@ def profile_documents(root, profile, ctx):
             continue
         for path in sorted(base.rglob("*")):
             rel_parts = path.relative_to(wm).parts
-            if path.is_file() and is_document(path) and "assets" not in rel_parts:
+            if path.is_file() and is_document(path, wm) and "assets" not in rel_parts:
                 docs.append(path)
     typed = []
     for path in docs:
@@ -741,15 +763,15 @@ def collect_documents(locations, root, ctx, session_signals=None):
     date_fields = profile.date_fields if applied else ["updated"]
     for doc in docs:
         doc.recency = recency(doc, date_fields)
-    if applied:
-        docs = [d for d in docs if d.field("type") not in profile.never_ranked]
-
     def key(doc):
+        # The profile never removes a generic result; types it never ranks as delivery
+        # work sort after every other document instead.
+        unranked = 1 if applied and doc.field("type") in profile.never_ranked else 0
         type_rank = profile.type_rank.get(doc.field("type"), len(profile.type_rank)) if applied else 0
         has_open = 0 if doc.open_items else 1
         # An uncommitted file without a date is being edited now, so it sorts as newest.
         stamp = doc.recency or ("9999" if doc.uncommitted else "0000")
-        return (doc.tier, type_rank, has_open, _negate(stamp))
+        return (unranked, doc.tier, type_rank, has_open, _negate(stamp))
 
     docs.sort(key=key)
     return docs, layers, unranked
@@ -921,12 +943,12 @@ def project_documents(locations, root, ctx, session_signals=None, extra_mismatch
                 mismatches.append(f"`{show_path(doc.path, ctx)}` was committed at {local_time(stamp)}, "
                                   "after the last agent message")
     out.append(top)
-    rest = docs[1:5]
+    rest = docs[1:] if ctx.lift_caps else docs[1:5]
     if rest:
-        out.append("### Documents 2 to 5")
+        out.append(f"### Documents 2 to {len(rest) + 1}")
         out.extend(describe_line(i + 2, d, ctx) for i, d in enumerate(rest))
-    if len(docs) > 5:
-        out.append(f"{len(docs) - 5} more documents. Print them with `--section \"Project documents\" --all`.")
+    if len(docs) > len(rest) + 1:
+        out.append(f"{len(docs) - len(rest) - 1} more documents. Print them with `--section \"Project documents\" --all`.")
     if unranked and ctx.profile is not None:
         workstreams = []
         name = docs[0].path.stem.lower()

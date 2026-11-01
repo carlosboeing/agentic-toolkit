@@ -8,12 +8,15 @@ Run with: python3 -m unittest discover -s tests -p 'test_resume_session_*.py'
 import re
 import sys
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from resume_session_support import READER, Sandbox, load_reader, ranked_paths  # noqa: E402
 
-FUTURE = "2999-01-01T00:00:00+00:00"
+# A time after every fixture commit. Git cannot parse far-future years such as 2999 and
+# then matches every commit, so use tomorrow.
+FUTURE = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(timespec="seconds")
 SCRIPTS = sorted(READER.parent.glob("*.py"))
 
 GENERIC_PLAN = """# Rollout plan
@@ -138,6 +141,29 @@ class GenericProjectTests(unittest.TestCase):
         self.assertIn("docs/plans/rollout.md", paths)
         self.assertIn("changed, not by this session", result.stdout)
 
+    def test_unstaged_change_to_a_tracked_document_is_found(self):
+        # Only the Git layer can find this document, and its status row starts with a
+        # space: " M docs/aside.md".
+        self.sb.write(self.project, {"docs/aside.md": "# Aside\n"})
+        self.sb.commit(self.project, "aside")
+        (self.project / "docs" / "aside.md").write_text("# Aside\n\n- [ ] Follow up\n")
+        result = self.sb.reader("show", "--repo-only", "--cwd", str(self.project), "--since", FUTURE,
+                                "--profile", "none")
+        out = result.stdout
+        self.assertEqual(ranked_paths(out)[0], "docs/aside.md", out)
+        self.assertIn("; uncommitted changes", out.split("### 1.", 1)[1])
+
+    def test_all_lists_every_document(self):
+        self.sb.write(self.project, {f"notes/n{i}.md": f"# Note {i}\n" for i in range(7)})
+        result = self.sb.reader("show", "--repo-only", "--cwd", str(self.project), "--since", FUTURE,
+                                "--section", "Project documents", "--all")
+        paths = ranked_paths(result.stdout)
+        self.assertEqual(len(paths), 8, result.stdout)
+        self.assertNotIn("more documents", result.stdout)
+        capped = self.sb.reader("show", "--repo-only", "--cwd", str(self.project), "--since", FUTURE).stdout
+        self.assertEqual(len(ranked_paths(capped)), 5)
+        self.assertIn("3 more documents", capped)
+
     def test_every_timestamp_carries_a_utc_offset(self):
         result = self.sb.reader("show", "--repo-only", "--cwd", str(self.project))
         stamps = re.findall(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?: [+-]\d{2}:\d{2})?", result.stdout)
@@ -208,6 +234,16 @@ class NestedWorkingMemoryTests(unittest.TestCase):
         generic = set(ranked_paths(generic_out))
         self.assertTrue(generic)
         self.assertLessEqual(generic, with_profile)
+
+    def test_profile_keeps_a_generic_lesson_and_orders_it_last(self):
+        lesson = "---\ntitle: \"A lesson\"\ntype: lesson\nstatus: draft\n---\n\n# A lesson\n"
+        self.sb.write(self.root, {"docs/lesson.md": lesson})
+        with_profile = ranked_paths(self.show())
+        generic = ranked_paths(self.show("--profile", "none"))
+        self.assertIn("docs/lesson.md", generic)
+        self.assertIn("docs/lesson.md", with_profile)
+        self.assertEqual(with_profile[0], "wm/4-plans/fixture-plan.md")
+        self.assertEqual(with_profile[-1], "docs/lesson.md")
 
     def test_ticked_item_with_unknown_commit_is_a_mismatch(self):
         text = (self.wm / "4-plans/fixture-plan.md").read_text()
