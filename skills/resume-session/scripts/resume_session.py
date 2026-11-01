@@ -5,12 +5,14 @@ Standard library only, Python 3.9 or later. The reader prints Markdown to standa
 output. It writes nothing except resume notes, and only through `mark`.
 
 Usage:
-  resume_session.py mark <claude|codex> <session-id> [--cwd DIR] [--by-session ID]
-  resume_session.py list [--cwd DIR] [--harness claude|codex|all] [--days N] [--json]
-  resume_session.py show <claude|codex> <session-id|title|path> [--cwd DIR]
+  resume_session.py mark <harness> <session-id> [--cwd DIR] [--by-session ID]
+  resume_session.py list [--cwd DIR] [--harness <harness>|all] [--days N] [--json]
+  resume_session.py show <harness> <session-id|title|path> [--cwd DIR]
                          [--profile auto|none|PATH] [--section NAME] [--request N] [--all]
   resume_session.py show --repo-only [--cwd DIR] [--profile auto|none|PATH] [--since TIME]
                          [--section NAME] [--all]
+
+Harnesses: claude, codex, opencode, antigravity, grok, muse.
 
 Exit codes: 0 success, 2 ambiguous or not found, 4 transcript format not recognized,
 1 other errors.
@@ -1016,7 +1018,8 @@ SIDE_EFFECT = re.compile(
     r"|(?:^|[\s;&|])(?:ssh|scp|rsync)\s|\bcurl\b[^\n]*-X\s*(?:POST|PUT|PATCH|DELETE)"
     r"|\bdocker\s+(?:push|rm|run)\b|\bkubectl\s+(?:apply|delete)\b")
 COMMIT_OR_PR = re.compile(r"\bgit\s+(?:-C\s+\S+\s+)?(?:commit|push|merge)\b|\bgh\s+pr\s+(?:create|merge)\b")
-HARNESS_NAMES = {"claude": "Claude Code", "codex": "Codex CLI"}
+HARNESS_NAMES = {"claude": "Claude Code", "codex": "Codex CLI", "opencode": "OpenCode",
+                 "antigravity": "Antigravity CLI", "grok": "Grok Build", "muse": "Muse Code"}
 
 
 def one_line(text, limit):
@@ -1078,9 +1081,32 @@ def session_locations(t, root, locations):
     return locations
 
 
+def pid_alive(pid):
+    try:
+        os.kill(int(pid), 0)
+    except (OSError, ValueError, TypeError, OverflowError):
+        return False
+    return True
+
+
+def grok_active():
+    """Grok's open sessions: session ID to process ID, from `active_sessions.json`."""
+    try:
+        entries = json.loads((transcripts.grok_home() / "active_sessions.json").read_text())
+    except (OSError, ValueError):
+        return {}
+    return {e.get("session_id"): e.get("pid") for e in entries if isinstance(e, dict)} if isinstance(entries, list) else {}
+
+
 def running_warning(t, ctx):
+    if t.harness == "grok":
+        pid = grok_active().get(t.session_id)
+        if pid and pid_alive(pid):
+            return (f"WARNING: Grok lists this session as open (process {pid}). It may still be running. "
+                    "Continue only if the user confirms.")
+        return None
     if t.harness != "claude":
-        return "Running check: not possible for Codex sources."
+        return f"Running check: not possible for {HARNESS_NAMES[t.harness]} sources."
     folder = transcripts.claude_home() / "sessions"
     if not folder.is_dir():
         ctx.warn("The Claude Code session registry was not found, so the running check did not run")
@@ -1235,7 +1261,7 @@ def transcript_sections(t, ctx, note_line=None):
     locations = session_locations(t, root, locations)
     agents = t.of("agent")
     ctx.last_agent_time = agents[-1].time if agents else None
-    title = t.title or transcripts.codex_titles().get(t.session_id) if t.harness == "codex" else t.title
+    title = (t.title or transcripts.codex_titles().get(t.session_id)) if t.harness == "codex" else t.title
     session = [
         f"- Harness: {HARNESS_NAMES[t.harness]} {t.version or '(version not recorded)'}",
         f"- Session ID: `{t.session_id}`",
@@ -1306,7 +1332,7 @@ def render_transcript(t, sections, ctx, only=None):
 # ---------------------------------------------------------------- resume notes
 
 NOTE_DAYS = 30
-SAFE_ID = re.compile(r"^[A-Za-z0-9-]+$")
+SAFE_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def notes_dir():
@@ -1331,12 +1357,53 @@ def note_line(harness, session_id):
     return f"Already resumed in {last.get('by_harness', 'another harness')} at {last.get('time_local', last.get('time_utc'))}{more}"
 
 
+# The variable each harness sets for its shell commands, naming the running session. The
+# toolkit's OpenCode plugin sets RESUME_SESSION_CURRENT, because OpenCode's own variable does
+# not match the stored session ID.
+CURRENT_VARIABLES = [("muse", "MUSE_SESSION_ID"), ("antigravity", "ANTIGRAVITY_CONVERSATION_ID"),
+                     ("grok", "GROK_SESSION_ID"), ("codex", "CODEX_THREAD_ID"),
+                     ("claude", "CLAUDE_CODE_SESSION_ID")]
+
+
+def ancestors():
+    pids, pid = [], os.getpid()
+    for _ in range(40):
+        _, out = run(["ps", "-o", "ppid=", "-p", str(pid)], Path.cwd(), timeout=5)
+        try:
+            pid = int((out or "").strip())
+        except ValueError:
+            break
+        if pid <= 1:
+            break
+        pids.append(pid)
+    return pids
+
+
+@functools.lru_cache(maxsize=None)
+def current_sessions():
+    """(harness, session ID) pairs for the session running this command, innermost first. A
+    harness started from another inherits its variables, so the outer session is included."""
+    found = []
+    marker = os.environ.get("RESUME_SESSION_CURRENT", "")
+    if ":" in marker:
+        found.append(tuple(marker.split(":", 1)))
+    found += [(h, os.environ[v]) for h, v in CURRENT_VARIABLES if os.environ.get(v)]
+    active = {pid: sid for sid, pid in grok_active().items() if sid and pid}
+    if active:
+        found += [("grok", active[pid]) for pid in ancestors() if pid in active]
+    return tuple(dict.fromkeys(found))
+
+
 def resuming_harness():
-    """The harness running this command, from the variables it sets for its shells."""
+    """The harness running this command and its session ID, when known."""
+    current = current_sessions()
+    if current:
+        harness, session_id = current[0]
+        return HARNESS_NAMES.get(harness, "another harness"), session_id
     if os.environ.get("CLAUDECODE"):
-        return "Claude Code", os.environ.get("CLAUDE_CODE_SESSION_ID")
+        return "Claude Code", None
     if any(key.startswith("CODEX_") and key != "CODEX_HOME" for key in os.environ):
-        return "Codex", os.environ.get("CODEX_THREAD_ID")
+        return "Codex CLI", None
     return "another harness", None
 
 
@@ -1408,18 +1475,39 @@ def project_paths(cwd):
     return paths
 
 
+PLACEHOLDER_TITLES = {"", "new session", "untitled", "new conversation", "(no title)"}
+
+
+def request_line(text, limit=70):
+    text = transcripts._claude_user_text(text or "")
+    return one_line(text, limit)
+
+
+def display_title(c):
+    """The harness's title when it carries meaning, else the first request."""
+    title = one_line(c.title or "", 90)
+    first = request_line(c.first_request)
+    weak = (title.lower() in PLACEHOLDER_TITLES or title.startswith(("/", "[Pasted"))
+            or (first and title.lower() == one_line(c.first_request or "", 90).lower()))
+    return (first or title or "(no title)") if weak else title
+
+
 def list_sessions(ctx, harness, days, as_json):
     root = toplevel(ctx.cwd)
     paths = project_paths(ctx.cwd)
     found = []
-    if harness in ("claude", "all"):
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-        found += [c for c in transcripts.claude_candidates(paths) if c.last and c.last >= cutoff]
-    if harness in ("codex", "all"):
-        found += [c for c in transcripts.codex_candidates(paths, days) if not c.subagent and c.cwd]
+    for name in transcripts.HARNESSES if harness == "all" else [harness]:
+        listed, problem = transcripts.candidates(name, paths, days)
+        if problem:
+            ctx.warn(problem)
+        found += [c for c in listed if not c.subagent and c.cwd]
+    current = set(current_sessions())
+    hidden = [c for c in found if (c.harness, c.session_id) in current]
+    found = [c for c in found if (c.harness, c.session_id) not in current]
     found.sort(key=lambda c: c.last or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     if as_json:
-        print(json.dumps([{"harness": c.harness, "session_id": c.session_id, "title": c.title,
+        print(json.dumps([{"harness": c.harness, "session_id": c.session_id, "title": display_title(c),
+                           "harness_title": c.title, "last_request": c.last_request,
                            "last_activity": c.last.isoformat() if c.last else None, "cwd": c.cwd,
                            "transcript": str(c.path), "already_resumed": note_line(c.harness, c.session_id)}
                           for c in found], indent=2))
@@ -1427,12 +1515,24 @@ def list_sessions(ctx, harness, days, as_json):
         for n, c in enumerate(found, 1):
             when = local_time(c.last) if c.last else "time not recorded"
             note = note_line(c.harness, c.session_id)
-            print(f"{n}. {HARNESS_NAMES[c.harness]} | {c.title or '(no title)'} | last {when} | "
+            print(f"{n}. {HARNESS_NAMES[c.harness]} | {display_title(c)} | last {when} | "
                   f"{show_path(c.cwd, ctx)} | {c.session_id}" + (f" | {note.lower()[0]}{note[1:]}" if note else ""))
+            last = request_line(c.last_request, 110)
+            if last and last != display_title(c):
+                print(f"   Last request: {quote_line(last)}")
     else:
         print(f"No candidate session for {show_path(root or ctx.cwd, ctx)} in the last {days} days. "
               "Try a larger --days, an explicit transcript path, or `show --repo-only`.")
+    if hidden and not as_json:
+        print(f"Not listed: this session ({HARNESS_NAMES[hidden[0].harness]} {hidden[0].session_id})"
+              + (f" and {len(hidden) - 1} other running session(s) that started it" if len(hidden) > 1 else "") + ".")
+    for warning in ctx.warnings:
+        print(f"Reader warning: {warning}", file=sys.stderr)
     return 0 if found else 2
+
+
+def quote_line(text):
+    return '"' + text.replace('"', "'") + '"'
 
 
 def render(sections, ctx, only=None):
@@ -1465,17 +1565,17 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Build a resume summary.")
     sub = parser.add_subparsers(dest="command", required=True)
     marker = sub.add_parser("mark", help="write the resume note for a source session")
-    marker.add_argument("harness", choices=["claude", "codex"])
+    marker.add_argument("harness", choices=transcripts.HARNESSES)
     marker.add_argument("session_id")
     marker.add_argument("--cwd", default=os.getcwd())
     marker.add_argument("--by-session", help="the resuming session's ID, when known")
     lister = sub.add_parser("list", help="list sessions for this project")
     lister.add_argument("--cwd", default=os.getcwd())
-    lister.add_argument("--harness", choices=["claude", "codex", "all"], default="all")
+    lister.add_argument("--harness", choices=[*transcripts.HARNESSES, "all"], default="all")
     lister.add_argument("--days", type=int, default=14)
     lister.add_argument("--json", action="store_true")
     show = sub.add_parser("show", help="print the summary")
-    show.add_argument("harness", nargs="?", choices=["claude", "codex"])
+    show.add_argument("harness", nargs="?", choices=transcripts.HARNESSES)
     show.add_argument("ref", nargs="?", help="session ID, ID prefix, title, or transcript path")
     show.add_argument("--repo-only", action="store_true", help="live state and project documents only")
     show.add_argument("--cwd", default=os.getcwd())
@@ -1507,8 +1607,7 @@ def main(argv=None):
         candidates = []
         if not Path(args.ref).expanduser().is_file():
             paths = project_paths(cwd)
-            candidates = (transcripts.claude_candidates(paths) if args.harness == "claude"
-                          else transcripts.codex_candidates(paths, 365))
+            candidates, _ = transcripts.candidates(args.harness, paths, 365)
         path, matches = transcripts.locate(args.harness, args.ref, candidates)
         if path is None:
             if matches:

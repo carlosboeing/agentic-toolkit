@@ -28,10 +28,13 @@ None at the moment.
 
 ## Parked
 
+- **Deferred: a `resume-session` reader for Cursor.** Its `store.db` keeps hex-encoded metadata and content-addressed blobs, and its hooks cannot add context on a prompt, so an open tab would get no warning.
+- **Declined: `resume-session` readers for Kimi Code and Gemini CLI.** Neither is in use; both stay targets with the repository-only summary.
 - **Deferred: retire `plugins/install-superpowers.sh`.** It stays as the rollback path until the per-harness skill trigger check passes and a stable period follows.
 
 ## Recently shipped
 
+- **Resume sessions from four more harnesses (2026-11-01).** `resume-session` reads OpenCode, Antigravity CLI, Grok Build and Muse Code sessions, leaves the running session out of its list, and gives every candidate a readable title and its last request. The resume warning hook covers those harnesses too, and `sync-toolkit.sh` now registers every hook it installs, in each harness's own settings.
 - **Resume an interrupted session in a fresh session (2026-11-01).** Add `resume-session`, a manual skill and standard-library reader that continue a Claude Code or Codex session in a fresh session of any harness from project records, live Git state and the old transcript, with no handoff document. Add an optional prompt hook that tells an old session it was resumed, without blocking it.
 
 - **Lifecycle document templates (2026-11-01).** Add requirements, design, plan and retrospective templates with familiar sections, standalone technical prose and concise control/history. Support provisional design-first work and evidence-based retro follow-ups while keeping brainstorm/research formats and routine-change routes flexible.

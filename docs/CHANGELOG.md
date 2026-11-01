@@ -2,6 +2,13 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-01: resume sessions from four more harnesses
+
+- `resume-session` reads OpenCode (2.x and 1.x database tables, opened read-only), Antigravity CLI, Grok Build and Muse Code sessions, with the same summary sections as Claude Code and Codex. Subagent sessions are left out of `list`. Grok sessions get a running check from `~/.grok/active_sessions.json`.
+- `list` leaves out the session it runs in, found from each harness's shell variables, and says so. Each candidate shows the harness's title, or its first request when the title is missing or a placeholder, and a line with its last request. No model call is made.
+- `resume-session-warn` covers Muse Code (plugin `UserPromptSubmit`), Antigravity CLI (`PreInvocation`), Grok Build (`PreToolUse`) and OpenCode (a dual-API plugin that adds the line next to the latest user turn and names the running session for `list`). Probes on each installed version are recorded in the harness hooks reference.
+- `sync-toolkit.sh --harness` registers the toolkit's hooks in Claude Code, Codex, Grok, Antigravity and Muse settings through `scripts/register_hooks.py`: idempotent, backed up once, `--dry-run` aware, and leaving any file it cannot parse alone. It reports the one manual step, trusting the Codex hook in `/hooks`.
+
 ## 2026-11-01: resume an interrupted session
 
 - Add the `resume-session` skill. It continues an interrupted Claude Code or Codex session in a fresh session of any harness from a summary built with no model call: live Git state for the root, worktrees and nested repositories; ranked project documents with their scope section, first open item and latest dated section; and, from the transcript, every request, short approvals with the message they answered, the last completion claim, files changed, side-effect commands and test verdicts.

@@ -19,6 +19,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from resume_session_support import REPO, Sandbox, claude_records, claude_transcript  # noqa: E402
 
 HOOK = REPO / "hooks" / "resume-session-warn" / "resume-session-warn.sh"
+LINE = ("This session was resumed in Codex at 2026-10-31 10:47 +10:00 for the project at /home/dev/app. "
+        "Work done here can conflict with that session. "
+        "Ask the user to confirm before changing any file in this session.")
 SESSION = "11111111-2222-3333-4444-555555555555"
 
 
@@ -62,7 +65,7 @@ class NoteTests(unittest.TestCase):
 
     def test_codex_and_unknown_resumers(self):
         self.mark(env={"CODEX_THREAD_ID": "thread-1"})
-        self.assertEqual(self.note()["resumes"][0]["by_harness"], "Codex")
+        self.assertEqual(self.note()["resumes"][0]["by_harness"], "Codex CLI")
         self.sb.env.pop("CODEX_THREAD_ID")
         self.mark()
         self.assertEqual(self.note()["resumes"][1]["by_harness"], "another harness")
@@ -120,9 +123,9 @@ class HookTests(unittest.TestCase):
     def tearDown(self):
         self.sb.close()
 
-    def run_hook(self, payload, env=None):
+    def run_hook(self, payload, env=None, mode=None):
         environment = dict(self.sb.env, **(env or {}))
-        return subprocess.run(["/bin/sh", str(HOOK)], input=payload, env=environment,
+        return subprocess.run(["/bin/sh", str(HOOK), *([mode] if mode else [])], input=payload, env=environment,
                               capture_output=True, text=True)
 
     def write_note(self, harness):
@@ -138,10 +141,39 @@ class HookTests(unittest.TestCase):
             self.write_note(harness)
             result = self.run_hook(json.dumps({"session_id": SESSION, "prompt": "hi"}))
             self.assertEqual(result.returncode, 0)
-            self.assertEqual(result.stdout.strip(),
-                             "This session was resumed in Codex at 2026-10-31 10:47 +10:00 for the project at "
-                             "/home/dev/app. Work done here can conflict with that session. "
-                             "Ask the user to confirm before changing any file in this session.")
+            self.assertEqual(result.stdout.strip(), LINE)
+
+    def test_every_harness_note_and_input_key_is_read(self):
+        for harness, key in (("muse", "session_id"), ("opencode", "session_id"), ("grok", "sessionId"),
+                             ("antigravity", "conversationId")):
+            for path in self.notes.glob("*.json"):
+                path.unlink()
+            self.write_note(harness)
+            result = self.run_hook(json.dumps({key: SESSION}))
+            self.assertEqual(result.stdout.strip(), LINE, harness)
+
+    def test_grok_and_antigravity_formats(self):
+        self.write_note("grok")
+        grok = json.loads(self.run_hook(json.dumps({"sessionId": SESSION}), mode="grok").stdout)
+        self.assertEqual(grok, {"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": LINE}})
+        agy = json.loads(self.run_hook(json.dumps({"conversationId": SESSION}), mode="antigravity").stdout)
+        self.assertEqual(agy, {"injectSteps": [{"ephemeralMessage": LINE}]})
+
+    def test_antigravity_gets_an_empty_object_without_a_note(self):
+        for payload in (json.dumps({"conversationId": "no-note"}), "not json"):
+            result = self.run_hook(payload, mode="antigravity")
+            self.assertEqual((result.returncode, result.stdout.strip()), (0, "{}"))
+        result = self.run_hook(json.dumps({"sessionId": "no-note"}), mode="grok")
+        self.assertEqual((result.returncode, result.stdout), (0, ""))
+
+    def test_opencode_plugin_prints_the_same_line(self):
+        plugin = (HOOK.parent / "opencode-resume-session-warn.ts").read_text()
+        # The exact line is compared in tests/assert-opencode-resume-plugin.mjs.
+        for fragment in ("This session was resumed in", "for the project at",
+                         "Work done here can conflict with that session.",
+                         "Ask the user to confirm before changing any file in this session."):
+            self.assertIn(fragment, plugin)
+            self.assertIn(fragment, HOOK.read_text())
 
     def test_silent_and_zero_in_every_other_case(self):
         self.write_note("claude")

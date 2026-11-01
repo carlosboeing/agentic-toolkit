@@ -37,6 +37,10 @@ MERMAID_HOOK_SRC="$REPO_ROOT/hooks/validate-mermaid/validate-mermaid.sh"
 RESUME_WARN_HOOK_SRC="$REPO_ROOT/hooks/resume-session-warn/resume-session-warn.sh"
 CLAUDE_HOOK_SRCS=("$MERMAID_HOOK_SRC" "$RESUME_WARN_HOOK_SRC")
 OPENCODE_MERMAID_SRC="$REPO_ROOT/hooks/validate-mermaid/opencode-validate-mermaid.ts"
+OPENCODE_RESUME_WARN_SRC="$REPO_ROOT/hooks/resume-session-warn/opencode-resume-session-warn.ts"
+# OpenCode plugin sources and the file name each is installed as.
+OPENCODE_PLUGINS=("$OPENCODE_MERMAID_SRC:validate-mermaid.ts" "$OPENCODE_RESUME_WARN_SRC:resume-session-warn.ts")
+REGISTER_HOOKS="$REPO_ROOT/scripts/register_hooks.py"
 
 # Spokes that point at the hub
 SPOKES=(
@@ -605,7 +609,7 @@ sync_claude_hooks() {
   local dest_dir="$claude_dir/hooks"
   run mkdir -p "$dest_dir"
 
-  # Copies only; registering a hook in settings.json stays the user's choice.
+  # Copies the scripts; register_harness_hooks adds the settings entries that run them.
   local src
   for src in "${CLAUDE_HOOK_SRCS[@]}"; do
     sync_claude_hook "$src" "$dest_dir/$(basename "$src")"
@@ -681,18 +685,37 @@ sync_opencode() {
   done
   echo -e "  • OpenCode wrappers -> $out  ($written written/updated, $kept user-owned)"
 
-  # Mermaid plugin
-  local plugin_dest="$cfg/plugins/validate-mermaid.ts"
-  if [[ -f "$OPENCODE_MERMAID_SRC" ]]; then
+  # Plugins
+  local entry plugin_src plugin_dest
+  for entry in "${OPENCODE_PLUGINS[@]}"; do
+    plugin_src="${entry%%:*}"
+    plugin_dest="$cfg/plugins/${entry##*:}"
+    [[ -f "$plugin_src" ]] || continue
     run mkdir -p "$cfg/plugins"
-    if [[ ! -f "$plugin_dest" ]] || ! cmp -s "$OPENCODE_MERMAID_SRC" "$plugin_dest"; then
-      echo -e "  • OpenCode mermaid plugin -> $plugin_dest  ${C_GREEN}[UPDATING]${C_RESET}"
-      run cp "$OPENCODE_MERMAID_SRC" "$plugin_dest"
+    if [[ ! -f "$plugin_dest" ]] || ! cmp -s "$plugin_src" "$plugin_dest"; then
+      echo -e "  • OpenCode plugin -> $plugin_dest  ${C_GREEN}[UPDATING]${C_RESET}"
+      run cp "$plugin_src" "$plugin_dest"
       TOTAL_HARNESS_UPDATED=$((TOTAL_HARNESS_UPDATED + 1))
     else
-      echo -e "  • OpenCode mermaid plugin -> $plugin_dest  ${C_GREEN}[OK]${C_RESET}"
+      echo -e "  • OpenCode plugin -> $plugin_dest  ${C_GREEN}[OK]${C_RESET}"
     fi
+  done
+}
+
+register_harness_hooks() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo -e "  • Hook registration  ${C_YELLOW}(skipped: python3 not found)${C_RESET}"
+    return
   fi
+  local args=(--repo "$REPO_ROOT" --hook-dir "$HOME/.claude/hooks") out changes
+  [[ $DRY_RUN -eq 1 ]] && args+=(--dry-run)
+  if ! out="$(python3 "$REGISTER_HOOKS" "${args[@]}")"; then
+    echo -e "  • Hook registration  ${C_YELLOW}(failed; settings unchanged where it stopped)${C_RESET}"
+    return
+  fi
+  printf '%s\n' "$out" | grep -v '^changes='
+  changes="$(printf '%s\n' "$out" | sed -n 's/^changes=//p')"
+  TOTAL_HARNESS_UPDATED=$((TOTAL_HARNESS_UPDATED + ${changes:-0}))
 }
 
 verify_hub_integrity() {
@@ -717,6 +740,7 @@ sync_harness() {
   done
   sync_claude_hooks
   sync_opencode
+  register_harness_hooks
   verify_hub_integrity
   echo ""
 }

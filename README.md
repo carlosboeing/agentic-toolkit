@@ -73,7 +73,7 @@ cd agentic-toolkit
 ./scripts/sync-toolkit.sh --harness
 ```
 
-`--harness` writes only under your home directory. It copies the skills into the hub, links each installed harness to it, and copies the Mermaid validation and resume warning hooks. OpenCode loads the Mermaid plugin automatically. Claude Code needs each hook registered in `settings.json`, as described in the [validator's README](hooks/validate-mermaid/README.md) and the [resume warning README](hooks/resume-session-warn/README.md). The script skips any harness whose configuration directory does not exist.
+`--harness` writes only under your home directory. It copies the skills into the hub, links each installed harness to it, copies the Mermaid validation and resume warning hooks, and registers them in each harness's settings, as the [validator's README](hooks/validate-mermaid/README.md) and the [resume warning README](hooks/resume-session-warn/README.md) describe. Each settings file is backed up once before its first change, and `--dry-run` shows the changes first. OpenCode loads both plugins automatically. Codex needs the resume warning trusted once in `/hooks`. The script skips any harness whose configuration directory does not exist.
 
 The `--all` mode also installs Git hooks into the repositories it finds in your projects directory. Run `./scripts/sync-toolkit.sh --dry-run --all` first to see which repositories it would change.
 
@@ -151,7 +151,7 @@ These directories mirror the harness's own layout under `~/.claude/`, so each it
 |---|---|
 | [`briefing`](skills/briefing/) | Summarizes a project's current state from Git, GitHub and its tracking files |
 | [`learn`](skills/learn/) | Explains a commit, pull request, file, symbol or topic at the level you choose |
-| [`resume-session`](skills/resume-session/) | Continues an interrupted Claude Code or Codex session in a fresh session of any harness, without a handoff document |
+| [`resume-session`](skills/resume-session/) | Continues an interrupted Claude Code, Codex, OpenCode, Antigravity, Grok Build or Muse Code session in a fresh session of any harness, without a handoff document |
 | [`schedule-resume`](skills/schedule-resume/) | Schedules an agent session to resume later, for example after a usage limit resets |
 | [`repo-standards`](skills/repo-standards/) | Checks or applies a repository's governance files, workflows and branch protection |
 | [`penmark-comments`](skills/penmark-comments/) | Reviews a local Markdown file and can write inline review comments into it |
