@@ -9,6 +9,12 @@ All notable changes to this project are recorded here, newest first.
 - Add `mark` and the optional `resume-session-warn` prompt hook for Claude Code and Codex. The hook adds one line to a resumed session's context asking the agent to confirm with the user before changing files, and never blocks. `sync-toolkit.sh` copies it beside `validate-mermaid` and registers neither.
 - Record the probed hook facts in the harness hooks reference, and add a fresh-session resume row to the capability map.
 
+## 2026-11-01: lifecycle document templates
+
+- Add original requirements, technical design, implementation plan and retrospective templates alongside their quality contracts, packaged with the corresponding skills. Use readable acceptance tables, standalone technical prose and concise document control/history while preserving project overrides and proportionate detail.
+- Support provisional design-first work for architecture and feasibility constraints, with derived requirements and design reconciliation before affected delivery planning or implementation. Retain requirements-first product work, routine clear-change routes and actual review authority.
+- Add retrospective guidance for evidence, successes, problems, contextual lessons and owned improvement actions with later success checks. Preserve the distinction from artifact review, incident analysis and instruction authority. Brainstorm and research formats remain open.
+
 ## 2026-11-01: lifecycle folders and requirements capture
 
 - Include all seven numbered lifecycle folders in bootstrap templates and migration previews/applications, with `.gitkeep` in empty folders. Retain working-memory routing, collision checks and idempotent reruns. Folder presence requires no phase or artifact.

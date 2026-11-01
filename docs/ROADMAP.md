@@ -34,6 +34,8 @@ None at the moment.
 
 - **Resume an interrupted session in a fresh session (2026-11-01).** Add `resume-session`, a manual skill and standard-library reader that continue a Claude Code or Codex session in a fresh session of any harness from project records, live Git state and the old transcript, with no handoff document. Add an optional prompt hook that tells an old session it was resumed, without blocking it.
 
+- **Lifecycle document templates (2026-11-01).** Add requirements, design, plan and retrospective templates with familiar sections, standalone technical prose and concise control/history. Support provisional design-first work and evidence-based retro follow-ups while keeping brainstorm/research formats and routine-change routes flexible.
+
 - **Lifecycle folders and requirements capture (2026-11-01).** Keep all seven numbered folders visible in templates and migrations, clarify and persist new capability requirements before technical design, and add a requirements quality contract with examples. Routine clear changes retain the lightweight route.
 
 - **Migration kickoff instructions (2026-11-01).** Save fresh-session preview and continuation prompts, bounded batch selection instructions, and dated harness/model guidance in the migration runbook.
