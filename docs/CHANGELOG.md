@@ -2,6 +2,13 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-01: resume an interrupted session
+
+- Add the `resume-session` skill. It continues an interrupted Claude Code or Codex session in a fresh session of any harness from a summary built with no model call: live Git state for the root, worktrees and nested repositories; ranked project documents with their scope section, first open item and latest dated section; and, from the transcript, every request, short approvals with the message they answered, the last completion claim, files changed, side-effect commands and test verdicts.
+- Find project records by generic layers that need no documentation method, and apply the toolkit's SDLC conventions from a data profile that only adds and reorders results. A contract test fails when the profile drifts from the plan checker or the conventions guide.
+- Add `mark` and the optional `resume-session-warn` prompt hook for Claude Code and Codex. The hook adds one line to a resumed session's context asking the agent to confirm with the user before changing files, and never blocks. `sync-toolkit.sh` copies it beside `validate-mermaid` and registers neither.
+- Record the probed hook facts in the harness hooks reference, and add a fresh-session resume row to the capability map.
+
 ## 2026-11-01: lifecycle document templates
 
 - Add original requirements, technical design, implementation plan and retrospective templates alongside their quality contracts, packaged with the corresponding skills. Use readable acceptance tables, standalone technical prose and concise document control/history while preserving project overrides and proportionate detail.

@@ -10,7 +10,6 @@ None at the moment.
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
 - **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
-- **Resume an interrupted session in any harness.** When a usage limit stops a session mid-task, build a short summary from its transcript and the live repository state, then continue in a fresh session of the same or another harness without a handoff document. A prototype carried a plan-driven Codex task into Antigravity; the design comes next.
 - **Privacy guard false positive.** The pre-commit pattern for macOS home paths ignores letter case, so example code with a lowercase `users` path segment is blocked. Make that match case-sensitive.
 
 ## Future considerations
@@ -32,6 +31,8 @@ None at the moment.
 - **Deferred: retire `plugins/install-superpowers.sh`.** It stays as the rollback path until the per-harness skill trigger check passes and a stable period follows.
 
 ## Recently shipped
+
+- **Resume an interrupted session in a fresh session (2026-11-01).** Add `resume-session`, a manual skill and standard-library reader that continue a Claude Code or Codex session in a fresh session of any harness from project records, live Git state and the old transcript, with no handoff document. Add an optional prompt hook that tells an old session it was resumed, without blocking it.
 
 - **Lifecycle document templates (2026-11-01).** Add requirements, design, plan and retrospective templates with familiar sections, standalone technical prose and concise control/history. Support provisional design-first work and evidence-based retro follow-ups while keeping brainstorm/research formats and routine-change routes flexible.
 

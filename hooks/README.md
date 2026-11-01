@@ -9,6 +9,7 @@ Looking for Git hooks? Those run inside Git for anyone who commits, and they liv
 | Hook | Event | What it does |
 |---|---|---|
 | [`validate-mermaid`](validate-mermaid/) | `PostToolUse` on `Write` and `Edit` | Parses each Mermaid diagram in an edited Markdown file and returns syntax errors to the agent so it can fix them |
+| [`resume-session-warn`](resume-session-warn/) | `UserPromptSubmit` (Claude Code, Codex) | Adds one line to a session's context when [`resume-session`](../skills/resume-session/) has resumed it elsewhere, asking the agent to confirm before changing files; never blocks |
 
 The CopyDesk writing-style hook that used to live here now ships with [CopyDesk](https://github.com/carlosboeing/copydesk).
 

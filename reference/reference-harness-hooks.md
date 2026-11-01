@@ -67,6 +67,13 @@ Most harnesses let an action through when a hook fails, so a broken hook does no
 - **Gemini CLI:** stdout must be the final JSON only. Plain text on stdout breaks the parse, so write logs to stderr.
 - **Claude Code:** exit codes other than `0` and `2` are non-blocking errors.
 
+## Probed on the installed version
+
+| Harness | Finding | Checked |
+|---|---|---|
+| Claude Code 2.1.316 | `claude -p --resume <id>` passes the original `session_id` to `UserPromptSubmit`, equal to the transcript file name, and appends to the same transcript. An interactive `claude --resume` was not tested | 2026-11-01, logging hook passed with `--settings` |
+| Codex CLI 0.166.0 | `codex exec` skips an untrusted hook in a project's `.codex/hooks.json`. `codex exec --dangerously-bypass-hook-trust` runs enabled hooks without stored trust for one run, including untrusted user hooks | 2026-11-01, run and `codex exec --help` |
+
 ## Open questions
 
 Each needs a probe on the installed version before a hook depends on it.
@@ -78,3 +85,4 @@ Each needs a probe on the installed version before a hook depends on it.
 | Does Grok's `UserPromptSubmit` or `SessionStart` output reach the model? | Not documented |
 | What are OpenCode 2.x's equivalents of the 1.x chat hooks? | Only the 1.x plugin types were checked |
 | Where does Muse Code load hooks from, and in which format? | Two third-party reports disagree |
+| Does a Codex hook's `session_id` equal the rollout ID in the transcript file name? | Not documented; the 2026-11-01 probe could not run an untrusted hook |
