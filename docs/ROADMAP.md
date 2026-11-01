@@ -10,7 +10,6 @@ None at the moment.
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
 - **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
-- **Privacy guard false positive.** The pre-commit pattern for macOS home paths ignores letter case, so example code with a lowercase `users` path segment is blocked. Make that match case-sensitive.
 
 ## Future considerations
 
@@ -34,6 +33,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Privacy guard home-path match (2026-11-02).** The pre-commit guard matches the macOS home-directory prefix case-sensitively, so example code with a lowercase `users` path segment is no longer refused. The other denied terms still match in any case.
 - **Resume sessions from four more harnesses (2026-11-01).** `resume-session` reads OpenCode, Antigravity CLI, Grok Build and Muse Code sessions, leaves the running session out of its list, and gives every candidate a readable title and its last request. The resume warning hook covers those harnesses too, and `sync-toolkit.sh` now registers every hook it installs, in each harness's own settings.
 - **Resume an interrupted session in a fresh session (2026-11-01).** Add `resume-session`, a manual skill and standard-library reader that continue a Claude Code or Codex session in a fresh session of any harness from project records, live Git state and the old transcript, with no handoff document. Add an optional prompt hook that tells an old session it was resumed, without blocking it.
 

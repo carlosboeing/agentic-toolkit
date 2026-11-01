@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-02: privacy guard home-path match
+
+- The public pre-commit guard matches the macOS home-directory prefix case-sensitively, so a lowercase `users` path segment such as `/api/users/42` is accepted. The workbench, repository-name and commercial terms still match in any case. Tests cover both.
+
 ## 2026-11-01: resume sessions from four more harnesses
 
 - `resume-session` reads OpenCode (2.x and 1.x database tables, opened read-only), Antigravity CLI, Grok Build and Muse Code sessions, with the same summary sections as Claude Code and Codex. Subagent sessions are left out of `list`. Grok sessions get a running check from `~/.grok/active_sessions.json`.
