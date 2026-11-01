@@ -34,6 +34,8 @@ PRE_COMMIT_SRC="$REPO_ROOT/git-hooks/private-workbench-guard/pre-commit"
 
 # Canonical lifecycle hook sources
 MERMAID_HOOK_SRC="$REPO_ROOT/hooks/validate-mermaid/validate-mermaid.sh"
+RESUME_WARN_HOOK_SRC="$REPO_ROOT/hooks/resume-session-warn/resume-session-warn.sh"
+CLAUDE_HOOK_SRCS=("$MERMAID_HOOK_SRC" "$RESUME_WARN_HOOK_SRC")
 OPENCODE_MERMAID_SRC="$REPO_ROOT/hooks/validate-mermaid/opencode-validate-mermaid.ts"
 
 # Spokes that point at the hub
@@ -369,7 +371,7 @@ run_wizard() {
   local skill_count
   skill_count="$(find "$SKILLS_SRC" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
   printf "  • %-45s %b[READY]%b\n" "$skill_count Authored Skills (hub ~/.claude/skills & spokes)" "$C_GREEN" "$C_RESET"
-  printf "  • %-45s %b[READY]%b\n" "Claude Code Lifecycle Hooks (validate-mermaid.sh)" "$C_GREEN" "$C_RESET"
+  printf "  • %-45s %b[READY]%b\n" "Claude Code Hooks (Mermaid, resume warning)" "$C_GREEN" "$C_RESET"
   printf "  • %-45s %b[READY]%b\n" "OpenCode Command Wrappers & Mermaid Plugin" "$C_GREEN" "$C_RESET"
 
   echo ""
@@ -601,22 +603,32 @@ sync_claude_hooks() {
   fi
 
   local dest_dir="$claude_dir/hooks"
-  local dest="$dest_dir/validate-mermaid.sh"
   run mkdir -p "$dest_dir"
 
-  if [[ ! -f "$MERMAID_HOOK_SRC" ]]; then
+  # Copies only; registering a hook in settings.json stays the user's choice.
+  local src
+  for src in "${CLAUDE_HOOK_SRCS[@]}"; do
+    sync_claude_hook "$src" "$dest_dir/$(basename "$src")"
+  done
+}
+
+sync_claude_hook() {
+  local src="$1"
+  local dest="$2"
+
+  if [[ ! -f "$src" ]]; then
     echo -e "  • $dest  ${C_YELLOW}(skipped: source missing)${C_RESET}"
     return
   fi
 
   if [[ ! -f "$dest" ]]; then
     echo -e "  • Claude hook -> $dest  ${C_GREEN}[NEW]${C_RESET}"
-    run cp "$MERMAID_HOOK_SRC" "$dest"
+    run cp "$src" "$dest"
     run chmod +x "$dest"
     TOTAL_HARNESS_UPDATED=$((TOTAL_HARNESS_UPDATED + 1))
-  elif ! cmp -s "$MERMAID_HOOK_SRC" "$dest"; then
+  elif ! cmp -s "$src" "$dest"; then
     echo -e "  • Claude hook -> $dest  ${C_YELLOW}[UPDATING]${C_RESET}"
-    run cp "$MERMAID_HOOK_SRC" "$dest"
+    run cp "$src" "$dest"
     run chmod +x "$dest"
     TOTAL_HARNESS_UPDATED=$((TOTAL_HARNESS_UPDATED + 1))
   elif [[ ! -x "$dest" ]]; then

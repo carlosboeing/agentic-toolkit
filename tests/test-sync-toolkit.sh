@@ -93,6 +93,7 @@ _assert "tier 1 (--harness) exits 0" 0 $?
 _assert_symlink "spoke ~/.agents/skills links to hub" "$MOCK_HOME/.agents/skills" "$MOCK_HUB"
 _assert_symlink "spoke ~/.gemini/config/skills links to hub" "$MOCK_HOME/.gemini/config/skills" "$MOCK_HUB"
 _assert_executable "claude hook validate-mermaid.sh is executable" "$MOCK_HOME/.claude/hooks/validate-mermaid.sh"
+_assert_executable "claude hook resume-session-warn.sh is executable" "$MOCK_HOME/.claude/hooks/resume-session-warn.sh"
 _assert_file "opencode mermaid plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-mermaid.ts"
 
 # Phase skills must remain complete when copied to the hub and linked spokes.
