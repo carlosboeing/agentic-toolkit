@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "name": "resume-session-warn",
+  "displayName": "resume-session warning",
+  "version": "1.0.0",
+  "description": "Tells a Muse session that resume-session continued it in another session, and asks the agent to confirm before changing files. Never blocks.",
+  "compat": {
+    "source": "native",
+    "manifestDir": ".muse-plugin"
+  },
+  "capabilities": {
+    "hooks": [
+      {
+        "id": "user-prompt-submit",
+        "event": "UserPromptSubmit",
+        "command": ["sh", "hooks/resume-session-warn.sh"],
+        "timeoutMs": 5000
+      }
+    ]
+  }
+}

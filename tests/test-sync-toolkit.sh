@@ -95,6 +95,9 @@ _assert_symlink "spoke ~/.gemini/config/skills links to hub" "$MOCK_HOME/.gemini
 _assert_executable "claude hook validate-mermaid.sh is executable" "$MOCK_HOME/.claude/hooks/validate-mermaid.sh"
 _assert_executable "claude hook resume-session-warn.sh is executable" "$MOCK_HOME/.claude/hooks/resume-session-warn.sh"
 _assert_file "opencode mermaid plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-mermaid.ts"
+_assert_file "opencode resume-session-warn plugin exists" "$MOCK_HOME/.config/opencode/plugins/resume-session-warn.ts"
+_assert_eq "claude settings register resume-session-warn" "1" \
+  "$(grep -c 'resume-session-warn.sh' "$MOCK_HOME/.claude/settings.json" 2>/dev/null || echo 0)"
 
 # Phase skills must remain complete when copied to the hub and linked spokes.
 for phase_skill in start-brainstorm start-research start-requirements start-design start-planning start-debugging start-implementation start-review start-retrospective migrate-lifecycle tdd receiving-code-review research handoff; do
@@ -643,6 +646,11 @@ EOF
   plugin_rc=$?
   printf '%s\n' "$plugin_out"
   _assert "opencode plugin shape and behavior against both APIs (V1 + V2)" 0 "$plugin_rc"
+
+  resume_out="$($TS_RUNNER "$TEST_DIR/assert-opencode-resume-plugin.mjs" "$MOCK_HOME/.config/opencode/plugins/resume-session-warn.ts" 2>&1)"
+  resume_rc=$?
+  printf '%s\n' "$resume_out"
+  _assert "opencode resume-session-warn plugin against both APIs (V1 + V2)" 0 "$resume_rc"
 fi
 
 

@@ -31,10 +31,10 @@ This map is the index of harness capabilities. Where a capability has its own re
 | Skills directory | `~/.claude/skills` (the hub) | `~/.agents/skills` | `~/.gemini/config/skills` | `~/.agents/skills` | The hub, through Claude compatibility | The hub and `~/.agents/skills` |
 | Hooks that can block the agent ([detail](reference-harness-hooks.md)) | Yes, including after a tool runs | Yes, before a tool runs, on prompt submit and on stop | Before a tool runs, and on stop | Before a tool runs, on stop and on prompt submit | Before a tool runs; stop is disputed | Before a tool runs |
 | Hooks that can rewrite a tool call ([detail](reference-harness-hooks.md)) | Yes | Yes, before a tool runs | Yes, before a tool runs | No | Disputed | Yes, through a plugin |
-| Hooks that add context on each prompt ([detail](reference-harness-hooks.md)) | Yes | Yes | Yes, before each model call | Disputed | Not documented | Through a plugin, on 1.x |
+| Hooks that add context on each prompt ([detail](reference-harness-hooks.md)) | Yes | Yes | Yes, before each model call | Disputed | No; `PreToolUse` context arrives with the tool result | Through a plugin, on 1.x and 2.x |
 | RTK mode | Automatic hook | `rtk` prefix in instructions | `rtk` prefix in instructions | `rtk` prefix in instructions | `rtk` prefix in instructions | Automatic plugin |
 | Headless resume | `claude --resume <id> --print` | `codex exec resume <id>` | `agy --conversation <id> --print` | `kimi --session <id> -p` | Not integrated | `opencode run --session <id>` |
-| Resume in a fresh session ([`resume-session`](../skills/resume-session/)) | Reads its transcripts; can be the target | Reads its transcripts; can be the target | Target only; its sessions get the repository-only summary | Target only; repository-only | Target only; repository-only | Target only; repository-only |
+| Resume in a fresh session ([`resume-session`](../skills/resume-session/)) | Reads its transcripts; can be the target | Reads its transcripts; can be the target | Reads its CLI transcripts; can be the target | Target only; its sessions get the repository-only summary | Reads its transcripts; can be the target | Reads its database; can be the target |
 
 ## Claude Code
 

@@ -263,7 +263,7 @@ class CodexSummaryTests(ProjectCase):
         self.assertIn("Result line: FAILED (failures=1)", out)
         self.assertIn("- [in_progress] Fix test", out)
         self.assertIn("file reads: partial", out)
-        self.assertIn("Running check: not possible for Codex sources.", out)
+        self.assertIn("Running check: not possible for Codex CLI sources.", out)
         self.assertIn("unknown type `brand-new-type`", out)
         self.assertNotIn("HOSTILE-CODEX-OUTPUT", out)
         self.assertIn("written or edited by the session", out)

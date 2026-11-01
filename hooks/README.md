@@ -9,13 +9,15 @@ Looking for Git hooks? Those run inside Git for anyone who commits, and they liv
 | Hook | Event | What it does |
 |---|---|---|
 | [`validate-mermaid`](validate-mermaid/) | `PostToolUse` on `Write` and `Edit` | Parses each Mermaid diagram in an edited Markdown file and returns syntax errors to the agent so it can fix them |
-| [`resume-session-warn`](resume-session-warn/) | `UserPromptSubmit` (Claude Code, Codex) | Adds one line to a session's context when [`resume-session`](../skills/resume-session/) has resumed it elsewhere, asking the agent to confirm before changing files; never blocks |
+| [`resume-session-warn`](resume-session-warn/) | `UserPromptSubmit` (Claude Code, Codex, Muse Code), `PreInvocation` (Antigravity CLI), `PreToolUse` (Grok Build), an OpenCode plugin | Adds one line to a session's context when [`resume-session`](../skills/resume-session/) has resumed it elsewhere, asking the agent to confirm before changing files; never blocks |
 
 The CopyDesk writing-style hook that used to live here now ships with [CopyDesk](https://github.com/carlosboeing/copydesk).
 
 ## Install a hook in Claude Code
 
-1. Copy the script into place and make it executable. `scripts/sync-toolkit.sh --harness` does this for you, or copy it by hand:
+`scripts/sync-toolkit.sh --harness` does both steps below for every hook in this directory, and registers the toolkit's hooks in the other harnesses it finds as each hook's README describes. By hand:
+
+1. Copy the script into place and make it executable:
 
    ```bash
    hook=validate-mermaid
