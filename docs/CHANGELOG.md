@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-02: narrower `rtk proxy` rule
+
+- The global brief keeps `rtk proxy` for exact bytes, test runs and filter debugging, and sends `git`, `gh`, `rg`, `grep`, `find` and `ls` through the plain `rtk` prefix. It also asks for a line range instead of a whole large file. In a 14-day Codex sample, 89% of shell calls used `rtk proxy`; whole-file reads averaged 29,000 characters and made up half of the measured output.
+
 ## 2026-11-02: privacy guard home-path match
 
 - The public pre-commit guard matches the macOS home-directory prefix case-sensitively, so a lowercase `users` path segment such as `/api/users/42` is accepted. The workbench, repository-name and commercial terms still match in any case. Tests cover both.

@@ -160,11 +160,11 @@ Use `rtk` for shell commands to conserve tokens.
 
 - Rely on trusted RTK hooks where available (Claude Code, Cursor).
 - Explicitly prefix shell commands with `rtk` on Codex, Antigravity/Agy, Kimi Code, and Grok Build TUI.
-- Use `rtk proxy <cmd>` when unfiltered debugging output is required.
+- Use `rtk proxy <cmd>` only for exact bytes or to debug a filter. For `git`, `gh`, `rg`, `grep`, `find` and `ls`, use the plain `rtk` prefix so the filter applies. Run tests through `rtk proxy` so the verdict line stays.
 
 ## RTK filtering — verbatim-critical files
 
-RTK filters output to save tokens. For verbatim-critical files (specs, plans, templates, YAML frontmatter), re-read exact bytes using native file-read tools or `rtk proxy` before acting. Never edit from filtered or truncated output.
+RTK filters output to save tokens. For verbatim-critical files (specs, plans, templates, YAML frontmatter), re-read exact bytes using native file-read tools or `rtk proxy` before acting. From a large file, read only the line range you need, such as `rtk proxy sed -n '40,90p' <file>`. Never edit from filtered or truncated output.
 
 ## Public-repo working-memory routing
 
