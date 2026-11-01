@@ -1,6 +1,12 @@
 # resume-session
 
-Continue an interrupted Claude Code or Codex session in a fresh session of any harness. A usage limit can stop a session mid-task. Resuming that same session later sends its whole context again, and a handoff document needs a session that still has quota. This skill builds a deterministic summary instead, with no model call, and the fresh session works from it.
+Continue a Claude Code or Codex session in a fresh session of any harness. Use it when:
+
+- a usage limit stopped the session mid-task;
+- the session sat idle for more than an hour, so its prompt cache has expired;
+- you want to move the work to another harness, for example one with spare quota.
+
+In each case, resuming the same session sends its whole context again, and a handoff document needs a session that still has quota. This skill builds a deterministic summary instead, with no model call, and the fresh session works from it. Within an hour of the last activity, the native resume is usually cheaper, because its cache is still warm.
 
 The summary has three sources:
 

@@ -2,9 +2,9 @@
 name: resume-session
 description: |
   Use only when the user explicitly invokes /resume-session, $resume-session, or asks
-  to run the resume-session skill. It continues an interrupted Claude Code or Codex
-  session in this fresh session from a summary of project records, live Git state, and
-  the old transcript. Do not invoke automatically for "continue", "resume", or session
+  to run the resume-session skill. It continues a Claude Code or Codex session in this
+  fresh session, after a usage limit, a long idle gap, or a switch of harness, from a
+  summary of project records, live Git state, and the old transcript. Do not invoke automatically for "continue", "resume", or session
   starts.
 disable-model-invocation: true
 argument-hint: "[claude|codex] [session-id|title|path] [report]"
