@@ -23,9 +23,11 @@
 
 set -uo pipefail
 
-# Denied patterns: .workbench paths, workbench repo name, local /Users/ paths,
-# and commercial strategy terms.
-PATTERN='\.workbench|agentic-toolkit-workbench|/Users/|hosted (service|tier)|monetiz|monetis'
+# Denied patterns: .workbench paths, workbench repo name and commercial strategy
+# terms, matched in any case. The macOS home path is matched case-sensitively so
+# a lowercase `users` path segment in example code is not refused.
+PATTERN='\.workbench|agentic-toolkit-workbench|hosted (service|tier)|monetiz|monetis'
+HOME_PATTERN='/Users/'
 
 # Files that state or test the rules and therefore legitimately mention denied terms.
 _skip() {
@@ -61,9 +63,11 @@ reported=0
 while IFS= read -r f; do
   [ -n "$f" ] || continue
   _skip "$f" && continue
-  hits="$(git diff --cached --unified=0 -- "$f" \
-            | grep -E '^\+' | grep -v '^+++' \
-            | grep -inE "$PATTERN" || true)"
+  added="$(git diff --cached --unified=0 -- "$f" \
+            | grep -E '^\+' | grep -v '^+++' || true)"
+  hits="$({ printf '%s\n' "$added" | grep -inE "$PATTERN"
+            printf '%s\n' "$added" | grep -nE "$HOME_PATTERN"; } \
+            | sort -t: -k1,1n -u || true)"
   [ -n "$hits" ] || continue
   if [ "$reported" -eq 0 ]; then
     printf '\npre-commit: refusing — added lines carry workbench vocabulary.\n\n' >&2

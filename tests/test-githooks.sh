@@ -104,8 +104,14 @@ _assert_eq "denied term 'agentic-toolkit-workbench' is refused" "refused" \
 _assert_eq "denied term '/Users/' is refused" "refused" \
   "$(test_staged_content "note.md" "Local checkout at /Users/carlos/Projects/repo.")"
 
+_assert_eq "lowercase 'users' path segment is accepted" "accepted" \
+  "$(test_staged_content "api.md" "GET /api/users/42 returns one profile.")"
+
 _assert_eq "denied term 'hosted service' is refused" "refused" \
   "$(test_staged_content "note.md" "We will offer a hosted service.")"
+
+_assert_eq "denied term 'Hosted Service' in title case is refused" "refused" \
+  "$(test_staged_content "note.md" "Plans for a Hosted Service.")"
 
 _assert_eq "denied term 'hosted tier' is refused" "refused" \
   "$(test_staged_content "note.md" "Moving users to the hosted tier.")"
