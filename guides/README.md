@@ -30,6 +30,7 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 | Guide | Use it to |
 |---|---|
 | [`guide-project-structure-and-conventions.md`](guide-project-structure-and-conventions.md) | Organize project documents, frontmatter, roadmaps and decision records |
+| [`guide-lifecycle-documentation.md`](guide-lifecycle-documentation.md) | Use requirements, design, plan and retrospective templates with standalone technical prose, control/history and flexible entry routes |
 | [`guide-creating-claude-code-skills.md`](guide-creating-claude-code-skills.md) | Design a skill: when it activates, its commands, instructions, file layout and failure behavior |
 | [`guide-penmark-agent-integration.md`](guide-penmark-agent-integration.md) | Install and test the Penmark inline-comment workflow |
 

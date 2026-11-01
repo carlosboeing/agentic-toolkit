@@ -44,7 +44,7 @@ Read the project instructions the harness provides, and the artifacts they name,
 
 | Need | Look in |
 |---|---|
-| Planning method | A project-named planner or plan template; else the plan contract plus how this repository already writes plans |
+| Planning method | A project-named planner or plan template; else the plan contract and default [plan template](references/plan-template.md) |
 | Plan content contract | A project-named contract when one is named; else [references/plan-contract.md](references/plan-contract.md) beside this skill's installed `SKILL.md` |
 | Where plans go | Explicit project convention, then existing plan patterns |
 | What "ready to plan" means | The project's approval, status, or review rules |
@@ -73,7 +73,7 @@ An explicit current request or accepted in-session agreement can own requirement
 
 ### 5. Write the plan
 
-The plan contract is the quality bar; the project's method and presentation decide the prose. A plan records decisions, not code: give exact interfaces or commands only where a failure mode needs them, and keep its length in proportion to the design.
+The plan contract is the quality bar; use the default [plan template](references/plan-template.md) unless the project supplies its own. Keep technical prose standalone, control information concise, and material decisions in document history. A design-first source must be reconciled with accepted requirements before affected delivery planning. A plan records decisions, not code: give exact interfaces or commands only where a failure mode needs them, and keep its length in proportion to the design.
 
 - Argue from the named design, and link it so an implementer can find it.
 - Check the design against the product and architecture decisions it or the project names; report an omitted or conflicting one before planning that part.
