@@ -11,12 +11,16 @@ adds the entries that make each harness run them:
   Codex CLI     ~/.codex/hooks.json: resume-session-warn (UserPromptSubmit) and
                 `rtk hook codex` (PreToolUse)
   Grok Build    ~/.grok/hooks/resume-session-warn.json (PreToolUse)
-  Antigravity   ~/.gemini/config/hooks.json: resume-session-warn (PreInvocation) and
-                `rtk hook antigravity` (PreToolUse)
+  Antigravity   ~/.gemini/config/hooks.json: resume-session-warn (PreInvocation)
   Muse Code     a local plugin, installed and approved with the muse CLI
 
-The RTK entries rewrite shell commands to their `rtk` form. They are added only when `rtk`
-is on PATH and its `rtk hook --help` lists that processor (RTK 0.50 and later for Codex).
+RTK rewrites shell commands to their `rtk` form. Its own installer sets that up for Claude
+Code, Antigravity (a plugin) and OpenCode (a plugin), and this script only reports a missing
+plugin with the command to run. For Codex, `rtk init --codex` also writes into AGENTS.md,
+which here links to the shared instruction file, so this script registers `rtk hook codex`
+itself when `rtk hook --help` lists it (RTK 0.50 and later). It also compares RTK's current
+agent instructions with scripts/rtk-awareness.snapshot.md, the text the shared instruction
+file's RTK section follows, and reports a difference.
 
 Rules: an entry whose command already names the script is left as it is, so a second run
 changes nothing. A settings file is copied to <file>.agentic-toolkit.bak once, before its
@@ -138,8 +142,48 @@ def rtk_processors():
     return rtk, set(re.findall(r"^\s+([a-z]+)\s", done.stdout, re.M))
 
 
-def antigravity(home, run, name, spec, detail):
-    label = f"Antigravity CLI: {name}"
+def rtk_plugins(home, processors, run):
+    """Report RTK's own Antigravity and OpenCode plugins when missing; RTK's installer writes them."""
+    if "antigravity" in processors and (home / ".gemini" / "antigravity-cli").is_dir():
+        if (home / ".gemini" / "config" / "plugins" / "rtk" / "hooks.json").is_file():
+            run.say("Antigravity CLI: RTK plugin", "OK")
+        else:
+            run.say("Antigravity CLI: RTK plugin", "ACTION", "run `rtk init -g --agent antigravity`")
+    opencode = Path(os.environ.get("XDG_CONFIG_HOME") or home / ".config") / "opencode"
+    if "opencode" in processors and opencode.is_dir():
+        plugin = opencode / "plugins" / "rtk.ts"
+        if plugin.is_file() and "rtk hook opencode" in plugin.read_text(errors="replace"):
+            run.say("OpenCode: RTK plugin", "OK")
+        else:
+            run.say("OpenCode: RTK plugin", "ACTION", "run `rtk init -g --opencode --hook-only`")
+
+
+def rtk_awareness(rtk, processors, repo, run):
+    """Compare RTK's current agent instructions with the snapshot the shared brief follows."""
+    label = "RTK agent instructions"
+    if "antigravity" not in processors:
+        return
+    snapshot = repo / "scripts" / "rtk-awareness.snapshot.md"
+    with tempfile.TemporaryDirectory() as tmp:
+        # RTK writes its instruction text into the Antigravity plugin it installs; a throwaway
+        # home keeps the real settings untouched.
+        env = {k: v for k, v in os.environ.items() if k not in ("CLAUDE_CONFIG_DIR", "CODEX_HOME", "XDG_CONFIG_HOME")}
+        subprocess.run([rtk, "init", "-g", "--agent", "antigravity"], cwd=tmp, env={**env, "HOME": tmp},
+                       stdin=subprocess.DEVNULL, capture_output=True)
+        current = Path(tmp) / ".gemini" / "config" / "plugins" / "rtk" / "rules" / "AGENTS.md"
+        text = current.read_text() if current.is_file() else None
+    if text is None:
+        run.say(label, "SKIPPED", "`rtk init -g --agent antigravity` wrote no instruction file")
+    elif text == snapshot.read_text():
+        run.say(label, "OK")
+    else:
+        run.say(label, "ACTION", "RTK's agent instructions changed; compare them with "
+                                 "scripts/rtk-awareness.snapshot.md, update the RTK section of "
+                                 "instructions/CLAUDE.md, then the snapshot")
+
+
+def antigravity(home, hook_dir, run):
+    label = "Antigravity CLI: resume-session-warn"
     if not (home / ".gemini" / "antigravity-cli").is_dir():
         run.say(label, "SKIPPED", "Antigravity CLI not installed")
         return
@@ -155,11 +199,12 @@ def antigravity(home, run, name, spec, detail):
                                   "Antigravity cannot parse, so none of its hooks load. Not changed; "
                                   "convert those entries to `{\"<name>\": {\"<event>\": [...]}}` first")
         return
-    if name in data:
+    if "resume-session-warn" in data:
         run.say(label, "OK")
         return
-    data[name] = spec
-    run.change(label, detail)
+    data["resume-session-warn"] = {"PreInvocation": [
+        {"type": "command", "command": f"sh {hook_dir / WARN} antigravity", "timeout": 5}]}
+    run.change(label, "(PreInvocation)")
     run.write(path, dump(data))
 
 
@@ -253,11 +298,10 @@ def main(argv=None):
         run.say("Codex CLI", "SKIPPED", "~/.codex not present")
 
     grok(home, args.hook_dir, run)
-    antigravity(home, run, "resume-session-warn", {"PreInvocation": [
-        {"type": "command", "command": f"sh {warn} antigravity", "timeout": 5}]}, "(PreInvocation)")
-    if "antigravity" in processors:
-        antigravity(home, run, "rtk", {"PreToolUse": [{"matcher": "run_command", "hooks": [
-            {"type": "command", "command": f"{rtk} hook antigravity", "timeout": 10}]}]}, "(PreToolUse)")
+    antigravity(home, args.hook_dir, run)
+    rtk_plugins(home, processors, run)
+    if rtk:
+        rtk_awareness(rtk, processors, args.repo, run)
     muse(home, args.repo, run)
     print(f"changes={run.changes}")
     return 0

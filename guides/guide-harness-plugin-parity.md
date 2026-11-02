@@ -104,7 +104,7 @@ Kimi reads the shared `~/.agents/` directory natively, so the hub and the shared
 | Hooks | JavaScript plugin modules in `~/.config/opencode/plugins/`. On 2.x a plugin default-exports a definition with `id` and `setup`; on 1.x the module returns a hooks map. One module can serve both APIs with a dual entrypoint: `id` plus `setup` for 2.x, `server()` for 1.x from 1.18.29. What each hook can do is in [harness hooks](../reference/reference-harness-hooks.md) |
 | Mermaid validation | `scripts/sync-toolkit.sh --harness` copies `hooks/validate-mermaid/opencode-validate-mermaid.ts` to `plugins/validate-mermaid.ts`. Dual-API: OpenCode 2.x and 1.x from 1.18.29 |
 | Plugins | The `plugins` array (named `plugin` on 1.x) accepts npm and Git sources. Files placed in `plugins/` load without a configuration entry. |
-| RTK | `rtk init -g --opencode` writes `~/.config/opencode/plugins/rtk.ts`. Checked 2026-09-23: that file is V1-format and does not load on OpenCode 2.x, which reports `Plugin must export a default definition`; porting it is an RTK-side change |
+| RTK | `rtk init -g --opencode --hook-only` writes `~/.config/opencode/plugins/rtk.ts`, which passes each command to `rtk hook opencode`. RTK 0.52.0 added OpenCode 2.x support; with RTK 1.1.0 it rewrote commands on OpenCode 2.1.4 (checked 2026-11-02). The 1.x-only plugin recorded on 2026-09-23 is superseded |
 | Providers | `disabled_providers` turns off a provider that an environment variable enabled by accident |
 | Agents and commands | `~/.config/opencode/agent/<name>.md` and `command/<name>.md`, as Markdown with frontmatter. On 2.x the canonical command directory is `commands/`, and `command/` is still discovered |
 

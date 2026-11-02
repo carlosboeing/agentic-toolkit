@@ -34,7 +34,7 @@ None at the moment.
 
 ## Recently shipped
 
-- **RTK rewrite hooks for Codex and Antigravity (2026-11-02).** `sync-toolkit.sh --harness` registers `rtk hook codex` and `rtk hook antigravity` when `rtk` is on `PATH`, so those harnesses no longer type the `rtk` prefix. Muse keeps the prefix: it applies a rewrite only for commands RTK auto-allows.
+- **RTK rewrite in Codex, Antigravity and OpenCode (2026-11-02).** Those harnesses no longer type the `rtk` prefix. Antigravity and OpenCode use RTK's own plugins; sync registers only the Codex hook, reports a missing plugin, and warns when RTK's agent text changes. Muse keeps the prefix: it applies a rewrite only for commands RTK auto-allows.
 - **Narrower `rtk proxy` rule (2026-11-02).** The global brief limits `rtk proxy` to exact bytes, test runs and filter debugging, routes `git`, `gh`, `rg`, `grep`, `find` and `ls` through RTK's filters, and asks for line ranges from large files.
 - **Privacy guard home-path match (2026-11-02).** The pre-commit guard matches the macOS home-directory prefix case-sensitively, so example code with a lowercase `users` path segment is no longer refused. The other denied terms still match in any case.
 - **Resume sessions from four more harnesses (2026-11-01).** `resume-session` reads OpenCode, Antigravity CLI, Grok Build and Muse Code sessions, leaves the running session out of its list, and gives every candidate a readable title and its last request. The resume warning hook covers those harnesses too, and `sync-toolkit.sh` now registers every hook it installs, in each harness's own settings.

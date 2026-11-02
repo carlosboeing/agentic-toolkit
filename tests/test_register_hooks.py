@@ -27,8 +27,13 @@ exit 0
 """
 
 FAKE_RTK = """#!/bin/sh
-# Fake rtk: lists the hook processors RTK 1.1 has.
-if [ "$1 $2" = "hook --help" ]; then printf 'Commands:\\n  claude  x\\n  codex  x\\n  antigravity  x\\n'; fi
+# Fake rtk: lists the hook processors RTK 1.1 has, and writes $FAKE_AWARENESS as the agent
+# text of the Antigravity plugin that `rtk init -g --agent antigravity` installs.
+if [ "$1 $2" = "hook --help" ]; then printf 'Commands:\\n  claude  x\\n  codex  x\\n  antigravity  x\\n  opencode  x\\n'; fi
+if [ "$1 $2 $3 $4" = "init -g --agent antigravity" ]; then
+  mkdir -p "$HOME/.gemini/config/plugins/rtk/rules"
+  cat "$FAKE_AWARENESS" > "$HOME/.gemini/config/plugins/rtk/rules/AGENTS.md"
+fi
 exit 0
 """
 
@@ -166,18 +171,37 @@ class RtkTests(RegisterCase):
         self.rtk = self.home / "bin" / "rtk"
         self.rtk.write_text(FAKE_RTK)
         self.rtk.chmod(0o755)
+        self.env["FAKE_AWARENESS"] = str(REPO / "scripts" / "rtk-awareness.snapshot.md")
+        (self.home / ".config" / "opencode").mkdir(parents=True)
 
-    def test_rtk_rewrite_hooks_are_registered(self):
+    def test_codex_rtk_hook_is_registered(self):
         out = self.register()
-        self.assertEqual(self.changes(out), 8, out)
+        self.assertEqual(self.changes(out), 7, out)
         codex = self.json(".codex/hooks.json")
         self.assertEqual(codex["hooks"]["PreToolUse"], [
             {"matcher": "Bash", "hooks": [{"type": "command", "command": f"{self.rtk} hook codex", "timeout": 10}]}])
-        agy = self.json(".gemini/config/hooks.json")
-        self.assertEqual(agy["rtk"], {"PreToolUse": [{"matcher": "run_command", "hooks": [
-            {"type": "command", "command": f"{self.rtk} hook antigravity", "timeout": 10}]}]})
-        self.assertIn("resume-session-warn", agy)
+        self.assertNotIn("rtk", self.json(".gemini/config/hooks.json"))
         self.assertEqual(self.changes(self.register()), 0)
+
+    def test_missing_rtk_plugins_are_reported(self):
+        out = self.register()
+        self.assertRegex(out, r"Antigravity CLI: RTK plugin.*\[ACTION\] run `rtk init -g --agent antigravity`")
+        self.assertRegex(out, r"OpenCode: RTK plugin.*\[ACTION\] run `rtk init -g --opencode --hook-only`")
+        (self.home / ".gemini/config/plugins/rtk").mkdir(parents=True)
+        (self.home / ".gemini/config/plugins/rtk/hooks.json").write_text("{}")
+        (self.home / ".config/opencode/plugins").mkdir(parents=True)
+        (self.home / ".config/opencode/plugins/rtk.ts").write_text('run(["hook", "opencode"]) // rtk hook opencode')
+        out = self.register()
+        self.assertRegex(out, r"Antigravity CLI: RTK plugin.*\[OK\]")
+        self.assertRegex(out, r"OpenCode: RTK plugin.*\[OK\]")
+
+    def test_changed_rtk_instructions_are_reported(self):
+        self.assertRegex(self.register(), r"RTK agent instructions.*\[OK\]")
+        changed = self.home / "changed.md"
+        changed.write_text("# Command output\n\nNew wording.\n")
+        self.env["FAKE_AWARENESS"] = str(changed)
+        self.assertRegex(self.register(), r"RTK agent instructions.*\[ACTION\]")
+        self.assertFalse((self.home / ".gemini/config/plugins/rtk").exists())
 
     def test_existing_rtk_entries_are_kept(self):
         codex = self.home / ".codex" / "hooks.json"
@@ -190,16 +214,16 @@ class RtkTests(RegisterCase):
         self.rtk.write_text("#!/bin/sh\nprintf 'Commands:\\n  claude  x\\n'\n")
         out = self.register()
         self.assertRegex(out, r"Codex CLI: rtk hook codex.*\[SKIPPED\]")
-        self.assertNotIn("rtk", self.json(".gemini/config/hooks.json"))
+        self.assertNotIn("PreToolUse", self.json(".codex/hooks.json")["hooks"])
 
     def test_codex_trust_covers_the_rtk_hook(self):
         (self.home / ".codex" / "config.toml").write_text(
             '[hooks.state."user:hooks.json:user_prompt_submit:0:0"]\ntrusted_hash = "sha256:x"\n')
-        self.assertIn("ACTION", self.register())
+        self.assertIn("Codex CLI: hook trust", self.register())
         (self.home / ".codex" / "config.toml").write_text(
             '[hooks.state."user:hooks.json:user_prompt_submit:0:0"]\ntrusted_hash = "sha256:x"\n'
             '[hooks.state."user:hooks.json:pre_tool_use:0:0"]\ntrusted_hash = "sha256:y"\n')
-        self.assertNotIn("ACTION", self.register())
+        self.assertNotIn("Codex CLI: hook trust", self.register())
 
 
 if __name__ == "__main__":

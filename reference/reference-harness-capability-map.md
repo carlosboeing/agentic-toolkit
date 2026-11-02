@@ -32,7 +32,7 @@ This map is the index of harness capabilities. Where a capability has its own re
 | Hooks that can block the agent ([detail](reference-harness-hooks.md)) | Yes, including after a tool runs | Yes, before a tool runs, on prompt submit and on stop | Before a tool runs, and on stop | Before a tool runs, on stop and on prompt submit | Before a tool runs; stop is disputed | Before a tool runs |
 | Hooks that can rewrite a tool call ([detail](reference-harness-hooks.md)) | Yes | Yes, before a tool runs | Yes, before a tool runs | No | Disputed | Yes, through a plugin |
 | Hooks that add context on each prompt ([detail](reference-harness-hooks.md)) | Yes | Yes | Yes, before each model call | Disputed | No; `PreToolUse` context arrives with the tool result | Through a plugin, on 1.x and 2.x |
-| RTK mode | Automatic hook | Automatic hook (`rtk hook codex`), trusted once in `/hooks` | Automatic hook (`rtk hook antigravity`) | `rtk` prefix in instructions | `rtk` prefix in instructions | Automatic plugin |
+| RTK mode | Automatic hook | Automatic hook (`rtk hook codex`), trusted once in `/hooks` | Automatic plugin (`rtk init -g --agent antigravity`) | `rtk` prefix in instructions | `rtk` prefix in instructions | Automatic plugin |
 | Headless resume | `claude --resume <id> --print` | `codex exec resume <id>` | `agy --conversation <id> --print` | `kimi --session <id> -p` | Not integrated | `opencode run --session <id>` |
 | Resume in a fresh session ([`resume-session`](../skills/resume-session/)) | Reads its transcripts; can be the target | Reads its transcripts; can be the target | Reads its CLI transcripts; can be the target | Target only; its sessions get the repository-only summary | Reads its transcripts; can be the target | Reads its database; can be the target |
 
@@ -46,7 +46,7 @@ Reads `AGENTS.md` for instructions and `~/.agents/skills` for skills. `~/.codex/
 
 ## Antigravity
 
-Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/.gemini/config/skills`. The command-line tool also documents `~/.gemini/antigravity-cli/skills`, which the synchronizer does not link. Antigravity stops reading instructions after 24,023 characters. Some plugins come bundled. Models are chosen by hand with `/model`. RTK rewrites commands through `rtk hook antigravity`, which the synchronizer registers in `~/.gemini/config/hooks.json`. See the [Antigravity model and quota guide](../guides/guide-agy-model-and-quota-selection.md).
+Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/.gemini/config/skills`. The command-line tool also documents `~/.gemini/antigravity-cli/skills`, which the synchronizer does not link. Antigravity stops reading instructions after 24,023 characters. Some plugins come bundled. Models are chosen by hand with `/model`. RTK rewrites commands through its own plugin, installed with `rtk init -g --agent antigravity`. See the [Antigravity model and quota guide](../guides/guide-agy-model-and-quota-selection.md).
 
 ## Kimi Code (recorded 2026-07-28)
 
@@ -67,7 +67,7 @@ Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/
 - **Instructions: `AGENTS.md` only on 2.x.** Both versions read `AGENTS.md` natively at `~/.config/opencode/AGENTS.md` and project level, and load both `~/.claude/skills` and `~/.agents/skills`. OpenCode 2.x no longer falls back to `CLAUDE.md` and accepts but does not load the `instructions` config array.
 - **Skills and the `/` menu.** Version 1.18.x left skills out of its slash picker and offered a `/skills` browser instead (checked 1.18.21 on 2026-08-22), so the synchronizer writes one command file per skill into `~/.config/opencode/command/`, giving each skill a `/name` entry. OpenCode 2.x documents a `slash` frontmatter field that controls a skill's presence in interactive command catalogs. Both versions discover `command/`, which 2.x calls a legacy alias for `commands/`.
 - **Hooks are JavaScript plugins with two API shapes.** On 2.x a plugin default-exports a definition with `id` and `setup`, registers hooks with `ctx.tool.hook("execute.before", ...)`, and refuses a call by throwing. On 1.x the entrypoint returns a hooks map keyed `tool.execute.before`, and object entrypoints are supported from 1.18.29. `tool.execute.after` cannot block on either. One module serves both with a dual entrypoint: `id` plus `setup` for 2.x, `server()` for 1.x.
-- **RTK** installs its plugin with `rtk init -g --opencode`. Checked 2026-09-23: that plugin is V1-format and fails to load on OpenCode 2.x, which reports `Plugin must export a default definition`.
+- **RTK** installs its plugin with `rtk init -g --opencode --hook-only`. With RTK 1.1.0 it rewrote commands on OpenCode 2.1.4 (checked 2026-11-02); RTK 0.52.0 added 2.x support.
 - **Plugins** install from one `plugin` entry per package, npm or Git. On 2.x the config key is `plugins`, and `plugin` is still accepted.
 - **Model-dependent tool sets on 2.x.** Supported GPT models get the `patch` tool instead of `write` and `edit`, so a guard built on `write` and `edit` does not see their file writes (checked 2026-09-23).
 - **Headless resume.** `opencode run` accepts `--session`, `--continue`, `--fork`, `--dir` and `--auto`. `--fork` resumes into a copy, which avoids taking over a session that is still open.

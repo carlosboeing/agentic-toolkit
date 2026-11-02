@@ -2,11 +2,13 @@
 
 All notable changes to this project are recorded here, newest first.
 
-## 2026-11-02: RTK rewrite hooks for Codex and Antigravity
+## 2026-11-02: RTK rewrite in Codex, Antigravity and OpenCode
 
-- `scripts/register_hooks.py` adds `rtk hook codex` to `~/.codex/hooks.json` (`PreToolUse`, `Bash`) and an `rtk` entry with `rtk hook antigravity` to `~/.gemini/config/hooks.json` (`PreToolUse`, `run_command`), by the full path of `rtk`. Each is added only when `rtk hook --help` lists that processor. The Codex trust reminder now covers every hook it registers.
-- The global brief drops the explicit `rtk` prefix for Codex and Antigravity and keeps it for Kimi Code, Grok and Muse. Live probes with RTK 1.1.0 confirmed the rewrite in Codex 0.166.0 and Antigravity CLI 1.4.12; Muse 1.4.14 applies a rewrite only with `permissionDecision: "allow"`, and Grok could not be tested.
-- The RTK setup guide and the harness hooks reference record the probe results.
+- `scripts/register_hooks.py` registers `rtk hook codex` in `~/.codex/hooks.json` (`PreToolUse`, `Bash`) by the full path of `rtk`, when `rtk hook --help` lists it. RTK's own `rtk init --codex` is not used: it also writes into `AGENTS.md`, which here links to the shared instruction file, and refuses `--hook-only`. The Codex trust reminder now covers every hook it registers.
+- Antigravity and OpenCode use RTK's own plugins, installed with `rtk init -g --agent antigravity` and `rtk init -g --opencode --hook-only`. Sync reports a missing plugin with that command and writes neither, so RTK's fixes reach them through RTK.
+- Sync generates RTK's current agent text in a throwaway home and reports when it differs from `scripts/rtk-awareness.snapshot.md`, the text the brief's RTK section follows.
+- The brief's RTK section follows RTK 1.1's agent text: treat condensed output as complete, batch related commands, and re-run with `rtk bypass` (the 1.0 name for `rtk proxy`) only when output is unusable or a test verdict is missing. Kimi Code, Grok and Muse keep the prefix, on each command in a chain. `cat` and `rtk read` are byte-exact in RTK 1.1, so exact-byte reads need no bypass.
+- Live probes with RTK 1.1.0 confirmed the rewrite in Codex 0.166.0, Antigravity CLI 1.4.12 (project hooks file and RTK's plugin) and OpenCode 2.1.4. Muse 1.4.14 applies a rewrite only with `permissionDecision: "allow"`, and Grok could not be tested. The RTK setup guide, the harness hooks reference and the capability map record the results.
 
 ## 2026-11-02: narrower `rtk proxy` rule
 

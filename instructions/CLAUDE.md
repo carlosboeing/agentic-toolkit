@@ -156,15 +156,16 @@ Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CL
 
 ## RTK - Rust Token Killer
 
-Use `rtk` for shell commands to conserve tokens.
+RTK condenses shell output to save tokens.
 
 - Rely on RTK rewrite hooks in Claude Code, Cursor, Codex, Antigravity and OpenCode.
-- Explicitly prefix shell commands with `rtk` on Kimi Code, Grok Build TUI and Muse Code.
-- Use `rtk proxy <cmd>` only for exact bytes or to debug a filter. For `git`, `gh`, `rg`, `grep`, `find` and `ls`, use the plain `rtk` prefix so the filter applies. Run tests through `rtk proxy` so the verdict line stays.
+- On Kimi Code, Grok Build TUI and Muse Code, prefix every shell command with `rtk`, including each command in a chain: `rtk git add . && rtk git commit -m "msg"`.
+- Treat condensed output as the complete result, and batch related commands into one call. A truncated result names its own recovery path.
+- Re-run a command as `rtk bypass <cmd>` only when its output is unusable: empty when output was expected, contradicting its exit code, or garbled. Run tests through `rtk bypass` so the verdict line stays.
 
 ## RTK filtering — verbatim-critical files
 
-RTK filters output to save tokens. For verbatim-critical files (specs, plans, templates, YAML frontmatter), re-read exact bytes using native file-read tools or `rtk proxy` before acting. From a large file, read only the line range you need, such as `rtk proxy sed -n '40,90p' <file>`. Never edit from filtered or truncated output.
+`cat` and `rtk read` return a file's exact bytes. For verbatim-critical files (specs, plans, templates, YAML frontmatter), re-read exact bytes before acting. From a large file, read only the line range you need, such as `sed -n '40,90p' <file>`. Never edit from filtered or truncated output.
 
 ## Public-repo working-memory routing
 
