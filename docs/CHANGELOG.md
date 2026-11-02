@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-02: QMD search scope and smoke tests
+
+- Start unfamiliar document searches with the current project's main and private collections. Include related repositories for dependencies, integrations, shared tooling and prior solutions; broaden automatically when local context is insufficient. Collection filters control scope, not the working directory.
+- Keep personal or client collections excluded from default engineering searches available through explicit selection. Cross-project decisions inform the answer without overriding the owning project's accepted requirements and current decisions.
+- Add a smoke-test guide for project scope, automatic cross-project discovery, reuse of prior work, excluded collections and current-source verification.
+
 ## 2026-11-02: optional QMD document discovery
 
 - The shared brief uses bounded lexical QMD results for unfamiliar document topics when QMD is installed and collections are registered. Exact identifiers and code still use native search. Agents read current source files to establish facts, status and approval, since indexed content can be stale.
