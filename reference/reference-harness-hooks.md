@@ -7,9 +7,9 @@ authors:
   - "Carlos Boeing"
   - "claude-opus-5-5 (claude-code)"
 related:
-  - reference/reference-harness-capability-map.md
-  - hooks/README.md
-  - guides/guide-harness-plugin-parity.md
+  - reference-harness-capability-map.md
+  - ../hooks/README.md
+  - ../guides/guide-harness-plugin-parity.md
 ---
 
 # Harness hooks

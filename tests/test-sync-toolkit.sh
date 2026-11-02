@@ -93,8 +93,10 @@ _assert "tier 1 (--harness) exits 0" 0 $?
 _assert_symlink "spoke ~/.agents/skills links to hub" "$MOCK_HOME/.agents/skills" "$MOCK_HUB"
 _assert_symlink "spoke ~/.gemini/config/skills links to hub" "$MOCK_HOME/.gemini/config/skills" "$MOCK_HUB"
 _assert_executable "claude hook validate-mermaid.sh is executable" "$MOCK_HOME/.claude/hooks/validate-mermaid.sh"
+_assert_executable "claude hook validate-frontmatter.sh is executable" "$MOCK_HOME/.claude/hooks/validate-frontmatter.sh"
 _assert_executable "claude hook resume-session-warn.sh is executable" "$MOCK_HOME/.claude/hooks/resume-session-warn.sh"
 _assert_file "opencode mermaid plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-mermaid.ts"
+_assert_file "opencode frontmatter plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-frontmatter.ts"
 _assert_file "opencode resume-session-warn plugin exists" "$MOCK_HOME/.config/opencode/plugins/resume-session-warn.ts"
 _assert_eq "claude settings register resume-session-warn" "1" \
   "$(grep -c 'resume-session-warn.sh' "$MOCK_HOME/.claude/settings.json" 2>/dev/null || echo 0)"
@@ -651,7 +653,43 @@ EOF
   resume_rc=$?
   printf '%s\n' "$resume_out"
   _assert "opencode resume-session-warn plugin against both APIs (V1 + V2)" 0 "$resume_rc"
+
+  fm_out="$($TS_RUNNER "$TEST_DIR/assert-opencode-frontmatter-plugin.mjs" "$MOCK_HOME/.config/opencode/plugins/validate-frontmatter.ts" 2>&1)"
+  fm_rc=$?
+  printf '%s\n' "$fm_out"
+  _assert "opencode validate-frontmatter plugin against both APIs (V1 + V2)" 0 "$fm_rc"
 fi
+
+# --- 21. validate-frontmatter.sh shell hook behavior ---
+FM_TEST_DIR="$TMP/fm-hook-test"
+mkdir -p "$FM_TEST_DIR/0-brainstorms" "$FM_TEST_DIR/1-research"
+printf '# Idea\n' > "$FM_TEST_DIR/0-brainstorms/idea.md"
+cat > "$FM_TEST_DIR/1-research/good.md" <<'EOF'
+---
+title: Good
+related:
+  - ../0-brainstorms/idea.md
+---
+# Good
+EOF
+cat > "$FM_TEST_DIR/1-research/bad.md" <<'EOF'
+---
+title: Bad
+related:
+  - 0-brainstorms/idea.md
+---
+# Bad
+EOF
+
+jq -n --arg path "$FM_TEST_DIR/1-research/good.md" '{tool_input: {file_path: $path}}' \
+  | "$MOCK_HOME/.claude/hooks/validate-frontmatter.sh" >/dev/null 2>&1
+_assert "validate-frontmatter.sh accepts file-relative related path" 0 $?
+
+bad_err="$(jq -n --arg path "$FM_TEST_DIR/1-research/bad.md" '{tool_input: {file_path: $path}}' \
+  | "$MOCK_HOME/.claude/hooks/validate-frontmatter.sh" 2>&1)"
+_assert "validate-frontmatter.sh exits 2 on root-relative related path" 2 $?
+echo "$bad_err" | grep -q '\.\./0-brainstorms/idea\.md'
+_assert "validate-frontmatter.sh suggests the file-relative path" 0 $?
 
 
 echo ""

@@ -50,6 +50,8 @@ INLINE_LINK_RE = re.compile(r"\[(?:[^\]]*)\]\(([^)]+)\)")
 REF_DEF_RE = re.compile(r"^\[([^\]]+)\]:\s*(\S+)")
 HTML_HREF_RE = re.compile(r'<a\s+[^>]*href=["\']([^"\']+)["\']', re.IGNORECASE)
 HTML_SRC_RE = re.compile(r'<img\s+[^>]*src=["\']([^"\']+)["\']', re.IGNORECASE)
+FRONTMATTER_REL_KEY_RE = re.compile(r"^(related|supersedes|superseded_by)\s*:(.*)$")
+FRONTMATTER_LIST_ITEM_RE = re.compile(r"^[ \t]+-\s+(.*)$")
 
 EXTERNAL_SCHEMES = ("http://", "https://", "mailto:", "ftp://", "file://", "data:", "javascript:")
 
@@ -89,15 +91,81 @@ def clean_target(raw_target: str) -> str:
     return urllib.parse.unquote(target)
 
 
+def _strip_yaml_comment_and_quotes(val: str) -> str:
+    val = re.sub(r"(?:^|[ \t]+)#.*$", "", val).strip()
+    if len(val) >= 2 and ((val[0] == '"' and val[-1] == '"') or (val[0] == "'" and val[-1] == "'")):
+        val = val[1:-1].strip()
+    return val
+
+
+def extract_frontmatter_links(lines, source_file: str):
+    """
+    Extracts file-relative relationship paths (related, supersedes, superseded_by)
+    from a YAML frontmatter block at byte 0.
+    Returns list of (line_number, raw_target, cleaned_target).
+    """
+    if not lines or lines[0].rstrip("\r\n") != "---":
+        return []
+    end_idx = None
+    for idx in range(1, len(lines)):
+        if lines[idx].rstrip("\r\n") == "---":
+            end_idx = idx
+            break
+    if end_idx is None:
+        return []
+
+    links = []
+    in_rel_list = False
+    for idx in range(1, end_idx):
+        lno = idx + 1
+        line = lines[idx]
+        key_match = FRONTMATTER_REL_KEY_RE.match(line)
+        candidates = []
+        if key_match:
+            in_rel_list = True
+            rest = _strip_yaml_comment_and_quotes(key_match.group(2))
+            if rest.startswith("[") and rest.endswith("]"):
+                inner = rest[1:-1].strip()
+                if inner:
+                    for part in inner.split(","):
+                        cleaned_part = _strip_yaml_comment_and_quotes(part)
+                        if cleaned_part:
+                            candidates.append(cleaned_part)
+                in_rel_list = False
+            elif rest:
+                candidates.append(rest)
+                in_rel_list = False
+        elif in_rel_list:
+            item_match = FRONTMATTER_LIST_ITEM_RE.match(line)
+            if item_match:
+                item_val = _strip_yaml_comment_and_quotes(item_match.group(1))
+                if item_val:
+                    candidates.append(item_val)
+            elif line.strip() and not line.lstrip().startswith("#"):
+                in_rel_list = False
+
+        for raw_target in candidates:
+            if is_external_or_anchor(raw_target):
+                continue
+            if is_template_placeholder(raw_target, source_file):
+                continue
+            cleaned = clean_target(raw_target)
+            if not cleaned:
+                continue
+            links.append((lno, raw_target, cleaned))
+
+    return links
+
+
 def extract_links_from_content(content: str, source_file: str):
     """
-    Extracts local relative links from Markdown content.
+    Extracts local relative links from Markdown content (including frontmatter relationship fields).
     Returns list of (line_number, raw_target, cleaned_target).
     """
     lines = content.splitlines()
     in_fence = False
     in_comment = False
-    links = []
+    links = extract_frontmatter_links(lines, source_file)
 
     for lno, line in enumerate(lines, 1):
         stripped = line.strip()
