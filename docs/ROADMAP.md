@@ -33,6 +33,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Narrower `rtk proxy` rule (2026-11-02).** The global brief limits `rtk proxy` to exact bytes, test runs and filter debugging, routes `git`, `gh`, `rg`, `grep`, `find` and `ls` through RTK's filters, and asks for line ranges from large files.
 - **Privacy guard home-path match (2026-11-02).** The pre-commit guard matches the macOS home-directory prefix case-sensitively, so example code with a lowercase `users` path segment is no longer refused. The other denied terms still match in any case.
 - **Resume sessions from four more harnesses (2026-11-01).** `resume-session` reads OpenCode, Antigravity CLI, Grok Build and Muse Code sessions, leaves the running session out of its list, and gives every candidate a readable title and its last request. The resume warning hook covers those harnesses too, and `sync-toolkit.sh` now registers every hook it installs, in each harness's own settings.
 - **Resume an interrupted session in a fresh session (2026-11-01).** Add `resume-session`, a manual skill and standard-library reader that continue a Claude Code or Codex session in a fresh session of any harness from project records, live Git state and the old transcript, with no handoff document. Add an optional prompt hook that tells an old session it was resumed, without blocking it.
