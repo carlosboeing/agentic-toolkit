@@ -2,6 +2,11 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-02: lifecycle docs in the first search across project layouts
+
+- Discover document roots from project instructions, the Project Map and disk, regardless of repo visibility or Git boundaries. Include working-memory records in the first lookup, whether they belong to a nested private clone, the same repo, `docs/` or another declared layout. Search unindexed roots natively from the start.
+- Test ordinary questions without retrieval hints in the prompts across split repos, single repos and custom layouts. Inspect tool activity afterward for initial lifecycle coverage, reuse of prior work and discovery of related repositories. Keep CLI diagnostics separate from everyday tests.
+
 ## 2026-11-02: QMD search scope and smoke tests
 
 - Start unfamiliar document searches with the current project's main and private collections. Include related repositories for dependencies, integrations, shared tooling and prior solutions; broaden automatically when local context is insufficient. Collection filters control scope, not the working directory.
