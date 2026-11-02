@@ -92,6 +92,14 @@ def clean_target(raw_target: str) -> str:
 
 
 def _strip_yaml_comment_and_quotes(val: str) -> str:
+    val = val.strip()
+    if val.startswith("#"):
+        return ""
+    if val.startswith(('"', "'")):
+        q = val[0]
+        end = val.find(q, 1)
+        if end != -1:
+            return val[1:end].strip()
     val = re.sub(r"(?:^|[ \t]+)#.*$", "", val).strip()
     if len(val) >= 2 and ((val[0] == '"' and val[-1] == '"') or (val[0] == "'" and val[-1] == "'")):
         val = val[1:-1].strip()

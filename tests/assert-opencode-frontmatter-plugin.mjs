@@ -25,6 +25,7 @@ const GOOD = [
   'title: "Study"',
   "related:",
   "  - ../0-brainstorms/idea.md",
+  '  - "../0-brainstorms/idea.md#section" # inline comment',
   "  - https://example.com/spec",
   "---",
   "",

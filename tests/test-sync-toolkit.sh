@@ -669,6 +669,7 @@ cat > "$FM_TEST_DIR/1-research/good.md" <<'EOF'
 title: Good
 related:
   - ../0-brainstorms/idea.md
+  - "../0-brainstorms/idea.md#section" # inline comment
 ---
 # Good
 EOF
