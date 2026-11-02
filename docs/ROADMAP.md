@@ -34,6 +34,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Optional QMD document discovery (2026-11-02).** The shared brief directs unfamiliar document topics to a registered lexical index with five results, then reads current files for facts and authority. Keep exact native search, one indexing writer and explicit corpus registration. Installation, models and MCP servers remain separate actions.
 - **File-relative frontmatter relationship links and validation (2026-11-02).** Define `related`, `supersedes` and `superseded_by` paths as relative to the containing file so links work in every editor and in both `docs/` and split working-memory setups. Enforce the rule in `drift-guard` (`housekeep check --push`), `scripts/check-relative-links.py`, and the new `validate-frontmatter` hook for Claude Code and OpenCode.
 - **RTK rewrite in Codex, Antigravity and OpenCode (2026-11-02).** Those harnesses no longer type the `rtk` prefix. Antigravity and OpenCode use RTK's own plugins; sync registers only the Codex hook, reports a missing plugin, and warns when RTK's agent text changes. Muse keeps the prefix: it applies a rewrite only for commands RTK auto-allows.
 - **Narrower `rtk proxy` rule (2026-11-02).** The global brief limits `rtk proxy` to exact bytes, test runs and filter debugging, routes `git`, `gh`, `rg`, `grep`, `find` and `ls` through RTK's filters, and asks for line ranges from large files.

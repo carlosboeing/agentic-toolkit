@@ -2,6 +2,11 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-02: optional QMD document discovery
+
+- The shared brief uses bounded lexical QMD results for unfamiliar document topics when QMD is installed and collections are registered. Exact identifiers and code still use native search. Agents read current source files to establish facts, status and approval, since indexed content can be stale.
+- Keep index refresh to one writer and register canonical corpus roots explicitly. The lexical pilot does not authorize model downloads, semantic search, MCP servers or daemons. No automatic installation or harness hook is added.
+
 ## 2026-11-02: file-relative frontmatter relationship links and validation
 
 - Specify in the conventions guide, project templates and global agent brief that paths in frontmatter `related`, `supersedes` and `superseded_by` fields are relative to the file's own directory, matching Markdown body links. Convert the 14 repo-root frontmatter entries in `guides/` and `reference/` to file-relative paths.

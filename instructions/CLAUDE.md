@@ -154,6 +154,14 @@ Scale gate and task counts to artifact blast radius rather than skill defaults.
 
 Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CLI once the remaining steps are known. The full decision rule, the ejection triggers, the Kimi WebBridge path for real logins and the required `--isolated` flag are in `agentic-toolkit/guides/guide-browser-automation-mcp-vs-cli.md`.
 
+## Document discovery with QMD
+
+When QMD is installed and the document corpus is registered, use `qmd --index agent-docs search "keywords" --json -n 5` for an unfamiliar document topic. Add `-c <collection>` when the corpus is known. Keep `rg` for exact identifiers, paths, code and documents outside the index. If the candidates are poor, reformulate once or use `rg`.
+
+QMD returns indexed candidates. Read the selected file's current frontmatter and relevant lines from the active checkout before quoting it or deciding scope, status or approval. Search rank does not establish authority. `qmd get` does not prove current disk content.
+
+Refresh changed registered sources with `qmd --index agent-docs update` before document-heavy work. Use one indexing writer. This pilot uses lexical search only; model downloads, semantic search, MCP servers and daemons need separate authorization. Register canonical corpus roots explicitly, avoiding transient worktrees and duplicate copies.
+
 ## RTK - Rust Token Killer
 
 RTK condenses shell output to save tokens.
