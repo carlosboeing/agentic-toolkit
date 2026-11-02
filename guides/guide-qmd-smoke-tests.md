@@ -10,92 +10,84 @@ related:
   - guide-project-structure-and-conventions.md
 ---
 
-# Test document retrieval in a fresh agent session
+# Test retrieval with ordinary project questions
 
-These checks test whether an agent starts with the current project, searches related repositories when useful and verifies current source files. They distinguish QMD command behavior from the agent's search decisions. They are for users checking a registered lexical index across coding harnesses; they do not measure token savings.
+These checks test whether durable instructions make an agent find project knowledge without search hints in the user's prompt. They cover private lifecycle records, reuse of earlier work and related repositories. They are for users checking everyday behavior across coding harnesses; token savings require a separate task comparison.
 
-## 1. Check the index
+## 1. Start a normal session
 
-Run these commands in your terminal:
+Open a fresh agent session at the project root, as you normally would. Paste only the short questions below; keep this guide and its expected behavior out of the agent's context. Do not mention QMD, collection names, document paths, citations or search commands.
+
+Choose a project decision documented in its engineering or lifecycle corpus but not already answered by the startup instructions. The quota example below suits QuotaCap; substitute an equivalent question for another project. Repeat the test on layouts you use:
+
+| Project layout | Expected initial scope |
+|---|---|
+| Public repo with a nested private documentation clone | Private lifecycle corpus as a primary source, alongside relevant public docs |
+| Single repo with a working-memory folder | That folder from the first lookup, even without a separate Git repo |
+| Single repo with lifecycle records under `docs/` | The declared documentation and lifecycle roots |
+| Custom layout or multiple services | Roots declared in project instructions or the Project Map, checked against disk |
+
+A layout may use one or several QMD collections. Repo visibility does not determine search scope, and missing registration should trigger native discovery of that root rather than omission. Do not create folders or change project layouts for this test.
+
+## 2. Check a question about the current project
+
+```text
+════ PROMPT STARTS BELOW THIS LINE ════
+Why did we decide to record unused quota when a weekly window closes?
+════ PROMPT ENDS ABOVE THIS LINE ════
+```
+
+The delimiters are not part of the prompt.
+
+Inspect the agent's tool activity after it answers. Pass when the first document lookup includes the actual engineering and lifecycle roots and the agent reads the relevant current files. For the usual nested private clone, that corpus is a primary source from the public root. A single private repo must work equally well using its declared working-memory or documentation folders. Registered roots use the appropriate QMD collections; unindexed roots use native search immediately.
+
+Fail when it treats lifecycle docs as a fallback after application docs, needs you to identify the ordinary document root, assumes a separate private clone is required, or guesses the project's decision without evidence. If it already has the authoritative answer in its loaded instructions, choose another decision to exercise retrieval.
+
+## 3. Check reuse of earlier work
+
+After the first answer, ask:
+
+```text
+════ PROMPT STARTS BELOW THIS LINE ════
+Have we solved something like this before?
+════ PROMPT ENDS ABOVE THIS LINE ════
+```
+
+The delimiters are not part of the prompt.
+
+Pass when the agent uses the previous topic to look for relevant prior work, including other engineering projects, without asking permission to broaden its search. No useful matches is a valid result. Excluded personal or client collections should stay outside an engineering search.
+
+## 4. Check a related repository
+
+For a setup using CrossRev, ask this from the same project root:
+
+```text
+════ PROMPT STARTS BELOW THIS LINE ════
+How does CrossRev recognize a finding it has already reviewed?
+════ PROMPT ENDS ABOVE THIS LINE ════
+```
+
+The delimiters are not part of the prompt.
+
+Pass when the agent discovers and reads relevant CrossRev sources automatically. It must distinguish shared behavior from the current project's configuration. Fail when it stays inside the current project despite missing the answer, asks permission just to search the related corpus, or substitutes another project's policy for local requirements. If CrossRev is not registered, ask about another registered dependency or shared tool.
+
+## 5. Check the evidence
+
+Use the tool activity or saved session transcript to see which collections and files the agent searched. Do not add retrieval directions to make a failed attempt pass. After recording a failure, use a new session for a retest once the durable setup has been corrected.
+
+Open one source the agent actually read. Confirm that its current text supports the answer and a draft is not presented as an approved decision. A stale indexed snippet must not override the current checkout. Finding a file is insufficient if the answer misreads its status or rationale.
+
+Keep a short result note with the date, harness, project, question, observed searches and pass or failure. These tests distinguish retrieval behavior from answer quality; record both.
+
+## Diagnose a failed test
+
+Run these yourself after the attempt, rather than asking the agent to follow them during the test:
 
 ```sh
 qmd --index agent-docs status
 qmd --index agent-docs collection list
 ```
 
-Confirm that the intended main and private collections appear, with nonzero document counts. To verify a collection's root and default-inclusion setting, replace `project-docs` with its registered name:
+Use `qmd --index agent-docs collection show <name>` to verify the root and default inclusion for each intended collection. Compare coverage with the project's actual declared document roots; do not assume every project needs a main/private pair. The working directory does not scope the named index; repeated `-c` filters select the union of collections. CLI behavior was checked against QMD 2.8.3 on November 2, 2026; see the [QMD CLI reference](https://github.com/tobi/qmd/blob/v2.8.3/README.md#usage).
 
-```sh
-qmd --index agent-docs collection show project-docs
-```
-
-A pending-embeddings message is expected for lexical search. If documents changed since the last refresh, have one indexing writer run:
-
-```sh
-qmd --index agent-docs update
-```
-
-Working in a project directory does not automatically scope this named index. Agents must select the relevant collections. Two `-c` options search the union of those collections. CLI behavior was checked against QMD 2.8.3 on November 2, 2026; see the [QMD CLI reference](https://github.com/tobi/qmd/blob/v2.8.3/README.md#usage).
-
-## 2. Check a question about the current project
-
-Open a fresh agent session in a registered project. Choose a topic you know its docs cover. This example suits a quota-tracking project; replace "quota resets" with your topic.
-
-```text
-════ PROMPT STARTS BELOW THIS LINE ════
-What do our docs say about quota resets? Find the relevant documentation, cite the current source files, and show the search commands you used.
-════ PROMPT ENDS ABOVE THIS LINE ════
-```
-
-The delimiters are not part of the prompt.
-
-Pass when the agent uses QMD with filters for the project's main and private documentation, where registered, and reads the selected files from the current checkout before answering. It should keep routine project questions focused. A broader search is valid when it explains a real gap or dependency.
-
-Fail when the agent searches every collection immediately without a task reason, treats the working directory as a QMD filter, or answers solely from indexed snippets.
-
-## 3. Check automatic discovery across projects
-
-In the same session, ask about a shared tool whose documentation lives in another registered repository. For a setup using CrossRev:
-
-```text
-════ PROMPT STARTS BELOW THIS LINE ════
-Before changing this project, explain how CrossRev decides whether another review pass is needed and when its loop stops. Find the current documentation, show the search commands, and cite the sources.
-════ PROMPT ENDS ABOVE THIS LINE ════
-```
-
-The delimiters are not part of the prompt.
-
-Pass when the agent includes CrossRev's collections without asking permission to broaden its search. It may include the current project's integration records and shared toolkit instructions. It must check the current project's configuration before claiming that a shared default applies locally.
-
-Fail when the agent searches only the current project, asks permission merely to read another registered corpus, or presents another repository's decision as a binding local requirement.
-
-If CrossRev is not registered, substitute a dependency or shared tool that is. A missing relevant corpus is a coverage gap, not proof of a search failure.
-
-## 4. Check deliberate reuse of prior work
-
-```text
-════ PROMPT STARTS BELOW THIS LINE ════
-Search our other engineering projects for similar problems or decisions that could help with the topic we discussed. Show the search commands and explain why each selected source is relevant.
-════ PROMPT ENDS ABOVE THIS LINE ════
-```
-
-The delimiters are not part of the prompt.
-
-Pass when the agent searches beyond the current project's collections and keeps excluded personal or client collections outside this engineering search. Finding no useful matches is valid. Relevance, current status and ownership matter more than the number of matches.
-
-## 5. Check an excluded collection and source freshness
-
-If your configuration has a personal or client collection excluded from default searches, choose a phrase that appears in one of its documents. Replace the example values below with that phrase and collection name:
-
-```sh
-qmd --index agent-docs search "distinctive phrase" --json -n 5
-qmd --index agent-docs search "distinctive phrase" --json -n 5 -c personal-docs
-```
-
-Pass when the first query contains no result from that excluded collection and the second finds its known document. Other engineering documents may mention the same phrase.
-
-Open one source cited by the agent. Confirm that the current text supports the answer, the cited revision is the active checkout's version and a draft is not presented as an approved decision. A stale indexed snippet must not override the current file.
-
-## Record the result
-
-Keep a short note with the date, harness, project, failed check and search command. If a check fails, distinguish a missing or stale collection from an agent routing error. These smoke tests establish retrieval behavior and source checks; compare equivalent tasks separately to measure exploratory reads, answer quality and token usage.
+If documents changed, have one indexing writer run `qmd --index agent-docs update`. A pending-embeddings message is expected for lexical search. Missing or stale collections need a configuration or refresh fix; an agent ignoring correctly registered sources needs a durable routing fix.

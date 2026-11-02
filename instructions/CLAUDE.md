@@ -156,13 +156,15 @@ Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CL
 
 ## Document discovery with QMD
 
-When QMD is installed and the corpus is registered, use `qmd --index agent-docs search "keywords" --json -n 5` for unfamiliar document topics. Start with the current project's main and private collections using repeated `-c <collection>` filters. When the mapping is unknown, use `qmd --index agent-docs collection list` for names and `qmd --index agent-docs collection show <name>` for canonical roots. The working directory does not scope this index. Keep `rg` for exact identifiers, paths, code and unindexed documents.
+Find document roots, including hidden folders, from project instructions/Project Map and disk, regardless of visibility or Git boundaries. Unless project instructions say otherwise, an existing working-memory folder is the primary engineering and lifecycle corpus from the first lookup, whether a nested clone or in the same repo. Other layouts use `docs/` or declared roots.
 
-Include related repositories from the start for dependencies, integrations, shared tooling or prior solutions. Broaden automatically when local results are weak, incomplete or conflicting, or the task needs wider context. No permission is needed to broaden a search. Unscoped searches use default-included collections; select excluded personal or client collections explicitly when relevant. If candidates remain poor, reformulate once or use `rg`.
+For unfamiliar document topics, use `qmd --index agent-docs search "keywords" --json -n 5` when QMD is installed and roots are registered. Scope the first query to applicable project collections with repeated `-c <name>`. Map unknown collections with `qmd --index agent-docs collection list` and `qmd --index agent-docs collection show <name>`. The working directory does not scope the index. Search unindexed roots natively immediately. Keep `rg` for code, exact paths and identifiers.
 
-Read each selected file's current frontmatter and relevant lines from the active checkout before quoting it or deciding scope, status or approval. Search rank does not establish authority; another project's decisions do not override the owning project's accepted requirements or current decisions. `qmd get` does not prove current disk content.
+Include related repos immediately for dependencies, integrations, shared tooling or prior solutions. Broaden automatically for weak, incomplete or conflicting local results or wider task context; no permission needed. Unscoped queries use default-included collections. Select excluded personal/client collections explicitly when relevant. If candidates remain poor, reformulate once or use `rg`.
 
-Refresh changed registered sources with `qmd --index agent-docs update` before document-heavy work. Use one indexing writer. This pilot uses lexical search only; model downloads, semantic search, MCP servers and daemons need separate authorization. Register canonical corpus roots explicitly, avoiding transient worktrees and duplicate copies.
+Read current frontmatter and relevant lines from the active checkout before quoting or deciding scope, status or approval. Rank and other projects' decisions do not override the owning project's accepted requirements or current decisions. `qmd get` does not prove current disk content.
+
+Refresh changed registered sources with `qmd --index agent-docs update` before document-heavy work. Use one indexing writer and explicit canonical roots, avoiding transient worktrees and duplicates. Lexical search only; models, semantic search, MCP servers and daemons need separate authorization.
 
 ## RTK - Rust Token Killer
 
