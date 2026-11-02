@@ -467,11 +467,13 @@ status: draft                      # draft | approved | in-progress | shipped | 
 authors: ["Jane Doe", "claude-fable-5 (claude-code)"]  # see "Authorship" below
 scope: [containers, network]       # optional, multi-valued tags
 reviewed_by: []                    # optional, accountable human GitHub username, with delegation qualifier when applicable
-supersedes:                        # optional, path of doc this replaces
-superseded_by:                     # optional, path of doc replacing this
-related: []                        # optional, paths to related docs
+supersedes:                        # optional, path of doc this replaces (relative to this file)
+superseded_by:                     # optional, path of doc replacing this (relative to this file)
+related: []                        # optional, paths to related docs (relative to this file)
 ---
 ```
+
+**Relationship paths.** Entries in `related`, `supersedes`, and `superseded_by` are written relative to the file's own directory, the same rule Markdown body links follow (e.g., `../0-brainstorms/2026-10-30-topic.md` from `1-research/`, or `../../guides/guide-foo.md` from a lifecycle folder). Never write bare working-memory-root or repo-root paths unless the file itself is in that root directory.
 
 **Dates.** `created` is the original document date and stays fixed. Set both fields to the creation date for a new lifecycle record. Advance `updated` when content, decisions, status, or execution progress changes. Folder moves, link repairs, and schema normalization preserve the pre-migration update date. Use calendar dates in `YYYY-MM-DD` form; quoted values keep their interpretation consistent across YAML readers. `updated` must not precede `created`.
 

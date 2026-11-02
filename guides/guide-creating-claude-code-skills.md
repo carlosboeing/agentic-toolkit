@@ -4,7 +4,7 @@ type: guide
 scope: [skills, claude-code]
 last_reviewed: 2026-05-02
 related:
-  - skills/learn/SKILL.md
+  - ../skills/learn/SKILL.md
 ---
 
 # Creating Claude Code skills

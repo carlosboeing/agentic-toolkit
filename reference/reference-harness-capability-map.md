@@ -9,8 +9,8 @@ authors:
   - "claude-opus-5 (claude-code)"
   - "MiMo-V2.6-Pro (opencode)"
 related:
-  - guides/guide-harness-plugin-parity.md
-  - guides/guide-ai-model-and-effort-routing.md
+  - ../guides/guide-harness-plugin-parity.md
+  - ../guides/guide-ai-model-and-effort-routing.md
 ---
 
 # Harness capability map

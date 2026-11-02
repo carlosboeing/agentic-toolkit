@@ -34,12 +34,14 @@ PRE_COMMIT_SRC="$REPO_ROOT/git-hooks/private-workbench-guard/pre-commit"
 
 # Canonical lifecycle hook sources
 MERMAID_HOOK_SRC="$REPO_ROOT/hooks/validate-mermaid/validate-mermaid.sh"
+FRONTMATTER_HOOK_SRC="$REPO_ROOT/hooks/validate-frontmatter/validate-frontmatter.sh"
 RESUME_WARN_HOOK_SRC="$REPO_ROOT/hooks/resume-session-warn/resume-session-warn.sh"
-CLAUDE_HOOK_SRCS=("$MERMAID_HOOK_SRC" "$RESUME_WARN_HOOK_SRC")
+CLAUDE_HOOK_SRCS=("$MERMAID_HOOK_SRC" "$FRONTMATTER_HOOK_SRC" "$RESUME_WARN_HOOK_SRC")
 OPENCODE_MERMAID_SRC="$REPO_ROOT/hooks/validate-mermaid/opencode-validate-mermaid.ts"
+OPENCODE_FRONTMATTER_SRC="$REPO_ROOT/hooks/validate-frontmatter/opencode-validate-frontmatter.ts"
 OPENCODE_RESUME_WARN_SRC="$REPO_ROOT/hooks/resume-session-warn/opencode-resume-session-warn.ts"
 # OpenCode plugin sources and the file name each is installed as.
-OPENCODE_PLUGINS=("$OPENCODE_MERMAID_SRC:validate-mermaid.ts" "$OPENCODE_RESUME_WARN_SRC:resume-session-warn.ts")
+OPENCODE_PLUGINS=("$OPENCODE_MERMAID_SRC:validate-mermaid.ts" "$OPENCODE_FRONTMATTER_SRC:validate-frontmatter.ts" "$OPENCODE_RESUME_WARN_SRC:resume-session-warn.ts")
 REGISTER_HOOKS="$REPO_ROOT/scripts/register_hooks.py"
 
 # Spokes that point at the hub

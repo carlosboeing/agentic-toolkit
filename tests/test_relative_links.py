@@ -123,6 +123,41 @@ class TestRelativeLinks(unittest.TestCase):
         self.assertTrue(len(failures) > 0, "Deliberately missing real target must fail")
         self.assertIn("definitely_missing_file_123.md", failures[0])
 
+    def test_frontmatter_related_links(self):
+        sub = os.path.join(self.tmpdir, "1-research")
+        sibling = os.path.join(self.tmpdir, "0-brainstorms")
+        os.makedirs(sub)
+        os.makedirs(sibling)
+        target = os.path.join(sibling, "idea.md")
+        with open(target, "w") as f:
+            f.write("# Idea\n")
+
+        good = os.path.join(sub, "good.md")
+        with open(good, "w") as f:
+            f.write(
+                "---\n"
+                "title: Good\n"
+                "related:\n"
+                "  - ../0-brainstorms/idea.md\n"
+                "  - https://example.com/spec\n"
+                "supersedes: [../0-brainstorms/idea.md]\n"
+                "---\n\n# Body\n"
+            )
+        self.assertEqual(check_file_links("1-research/good.md", self.tmpdir), [])
+
+        bad = os.path.join(sub, "bad.md")
+        with open(bad, "w") as f:
+            f.write(
+                "---\n"
+                "title: Bad\n"
+                "related:\n"
+                "  - 0-brainstorms/idea.md\n"
+                "---\n\n# Body\n"
+            )
+        failures = check_file_links("1-research/bad.md", self.tmpdir)
+        self.assertEqual(len(failures), 1)
+        self.assertIn("1-research/bad.md:4: 0-brainstorms/idea.md", failures[0])
+
 
 if __name__ == "__main__":
     unittest.main()

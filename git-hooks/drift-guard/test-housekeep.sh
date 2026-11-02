@@ -80,6 +80,18 @@ for hook in "$HOOK_DIR/housekeep" "$HOOK_DIR/../../scripts/githooks/housekeep"; 
     ( cd "$R" && "$hook" check --push "main~1" main ) >/dev/null 2>&1
     _assert "$hook_label exempts $directory" 0 $?
   done
+
+  mkdir -p "$R/docs/0-brainstorms" "$R/docs/1-research"
+  printf -- '---\ncreated: "2026-10-30"\nupdated: "2026-10-30"\ntitle: Brainstorm\ntype: brainstorm\nstatus: open\nauthors: ["C"]\n---\n' > "$R/docs/0-brainstorms/idea.md"
+  printf -- '---\ncreated: "2026-11-02"\nupdated: "2026-11-02"\ntitle: Research\ntype: research\nstatus: resolved\nauthors: ["C"]\nrelated:\n  - ../0-brainstorms/idea.md\n  - https://example.com/doc\n---\n' > "$R/docs/1-research/study.md"
+  git -C "$R" add -A && git -C "$R" commit -q -m "docs: valid relative related path"
+  ( cd "$R" && "$hook" check --push "main~1" main ) >/dev/null 2>&1
+  _assert "$hook_label accepts file-relative related path" 0 $?
+
+  printf -- '---\ncreated: "2026-11-02"\nupdated: "2026-11-02"\ntitle: Research\ntype: research\nstatus: resolved\nauthors: ["C"]\nrelated:\n  - 0-brainstorms/idea.md\n---\n' > "$R/docs/1-research/study.md"
+  git -C "$R" add -A && git -C "$R" commit -q -m "docs: root-relative related path"
+  ( cd "$R" && "$hook" check --push "main~1" main ) >/dev/null 2>&1
+  _assert "$hook_label rejects non-file-relative related path" 1 $?
 done
 
 # --- a published doc outside a lifecycle dir is ignored ---

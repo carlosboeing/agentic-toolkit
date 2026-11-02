@@ -9,6 +9,7 @@ Looking for Git hooks? Those run inside Git for anyone who commits, and they liv
 | Hook | Event | What it does |
 |---|---|---|
 | [`validate-mermaid`](validate-mermaid/) | `PostToolUse` on `Write` and `Edit` | Parses each Mermaid diagram in an edited Markdown file and returns syntax errors to the agent so it can fix them |
+| [`validate-frontmatter`](validate-frontmatter/) | `PostToolUse` on `Write` and `Edit`, an OpenCode plugin | Checks that local paths in YAML frontmatter `related`, `supersedes` and `superseded_by` fields resolve relative to the file's directory |
 | [`resume-session-warn`](resume-session-warn/) | `UserPromptSubmit` (Claude Code, Codex, Muse Code), `PreInvocation` (Antigravity CLI), `PreToolUse` (Grok Build), an OpenCode plugin | Adds one line to a session's context when [`resume-session`](../skills/resume-session/) has resumed it elsewhere, asking the agent to confirm before changing files; never blocks |
 
 The CopyDesk writing-style hook that used to live here now ships with [CopyDesk](https://github.com/carlosboeing/copydesk).

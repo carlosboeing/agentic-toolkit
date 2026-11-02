@@ -13,7 +13,7 @@ authors:
 related:
   - guide-browser-automation-mcp-vs-cli.md
   - guide-cross-harness-project-instructions.md
-  - reference/reference-harness-capability-map.md
+  - ../reference/reference-harness-capability-map.md
 ---
 
 # Harness plugin and skill parity
