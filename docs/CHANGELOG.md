@@ -10,7 +10,7 @@ All notable changes to this project are recorded here, newest first.
 ## 2026-11-02: file-relative frontmatter relationship links and validation
 
 - Specify in the conventions guide, project templates and global agent brief that paths in frontmatter `related`, `supersedes` and `superseded_by` fields are relative to the file's own directory, matching Markdown body links. Convert the 14 repo-root frontmatter entries in `guides/` and `reference/` to file-relative paths.
-- Extend `scripts/check-relative-links.py` and `drift-guard/housekeep` (`_check_frontmatter`) to verify that local paths in `related`, `supersedes` and `superseded_by` resolve from the file's directory.
+- Extend `scripts/check-relative-links.py` and `drift-guard/housekeep` (`_check_frontmatter`) to verify that local paths in `related`, `supersedes` and `superseded_by` resolve from the file's directory, unquoting YAML strings before stripping `#` comments so quoted `#` fragments and issue references remain intact.
 - Add the `validate-frontmatter` harness hook (`hooks/validate-frontmatter/validate-frontmatter.sh` for Claude Code `PostToolUse` on `Write|Edit` and `opencode-validate-frontmatter.ts` for OpenCode 2.x and 1.x `execute.before`), wired into `scripts/sync-toolkit.sh` and `scripts/register_hooks.py`. When a path fails to resolve from the file's directory but exists at a parent root, the hook suggests the exact file-relative replacement.
 
 ## 2026-11-02: RTK rewrite in Codex, Antigravity and OpenCode

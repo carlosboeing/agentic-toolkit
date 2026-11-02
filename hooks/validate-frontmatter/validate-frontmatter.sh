@@ -23,10 +23,19 @@ head -n 60 "$file" 2>/dev/null | grep -qE '^(related|supersedes|superseded_by)[[
 file_dir=$(cd "$(dirname "$file")" 2>/dev/null && pwd -P) || exit 0
 
 targets=$(awk '
-  function clean(s) {
-    sub(/(^|[ \t]+)#.*$/, "", s)
+  function clean(s,    q, idx) {
     gsub(/^[ \t]+|[ \t]+$/, "", s)
-    if ((s ~ /^".*"$/) || (s ~ /^'\''.*'\''$/)) s = substr(s, 2, length(s) - 2)
+    if (s ~ /^#/) return ""
+    q = substr(s, 1, 1)
+    if (q == "\"" || q == "\x27") {
+      idx = index(substr(s, 2), q)
+      if (idx > 0) {
+        s = substr(s, 2, idx - 1)
+        gsub(/^[ \t]+|[ \t]+$/, "", s)
+        return s
+      }
+    }
+    sub(/(^|[ \t]+)#.*$/, "", s)
     gsub(/^[ \t]+|[ \t]+$/, "", s)
     return s
   }

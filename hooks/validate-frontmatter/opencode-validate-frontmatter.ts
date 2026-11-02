@@ -22,7 +22,14 @@ const EXTERNAL_SCHEMES = ["http://", "https://", "mailto:", "ftp://", "file://",
 type RelEntry = { line: number; key: string; target: string }
 
 function cleanScalar(raw: string): string {
-  let s = raw.replace(/(^|[ \t]+)#.*$/, "").trim()
+  let s = raw.trim()
+  if (s.startsWith("#")) return ""
+  if (s.startsWith('"') || s.startsWith("'")) {
+    const q = s[0]
+    const end = s.indexOf(q, 1)
+    if (end !== -1) return s.slice(1, end).trim()
+  }
+  s = s.replace(/(^|[ \t]+)#.*$/, "").trim()
   if (s.length >= 2 && ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'")))) {
     s = s.slice(1, -1).trim()
   }

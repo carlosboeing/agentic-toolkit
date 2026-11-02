@@ -139,6 +139,7 @@ class TestRelativeLinks(unittest.TestCase):
                 "title: Good\n"
                 "related:\n"
                 "  - ../0-brainstorms/idea.md\n"
+                '  - "../0-brainstorms/idea.md#section" # inline comment\n'
                 "  - https://example.com/spec\n"
                 "supersedes: [../0-brainstorms/idea.md]\n"
                 "---\n\n# Body\n"
