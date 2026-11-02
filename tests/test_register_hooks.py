@@ -78,10 +78,13 @@ class RegisterCase(unittest.TestCase):
 class RegisterTests(RegisterCase):
     def test_first_run_registers_every_hook(self):
         out = self.register()
-        self.assertEqual(self.changes(out), 6, out)
+        self.assertEqual(self.changes(out), 7, out)
         claude = self.json(".claude/settings.json")
         self.assertEqual(self.commands(claude, "UserPromptSubmit"), [f"sh {self.hooks}/resume-session-warn.sh"])
-        self.assertEqual(self.commands(claude, "PostToolUse"), [f"bash {self.hooks}/validate-mermaid.sh"])
+        self.assertEqual(self.commands(claude, "PostToolUse"), [
+            f"bash {self.hooks}/validate-mermaid.sh",
+            f"bash {self.hooks}/validate-frontmatter.sh",
+        ])
         codex = self.json(".codex/hooks.json")
         self.assertEqual(self.commands(codex, "UserPromptSubmit"), [f"sh {self.hooks}/resume-session-warn.sh"])
         grok = self.json(".grok/hooks/resume-session-warn.json")
@@ -107,7 +110,7 @@ class RegisterTests(RegisterCase):
     def test_dry_run_writes_nothing(self):
         before = self.state()
         out = self.register("--dry-run")
-        self.assertEqual(self.changes(out), 6, out)
+        self.assertEqual(self.changes(out), 7, out)
         self.assertIn("WOULD ADD", out)
         self.assertEqual(self.state(), before)
         self.assertNotIn("install", (self.home / "muse-calls.log").read_text())
@@ -120,7 +123,10 @@ class RegisterTests(RegisterCase):
         self.register()
         data = self.json(".claude/settings.json")
         self.assertEqual(data["model"], "x")
-        self.assertEqual(self.commands(data, "PostToolUse"), ["bash /elsewhere/validate-mermaid.sh"])
+        self.assertEqual(self.commands(data, "PostToolUse"), [
+            "bash /elsewhere/validate-mermaid.sh",
+            f"bash {self.hooks}/validate-frontmatter.sh",
+        ])
         backup = settings.with_name("settings.json.agentic-toolkit.bak")
         self.assertEqual(json.loads(backup.read_text()), original)
 
@@ -148,7 +154,7 @@ class RegisterTests(RegisterCase):
         for folder in (".codex", ".grok", ".gemini", ".local/share/muse"):
             shutil.rmtree(self.home / folder)
         out = self.register()
-        self.assertEqual(self.changes(out), 2, out)
+        self.assertEqual(self.changes(out), 3, out)
         for name in ("Codex CLI", "Grok Build", "Antigravity CLI", "Muse Code"):
             self.assertRegex(out, rf"{name}.*\[SKIPPED\]")
 
@@ -176,7 +182,7 @@ class RtkTests(RegisterCase):
 
     def test_codex_rtk_hook_is_registered(self):
         out = self.register()
-        self.assertEqual(self.changes(out), 7, out)
+        self.assertEqual(self.changes(out), 8, out)
         codex = self.json(".codex/hooks.json")
         self.assertEqual(codex["hooks"]["PreToolUse"], [
             {"matcher": "Bash", "hooks": [{"type": "command", "command": f"{self.rtk} hook codex", "timeout": 10}]}])

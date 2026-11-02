@@ -6,8 +6,8 @@ Usage: register_hooks.py --repo DIR --hook-dir DIR [--dry-run]
 The hook scripts are already copied to --hook-dir (normally ~/.claude/hooks). This script
 adds the entries that make each harness run them:
 
-  Claude Code   ~/.claude/settings.json: resume-session-warn (UserPromptSubmit) and
-                validate-mermaid (PostToolUse)
+  Claude Code   ~/.claude/settings.json: resume-session-warn (UserPromptSubmit),
+                validate-mermaid and validate-frontmatter (PostToolUse)
   Codex CLI     ~/.codex/hooks.json: resume-session-warn (UserPromptSubmit) and
                 `rtk hook codex` (PreToolUse)
   Grok Build    ~/.grok/hooks/resume-session-warn.json (PreToolUse)
@@ -41,6 +41,7 @@ from pathlib import Path
 
 WARN = "resume-session-warn.sh"
 MERMAID = "validate-mermaid.sh"
+FRONTMATTER = "validate-frontmatter.sh"
 ANTIGRAVITY_EVENTS = {"SessionStart", "PreInvocation", "PostInvocation", "PreToolUse", "PostToolUse", "Stop"}
 
 
@@ -267,7 +268,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     home = Path.home()
     run = Run(args.dry_run)
-    warn, mermaid = args.hook_dir / WARN, args.hook_dir / MERMAID
+    warn, mermaid, frontmatter = args.hook_dir / WARN, args.hook_dir / MERMAID, args.hook_dir / FRONTMATTER
     rtk, processors = rtk_processors()
     if not rtk:
         run.say("RTK rewrite hooks", "SKIPPED", "rtk not on PATH")
@@ -277,6 +278,8 @@ def main(argv=None):
             ("UserPromptSubmit", None, {"type": "command", "command": f"sh {warn}", "timeout": 5}, WARN),
             ("PostToolUse", "Write|Edit", {"type": "command", "command": f"bash {mermaid}", "timeout": 90,
                                            "statusMessage": "Validating Mermaid blocks"}, MERMAID),
+            ("PostToolUse", "Write|Edit", {"type": "command", "command": f"bash {frontmatter}", "timeout": 10,
+                                           "statusMessage": "Validating frontmatter links"}, FRONTMATTER),
         ], run, "Claude Code")
     else:
         run.say("Claude Code", "SKIPPED", "~/.claude not present")

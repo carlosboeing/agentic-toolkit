@@ -7,7 +7,7 @@ authors:
   - "Carlos Boeing"
   - "Muse Spark (Muse Code)"
 related:
-  - reference/reference-oss-standards.md
+  - reference-oss-standards.md
 ---
 
 # Build and release house standard

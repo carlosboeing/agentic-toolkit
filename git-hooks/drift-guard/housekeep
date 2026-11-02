@@ -58,6 +58,100 @@ _valid_document_date() { # ISO calendar date, including leap years
   ((day <= month_days))
 }
 
+_relationship_targets() { # _relationship_targets <file> -> one raw target per line
+  _frontmatter "$1" | awk '
+    function clean(s) {
+      sub(/(^|[ \t]+)#.*$/, "", s)
+      gsub(/^[ \t]+|[ \t]+$/, "", s)
+      if ((s ~ /^".*"$/) || (s ~ /^'\''.*'\''$/)) s = substr(s, 2, length(s) - 2)
+      gsub(/^[ \t]+|[ \t]+$/, "", s)
+      return s
+    }
+    /^(related|supersedes|superseded_by)[ \t]*:/ {
+      in_list = 1
+      rest = $0
+      sub(/^[^:]+:[ \t]*/, "", rest)
+      rest = clean(rest)
+      if (rest ~ /^\[.*\]$/) {
+        inner = substr(rest, 2, length(rest) - 2)
+        n = split(inner, parts, ",")
+        for (i = 1; i <= n; i++) {
+          v = clean(parts[i])
+          if (v != "") print v
+        }
+        in_list = 0
+      } else if (rest != "") {
+        print rest
+        in_list = 0
+      }
+      next
+    }
+    in_list && /^[ \t]+-[ \t]+/ {
+      item = $0
+      sub(/^[ \t]+-[ \t]+/, "", item)
+      v = clean(item)
+      if (v != "") print v
+      next
+    }
+    in_list && /^[ \t]*($|#)/ { next }
+    in_list { in_list = 0 }
+  '
+}
+
+_check_relationship_paths() { # _check_relationship_paths <blob> <label> [head] -> 0 ok, 1 finding
+  local f="$1" label="${2:-$1}" head="${3:-}" rc=0 root label_dir target clean norm rel parent
+  root="$(git rev-parse --show-toplevel 2>/dev/null)" || return 0
+  label_dir="$(dirname "$label")"
+  [ "$label_dir" = "." ] && label_dir=""
+  while IFS= read -r target; do
+    [ -n "$target" ] || continue
+    case "$target" in
+      http://*|https://*|mailto:*|file://*|'#'*) continue ;;
+    esac
+    clean="${target%%#*}"
+    clean="${clean%%\?*}"
+    clean="${clean%/}"
+    [ -n "$clean" ] || continue
+    case "$clean" in
+      /*)
+        printf '  %s:1  relationship path %s must be relative to the file, not absolute\n' "$label" "$target" >&2
+        rc=1
+        continue ;;
+    esac
+    rel="${label_dir:+$label_dir/}$clean"
+    norm="$(awk -v p="$rel" 'BEGIN {
+      n = split(p, a, "/"); m = 0
+      for (i = 1; i <= n; i++) {
+        if (a[i] == "" || a[i] == ".") continue
+        if (a[i] == "..") {
+          if (m > 0 && out[m] != "..") { m--; continue }
+        }
+        out[++m] = a[i]
+      }
+      for (i = 1; i <= m; i++) printf "%s%s", (i > 1 ? "/" : ""), out[i]
+    }')"
+    case "$norm" in
+      ../*|..)
+        parent="$(dirname "$root")/${norm#../}"
+        if [ -e "$parent" ]; then continue; fi
+        printf '  %s:1  relationship path %s does not resolve from %s\n' "$label" "$target" "${label_dir:-.}" >&2
+        rc=1
+        continue ;;
+    esac
+    if [ -n "$head" ] && git cat-file -e "$head:$norm" 2>/dev/null; then
+      continue
+    fi
+    if [ -e "$root/$norm" ]; then
+      continue
+    fi
+    printf '  %s:1  relationship path %s does not resolve relative to %s\n' "$label" "$target" "${label_dir:-.}" >&2
+    rc=1
+  done <<EOF_REL
+$(_relationship_targets "$f")
+EOF_REL
+  return $rc
+}
+
 _blob() { # _blob <commit-ish> <repo-relative-path> -> prints a temp file path
   local out
   out="$(mktemp)" || return 1
@@ -71,8 +165,8 @@ _lifecycle_files() { # _lifecycle_files <base> <head>
 
 # --- check A: frontmatter ---------------------------------------------------
 
-_check_frontmatter() { # _check_frontmatter <blob-path> <label> -> 0 ok, 1 finding
-  local f="$1" label="${2:-$1}" doctype status rc=0
+_check_frontmatter() { # _check_frontmatter <blob-path> <label> [head] -> 0 ok, 1 finding
+  local f="$1" label="${2:-$1}" head="${3:-}" doctype status rc=0
   [ -f "$f" ] || return 0
   if ! _frontmatter "$f" >/dev/null 2>&1; then
     printf '  %s:1  no frontmatter block at byte 0\n' "$label" >&2
@@ -113,6 +207,7 @@ _check_frontmatter() { # _check_frontmatter <blob-path> <label> -> 0 ok, 1 findi
       printf '  %s:1  status %s is not one of: %s\n' "$label" "$status" "$VALID_STATUS" >&2; rc=1
     fi
   fi
+  _check_relationship_paths "$f" "$label" "$head" || rc=1
   return $rc
 }
 
@@ -1019,7 +1114,7 @@ cmd_check_push() { # cmd_check_push <base> <head>
   while IFS= read -r f; do
     [ -n "$f" ] || continue
     blob="$(_blob "$head" "$f")" || continue
-    _check_frontmatter "$blob" "$f" || rc=1
+    _check_frontmatter "$blob" "$f" "$head" || rc=1
     rm -f "$blob"
   done <<INNER
 $(_lifecycle_files "$base" "$head")

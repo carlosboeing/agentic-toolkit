@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-02: file-relative frontmatter relationship links and validation
+
+- Specify in the conventions guide, project templates and global agent brief that paths in frontmatter `related`, `supersedes` and `superseded_by` fields are relative to the file's own directory, matching Markdown body links. Convert the 14 repo-root frontmatter entries in `guides/` and `reference/` to file-relative paths.
+- Extend `scripts/check-relative-links.py` and `drift-guard/housekeep` (`_check_frontmatter`) to verify that local paths in `related`, `supersedes` and `superseded_by` resolve from the file's directory.
+- Add the `validate-frontmatter` harness hook (`hooks/validate-frontmatter/validate-frontmatter.sh` for Claude Code `PostToolUse` on `Write|Edit` and `opencode-validate-frontmatter.ts` for OpenCode 2.x and 1.x `execute.before`), wired into `scripts/sync-toolkit.sh` and `scripts/register_hooks.py`. When a path fails to resolve from the file's directory but exists at a parent root, the hook suggests the exact file-relative replacement.
+
 ## 2026-11-02: RTK rewrite in Codex, Antigravity and OpenCode
 
 - `scripts/register_hooks.py` registers `rtk hook codex` in `~/.codex/hooks.json` (`PreToolUse`, `Bash`) by the full path of `rtk`, when `rtk hook --help` lists it. RTK's own `rtk init --codex` is not used: it also writes into `AGENTS.md`, which here links to the shared instruction file, and refuses `--hook-only`. The Codex trust reminder now covers every hook it registers.
