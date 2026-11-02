@@ -95,11 +95,13 @@ Run `rtk init -g --opencode` to install RTK's plugin, which rewrites commands be
 
 ### Codex
 
-This toolkit uses the instruction prefix for Codex. The shared instruction file, linked to `~/.codex/AGENTS.md`, tells the agent to prefix shell commands with `rtk`. Upstream also offers `rtk init -g --codex`, which installs a rewrite hook. Check that your Codex version supports it before switching.
+RTK 0.50.0 and later rewrite Codex commands with `rtk hook codex`, a `PreToolUse` hook on the `Bash` matcher. `scripts/sync-toolkit.sh --harness` adds it to `~/.codex/hooks.json` by the full path of `rtk`, because a bare `rtk` can fail with exit 127 in Codex started from a desktop app ([rtk-ai/rtk#4560](https://github.com/rtk-ai/rtk/issues/4560)). Trust it once in `/hooks`; Codex skips an untrusted hook.
+
+Do not run `rtk init -g --codex` when `~/.codex/AGENTS.md` is a link to the shared instruction file: it writes through the link into that file ([rtk-ai/rtk#4156](https://github.com/rtk-ai/rtk/issues/4156)). The hook passes a command through unchanged when Codex reports a permission mode RTK does not know; Codex 0.166.0 sends `bypassPermissions` under `--yolo`, which RTK accepts.
 
 ### Antigravity
 
-Antigravity uses the instruction prefix. The RTK section of the shared instruction file covers it. Upstream's `rtk init --agent antigravity` writes a project rule file at `.agents/rules/antigravity-rtk-rules.md` instead. This repository keeps an [equivalent rule](../rules/antigravity-rtk-rules.md) that is not installed by default. See the [rules README](../rules/README.md) to install it.
+RTK 0.51.0 and later rewrite Antigravity commands with `rtk hook antigravity`, which returns the new command in `overwrite.CommandLine`. `scripts/sync-toolkit.sh --harness` adds it to `~/.gemini/config/hooks.json` as an `rtk` entry with the `run_command` matcher. Upstream's `rtk init -g --agent antigravity` installs it as a plugin instead; this toolkit uses the global hooks file because output from plugin hooks did not reach Antigravity CLI 1.4.12 in a probe. The [rule file](../rules/antigravity-rtk-rules.md) that tells the agent to prefix commands stays available for an Antigravity without the hook.
 
 ### Kimi Code
 
@@ -108,6 +110,10 @@ Kimi Code's hooks can allow or deny a tool call but cannot change it, so automat
 ### Grok Build TUI
 
 Grok's own `PreToolUse` hooks could rewrite commands, but Grok does not load Claude hooks, and RTK's Claude hook cannot read Grok's camelCase payload. There is no `rtk init` option for Grok, so do not run another agent's option in its place. Grok reads the shared instruction file through its Claude compatibility setting, and that file tells it to prefix commands with `rtk`.
+
+### Muse Code
+
+Muse's `PreToolUse` plugin hooks accept the output of `rtk hook claude`, but Muse 1.4.14 applies a rewrite only when it carries `permissionDecision: "allow"`. RTK sets that only for commands your Claude Code permission rules allow, so a hook would leave most commands unfiltered. Muse reads the shared instruction file, which tells it to prefix commands with `rtk`, and no hook is installed.
 
 ## Check that it works
 

@@ -34,7 +34,7 @@ Before creating or editing any public repo's governance files (`CODE_OF_CONDUCT.
 - **Simplicity first.** Write the minimum code that solves the problem. Avoid speculative abstractions, unrequested features, and impossible error handling.
 - **Surgical changes.** Touch only required code. Match existing style. Delete orphans created by your changes, but leave pre-existing dead code untouched.
 - **Verifiable goals.** Convert vague tasks into testable success criteria before starting.
-- **Token efficiency (RTK).** Prefix shell commands with `rtk` unless using a transparent rewrite hook (Claude Code, Cursor). Antigravity/Agy, Codex, Kimi Code, and Grok require explicit `rtk` prefixes.
+- **Token efficiency (RTK).** Prefix shell commands with `rtk` unless a rewrite hook adds it (Claude Code, Cursor, Codex, Antigravity, OpenCode). Kimi Code, Grok and Muse require explicit `rtk` prefixes.
 
 ## Housekeeping inside approved scope
 
@@ -158,8 +158,8 @@ Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CL
 
 Use `rtk` for shell commands to conserve tokens.
 
-- Rely on trusted RTK hooks where available (Claude Code, Cursor).
-- Explicitly prefix shell commands with `rtk` on Codex, Antigravity/Agy, Kimi Code, and Grok Build TUI.
+- Rely on RTK rewrite hooks in Claude Code, Cursor, Codex, Antigravity and OpenCode.
+- Explicitly prefix shell commands with `rtk` on Kimi Code, Grok Build TUI and Muse Code.
 - Use `rtk proxy <cmd>` only for exact bytes or to debug a filter. For `git`, `gh`, `rg`, `grep`, `find` and `ls`, use the plain `rtk` prefix so the filter applies. Run tests through `rtk proxy` so the verdict line stays.
 
 ## RTK filtering — verbatim-critical files

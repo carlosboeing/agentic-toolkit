@@ -32,7 +32,7 @@ This map is the index of harness capabilities. Where a capability has its own re
 | Hooks that can block the agent ([detail](reference-harness-hooks.md)) | Yes, including after a tool runs | Yes, before a tool runs, on prompt submit and on stop | Before a tool runs, and on stop | Before a tool runs, on stop and on prompt submit | Before a tool runs; stop is disputed | Before a tool runs |
 | Hooks that can rewrite a tool call ([detail](reference-harness-hooks.md)) | Yes | Yes, before a tool runs | Yes, before a tool runs | No | Disputed | Yes, through a plugin |
 | Hooks that add context on each prompt ([detail](reference-harness-hooks.md)) | Yes | Yes | Yes, before each model call | Disputed | No; `PreToolUse` context arrives with the tool result | Through a plugin, on 1.x and 2.x |
-| RTK mode | Automatic hook | `rtk` prefix in instructions | `rtk` prefix in instructions | `rtk` prefix in instructions | `rtk` prefix in instructions | Automatic plugin |
+| RTK mode | Automatic hook | Automatic hook (`rtk hook codex`), trusted once in `/hooks` | Automatic hook (`rtk hook antigravity`) | `rtk` prefix in instructions | `rtk` prefix in instructions | Automatic plugin |
 | Headless resume | `claude --resume <id> --print` | `codex exec resume <id>` | `agy --conversation <id> --print` | `kimi --session <id> -p` | Not integrated | `opencode run --session <id>` |
 | Resume in a fresh session ([`resume-session`](../skills/resume-session/)) | Reads its transcripts; can be the target | Reads its transcripts; can be the target | Reads its CLI transcripts; can be the target | Target only; its sessions get the repository-only summary | Reads its transcripts; can be the target | Reads its database; can be the target |
 
@@ -42,11 +42,11 @@ The reference harness. Skills live in the hub at `~/.claude/skills`, which the o
 
 ## Codex
 
-Reads `AGENTS.md` for instructions and `~/.agents/skills` for skills. `~/.codex/skills` holds Codex's own bundled skills and is not linked to the hub. RTK runs through an instruction to prefix commands with `rtk`. Headless resume uses `codex exec resume <id> -`, reading the prompt from standard input.
+Reads `AGENTS.md` for instructions and `~/.agents/skills` for skills. `~/.codex/skills` holds Codex's own bundled skills and is not linked to the hub. RTK rewrites commands through `rtk hook codex`, which the synchronizer registers in `~/.codex/hooks.json`. Headless resume uses `codex exec resume <id> -`, reading the prompt from standard input.
 
 ## Antigravity
 
-Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/.gemini/config/skills`. The command-line tool also documents `~/.gemini/antigravity-cli/skills`, which the synchronizer does not link. Antigravity stops reading instructions after 24,023 characters. Some plugins come bundled. Models are chosen by hand with `/model`. See the [Antigravity model and quota guide](../guides/guide-agy-model-and-quota-selection.md).
+Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/.gemini/config/skills`. The command-line tool also documents `~/.gemini/antigravity-cli/skills`, which the synchronizer does not link. Antigravity stops reading instructions after 24,023 characters. Some plugins come bundled. Models are chosen by hand with `/model`. RTK rewrites commands through `rtk hook antigravity`, which the synchronizer registers in `~/.gemini/config/hooks.json`. See the [Antigravity model and quota guide](../guides/guide-agy-model-and-quota-selection.md).
 
 ## Kimi Code (recorded 2026-07-28)
 

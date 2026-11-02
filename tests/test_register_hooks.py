@@ -26,6 +26,12 @@ if [ "$1 $2" = "plugins install" ]; then touch "$HOME/muse-installed"; fi
 exit 0
 """
 
+FAKE_RTK = """#!/bin/sh
+# Fake rtk: lists the hook processors RTK 1.1 has.
+if [ "$1 $2" = "hook --help" ]; then printf 'Commands:\\n  claude  x\\n  codex  x\\n  antigravity  x\\n'; fi
+exit 0
+"""
+
 
 class RegisterCase(unittest.TestCase):
     def setUp(self):
@@ -146,6 +152,53 @@ class RegisterTests(RegisterCase):
         self.assertIn("ACTION", out)
         (self.home / ".codex" / "config.toml").write_text(
             '[hooks.state."user:hooks.json:user_prompt_submit:0:0"]\ntrusted_hash = "sha256:x"\n')
+        self.assertNotIn("ACTION", self.register())
+
+    def test_rtk_is_skipped_when_absent(self):
+        out = self.register()
+        self.assertRegex(out, r"RTK.*\[SKIPPED\] rtk not on PATH")
+        self.assertNotIn("PreToolUse", self.json(".codex/hooks.json")["hooks"])
+
+
+class RtkTests(RegisterCase):
+    def setUp(self):
+        super().setUp()
+        self.rtk = self.home / "bin" / "rtk"
+        self.rtk.write_text(FAKE_RTK)
+        self.rtk.chmod(0o755)
+
+    def test_rtk_rewrite_hooks_are_registered(self):
+        out = self.register()
+        self.assertEqual(self.changes(out), 8, out)
+        codex = self.json(".codex/hooks.json")
+        self.assertEqual(codex["hooks"]["PreToolUse"], [
+            {"matcher": "Bash", "hooks": [{"type": "command", "command": f"{self.rtk} hook codex", "timeout": 10}]}])
+        agy = self.json(".gemini/config/hooks.json")
+        self.assertEqual(agy["rtk"], {"PreToolUse": [{"matcher": "run_command", "hooks": [
+            {"type": "command", "command": f"{self.rtk} hook antigravity", "timeout": 10}]}]})
+        self.assertIn("resume-session-warn", agy)
+        self.assertEqual(self.changes(self.register()), 0)
+
+    def test_existing_rtk_entries_are_kept(self):
+        codex = self.home / ".codex" / "hooks.json"
+        codex.write_text(json.dumps({"hooks": {"PreToolUse": [
+            {"matcher": "Bash", "hooks": [{"type": "command", "command": "rtk hook codex"}]}]}}))
+        self.register()
+        self.assertEqual(self.commands(self.json(".codex/hooks.json"), "PreToolUse"), ["rtk hook codex"])
+
+    def test_rtk_without_codex_processor_is_skipped(self):
+        self.rtk.write_text("#!/bin/sh\nprintf 'Commands:\\n  claude  x\\n'\n")
+        out = self.register()
+        self.assertRegex(out, r"Codex CLI: rtk hook codex.*\[SKIPPED\]")
+        self.assertNotIn("rtk", self.json(".gemini/config/hooks.json"))
+
+    def test_codex_trust_covers_the_rtk_hook(self):
+        (self.home / ".codex" / "config.toml").write_text(
+            '[hooks.state."user:hooks.json:user_prompt_submit:0:0"]\ntrusted_hash = "sha256:x"\n')
+        self.assertIn("ACTION", self.register())
+        (self.home / ".codex" / "config.toml").write_text(
+            '[hooks.state."user:hooks.json:user_prompt_submit:0:0"]\ntrusted_hash = "sha256:x"\n'
+            '[hooks.state."user:hooks.json:pre_tool_use:0:0"]\ntrusted_hash = "sha256:y"\n')
         self.assertNotIn("ACTION", self.register())
 
 

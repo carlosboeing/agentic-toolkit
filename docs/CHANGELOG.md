@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-02: RTK rewrite hooks for Codex and Antigravity
+
+- `scripts/register_hooks.py` adds `rtk hook codex` to `~/.codex/hooks.json` (`PreToolUse`, `Bash`) and an `rtk` entry with `rtk hook antigravity` to `~/.gemini/config/hooks.json` (`PreToolUse`, `run_command`), by the full path of `rtk`. Each is added only when `rtk hook --help` lists that processor. The Codex trust reminder now covers every hook it registers.
+- The global brief drops the explicit `rtk` prefix for Codex and Antigravity and keeps it for Kimi Code, Grok and Muse. Live probes with RTK 1.1.0 confirmed the rewrite in Codex 0.166.0 and Antigravity CLI 1.4.12; Muse 1.4.14 applies a rewrite only with `permissionDecision: "allow"`, and Grok could not be tested.
+- The RTK setup guide and the harness hooks reference record the probe results.
+
 ## 2026-11-02: narrower `rtk proxy` rule
 
 - The global brief keeps `rtk proxy` for exact bytes, test runs and filter debugging, and sends `git`, `gh`, `rg`, `grep`, `find` and `ls` through the plain `rtk` prefix. It also asks for a line range instead of a whole large file. In a 14-day Codex sample, 89% of shell calls used `rtk proxy`; whole-file reads averaged 29,000 characters and made up half of the measured output.
