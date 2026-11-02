@@ -34,7 +34,7 @@ Before creating or editing any public repo's governance files (`CODE_OF_CONDUCT.
 - **Simplicity first.** Write the minimum code that solves the problem. Avoid speculative abstractions, unrequested features, and impossible error handling.
 - **Surgical changes.** Touch only required code. Match existing style. Delete orphans created by your changes, but leave pre-existing dead code untouched.
 - **Verifiable goals.** Convert vague tasks into testable success criteria before starting.
-- **Token efficiency (RTK).** Prefix shell commands with `rtk` unless using a transparent rewrite hook (Claude Code, Cursor). Antigravity/Agy, Codex, Kimi Code, and Grok require explicit `rtk` prefixes.
+- **Token efficiency (RTK).** Prefix shell commands with `rtk` unless a rewrite hook adds it (Claude Code, Cursor, Codex, Antigravity, OpenCode). Kimi Code, Grok and Muse require explicit `rtk` prefixes.
 
 ## Housekeeping inside approved scope
 
@@ -156,15 +156,16 @@ Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CL
 
 ## RTK - Rust Token Killer
 
-Use `rtk` for shell commands to conserve tokens.
+RTK condenses shell output to save tokens.
 
-- Rely on trusted RTK hooks where available (Claude Code, Cursor).
-- Explicitly prefix shell commands with `rtk` on Codex, Antigravity/Agy, Kimi Code, and Grok Build TUI.
-- Use `rtk proxy <cmd>` only for exact bytes or to debug a filter. For `git`, `gh`, `rg`, `grep`, `find` and `ls`, use the plain `rtk` prefix so the filter applies. Run tests through `rtk proxy` so the verdict line stays.
+- Rely on RTK rewrite hooks in Claude Code, Cursor, Codex, Antigravity and OpenCode.
+- On Kimi Code, Grok Build TUI and Muse Code, prefix every shell command with `rtk`, including each command in a chain: `rtk git add . && rtk git commit -m "msg"`.
+- Treat condensed output as the complete result, and batch related commands into one call. A truncated result names its own recovery path.
+- Re-run a command as `rtk bypass <cmd>` only when its output is unusable: empty when output was expected, contradicting its exit code, or garbled. Run tests through `rtk bypass` so the verdict line stays.
 
 ## RTK filtering — verbatim-critical files
 
-RTK filters output to save tokens. For verbatim-critical files (specs, plans, templates, YAML frontmatter), re-read exact bytes using native file-read tools or `rtk proxy` before acting. From a large file, read only the line range you need, such as `rtk proxy sed -n '40,90p' <file>`. Never edit from filtered or truncated output.
+`cat` and `rtk read` return a file's exact bytes. For verbatim-critical files (specs, plans, templates, YAML frontmatter), re-read exact bytes before acting. From a large file, read only the line range you need, such as `sed -n '40,90p' <file>`. Never edit from filtered or truncated output.
 
 ## Public-repo working-memory routing
 

@@ -2,6 +2,14 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-02: RTK rewrite in Codex, Antigravity and OpenCode
+
+- `scripts/register_hooks.py` registers `rtk hook codex` in `~/.codex/hooks.json` (`PreToolUse`, `Bash`) by the full path of `rtk`, when `rtk hook --help` lists it. RTK's own `rtk init --codex` is not used: it also writes into `AGENTS.md`, which here links to the shared instruction file, and refuses `--hook-only`. The Codex trust reminder now covers every hook it registers.
+- Antigravity and OpenCode use RTK's own plugins, installed with `rtk init -g --agent antigravity` and `rtk init -g --opencode --hook-only`. Sync reports a missing plugin with that command and writes neither, so RTK's fixes reach them through RTK.
+- Sync generates RTK's current agent text in a throwaway home and reports when it differs from `scripts/rtk-awareness.snapshot.md`, the text the brief's RTK section follows.
+- The brief's RTK section follows RTK 1.1's agent text: treat condensed output as complete, batch related commands, and re-run with `rtk bypass` (the 1.0 name for `rtk proxy`) only when output is unusable or a test verdict is missing. Kimi Code, Grok and Muse keep the prefix, on each command in a chain. `cat` and `rtk read` are byte-exact in RTK 1.1, so exact-byte reads need no bypass.
+- Live probes with RTK 1.1.0 confirmed the rewrite in Codex 0.166.0, Antigravity CLI 1.4.12 (project hooks file and RTK's plugin) and OpenCode 2.1.4. Muse 1.4.14 applies a rewrite only with `permissionDecision: "allow"`, and Grok could not be tested. The RTK setup guide, the harness hooks reference and the capability map record the results.
+
 ## 2026-11-02: narrower `rtk proxy` rule
 
 - The global brief keeps `rtk proxy` for exact bytes, test runs and filter debugging, and sends `git`, `gh`, `rg`, `grep`, `find` and `ls` through the plain `rtk` prefix. It also asks for a line range instead of a whole large file. In a 14-day Codex sample, 89% of shell calls used `rtk proxy`; whole-file reads averaged 29,000 characters and made up half of the measured output.

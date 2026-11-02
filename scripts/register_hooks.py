@@ -8,10 +8,19 @@ adds the entries that make each harness run them:
 
   Claude Code   ~/.claude/settings.json: resume-session-warn (UserPromptSubmit) and
                 validate-mermaid (PostToolUse)
-  Codex CLI     ~/.codex/hooks.json: resume-session-warn (UserPromptSubmit)
+  Codex CLI     ~/.codex/hooks.json: resume-session-warn (UserPromptSubmit) and
+                `rtk hook codex` (PreToolUse)
   Grok Build    ~/.grok/hooks/resume-session-warn.json (PreToolUse)
   Antigravity   ~/.gemini/config/hooks.json: resume-session-warn (PreInvocation)
   Muse Code     a local plugin, installed and approved with the muse CLI
+
+RTK rewrites shell commands to their `rtk` form. Its own installer sets that up for Claude
+Code, Antigravity (a plugin) and OpenCode (a plugin), and this script only reports a missing
+plugin with the command to run. For Codex, `rtk init --codex` also writes into AGENTS.md,
+which here links to the shared instruction file, so this script registers `rtk hook codex`
+itself when `rtk hook --help` lists it (RTK 0.50 and later). It also compares RTK's current
+agent instructions with scripts/rtk-awareness.snapshot.md, the text the shared instruction
+file's RTK section follows, and reports a difference.
 
 Rules: an entry whose command already names the script is left as it is, so a second run
 changes nothing. A settings file is copied to <file>.agentic-toolkit.bak once, before its
@@ -114,14 +123,63 @@ def claude_style(path, entries, run, label):
         run.write(path, dump(data))
 
 
-def codex_trusted(home):
-    """True when Codex has recorded trust for a user UserPromptSubmit hook."""
+def codex_trusted(home, events):
+    """True when Codex has recorded trust for a user hook on each event, such as user_prompt_submit."""
     try:
         text = (home / ".codex" / "config.toml").read_text()
     except OSError:
         return False
-    keys = re.findall(r'^\[hooks\.state\."([^"]+)"\]', text, re.M)
-    return any("user_prompt_submit" in k and "@" not in k.split(":", 1)[0] for k in keys)
+    keys = [k for k in re.findall(r'^\[hooks\.state\."([^"]+)"\]', text, re.M) if "@" not in k.split(":", 1)[0]]
+    return all(any(f":{event}:" in k for k in keys) for event in events)
+
+
+def rtk_processors():
+    """The rtk path and the hook processors its `rtk hook --help` lists, or (None, set())."""
+    rtk = shutil.which("rtk")
+    if not rtk:
+        return None, set()
+    done = subprocess.run([rtk, "hook", "--help"], capture_output=True, text=True)
+    return rtk, set(re.findall(r"^\s+([a-z]+)\s", done.stdout, re.M))
+
+
+def rtk_plugins(home, processors, run):
+    """Report RTK's own Antigravity and OpenCode plugins when missing; RTK's installer writes them."""
+    if "antigravity" in processors and (home / ".gemini" / "antigravity-cli").is_dir():
+        if (home / ".gemini" / "config" / "plugins" / "rtk" / "hooks.json").is_file():
+            run.say("Antigravity CLI: RTK plugin", "OK")
+        else:
+            run.say("Antigravity CLI: RTK plugin", "ACTION", "run `rtk init -g --agent antigravity`")
+    opencode = Path(os.environ.get("XDG_CONFIG_HOME") or home / ".config") / "opencode"
+    if "opencode" in processors and opencode.is_dir():
+        plugin = opencode / "plugins" / "rtk.ts"
+        if plugin.is_file() and "rtk hook opencode" in plugin.read_text(errors="replace"):
+            run.say("OpenCode: RTK plugin", "OK")
+        else:
+            run.say("OpenCode: RTK plugin", "ACTION", "run `rtk init -g --opencode --hook-only`")
+
+
+def rtk_awareness(rtk, processors, repo, run):
+    """Compare RTK's current agent instructions with the snapshot the shared brief follows."""
+    label = "RTK agent instructions"
+    if "antigravity" not in processors:
+        return
+    snapshot = repo / "scripts" / "rtk-awareness.snapshot.md"
+    with tempfile.TemporaryDirectory() as tmp:
+        # RTK writes its instruction text into the Antigravity plugin it installs; a throwaway
+        # home keeps the real settings untouched.
+        env = {k: v for k, v in os.environ.items() if k not in ("CLAUDE_CONFIG_DIR", "CODEX_HOME", "XDG_CONFIG_HOME")}
+        subprocess.run([rtk, "init", "-g", "--agent", "antigravity"], cwd=tmp, env={**env, "HOME": tmp},
+                       stdin=subprocess.DEVNULL, capture_output=True)
+        current = Path(tmp) / ".gemini" / "config" / "plugins" / "rtk" / "rules" / "AGENTS.md"
+        text = current.read_text() if current.is_file() else None
+    if text is None:
+        run.say(label, "SKIPPED", "`rtk init -g --agent antigravity` wrote no instruction file")
+    elif text == snapshot.read_text():
+        run.say(label, "OK")
+    else:
+        run.say(label, "ACTION", "RTK's agent instructions changed; compare them with "
+                                 "scripts/rtk-awareness.snapshot.md, update the RTK section of "
+                                 "instructions/CLAUDE.md, then the snapshot")
 
 
 def antigravity(home, hook_dir, run):
@@ -210,6 +268,9 @@ def main(argv=None):
     home = Path.home()
     run = Run(args.dry_run)
     warn, mermaid = args.hook_dir / WARN, args.hook_dir / MERMAID
+    rtk, processors = rtk_processors()
+    if not rtk:
+        run.say("RTK rewrite hooks", "SKIPPED", "rtk not on PATH")
 
     if (home / ".claude").is_dir():
         claude_style(home / ".claude" / "settings.json", [
@@ -221,17 +282,26 @@ def main(argv=None):
         run.say("Claude Code", "SKIPPED", "~/.claude not present")
 
     if (home / ".codex").is_dir():
-        claude_style(home / ".codex" / "hooks.json", [
-            ("UserPromptSubmit", None, {"type": "command", "command": f"sh {warn}", "timeout": 5}, WARN),
-        ], run, "Codex CLI")
-        if not codex_trusted(home):
-            run.say("Codex CLI: hook trust", "ACTION", "open /hooks in Codex once and trust resume-session-warn; "
-                                                       "Codex skips an untrusted hook")
+        entries = [("UserPromptSubmit", None, {"type": "command", "command": f"sh {warn}", "timeout": 5}, WARN)]
+        events = ["user_prompt_submit"]
+        if "codex" in processors:
+            entries.append(("PreToolUse", "Bash", {"type": "command", "command": f"{rtk} hook codex", "timeout": 10},
+                            "rtk hook codex"))
+            events.append("pre_tool_use")
+        elif rtk:
+            run.say("Codex CLI: rtk hook codex", "SKIPPED", "this rtk has no Codex processor; upgrade to 0.50 or later")
+        claude_style(home / ".codex" / "hooks.json", entries, run, "Codex CLI")
+        if not codex_trusted(home, events):
+            run.say("Codex CLI: hook trust", "ACTION", "open /hooks in Codex once and trust the hooks from "
+                                                       "~/.codex/hooks.json; Codex skips an untrusted hook")
     else:
         run.say("Codex CLI", "SKIPPED", "~/.codex not present")
 
     grok(home, args.hook_dir, run)
     antigravity(home, args.hook_dir, run)
+    rtk_plugins(home, processors, run)
+    if rtk:
+        rtk_awareness(rtk, processors, args.repo, run)
     muse(home, args.repo, run)
     print(f"changes={run.changes}")
     return 0

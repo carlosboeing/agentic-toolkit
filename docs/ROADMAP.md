@@ -9,7 +9,8 @@ None at the moment.
 ## Next actions
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
-- **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
+- **Codex Mermaid validation.** Adapt `validate-mermaid` to Codex's `PostToolUse` hook, which can return feedback after an edit, and test it before enabling it.
+- **RTK rewrite hook for Grok Build.** Grok's bundled hook reference documents `updatedInput`, and RTK's Claude processor cannot read Grok's camelCase payload. Test a mapping wrapper once the Grok account can run a session.
 
 ## Future considerations
 
@@ -33,6 +34,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **RTK rewrite in Codex, Antigravity and OpenCode (2026-11-02).** Those harnesses no longer type the `rtk` prefix. Antigravity and OpenCode use RTK's own plugins; sync registers only the Codex hook, reports a missing plugin, and warns when RTK's agent text changes. Muse keeps the prefix: it applies a rewrite only for commands RTK auto-allows.
 - **Narrower `rtk proxy` rule (2026-11-02).** The global brief limits `rtk proxy` to exact bytes, test runs and filter debugging, routes `git`, `gh`, `rg`, `grep`, `find` and `ls` through RTK's filters, and asks for line ranges from large files.
 - **Privacy guard home-path match (2026-11-02).** The pre-commit guard matches the macOS home-directory prefix case-sensitively, so example code with a lowercase `users` path segment is no longer refused. The other denied terms still match in any case.
 - **Resume sessions from four more harnesses (2026-11-01).** `resume-session` reads OpenCode, Antigravity CLI, Grok Build and Muse Code sessions, leaves the running session out of its list, and gives every candidate a readable title and its last request. The resume warning hook covers those harnesses too, and `sync-toolkit.sh` now registers every hook it installs, in each harness's own settings.
