@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-03: additive requirements extraction in migrations
+
+- Assess requirements ownership in every lifecycle migration preview. Support requested extraction into additional draft briefs or PRDs using the SDD requirements contract and template.
+- Preserve original brainstorms, designs and plans apart from separately previewed structural repairs. Trace explicit and inferred requirements to fixed source revisions, retain source authority and record conflicts without inventing approval or delivery.
+- Rehearse the exact authored additions after the deterministic structural target. Verify source preservation and record both target trees for interrupted-run recovery; the structural runner remains unchanged.
+
 ## 2026-11-03: lifecycle consumer consistency
 
 - Align session recovery with file-relative relationships and root-level lifecycle folders. Resolve numeric-only commit abbreviations without treating numeric counts as commits.
