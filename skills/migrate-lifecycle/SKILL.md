@@ -22,6 +22,8 @@ Read each project's instructions, Project Map, current conventions and installed
 
 Inventory files, modes, links, assets and existing reference failures. Preserve uncommitted work; a dirty or diverged migration target is blocked until reconciled. Other independent targets may continue.
 
+Inspect discovery consumers before moving records. Include declared roots and any existing QMD collection patterns in the preview: legacy-only globs can omit the new paths. Preserve collection roots, exclusions and visibility; configuration writes require their actual authority. Reindex only after authorized updates and verify the intended records can be found. Do not register transient worktrees or add models, embeddings, daemons or MCP services.
+
 Propose an explicit file mapping. Folder numbers do not establish document meaning. Use type and content to separate requirements, technical designs, reviews, retrospectives and evergreen material. Raise consequential ambiguity; do not guess approval, status or product scope. Keep original types except the supported `discovery` to `research` alias. Move attachments with their owner only when exclusive; retain shared evidence with repaired links. Preserve frozen transcripts, historical paths and review provenance.
 
 Build only the required reference edits and project-instruction changes. Avoid blind repository-wide replacement. Classify live navigation separately from historical examples. For each declared working-memory root, create all seven numbered lifecycle folders, adding `.gitkeep` to empty folders. Their presence requires no phase or artifact. Nested lesson and asset folders remain on demand. Do not create lifecycle folders in a public tree whose working memory belongs elsewhere.

@@ -64,6 +64,14 @@ Run serially. Apply and stage the rehearsed changes, verify preservation and ref
 
 The delimiters are not part of the prompt.
 
+## Check discovery coverage before moving records
+
+Inventory document consumers along with the files. Check the Project Map, phase skills, briefing/session recovery, validators and registered search collections against the target paths. Supporting old folders does not establish support for every new location or metadata field.
+
+For QMD installations, inspect the existing collections with `qmd --index agent-docs collection list`. A collection restricted to legacy folders can lose designs, plans, reviews and retrospectives after their moves. Include the exact collection-pattern update in the migration scope, preserve its canonical root, exclusions and private visibility, and obtain any missing configuration authority. Do not register transient worktrees or duplicate clones. After the authorized changes, run `qmd --index agent-docs update` and verify the migrated records are found through the intended collections. This is lexical indexing; model downloads, embeddings, daemons and MCP servers remain separate actions.
+
+A source rehearsal verifies file transformations; it does not prove that an installed harness or search index can discover the result. Keep unavailable consumer checks and configuration changes explicit in the per-project disposition.
+
 ## Establish the baseline
 
 Read project instructions and the Project Map. Do not assume `docs/` or a numbered folder identifies the active working-memory root. Inspect dirty files, local and remote commits, worktrees and other writers. Keep incompatible sessions read-only during application.

@@ -654,6 +654,8 @@ def working_memory_root(root, profile, ctx):
                     candidate = (root / token.group("target")).resolve()
                     if candidate.is_dir():
                         return candidate, f"the Project Map `{field}` field in {name}"
+    if _has_lifecycle_folder(root, profile):
+        return root, "the repository root"
     fallback = profile.wm.get("fallback_folder")
     if fallback and (root / fallback).is_dir() and _has_lifecycle_folder(root / fallback, profile):
         return root / fallback, f"the `{fallback}/` folder"
@@ -876,7 +878,8 @@ def describe_top(doc, locations, ctx):
     refs = []
     for _, done, text in doc.checks:
         if done:
-            refs.extend(t for t in HEX_TOKEN.findall(text) if not t.isdigit() and t not in refs)
+            refs.extend(t for t in HEX_TOKEN.findall(text)
+                        if t not in refs and (not t.isdigit() or commit_state(t, locations) is not None))
     limit = ctx.cap("commit_refs")
     if refs:
         out.append("- Commit references in ticked items:")
@@ -897,7 +900,7 @@ def describe_top(doc, locations, ctx):
 
 
 def chain_entry(item, doc, profile, ctx):
-    for base in (profile.root, doc.path.parent):
+    for base in (doc.path.parent, profile.root):
         if base is None:
             continue
         path = base / item

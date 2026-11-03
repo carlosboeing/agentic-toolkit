@@ -227,6 +227,41 @@ class NestedWorkingMemoryTests(unittest.TestCase):
         self.assertIn("`3-design/fixture-design.md`: status approved, reviewed_by fixture-reviewer", out)
         self.assertRegex(out, r"`[0-9a-f]{7}`: reachable from `main` in wm")
 
+    def test_numeric_commit_reference_is_checked_without_treating_counts_as_commits(self):
+        for nonce in range(4096):
+            sha = self.sb.git(self.wm, "commit-tree", "HEAD^{tree}", "-p", "HEAD",
+                              "-m", f"numeric reference fixture {nonce}")
+            if sha[:7].isdigit():
+                break
+        else:
+            self.fail("could not create a numeric commit abbreviation")
+        self.sb.git(self.wm, "update-ref", "refs/heads/main", sha)
+        number = "9999999999999999999999999999999999999999"
+        self.sb.write(self.wm, {"4-plans/fixture-plan.md":
+                               SDLC_PLAN.replace("{sha}", sha[:7]) + f"\n- [x] Count {number} records.\n"})
+        self.sb.commit(self.wm, "record numeric reference")
+        out = self.show()
+        self.assertIn(f"`{sha[:7]}`: reachable from `main` in wm", out)
+        self.assertNotIn(f"`{number}`: not found", out)
+
+    def test_source_chain_prefers_the_document_directory_over_a_root_shadow(self):
+        self.sb.write(self.wm, {
+            "source.md": SDLC_DESIGN.replace("fixture-reviewer", "root-shadow-reviewer"),
+            "4-plans/source.md": SDLC_DESIGN.replace("fixture-reviewer", "file-relative-reviewer"),
+            "4-plans/fixture-plan.md": SDLC_PLAN.replace("{sha}", self.sb.git(self.wm, "rev-parse", "HEAD")[:7])
+                                                   .replace("3-design/fixture-design.md", "source.md"),
+        })
+        self.sb.commit(self.wm, "record file-relative source")
+        out = self.show()
+        self.assertIn("`source.md`: status approved, reviewed_by file-relative-reviewer", out)
+        self.assertNotIn("`source.md`: status approved, reviewed_by root-shadow-reviewer", out)
+
+    def test_profile_applies_from_a_repository_with_lifecycle_folders_at_its_root(self):
+        result = self.sb.reader("show", "--repo-only", "--cwd", str(self.wm), "--all")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Profile: `agentic-sdlc` applied", result.stdout)
+        self.assertEqual(ranked_paths(result.stdout)[0], "4-plans/fixture-plan.md")
+
     def test_generic_run_keeps_every_candidate_of_the_profile_run(self):
         with_profile = set(ranked_paths(self.show()))
         generic_out = self.show("--profile", "none")

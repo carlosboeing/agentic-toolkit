@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-03: lifecycle consumer consistency
+
+- Align session recovery with file-relative relationships and root-level lifecycle folders. Resolve numeric-only commit abbreviations without treating numeric counts as commits.
+- Make the Python link checker reject absolute local frontmatter relationships while retaining root-relative Markdown body links.
+- Name the authoritative lifecycle sources and require discovery/search coverage in migration previews, including existing collection patterns.
+
 ## 2026-11-03: reliable toolkit synchronization
 
 - Add a `sync-toolkit` skill and script catalog, with one hook-installation implementation shared by rollout and repository-standards guidance.

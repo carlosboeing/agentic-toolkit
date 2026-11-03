@@ -72,6 +72,8 @@ Recency comes from frontmatter `updated`, else the file's last commit, never the
 
 `profiles/agentic-sdlc.json` holds the conventions of this toolkit's [project structure guide](../../guides/guide-project-structure-and-conventions.md) as data: lifecycle folders, types, statuses, date fields, and task patterns. It applies only when a lifecycle folder holds a document whose frontmatter has a profile type, and it can only add documents and change their order. `--profile none` shows the generic result. `tests/test_resume_session_profile.py` fails when the profile drifts from its sources.
 
+The profile discovers lifecycle folders at a declared working-memory location, directly at the repository root, in `docs/`, or in an independent nested repository. File-relative `related` links take precedence; the memory-root fallback remains for legacy records. Checked commit references include valid numeric-only Git abbreviations, while ordinary numeric counts are ignored.
+
 ### Long output
 
 A summary is typically 8,000 to 10,000 tokens. It has no hard ceiling; past 48,000 characters its first line says to read it by section. Harnesses cut long command output, so the skill reads the summary by section whenever a harness cuts or previews it. On 2026-11-01, Claude Code 2.1.316 showed command output inline up to about 20,000 characters, and Codex CLI 0.166.0 kept at most about 10,000 tokens per command.
