@@ -12,6 +12,7 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 | [`schedule-resume`](schedule-resume/) | `/schedule-resume` | Bundled skill with a shell helper that schedules an unattended session to resume later, using launchd on macOS or cron on Linux. Works with Claude Code, Antigravity, Codex and Kimi Code. |
 | [`repo-standards`](repo-standards/) | `/repo-standards` | Checks, fixes or scaffolds a repository's governance files, workflows and branch protection from the house standard |
 | [`oss-standards`](oss-standards/) | `/oss-standards` | Shortcut for `/repo-standards oss`. New automation should call `repo-standards` directly. |
+| [`sync-toolkit`](sync-toolkit/) | `/sync-toolkit`, or on request | Coordinates toolkit installation and selected repository rollouts using exact change reports, smoke tests and separate publication verification |
 | [`migrate-lifecycle`](migrate-lifecycle/) | On request | Guides lifecycle migration for one project or an explicitly selected batch, with deterministic execution and preservation checks |
 | [`housekeeping`](housekeeping/) | `/housekeeping` | Compares local branches and worktrees with GitHub pull requests, and in `fix` mode removes only what a merge left behind |
 | [`penmark-comments`](penmark-comments/) | Automatic, or on request | Reviews a local Markdown file and, once you choose where the output goes, can write validated Penmark inline comments |
@@ -86,7 +87,7 @@ Start a new session afterwards. Skills with a slash command appear in the harnes
 
 ## Synchronize every authored skill
 
-The synchronizer copies every skill in this directory into one hub at `~/.claude/skills`, then links the other harnesses' skill directories to it. It also writes OpenCode slash-command wrappers and the OpenCode Mermaid plugin.
+The synchronizer copies every skill in this directory into one hub at `~/.claude/skills`, then links the other harnesses' skill directories to it. It also writes OpenCode slash-command wrappers and the Mermaid, frontmatter and resume-warning plugins.
 
 Preview the changes, then apply them:
 

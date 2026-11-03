@@ -10,6 +10,8 @@
 #   ./scripts/sync-toolkit.sh --all        full sync: harnesses (~/) + repositories ($PROJECTS_DIR)
 #   ./scripts/sync-toolkit.sh --harness    sync only harness tools in $HOME (skills, hooks, plugins)
 #   ./scripts/sync-toolkit.sh --repos      sync only git hooks across project repositories
+#   ./scripts/sync-toolkit.sh --registration-report <p>  record hook registration and manual actions
+#   ./scripts/sync-toolkit.sh --no-sidecars  target outer repositories only (rollout preflight)
 #   ./scripts/sync-toolkit.sh --all-repos  sync all discovered repositories, bypassing fleet filter
 #   ./scripts/sync-toolkit.sh --dry-run    audit mode: report drift without modifying files
 #   ./scripts/sync-toolkit.sh --adopt            fold a real spoke directory into the hub
@@ -73,17 +75,21 @@ fi
 TOTAL_HARNESS_UPDATED=0
 TOTAL_REPO_HOOKS_UPDATED=0
 TOTAL_REPOS_CHECKED=0
+TOTAL_FAILURES=0
 
 MODE="all"
 DRY_RUN=0
 ADOPT=0
 ASSUME_YES=0
 ALL_REPOS=0
+INCLUDE_SIDECARS=1
+REGISTRATION_REPORT=""
 NO_CONFIG=0
 CONFIG_FILE=""
 TARGET_PATH=""
 ORIG_ARG_COUNT=$#
 SELECTED_REPOS=()
+PLANNED_SKILL_FILES=()
 
 # Built-in generic fallbacks
 DEFAULT_PROJECTS_DIR=""
@@ -101,7 +107,7 @@ IGNORE_DIRS=("temp" "archive" "node_modules" ".worktrees")
 EXTRA_SKILL_SOURCES=()
 
 print_usage() {
-  sed -n '3,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '3,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 run() {
@@ -227,6 +233,14 @@ while [[ $# -gt 0 ]]; do
       ALL_REPOS=1
       shift
       ;;
+    --registration-report)
+      REGISTRATION_REPORT="${2:?--registration-report needs a new JSON path}"
+      shift 2
+      ;;
+    --no-sidecars)
+      INCLUDE_SIDECARS=0
+      shift
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -279,6 +293,15 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ -n "$REGISTRATION_REPORT" && "$MODE" == "repos" ]]; then
+  echo "--registration-report requires --harness or --all" >&2
+  exit 2
+fi
+if [[ -n "$REGISTRATION_REPORT" && ( -e "$REGISTRATION_REPORT" || -L "$REGISTRATION_REPORT" ) ]]; then
+  echo "registration report already exists; choose a new path" >&2
+  exit 2
+fi
 
 # ---------------------------------------------------- Interactive Wizard ---
 
@@ -377,8 +400,8 @@ run_wizard() {
   local skill_count
   skill_count="$(find "$SKILLS_SRC" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
   printf "  • %-45s %b[READY]%b\n" "$skill_count Authored Skills (hub ~/.claude/skills & spokes)" "$C_GREEN" "$C_RESET"
-  printf "  • %-45s %b[READY]%b\n" "Claude Code Hooks (Mermaid, resume warning)" "$C_GREEN" "$C_RESET"
-  printf "  • %-45s %b[READY]%b\n" "OpenCode Command Wrappers & Mermaid Plugin" "$C_GREEN" "$C_RESET"
+  printf "  • %-45s %b[READY]%b\n" "Claude Code Hooks (Mermaid, frontmatter, resume warning)" "$C_GREEN" "$C_RESET"
+  printf "  • %-45s %b[READY]%b\n" "OpenCode Command Wrappers & Validation/Resume Plugins" "$C_GREEN" "$C_RESET"
 
   echo ""
   # [3/3] Local Project Repositories
@@ -529,6 +552,7 @@ sync_authored() {
     src="${path%/}"
     name="$(basename "$src")"
     [[ -f "$src/SKILL.md" ]] || continue
+    PLANNED_SKILL_FILES+=("$src/SKILL.md")
     dest="$HUB/$name"
 
     if [[ -L "$dest" ]]; then
@@ -623,7 +647,8 @@ sync_claude_hook() {
   local dest="$2"
 
   if [[ ! -f "$src" ]]; then
-    echo -e "  • $dest  ${C_YELLOW}(skipped: source missing)${C_RESET}"
+    echo -e "  • $dest  ${C_YELLOW}(failed: source missing)${C_RESET}"
+    TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
     return
   fi
 
@@ -658,12 +683,18 @@ sync_opencode() {
   fi
 
   # Command wrappers
-  local out="$cfg/command" src name dest written=0 kept=0
+  local out="$cfg/command" src name dest written=0 kept=0 seen="|"
+  local skill_files=("$HUB"/*/SKILL.md)
+  if [[ $DRY_RUN -eq 1 && ${#PLANNED_SKILL_FILES[@]} -gt 0 ]]; then
+    skill_files+=("${PLANNED_SKILL_FILES[@]}")
+  fi
   run mkdir -p "$out"
 
-  for src in "$HUB"/*/SKILL.md; do
+  for src in "${skill_files[@]}"; do
     [[ -f "$src" ]] || continue
     name="$(basename "$(dirname "$src")")"
+    [[ "$seen" == *"|$name|"* ]] && continue
+    seen="$seen$name|"
     dest="$out/$name.md"
 
     if [[ -f "$dest" ]] && ! grep -q 'skill using the skill tool' "$dest"; then
@@ -692,7 +723,11 @@ sync_opencode() {
   for entry in "${OPENCODE_PLUGINS[@]}"; do
     plugin_src="${entry%%:*}"
     plugin_dest="$cfg/plugins/${entry##*:}"
-    [[ -f "$plugin_src" ]] || continue
+    if [[ ! -f "$plugin_src" ]]; then
+      echo -e "  • $plugin_dest  ${C_YELLOW}(failed: source missing)${C_RESET}"
+      TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
+      continue
+    fi
     run mkdir -p "$cfg/plugins"
     if [[ ! -f "$plugin_dest" ]] || ! cmp -s "$plugin_src" "$plugin_dest"; then
       echo -e "  • OpenCode plugin -> $plugin_dest  ${C_GREEN}[UPDATING]${C_RESET}"
@@ -706,13 +741,17 @@ sync_opencode() {
 
 register_harness_hooks() {
   if ! command -v python3 >/dev/null 2>&1; then
-    echo -e "  • Hook registration  ${C_YELLOW}(skipped: python3 not found)${C_RESET}"
+    echo -e "  • Hook registration  ${C_YELLOW}(failed: python3 not found)${C_RESET}"
+    TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
     return
   fi
   local args=(--repo "$REPO_ROOT" --hook-dir "$HOME/.claude/hooks") out changes
   [[ $DRY_RUN -eq 1 ]] && args+=(--dry-run)
+  [[ -n "$REGISTRATION_REPORT" ]] && args+=(--report "$REGISTRATION_REPORT")
   if ! out="$(python3 "$REGISTER_HOOKS" "${args[@]}")"; then
-    echo -e "  • Hook registration  ${C_YELLOW}(failed; settings unchanged where it stopped)${C_RESET}"
+    printf '%s\n' "$out"
+    echo -e "  • Hook registration  ${C_YELLOW}(failed; inspect reported settings)${C_RESET}"
+    TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
     return
   fi
   printf '%s\n' "$out" | grep -v '^changes='
@@ -762,6 +801,7 @@ sync_single_repo_hook() {
 
   if [[ ! -f "$src" ]]; then
     echo -e "     ${C_YELLOW}[SOURCE MISSING]${C_RESET} $hook_name"
+    TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
     return
   fi
 
@@ -796,6 +836,19 @@ sync_repo_target() {
   TOTAL_REPOS_CHECKED=$((TOTAL_REPOS_CHECKED + 1))
 
   echo -e "  • ${C_BOLD}$target${C_RESET}"
+
+  local required=("$HOUSEKEEP_SRC" "$PRE_PUSH_SRC" "$POST_MERGE_SRC") src missing=0
+  if [[ -d "$target/.workbench" ]]; then
+    required+=("$PRE_COMMIT_SRC")
+  fi
+  for src in "${required[@]}"; do
+    if [[ ! -f "$src" ]]; then
+      echo -e "     ${C_YELLOW}[SOURCE MISSING]${C_RESET} $src"
+      TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
+      missing=1
+    fi
+  done
+  [[ $missing -eq 0 ]] || return 0
 
   local githooks_dir="$target/scripts/githooks"
   run mkdir -p "$githooks_dir"
@@ -876,7 +929,7 @@ sync_repos() {
   local all_targets=()
   for t in "${targets[@]}"; do
     all_targets+=("$t")
-    if [[ "$(basename "$t")" != ".workbench" && (-d "$t/.workbench/.git" || -f "$t/.workbench/.git") ]]; then
+    if [[ $INCLUDE_SIDECARS -eq 1 && "$(basename "$t")" != ".workbench" && (-d "$t/.workbench/.git" || -f "$t/.workbench/.git") ]]; then
       all_targets+=("$t/.workbench")
     fi
   done
@@ -904,10 +957,18 @@ case "$MODE" in
     ;;
 esac
 
-echo -e "${C_BOLD}${C_GREEN}Synchronization complete:${C_RESET}"
+if [[ $TOTAL_FAILURES -gt 0 ]]; then
+  echo -e "${C_YELLOW}Synchronization incomplete: $TOTAL_FAILURES failure(s).${C_RESET}"
+else
+  echo -e "${C_BOLD}${C_GREEN}Synchronization complete (installation only):${C_RESET}"
+fi
 if [[ "$MODE" == "all" || "$MODE" == "harness" ]]; then
   echo "  • Harness components updated: $TOTAL_HARNESS_UPDATED"
 fi
 if [[ "$MODE" == "all" || "$MODE" == "repos" ]]; then
   echo "  • Repository hooks updated:   $TOTAL_REPO_HOOKS_UPDATED across $TOTAL_REPOS_CHECKED target(s)"
+fi
+
+if [[ $TOTAL_FAILURES -gt 0 ]]; then
+  exit 1
 fi

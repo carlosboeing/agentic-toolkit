@@ -4,7 +4,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 
 ## In flight
 
-None at the moment.
+- **Toolkit cleanup and reliable synchronization.** Scope compatible consolidation of installation procedures, a sync skill, exact change reporting and verification, then reconcile affected projects without losing existing functionality or local work.
 
 ## Next actions
 

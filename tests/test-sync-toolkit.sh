@@ -476,6 +476,8 @@ fi
 MOCK_TOOLKIT="$TMP/mock-toolkit"
 mkdir -p "$MOCK_TOOLKIT/scripts" "$MOCK_TOOLKIT/git-hooks" "$MOCK_TOOLKIT/hooks" "$MOCK_TOOLKIT/skills"
 cp "$SCRIPT" "$MOCK_TOOLKIT/scripts/sync-toolkit.sh"
+cp "$REPO_ROOT/scripts/register_hooks.py" "$MOCK_TOOLKIT/scripts/register_hooks.py"
+cp "$REPO_ROOT/scripts/rtk-awareness.snapshot.md" "$MOCK_TOOLKIT/scripts/rtk-awareness.snapshot.md"
 chmod +x "$MOCK_TOOLKIT/scripts/sync-toolkit.sh"
 cp -R "$REPO_ROOT/git-hooks/"* "$MOCK_TOOLKIT/git-hooks/"
 cp -R "$REPO_ROOT/hooks/"* "$MOCK_TOOLKIT/hooks/"

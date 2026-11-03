@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Register the toolkit's hooks in each harness's own settings, for sync-toolkit.sh.
 
-Usage: register_hooks.py --repo DIR --hook-dir DIR [--dry-run]
+Usage: register_hooks.py --repo DIR --hook-dir DIR [--dry-run] [--report NEW_JSON_PATH]
 
 The hook scripts are already copied to --hook-dir (normally ~/.claude/hooks). This script
 adds the entries that make each harness run them:
@@ -26,10 +26,12 @@ Rules: an entry whose command already names the script is left as it is, so a se
 changes nothing. A settings file is copied to <file>.agentic-toolkit.bak once, before its
 first change. A file that does not parse is reported and left alone. Codex hook trust is
 never written; it is reported until Codex records it. A harness that is not installed is
-skipped. The last output line is `changes=<n>`.
+skipped. The last output line is `changes=<n>`. Invalid installed settings or failed
+registration commands exit 1; ACTION events remain explicit follow-up work in the optional report.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -50,8 +52,14 @@ class Run:
         self.dry_run = dry_run
         self.changes = 0
         self.backed_up = set()
+        self.errors = 0
+        self.events = []
+        self.files = []
 
     def say(self, label, state, detail=""):
+        self.events.append({"label": label, "state": state, "detail": detail})
+        if state == "FAILED":
+            self.errors += 1
         print(f"  • {label:<44} [{state}]" + (f" {detail}" if detail else ""))
 
     def change(self, label, detail=""):
@@ -59,6 +67,10 @@ class Run:
         self.say(label, "WOULD ADD" if self.dry_run else "ADDED", detail)
 
     def write(self, path, text):
+        before = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+        self.files.append({"path": str(path), "before_sha256": before,
+                           "expected_sha256": hashlib.sha256(text.encode()).hexdigest(),
+                           "applied": not self.dry_run})
         if self.dry_run:
             return
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -82,10 +94,10 @@ def load(path, run, label):
     try:
         data = json.loads(path.read_text() or "{}")
     except ValueError as exc:
-        run.say(label, "SKIPPED", f"{path} does not parse ({exc.msg}); not changed")
+        run.say(label, "FAILED", f"{path} does not parse ({exc.msg}); not changed")
         return None
     if not isinstance(data, dict):
-        run.say(label, "SKIPPED", f"{path} is not a JSON object; not changed")
+        run.say(label, "FAILED", f"{path} is not a JSON object; not changed")
         return None
     return data
 
@@ -105,7 +117,7 @@ def claude_style(path, entries, run, label):
         return
     hooks = data.setdefault("hooks", {})
     if not isinstance(hooks, dict):
-        run.say(label, "SKIPPED", f"`hooks` in {path} is not an object; not changed")
+        run.say(label, "FAILED", f"`hooks` in {path} is not an object; not changed")
         return
     added = False
     for event, matcher, hook, script in entries:
@@ -196,7 +208,7 @@ def antigravity(home, hook_dir, run):
     if first:
         # Antigravity CLI 1.4.12 reads hook names at the top level. Event names there make the
         # whole file fail to parse, so no hook in it loads. The entries belong to another tool.
-        run.say(label, "SKIPPED", f"{path} lists events ({', '.join(first)}) at the top level, a layout "
+        run.say(label, "FAILED", f"{path} lists events ({', '.join(first)}) at the top level, a layout "
                                   "Antigravity cannot parse, so none of its hooks load. Not changed; "
                                   "convert those entries to `{\"<name>\": {\"<event>\": [...]}}` first")
         return
@@ -250,8 +262,7 @@ def muse(home, repo, run):
     if run.dry_run:
         return
     for rel, text in wanted.items():
-        (stage / rel).parent.mkdir(parents=True, exist_ok=True)
-        (stage / rel).write_text(text)
+        run.write(stage / rel, text)
     action = ["update", "resume-session-warn"] if installed else ["install", str(stage), "--scope", "user"]
     for args in (action, ["approve", "resume-session-warn"]):
         done = subprocess.run([muse_bin, "plugins", *args], capture_output=True, text=True)
@@ -265,7 +276,10 @@ def main(argv=None):
     parser.add_argument("--repo", required=True, type=Path)
     parser.add_argument("--hook-dir", required=True, type=Path)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--report", type=Path, help="write events, changed paths and manual actions to a new JSON file")
     args = parser.parse_args(argv)
+    if args.report and args.report.exists():
+        parser.error("report already exists; choose a new report path")
     home = Path.home()
     run = Run(args.dry_run)
     warn, mermaid, frontmatter = args.hook_dir / WARN, args.hook_dir / MERMAID, args.hook_dir / FRONTMATTER
@@ -306,8 +320,21 @@ def main(argv=None):
     if rtk:
         rtk_awareness(rtk, processors, args.repo, run)
     muse(home, args.repo, run)
+    if args.report:
+        data = {"schema": 1, "dry_run": run.dry_run, "changes": run.changes, "errors": run.errors,
+                "events": run.events, "files": run.files,
+                "scope": "Hook registration only. ACTION events require follow-through; file registration is not a runtime smoke test."}
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        handle, temporary = tempfile.mkstemp(prefix=".registration-report-", dir=args.report.parent)
+        try:
+            with os.fdopen(handle, "w") as stream:
+                stream.write(dump(data))
+            os.replace(temporary, args.report)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
     print(f"changes={run.changes}")
-    return 0
+    return 1 if run.errors else 0
 
 
 if __name__ == "__main__":

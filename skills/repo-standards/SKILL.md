@@ -73,9 +73,8 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
 1. Run `check` first, keep gap table.
 2. For each gap, patch:
    - Git hooks (`scripts/githooks`): for the outer repository and `.workbench` (when `.workbench/.git` exists):
-     - Copy `housekeep` and `pre-push` from `<toolkit-path>/git-hooks/drift-guard/` to `scripts/githooks/`.
-     - `chmod +x scripts/githooks/housekeep scripts/githooks/pre-push`.
-     - `git config core.hooksPath scripts/githooks`.
+     - Use the `sync-toolkit` skill and the toolkit's `scripts/toolkit-rollout.py` audit/apply/verify process for the selected repository. The runner includes independent private companion repositories and delegates installation to `scripts/sync-toolkit.sh`.
+     - Inspect exact changed paths and blockers, preserve custom hooks and unrelated work, and verify installation separately from authorized commits/publication. Do not duplicate hook-copy commands here.
    - Missing `SUPPORT.md` or yml forms -> copy `templates/default-project/.github/ISSUE_TEMPLATE/*` and `templates/default-project/SUPPORT.md`, fill `<OWNER>`/`<REPO>` via `gh repo view --json nameWithOwner`.
    - Missing health files (oss only) -> copy `templates/default-project/CODE_OF_CONDUCT.md` etc., replace `<PROJECT_NAME>`.
    - Unpinned or floating action tags -> replace with full 40-char commit SHA and `# vX.Y.Z` comment (using baseline from reference §2 or resolving tag commit).
