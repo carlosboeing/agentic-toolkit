@@ -4,7 +4,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 
 ## In flight
 
-None at the moment.
+- **Lifecycle standards consolidation and adoption.** Reconcile the authoritative conventions and their consumers, verify metadata and recovery behavior, then rehearse explicit project migrations with preservation and discovery checks.
 
 ## Next actions
 
@@ -34,6 +34,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Lifecycle consumer consistency (2026-11-03).** Prefer file-relative metadata relationships, detect lifecycle repositories at their root and resolve numeric commit references. Reject absolute metadata paths in link checks. Identify authoritative standards and include search coverage in migration preparation.
 - **Reliable toolkit synchronization (2026-11-03).** Add the sync skill, script catalog and explicit rollout reports. Verify installed hooks, isolated validator behavior and remote publication separately. Preserve custom hooks and local work, report incomplete installation and preview new skill command wrappers. Complete the selected repository hook rollout with verified remote publication, validator smoke tests and a no-op repeat.
 - **Lifecycle docs in the first search across layouts (2026-11-02).** Discover declared knowledge roots regardless of repo visibility or Git boundaries, including nested private clones and single-repo working-memory or documentation folders. The [smoke test](../guides/guide-qmd-smoke-tests.md#2-check-a-question-about-the-current-project) uses ordinary questions without retrieval hints and checks initial lifecycle coverage.
 - **QMD search scope and smoke tests (2026-11-02).** Start document discovery with the current project's main and private collections, include related repositories when the task needs them and broaden without a permission round. Keep excluded collections explicit and verify current sources. The [smoke-test guide](../guides/guide-qmd-smoke-tests.md) checks routing and retrieval across harnesses.

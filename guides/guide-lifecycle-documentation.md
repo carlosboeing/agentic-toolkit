@@ -11,6 +11,20 @@ authors:
 
 This guide defines the default presentation of requirements, technical designs, implementation plans and retrospectives. It keeps technical content separate from document control and history while preserving flexible routes and proportionate detail. It is for teams and agents adopting the lifecycle workflow.
 
+## Which document owns a rule
+
+| Rule | Authoritative source |
+|---|---|
+| Lifecycle folders, metadata, status/type vocabulary, assets, authorship and review attribution | [Project structure and conventions](guide-project-structure-and-conventions.md), sections 2.5, 5.4 and 5.5 |
+| Artifact presentation and proportionate use of templates | This guide and the linked phase templates/contracts |
+| A project's active document roots, local schema and accepted product decisions | Its instructions, Project Map and owning artifacts |
+| Migration mapping, preservation, rehearsal and completion proof | [Lifecycle migration runbook](guide-lifecycle-migration.md) |
+| Installation and publication of shared tooling | [Sync workflow](../skills/sync-toolkit/SKILL.md) and [script catalog](../scripts/README.md) |
+
+Resolve an actual conflict against the owning source before changing dependent instructions or tools. An installed skill, parser or copied hook is a consumer of these rules. Its current behavior does not establish a new convention.
+
+The target convention uses all seven lifecycle folders and `created`/`updated` fields. Readers and validators retain legacy folders, `date` and `discovery` during adoption. New records follow the project's declared active schema until its migration completes; migrated records follow the canonical schema. Preserve historical evidence and review provenance. Retire compatibility only after accounting for remaining consumers.
+
 ## Select the document and route
 
 | Document | Owns | Template and quality contract |

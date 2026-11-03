@@ -250,8 +250,12 @@ def check_file_links(file_path: str, repo_root: str):
     failures = []
     file_dir = os.path.dirname(full_path)
     links = extract_links_from_content(content, file_path)
+    relationships = set(extract_frontmatter_links(content.splitlines(), file_path))
 
     for lno, raw_target, cleaned in links:
+        if (lno, raw_target, cleaned) in relationships and os.path.isabs(cleaned):
+            failures.append(f"{file_path}:{lno}: {raw_target} -> relationship paths must be relative to the file directory")
+            continue
         if cleaned.startswith("/"):
             # Root-relative
             resolved = os.path.normpath(os.path.join(repo_root, cleaned.lstrip("/")))
