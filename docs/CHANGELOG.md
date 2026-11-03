@@ -2,6 +2,14 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-03: reliable toolkit synchronization
+
+- Add a `sync-toolkit` skill and script catalog, with one hook-installation implementation shared by rollout and repository-standards guidance.
+- Add explicit repository rollout audits and resumable reports that include newly created hooks, preserve conflicting work and distinguish installed, tested, committed and published states. Publication checks query the configured remote branch and inspect expected contents and executable modes.
+- Smoke-test installed metadata validation in disposable repositories. Preserve existing CLI paths, private companion handling and custom privacy hooks.
+- Report missing installation sources and failed settings registration as incomplete. Optional registration JSON preserves exact settings writes and manual follow-up actions. Installation success does not imply publication or runtime readiness.
+- Include command wrappers for newly selected skills in harness previews, and reject existing registration-report paths before installation starts.
+
 ## 2026-11-02: lifecycle docs in the first search across project layouts
 
 - Discover document roots from project instructions, the Project Map and disk, regardless of repo visibility or Git boundaries. Include working-memory records in the first lookup, whether they belong to a nested private clone, the same repo, `docs/` or another declared layout. Search unindexed roots natively from the start.

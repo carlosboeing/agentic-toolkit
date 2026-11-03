@@ -53,10 +53,10 @@ class RegisterCase(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def register(self, *extra):
+    def register(self, *extra, expected=0):
         done = subprocess.run([sys.executable, str(SCRIPT), "--repo", str(REPO), "--hook-dir", str(self.hooks), *extra],
                               env=self.env, capture_output=True, text=True)
-        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(done.returncode, expected, done.stdout + done.stderr)
         return done.stdout
 
     def changes(self, out):
@@ -137,11 +137,19 @@ class RegisterTests(RegisterCase):
         agy.parent.mkdir(parents=True)
         event_first = {"PreInvocation": [{"matcher": "*", "hooks": [{"name": "other", "type": "command", "command": "x"}]}]}
         agy.write_text(json.dumps(event_first))
-        out = self.register()
+        out = self.register(expected=1)
         self.assertEqual(settings.read_text(), "{not json")
         self.assertEqual(json.loads(agy.read_text()), event_first)
         self.assertIn("does not parse", out)
         self.assertIn("a layout Antigravity cannot parse", out)
+
+    def test_registration_report_preserves_required_manual_actions(self):
+        report = self.home / "registration-report.json"
+        self.register("--report", str(report))
+        data = json.loads(report.read_text())
+        self.assertEqual(data["errors"], 0)
+        self.assertTrue(any(e["state"] == "ACTION" and "trust" in e["label"] for e in data["events"]))
+        self.assertTrue(any(f["path"].endswith("settings.json") for f in data["files"]))
 
     def test_name_first_antigravity_file_is_merged(self):
         agy = self.home / ".gemini" / "config" / "hooks.json"
