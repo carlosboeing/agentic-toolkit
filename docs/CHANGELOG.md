@@ -2,7 +2,7 @@
 
 All notable changes to this project are recorded here, newest first.
 
-## Unreleased: reliable toolkit synchronization
+## 2026-11-03: reliable toolkit synchronization
 
 - Add a `sync-toolkit` skill and script catalog, with one hook-installation implementation shared by rollout and repository-standards guidance.
 - Add explicit repository rollout audits and resumable reports that include newly created hooks, preserve conflicting work and distinguish installed, tested, committed and published states. Publication checks query the configured remote branch and inspect expected contents and executable modes.
