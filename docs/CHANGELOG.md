@@ -9,6 +9,7 @@ All notable changes to this project are recorded here, newest first.
 - Smoke-test installed metadata validation in disposable repositories. Preserve existing CLI paths, private companion handling and custom privacy hooks.
 - Report missing installation sources and failed settings registration as incomplete. Optional registration JSON preserves exact settings writes and manual follow-up actions. Installation success does not imply publication or runtime readiness.
 - Include command wrappers for newly selected skills in harness previews, and reject existing registration-report paths before installation starts.
+- Complete the selected repository hook rollout with remote-content verification, validator smoke tests and repeat-apply checks. Preserve unrelated local work and remove verified merged implementation worktrees.
 
 ## 2026-11-02: lifecycle docs in the first search across project layouts
 
