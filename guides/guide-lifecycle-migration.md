@@ -32,6 +32,8 @@ Read the skill from that checkout at `skills/migrate-lifecycle/SKILL.md` and fol
 
 For each selected project, read its instructions, Project Map, Git state and actual documentation structure. Include lifecycle folders, YAML frontmatter, live references and project instructions. Preserve product decisions, document bodies except approved reference repairs, original dates, review provenance, historical evidence, assets and existing uncommitted work. Identify ignored evidence that needs separate handling.
 
+Identify the existing requirements owner and any useful extraction candidates. If requirements extraction is included in my request, preview additional draft requirements documents using the SDD template, with source revisions and coverage. Keep the original brainstorms, designs and plans intact apart from the structural migration. Distinguish explicit requirements from inferences, conflicts and gaps; retain the original scope owner's authority.
+
 Work serially. Inspect and propose an explicit mapping; raise ambiguous classifications instead of guessing. Use the deterministic runner to rehearse against a fixed source revision in a disposable copy. Check installed validator compatibility. Keep the manifest and preview in an appropriate private location outside the target repository; ask for that location if none is established.
 
 Show the proposed changes, verification results, blockers and unresolved decisions. Give me the saved manifest and preview paths so another session can resume.
@@ -48,6 +50,8 @@ For named projects, replace the preview prompt's first sentence with: "Use the m
 
 For all projects under a directory, replace that sentence with: "Discover candidate projects only beneath `<search-root>`. Show me the deduplicated repository list and exclusions, then wait for my selection before preparing previews." This first step discovers the scope. It does not authorize migration of every repository it finds. Once selected, preview serially; report blocked projects and continue independent ones.
 
+To include requirements extraction, add: "For `<selected-projects>`, also infer or extract requirements from the selected brainstorms, designs and plans into additional draft documents under the declared requirements folder. Preserve the original documents and their authority; include the exact new documents and source coverage in the preview." This requests extraction previews, not acceptance of their requirements or live application.
+
 ### Continue from an accepted preview
 
 Fill in the saved paths, including when you start a new session. This prompt authorizes local application and staging, not commits or publication.
@@ -59,6 +63,8 @@ Follow the migrate-lifecycle skill and runbook in `<toolkit-checkout>`. Apply th
 Verify the fixed source revisions and current Git state again. If the source or proposed mapping changed, or compatible validators are not installed, stop the affected project and explain what needs resolution. Do not silently expand the reviewed scope.
 
 Run serially. Apply and stage the rehearsed changes, verify preservation and references, and confirm a repeat is a no-op. Report each project's result and any blockers. Do not install validators, change global configuration, commit, push or open a PR.
+
+If the accepted preview includes requirements extraction, verify the structural no-op first, then apply only its saved additive patch under the extraction procedure below. Verify the final tree and unchanged source documents. Record structural completion and draft extraction separately; the structural runner alone cannot apply or recognize the combined result.
 
 ════ PROMPT ENDS ABOVE THIS LINE ════
 
@@ -96,6 +102,31 @@ The usual legacy transition is:
 Inspect type and content before applying whole-directory moves. Retain historical types except the supported research alias. Create all seven numbered lifecycle folders in each declared working-memory root, adding `.gitkeep` to empty folders. This does not require a document or phase in each folder; nested lesson and asset folders remain on demand. Preserve frozen evidence and separate live references from historical path examples.
 
 The model may propose classifications and exact reference edits. The operator or delegated scope resolves consequential ambiguity. Once settled, save the explicit mapping and execute it mechanically; do not ask a model to freely reorganize or rewrite the documents during application.
+
+## Assess requirements and optionally extract
+
+Every preview identifies the current requirements owner, including a sufficient brief embedded in a design or plan. Record whether a standalone requirements document would improve discovery or handoff. Reuse a sufficient existing requirements document. Extraction is optional and must be included in the requested project or batch scope; do not fill an empty requirements folder merely to complete the layout.
+
+When extraction is requested, read the [requirements quality contract](../skills/start-requirements/references/requirements-contract.md) and [SDD requirements template](../skills/start-requirements/references/requirements-template.md), using project overrides where present. Prepare an additional brief or PRD for each selected coherent initiative in the declared `2-requirements/` folder. Public application repositories with private working memory keep these records in the private repository. Public visibility does not override that routing.
+
+Keep the original brainstorms, designs, plans and their embedded requirements intact. Do not remove sections, replace requirement tables with pointers or add extraction-related edits to those sources. The structural migration may still move files, normalize metadata and repair references as explicitly previewed. Compare original sources with that structural target, then require byte-for-byte source preservation through extraction. The new document references the migrated source paths and fixed source revisions; it does not depend on rewriting the originals.
+
+Use the template's readable `ID | Requirement | Acceptance criteria` table. Retain existing IDs with source context, disambiguating collisions rather than silently renumbering historical obligations. For requirements inferred from intent, journeys or constraints, give them distinct IDs and label them as inferences. Capture relevant success, failure and recovery outcomes without converting implementation tasks into product requirements. Missing acceptance evidence, uncertain numerical targets and conflicting decisions remain visible gaps. Do not invent acceptance, delivery or personal review.
+
+Include a coverage table in the derived document with the original source path at its fixed revision, migrated live link, section/ID, extracted requirement IDs and disposition. Dispositions distinguish explicit source statements, inferences, exclusions with reasons and unresolved conflicts. Keep historical increments separate from current product scope. This lets a reviewer assess omissions and interpretations without modifying the originals.
+
+New extractions start as `draft`. Their `created` and `updated` dates are the extraction date; the source documents retain their original dates and review history. Attribute actual contributors to the new document; source authorship stays in the cited sources and is not copied as new contribution. Document control identifies the extraction date, all source revisions and the retained authoritative scope owner. A derived draft neither supersedes its sources nor inherits `reviewed_by`, approval or shipped status. Accepting it as a new scope owner is later work under actual authority, not a migration side effect.
+
+### Rehearse and apply the additive patch
+
+The manifest runner handles tracked-file structural changes and metadata, not PRD generation. Do not invent an extraction flag or place new documents in its existing-file `edits` list. Keep the authored patch outside the target repositories alongside the structural manifest and reports.
+
+1. Rehearse the structural manifest against its fixed source revision. Record its target tree and verify preservation, installed validation and the structural no-op.
+2. In a disposable copy of that structural target, create the exact additional documents, including their coverage tables. Save an additions-only patch and the final target tree for each Git repository. Check scope coverage, source preservation, new-document metadata, relative links and discovery coverage. The combined preview includes both patches and both target trees; extraction drafting changes no live project files.
+3. Under apply authority for the accepted preview, recheck the fixed source and apply the structural manifest. Verify its target tree and no-op before applying the saved additive patch. Check for destination collisions, apply only the exact rehearsed additions and stage them. Verify the final tree, source bytes, metadata, links and installed validator again. Do not regenerate the prose during application.
+4. On interruption, inspect the actual tree and existing checkpoint first. For staged work, compare the index tree and confirm there are no unexplained unstaged or untracked files; HEAD alone does not identify completion. At the clean original source, start structural application. At the exact structural target, continue only with its pending extraction patch. At the exact final target, report the recorded work already applied and skip both effects. An unexplained partial effect or changed source requires reconciliation. A final tree containing a PRD differs from the structural runner's target, so rerunning that runner can report source drift; it does not prove extraction failed.
+
+Report structural migration and requirements disposition separately: reused, extraction not requested, extraction unnecessary, drafted or blocked. Conflicting requirements can prevent acceptance of a draft while an independently safe structural migration completes. A combined apply request stops on an unresolved extraction patch unless its scope explicitly permits delivering the structural part separately. State that boundary in the preview rather than silently dropping requested extraction.
 
 ## Run one project or a selected batch
 
@@ -163,7 +194,8 @@ Prefer metadata conversion before mechanical moves. For already-moved files use 
 - Preserve bodies except the exact approved live-reference edits, and preserve all review attribution and approval evidence.
 - Compare links and metadata relationships against the baseline; introduce no new failures.
 - Verify the installed validator and actual hook entry point, not just source files.
-- Repeat the transformation and confirm zero further edits.
+- Repeat the structural transformation and confirm zero further edits before any extraction patch. For a combined migration, also verify its recorded final tree and skip already completed effects on resume.
+- When extraction is included, verify its source coverage, draft metadata, retained authority and unchanged source documents against the structural target. Validate the new records and discovery coverage separately from preservation of the originals.
 - Read the integrated diff and update the project's existing instructions and progress records.
 
 Record real commits after they exist. Publication and installation remain separate from verified local work. After an interruption, inspect the actual effect and checkpoint before repeating it. A dirty tree or unexplained partial effect is a recovery case, not permission to overwrite.

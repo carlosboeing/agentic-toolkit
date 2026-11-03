@@ -13,7 +13,7 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 | [`repo-standards`](repo-standards/) | `/repo-standards` | Checks, fixes or scaffolds a repository's governance files, workflows and branch protection from the house standard |
 | [`oss-standards`](oss-standards/) | `/oss-standards` | Shortcut for `/repo-standards oss`. New automation should call `repo-standards` directly. |
 | [`sync-toolkit`](sync-toolkit/) | `/sync-toolkit`, or on request | Coordinates toolkit installation and selected repository rollouts using exact change reports, smoke tests and separate publication verification |
-| [`migrate-lifecycle`](migrate-lifecycle/) | On request | Guides lifecycle migration for one project or an explicitly selected batch, with deterministic execution and preservation checks |
+| [`migrate-lifecycle`](migrate-lifecycle/) | On request | Guides lifecycle migration with preservation checks and optional additive requirements extraction |
 | [`housekeeping`](housekeeping/) | `/housekeeping` | Compares local branches and worktrees with GitHub pull requests, and in `fix` mode removes only what a merge left behind |
 | [`penmark-comments`](penmark-comments/) | Automatic, or on request | Reviews a local Markdown file and, once you choose where the output goes, can write validated Penmark inline comments |
 | [`git-worktrees`](git-worktrees/) | Automatic | Sets the worktree location shared by all harnesses and the checks to run before changing branches |
