@@ -34,6 +34,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Migration preservation and relationship conversions (2026-11-04).** Refuse rehearsals that lose tracked files at ignored destinations. Support explicit `inputs` and `amended_by` conversions into `related`, preserving other metadata and original document bodies.
 - **Additive requirements extraction in migrations (2026-11-03).** Assess requirements ownership in migration previews and optionally derive draft PRDs with the SDD template. Preserve original documents, distinguish source statements from inferences and keep authored additions separate from deterministic structural changes.
 - **Lifecycle consumer consistency (2026-11-03).** Prefer file-relative metadata relationships, detect lifecycle repositories at their root and resolve numeric commit references. Reject absolute metadata paths in link checks. Identify authoritative standards and include search coverage in migration preparation.
 - **Reliable toolkit synchronization (2026-11-03).** Add the sync skill, script catalog and explicit rollout reports. Verify installed hooks, isolated validator behavior and remote publication separately. Preserve custom hooks and local work, report incomplete installation and preview new skill command wrappers. Complete the selected repository hook rollout with verified remote publication, validator smoke tests and a no-op repeat.

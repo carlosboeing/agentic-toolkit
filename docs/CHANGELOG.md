@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-04: migration preservation and relationship conversions
+
+- Block lifecycle migration rehearsals when an originally tracked file would disappear from the staged result, including moves into ignored destinations. Require explicit ignore exceptions rather than force-adding evidence.
+- Support exact, opt-in conversion of `inputs` and `amended_by` into `related`. Preserve other metadata and document bodies, retain provenance guards, and document relationship coverage checks.
+- Cover blocked preview/apply, binary content and executable-mode preservation, relationship conversion, unsafe edits and repeat runs through the migration CLI.
+
 ## 2026-11-03: additive requirements extraction in migrations
 
 - Assess requirements ownership in every lifecycle migration preview. Support requested extraction into additional draft briefs or PRDs using the SDD requirements contract and template.
