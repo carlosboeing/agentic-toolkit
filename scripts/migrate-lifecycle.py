@@ -54,6 +54,40 @@ def broken_links(repo, tracked, reverse=None):
     return failures
 
 
+def convert_relationship(repo, tracked, conversion):
+    if not isinstance(conversion, dict) or set(conversion) != {"path", "field", "old", "new"}:
+        raise ValueError("relationship conversions require exactly path, field, old and new")
+    field = conversion["field"]
+    if field not in ("inputs", "amended_by"):
+        raise ValueError("only inputs and amended_by can be converted into related")
+    if conversion["path"] not in tracked:
+        raise ValueError("relationship conversion is not a tracked file")
+    path = path_at(repo, conversion["path"])
+    raw = path.read_bytes()
+    old, new = conversion["old"], conversion["new"]
+    if not isinstance(old, str) or not old or not isinstance(new, str):
+        raise ValueError("relationship conversions need exact old and new text")
+    if not raw.startswith((b"---\n", b"---\r\n")) or raw.count(old.encode()) != 1:
+        raise ValueError("relationship conversion needs frontmatter and one exact match")
+    replacement = raw.replace(old.encode(), new.encode())
+    before = re.split(rb"\r?\n---\r?\n", raw, maxsplit=1)
+    after = re.split(rb"\r?\n---\r?\n", replacement, maxsplit=1)
+    if len(before) != 2 or len(after) != 2 or before[1] != after[1]:
+        raise ValueError("relationship conversions must preserve fences and document bodies")
+    legacy = rb"(?m)^" + field.encode() + rb":[^\n]*\n(?:[ \t]+[^\n]*\n)*"
+    related = rb"(?m)^related:[^\n]*\n(?:[ \t]+[^\n]*\n)*"
+    before_header = before[0] + (b"\r\n" if raw.startswith(b"---\r\n") else b"\n")
+    after_header = after[0] + (b"\r\n" if replacement.startswith(b"---\r\n") else b"\n")
+    if len(re.findall(legacy, before_header)) != 1 or re.search(legacy, after_header):
+        raise ValueError("relationship conversion must remove exactly the selected legacy field")
+    if len(re.findall(related, before_header)) > 1 or len(re.findall(related, after_header)) != 1:
+        raise ValueError("relationship conversion must produce one related field")
+    allowed = rb"(?m)^(?:related|" + field.encode() + rb"):[^\n]*\n(?:[ \t]+[^\n]*\n)*"
+    if re.sub(allowed, b"", before_header) != re.sub(allowed, b"", after_header):
+        raise ValueError("relationship conversions must preserve all other frontmatter")
+    path.write_bytes(replacement)
+
+
 def build(repo, entry, temporary):
     revision = command(repo, "rev-parse", "--verify", "--end-of-options", entry["revision"] + "^{commit}").decode().strip()
     clone = temporary / "candidate"
@@ -81,6 +115,8 @@ def build(repo, entry, temporary):
         metadata = json.loads(result.stdout)
     else:
         metadata = {"changed_count": 0}
+    for conversion in entry.get("relationship_conversions", []):
+        convert_relationship(clone, tracked, conversion)
     for edit in entry.get("edits", []):
         if edit["path"] not in tracked:
             raise ValueError("edit is not a tracked file")
@@ -132,6 +168,10 @@ def build(repo, entry, temporary):
             if not command(clone, "ls-files", "--", str(Path(memory) / folder)).strip():
                 raise ValueError("lifecycle folder is ignored or has no tracked content: " + folder)
     final_files = set(command(clone, "ls-files", "-z").decode().split("\0")) - {""}
+    expected_files = (tracked - moves.keys()) | set(moves.values())
+    missing = expected_files - final_files
+    if missing:
+        raise ValueError("tracked files missing after migration, possibly ignored destinations: " + repr(sorted(missing)))
     new_failures = broken_links(clone, final_files, {target: source for source, target in moves.items()}) - before_links
     if new_failures:
         raise ValueError("new broken Markdown references: " + repr(sorted(new_failures)))
@@ -143,7 +183,7 @@ def build(repo, entry, temporary):
 
 
 def migrate(entry, manifest_parent, apply):
-    allowed = {"repo", "revision", "memory", "moves", "edits", "ignore_revisions"}
+    allowed = {"repo", "revision", "memory", "moves", "edits", "ignore_revisions", "relationship_conversions"}
     if not isinstance(entry, dict) or set(entry) - allowed:
         raise ValueError("unsupported project fields")
     if not isinstance(entry.get("revision"), str) or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", entry["revision"]):
@@ -172,6 +212,8 @@ def migrate(entry, manifest_parent, apply):
         # Check live path collisions, including ignored files and linked parents.
         for name in list(entry.get("moves", {})) + [edit["path"] for edit in entry.get("edits", [])]:
             path_at(repo, name)
+        for conversion in entry.get("relationship_conversions", []):
+            path_at(repo, conversion["path"])
         for target in set(entry.get("moves", {}).values()) | set(additions):
             dst = path_at(repo, target)
             if dst.exists() and target not in entry.get("moves", {}):

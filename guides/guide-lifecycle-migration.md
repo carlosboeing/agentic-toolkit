@@ -155,7 +155,7 @@ The runner is [scripts/migrate-lifecycle.py](../scripts/migrate-lifecycle.py). I
 }
 ```
 
-Add another object to `projects` for each selected repository. Repository paths can be absolute or relative to the manifest. `revision` must be a full Git commit ID. `memory`, move paths and edit paths are repository-relative; use `"memory": "."` for a working-memory repository whose root contains the lifecycle folders. Omit `memory` for a public-instruction-only change. Optional `ignore_revisions` is a list of reviewed mechanical commit IDs for metadata date lookup. Unknown fields are refused.
+Add another object to `projects` for each selected repository. Repository paths can be absolute or relative to the manifest. `revision` must be a full Git commit ID. `memory`, move paths and edit paths are repository-relative; use `"memory": "."` for a working-memory repository whose root contains the lifecycle folders. Omit `memory` for a public-instruction-only change. Optional `ignore_revisions` is a list of reviewed mechanical commit IDs for metadata date lookup. Optional `relationship_conversions` contains the explicit legacy-field conversions described below. Unknown fields are refused.
 
 ```bash
 python3 scripts/migrate-lifecycle.py --manifest <manifest.json>
@@ -164,9 +164,28 @@ python3 scripts/migrate-lifecycle.py --manifest <manifest.json> --apply
 
 The first command rehearses in disposable local clones and returns JSON containing exact patches, source revisions, target trees and per-project results. It does not change project files. Save the report outside the selected repositories. It may contain private document content, so keep it in an appropriate private location.
 
-The second rehearses the same fixed inputs, then applies and stages the patch in each clean matching repository. It normalizes metadata first, performs exact replacements at the original paths, then moves explicitly listed files. When `memory` is supplied, it also creates all seven numbered lifecycle folders beneath that root, with an empty `.gitkeep` in each empty folder. Existing placeholder files remain intact. Omit `memory` for public-instruction-only work so no lifecycle folders are added there. Ignored required folders block the project rather than silently omit the scaffold. Include every owned attachment in `moves`; directories are not inferred or recursively moved. Each replacement needs a positive exact `count`. Frontmatter edits may change relationship references, but must preserve other header fields after metadata normalization.
+The second rehearses the same fixed inputs, then applies and stages the patch in each clean matching repository. It normalizes metadata first, performs explicit relationship conversions and exact replacements at the original paths, then moves explicitly listed files. When `memory` is supplied, it also creates all seven numbered lifecycle folders beneath that root, with an empty `.gitkeep` in each empty folder. Existing placeholder files remain intact. Omit `memory` for public-instruction-only work so no lifecycle folders are added there. Ignored required folders block the project rather than silently omit the scaffold. Include every owned attachment in `moves`; directories are not inferred or recursively moved. Each replacement needs a positive exact `count`. Frontmatter edits may change relationship references, but must preserve other header fields after metadata normalization.
 
-The runner checks for new unresolved Markdown links using the toolkit's existing supported link parser. It retains pre-existing failures, rejects collisions and unsafe paths, and verifies the staged Git tree matches the rehearsed tree. It does not infer bare-text references or validate all metadata relationship syntax; the integrated comparison below remains required. Ignored files are not migrated. Inspect and resolve any ignored evidence that belongs with a moved document separately; never delete it or assume it followed the tracked files.
+### Convert legacy relationship fields explicitly
+
+After checking the owning document's meaning, use `relationship_conversions` to merge `inputs` or `amended_by` into `related`. This is an optional, exact conversion, not general support for custom fields or automatic schema inference. Each entry requires exactly `path`, `field`, `old` and `new`. `path` names the original tracked file; `old` must match once. For example:
+
+```json
+"relationship_conversions": [
+  {
+    "path": "docs/2-design/example.md",
+    "field": "inputs",
+    "old": "inputs: [source.md]\nrelated: [source.md, evidence.md]\n",
+    "new": "related: [source.md, evidence.md]\n"
+  }
+]
+```
+
+The conversion must remove the selected legacy field and produce one `related` field. It can change only that field and `related`; dates, status, authors, review history, other metadata and document body bytes must remain intact. Merge all references, remove duplicates and supply their final file-relative paths in the exact replacement. Preserve any explanation of amendment or input roles in the original body. A partial amendment does not mean full supersession. The runner checks supported link regressions, but an operator must still check that the explicit replacement retains every intended relationship; a resolving link alone does not establish its meaning.
+
+If a legacy target belongs to another repository, verify its owning path and use a GitHub URL pinned to its full source commit, with `blob` for files and `tree` for directories. Do not repair missing titles, authors or statuses through a relationship conversion. Recover those from evidence and review them separately.
+
+The runner checks for new unresolved Markdown links using the toolkit's existing supported link parser. It retains pre-existing failures, rejects collisions and unsafe paths, and verifies the staged Git tree matches the rehearsed tree. Every originally tracked file must still be tracked at its mapped destination or unchanged path. If an ignore rule would omit a moved file, the rehearsal blocks before the project is changed. Review an exact destination exception in `.gitignore`, then refresh the preview; the runner does not force-add files. It does not infer bare-text references or validate all metadata relationship syntax; the integrated comparison below remains required. Previously untracked ignored files are not migrated. Inspect and resolve any ignored evidence that belongs with a moved document separately; never delete it or assume it followed the tracked files.
 
 A batch runs serially. Exit code 1 means at least one project is blocked; other independent entries still run. Malformed top-level input exits 2. Results distinguish `previewed`, `applied`, `already-applied` and `blocked`. A repeat recognizes the exact staged or committed target tree; unrelated subsequent changes require reconciliation. A batch is not one transaction across repositories.
 

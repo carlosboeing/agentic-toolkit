@@ -8,6 +8,120 @@ SCRIPT = Path(__file__).resolve().parents[1] / "scripts/migrate-lifecycle.py"
 
 
 class MigrationCLI(unittest.TestCase):
+    def test_relationship_conversion_refuses_provenance_body_and_unrepaired_link_changes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            repo = root / "project"
+            repo.mkdir()
+            def git(*args):
+                return subprocess.check_output(["git", "-C", str(repo), *args])
+            git("init", "-q")
+            git("config", "user.name", "Fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            original = '---\ncreated: "2026-01-01"\nupdated: "2026-01-02"\nstatus: approved\nauthors: [Human]\nreviewed_by: [human]\ninputs: [target.md]\n---\nKeep the decision.\n'
+            (repo / "record.md").write_text(original)
+            (repo / "target.md").write_text("Source.\n")
+            git("add", ".")
+            git("-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture")
+            entry = {"repo": str(repo), "revision": git("rev-parse", "HEAD").decode().strip()}
+            manifest = root / "manifest.json"
+            for scenario in ["created", "updated", "status", "authors", "reviewed_by", "body", "field", "retained-field", "duplicate-related", "missing-link", "mismatched-text"]:
+                with self.subTest(scenario=scenario):
+                    changed = original.replace("inputs: [target.md]", "related: [target.md]")
+                    if scenario in ["created", "updated", "status", "authors", "reviewed_by"]:
+                        old_line = next(line for line in original.splitlines() if line.startswith(scenario + ":"))
+                        changed = changed.replace(old_line, scenario + ": altered")
+                    elif scenario == "body":
+                        changed = changed.replace("Keep the decision.", "Rewrite the decision.")
+                    elif scenario == "retained-field":
+                        changed = changed.replace("related:", "inputs: []\nrelated:")
+                    elif scenario == "duplicate-related":
+                        changed = changed.replace("related:", "related: []\nrelated:")
+                    elif scenario == "missing-link":
+                        changed = changed.replace("target.md", "missing.md")
+                    conversion = {"path": "record.md", "field": "inputs" if scenario != "field" else "reviewed_by",
+                                  "old": original if scenario != "mismatched-text" else original + "Absent.\n", "new": changed}
+                    entry["relationship_conversions"] = [conversion]
+                    manifest.write_text(json.dumps({"projects": [entry]}))
+                    result = subprocess.run(["python3", str(SCRIPT), "--manifest", str(manifest), "--apply"], capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertEqual(json.loads(result.stdout)["projects"][0]["state"], "blocked")
+                    self.assertEqual((repo / "record.md").read_text(), original)
+                    self.assertEqual(git("status", "--porcelain"), b"")
+
+    def test_explicit_relationship_conversion_merges_links_and_preserves_provenance(self):
+        for field, value in [("inputs", "[old.md]"), ("amended_by", '\n  - "old.md"')]:
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                repo = root / "project"
+                repo.mkdir()
+                def git(*args):
+                    return subprocess.check_output(["git", "-C", str(repo), *args])
+                git("init", "-q")
+                git("config", "user.name", "Fixture")
+                git("config", "user.email", "fixture@example.invalid")
+                provenance = 'created: "2026-01-01"\nupdated: "2026-01-02"\ntitle: Example\ntype: design\nstatus: approved\nauthors: [Human]\nreviewed_by: [human]\n'
+                old = f'{field}: {value}\nrelated: [old.md, keep.md]\n'
+                new = 'related:\n  - "new.md"\n  - "keep.md"\n'
+                original = '---\n' + provenance + old + '---\nKeep the inputs and amendment explanation.\n'
+                (repo / "record.md").write_text(original)
+                (repo / "old.md").write_text("Original source.\n")
+                (repo / "keep.md").write_text("Related evidence.\n")
+                git("add", ".")
+                git("-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture")
+                manifest = root / "manifest.json"
+                manifest.write_text(json.dumps({"projects": [{
+                    "repo": str(repo), "revision": git("rev-parse", "HEAD").decode().strip(),
+                    "moves": {"old.md": "new.md"},
+                    "relationship_conversions": [{"path": "record.md", "field": field, "old": old, "new": new}]
+                }]}))
+                for flags, state in [([], "previewed"), (["--apply"], "applied"), (["--apply"], "already-applied")]:
+                    result = subprocess.run(["python3", str(SCRIPT), "--manifest", str(manifest), *flags], capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(json.loads(result.stdout)["projects"][0]["state"], state)
+                    expected = original if not flags else '---\n' + provenance + new + '---\nKeep the inputs and amendment explanation.\n'
+                    self.assertEqual((repo / "record.md").read_text(), expected)
+
+    def test_ignored_move_blocks_until_an_exact_exception_preserves_the_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            repo = root / "project"
+            repo.mkdir()
+            def git(*args):
+                return subprocess.check_output(["git", "-C", str(repo), *args])
+            git("init", "-q")
+            git("config", "user.name", "Fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            source = repo / "old/evidence.log"
+            source.parent.mkdir()
+            source.write_bytes(b"Frozen evidence.\x00\xff\n")
+            source.chmod(0o755)
+            (repo / ".gitignore").write_text("new/*.log\n")
+            git("add", ".")
+            git("-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture")
+            entry = {"repo": str(repo), "revision": git("rev-parse", "HEAD").decode().strip(),
+                     "moves": {"old/evidence.log": "new/evidence.log"}}
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"projects": [entry]}))
+            for flags in [[], ["--apply"]]:
+                result = subprocess.run(["python3", str(SCRIPT), "--manifest", str(manifest), *flags], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                report = json.loads(result.stdout)["projects"][0]
+                self.assertEqual(report["state"], "blocked")
+                self.assertIn("new/evidence.log", report["reason"])
+                self.assertEqual(git("status", "--porcelain"), b"")
+                self.assertEqual(source.read_bytes(), b"Frozen evidence.\x00\xff\n")
+                self.assertFalse((repo / "new").exists())
+            entry["edits"] = [{"path": ".gitignore", "old": "new/*.log\n",
+                               "new": "new/*.log\n!new/evidence.log\n", "count": 1}]
+            manifest.write_text(json.dumps({"projects": [entry]}))
+            for expected in ["applied", "already-applied"]:
+                result = subprocess.run(["python3", str(SCRIPT), "--manifest", str(manifest), "--apply"], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(json.loads(result.stdout)["projects"][0]["state"], expected)
+                self.assertEqual((repo / "new/evidence.log").read_bytes(), b"Frozen evidence.\x00\xff\n")
+                self.assertTrue(git("ls-files", "--stage", "--", "new/evidence.log").startswith(b"100755 "))
+
     def test_scaffold_only_supports_private_root_and_refuses_ignored_or_linked_targets(self):
         for scenario in ["private-root", "ignored-folder", "linked-parent", "ignored-placeholder"]:
             with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary:
