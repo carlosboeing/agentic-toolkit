@@ -2,15 +2,21 @@
 
 A hook for Claude Code, Codex, Muse Code, Antigravity CLI, Grok Build, and OpenCode that tells an agent its session was resumed somewhere else. When [`resume-session`](../../skills/resume-session/) continues a session in a fresh one, it writes a resume note. If someone later types into the old session, this hook adds one line to that session's context, for example:
 
-> This session was resumed in Codex at 2026-10-31 10:47 +10:00 for the project at /home/dev/app. Work done here can conflict with that session. Ask the user to confirm before changing any file in this session.
+> SUPERSEDED SESSION: This session is superseded: it was resumed in Codex at 2026-10-31 10:47 +10:00 for the project at /home/dev/app, and that new session is now the active one. Make the warning stand out: start your reply with a separate blockquote banner headed, in bold capitals, SUPERSEDED SESSION - THIS IS THE OLD SESSION, naming the new harness, and telling the user to switch to the new session and close this one; do not bury it in a list or a status update. Do not change any file, commit, or run a side-effect command here unless the user explicitly replies in this session to stay here and keep working in this old session; if they do, tell them the new session is now stale.
 
-The hook never blocks. A prompt in the old session always goes through, and the agent asks before it changes files.
+The agent's reply should therefore open with a highlighted banner, not a note inside a status update or a numbered list:
+
+> **SUPERSEDED SESSION - THIS IS THE OLD SESSION**
+>
+> This session was resumed in Codex. Switch to that session and close this one.
+
+The hook never blocks. A prompt in the old session always goes through. Read-only answers can follow the banner. The agent must not change a file, commit, or run a side-effect command in the old session unless the user explicitly replies in that session to stay here and keep working there; then it first tells the user the new session is now stale. A general confirmation, or a yes to a different question, is not a stay-here reply.
 
 ## Why it exists
 
 A session left open in a tab is the case it covers. After a usage limit resets, the user may type into the old tab while the work has moved to a new session. Two agents then edit the same files without knowing about each other. `UserPromptSubmit` runs on that next prompt; `SessionStart` would not, because the session never restarts.
 
-Claude Code's hook reference advises factual wording, because instruction-style text can trigger its prompt-injection defenses. A factual line alone was not enough: on 2026-11-01, Claude Code 2.1.316 with Sonnet and with Opus mentioned the resume only after making the edit it was asked for. The old session never loads the `resume-session` skill, so nothing else tells it to wait. With the last sentence added, both models stopped, wrote nothing, and asked, and neither treated the line as an injection.
+Claude Code's hook reference advises factual wording, because instruction-style text can trigger its prompt-injection defenses. A factual line alone was not enough: on 2026-11-01, Claude Code 2.1.316 with Sonnet and with Opus mentioned the resume only after making the edit it was asked for. The old session never loads the `resume-session` skill, so nothing else tells it to wait. With an ask-before-editing sentence added, both models stopped, wrote nothing, and asked, and neither treated the line as an injection. That wording still let an agent soften the fact into "this project was also resumed", bury it in a list of questions, and offer to keep working here. The line now leads with the factual `SUPERSEDED SESSION` marker, then asks for a highlighted banner and a switch-and-close instruction; the stay-here reply is the only override. The new wording is covered by unit tests and has not yet had the live per-harness probe the 2026-11-01 wording had.
 
 ## Requirements
 

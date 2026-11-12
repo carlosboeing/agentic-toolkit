@@ -80,7 +80,7 @@ A summary is typically 8,000 to 10,000 tokens. It has no hard ceiling; past 48,0
 
 ## Warning the old session
 
-The [`resume-session-warn`](../../hooks/resume-session-warn/) hook adds one line to the old session's context when a resume note names it, asking the agent to confirm with the user before changing files. It never blocks. `scripts/sync-toolkit.sh --harness` installs it in Claude Code, Codex, Muse Code, Antigravity CLI, Grok Build, and OpenCode; Codex also needs the hook trusted once in `/hooks`.
+The [`resume-session-warn`](../../hooks/resume-session-warn/) hook adds one line to the old session's context when a resume note names it, telling the agent this session is superseded, to open with a highlighted banner telling the user to switch to the new session and close the old one, and not to change files there unless the user explicitly replies in that session to stay there. It never blocks. `scripts/sync-toolkit.sh --harness` installs it in Claude Code, Codex, Muse Code, Antigravity CLI, Grok Build, and OpenCode; Codex also needs the hook trusted once in `/hooks`.
 
 ## Limits
 

@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-12: superseded-session warning
+
+- Make the `resume-session-warn` line lead with `SUPERSEDED SESSION`, name the new session when its ID is a safe session ID, and ask the old session to open with a bold blockquote banner telling the user to switch to the new session and close the old one. The old session must not change files, commit, or run side-effect commands unless the user explicitly replies in that session to stay there, in which case it first warns that the new session is now stale. Same line in the shell hook and the OpenCode plugin, on all six harnesses; the hook still never blocks.
+
 ## 2026-11-04: migration preservation and relationship conversions
 
 - Block lifecycle migration rehearsals when an originally tracked file would disappear from the staged result, including moves into ignored destinations. Require explicit ignore exceptions rather than force-adding evidence.

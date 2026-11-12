@@ -34,6 +34,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Superseded-session warning (2026-11-12).** The resume warning now tells the old session it is superseded, opens with a highlighted switch-and-close banner, and allows writes only after an explicit stay-here reply in that session.
 - **Migration preservation and relationship conversions (2026-11-04).** Refuse rehearsals that lose tracked files at ignored destinations. Support explicit `inputs` and `amended_by` conversions into `related`, preserving other metadata and original document bodies.
 - **Additive requirements extraction in migrations (2026-11-03).** Assess requirements ownership in migration previews and optionally derive draft PRDs with the SDD template. Preserve original documents, distinguish source statements from inferences and keep authored additions separate from deterministic structural changes.
 - **Lifecycle consumer consistency (2026-11-03).** Prefer file-relative metadata relationships, detect lifecycle repositories at their root and resolve numeric commit references. Reject absolute metadata paths in link checks. Identify authoritative standards and include search coverage in migration preparation.
