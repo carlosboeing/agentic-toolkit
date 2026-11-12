@@ -170,7 +170,7 @@ The [skills catalog](skills/README.md) lists each skill's commands, dependencies
 | [Drift guard](git-hooks/drift-guard/) | `pre-push`, `post-merge`, and the `housekeep` command | Blocks a push when tracking records are out of date, and reports branches left behind by merges |
 | [Private workbench guard](git-hooks/private-workbench-guard/) | `pre-commit` | Refuses commits that stage private paths, private vocabulary or a nested private repository |
 | [Mermaid validator](hooks/validate-mermaid/) | Claude Code `PostToolUse`, an OpenCode plugin, or by hand | Parses each Mermaid diagram in an edited file and reports syntax errors to the agent |
-| [Resume warning](hooks/resume-session-warn/) | Claude Code and Codex `UserPromptSubmit` | Tells a session's agent that the session was resumed elsewhere and asks it to confirm before changing files; never blocks |
+| [Resume warning](hooks/resume-session-warn/) | Claude Code and Codex `UserPromptSubmit` | Tells a session's agent that the session is superseded, to open with a highlighted switch-and-close banner, and not to change files there unless the user explicitly says to stay there; never blocks |
 
 ### Guides and references
 

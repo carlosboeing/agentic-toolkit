@@ -24,8 +24,13 @@ if (!pluginPath) {
 
 const SESSION = "ses_fixture1"
 const LINE =
-  "This session was resumed in Codex CLI at 2026-10-31 10:47 +10:00 for the project at /home/dev/app. " +
-  "Work done here can conflict with that session. Ask the user to confirm before changing any file in this session."
+  "SUPERSEDED SESSION: This session is superseded: it was resumed in Codex CLI at 2026-10-31 10:47 +10:00 " +
+  "for the project at /home/dev/app, and that new session is now the active one. " +
+  "Make the warning stand out: start your reply with a separate blockquote banner headed, in bold capitals, SUPERSEDED SESSION - THIS IS THE OLD SESSION, " +
+  "naming the new harness, and telling the user to switch to the new session and close this one; " +
+  "do not bury it in a list or a status update. " +
+  "Do not change any file, commit, or run a side-effect command here unless the user explicitly replies in this session " +
+  "to stay here and keep working in this old session; if they do, tell them the new session is now stale."
 
 const state = mkdtempSync(join(tmpdir(), "oc-resume-test-"))
 process.on("exit", () => rmSync(state, { recursive: true, force: true }))

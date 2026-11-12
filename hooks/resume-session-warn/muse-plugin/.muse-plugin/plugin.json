@@ -3,7 +3,7 @@
   "name": "resume-session-warn",
   "displayName": "resume-session warning",
   "version": "1.0.0",
-  "description": "Tells a Muse session that resume-session continued it in another session, and asks the agent to confirm before changing files. Never blocks.",
+  "description": "Tells a Muse session that resume-session superseded it with a new session, to open with a highlighted banner telling the user to switch to the new session and close this one, and not to change files here unless the user explicitly says to stay here. Never blocks.",
   "compat": {
     "source": "native",
     "manifestDir": ".muse-plugin"

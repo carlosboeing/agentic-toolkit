@@ -7,8 +7,10 @@
 #   grok             Grok Build PreToolUse hook: prints hookSpecificOutput.additionalContext.
 #   antigravity      Antigravity CLI PreInvocation hook: prints an injectSteps message.
 #
-# When a resume note names this session, print one line that asks the agent to confirm
-# with the user before changing files. The hook never blocks: every path exits 0, and it
+# When a resume note names this session, print one line that tells the agent this session
+# is superseded, to open with a bold blockquote banner telling the user to switch to the
+# new session and close this one, and not to change files here unless the user explicitly
+# replies in this session to stay here. The hook never blocks: every path exits 0, and it
 # prints nothing (or `{}` for Antigravity) when there is no note, no jq, or bad input.
 # OpenCode gets the same line from opencode-resume-session-warn.ts.
 
@@ -32,7 +34,9 @@ for harness in claude codex opencode antigravity grok muse; do
   [ -f "$note" ] || continue
   line=$(jq -r '(.resumes[-1] // empty) as $r
     | select($r != null)
-    | "This session was resumed in \($r.by_harness // "another harness") at \($r.time_local // $r.time_utc) for the project at \(.project_root). Work done here can conflict with that session. Ask the user to confirm before changing any file in this session."' \
+    | (($r.by_harness // "another harness") as $h
+       | (if ($r.by_session // "" | test("^[A-Za-z0-9_-]+$")) then " session \($r.by_session)" else "" end) as $sid
+       | "SUPERSEDED SESSION: This session is superseded: it was resumed in \($h)\($sid) at \($r.time_local // $r.time_utc) for the project at \(.project_root), and that new session is now the active one. Make the warning stand out: start your reply with a separate blockquote banner headed, in bold capitals, SUPERSEDED SESSION - THIS IS THE OLD SESSION, naming the new harness, and telling the user to switch to the new session and close this one; do not bury it in a list or a status update. Do not change any file, commit, or run a side-effect command here unless the user explicitly replies in this session to stay here and keep working in this old session; if they do, tell them the new session is now stale.")' \
     "$note" 2>/dev/null)
   [ -n "$line" ] || quiet
   case "$format" in

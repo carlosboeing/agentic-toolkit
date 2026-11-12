@@ -5,9 +5,11 @@ import { join } from "path"
 // OpenCode plugin for resume-session. It does two things:
 //
 // 1. When a resume note names this session, it adds one line to each model request, next to
-//    the latest user turn, asking the agent to confirm with the user before changing files. It is
-//    the OpenCode counterpart of resume-session-warn.sh and prints the same sentence. It
-//    never blocks: a missing or unreadable note adds nothing.
+//    the latest user turn, telling the agent this session is superseded, to open with a bold
+//    blockquote banner telling the user to switch to the new session and close this one, and
+//    not to change files here unless the user explicitly replies in this session to stay
+//    here. It is the OpenCode counterpart of resume-session-warn.sh and prints the same
+//    sentence. It never blocks: a missing or unreadable note adds nothing.
 // 2. It sets RESUME_SESSION_CURRENT=opencode:<sessionID> for shell commands, so the
 //    resume-session reader can leave the running session out of its list. OpenCode's own
 //    OPENCODE_SESSION_ID does not match the stored session ID (probed on 2.1.4).
@@ -40,10 +42,15 @@ export function warning(sessionID: unknown): string | undefined {
   const resumes = Array.isArray(note?.resumes) ? note.resumes : []
   const last = resumes[resumes.length - 1]
   if (!last) return undefined
+  const sid = typeof last.by_session === "string" && SAFE_ID.test(last.by_session) ? ` session ${last.by_session}` : ""
   return (
-    `This session was resumed in ${last.by_harness ?? "another harness"} at ${last.time_local ?? last.time_utc} ` +
-    `for the project at ${note.project_root}. Work done here can conflict with that session. ` +
-    "Ask the user to confirm before changing any file in this session."
+    `SUPERSEDED SESSION: This session is superseded: it was resumed in ${last.by_harness ?? "another harness"}${sid} at ${last.time_local ?? last.time_utc} ` +
+    `for the project at ${note.project_root}, and that new session is now the active one. ` +
+    "Make the warning stand out: start your reply with a separate blockquote banner headed, in bold capitals, SUPERSEDED SESSION - THIS IS THE OLD SESSION, " +
+    "naming the new harness, and telling the user to switch to the new session and close this one; " +
+    "do not bury it in a list or a status update. " +
+    "Do not change any file, commit, or run a side-effect command here unless the user explicitly replies in this session " +
+    "to stay here and keep working in this old session; if they do, tell them the new session is now stale."
   )
 }
 
