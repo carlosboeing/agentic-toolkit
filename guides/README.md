@@ -23,7 +23,7 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 | [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md) | Match plugins, skills, MCP servers, hooks and browser tools across harnesses |
 | [`guide-ai-model-and-effort-routing.md`](guide-ai-model-and-effort-routing.md) | Choose a model and effort level by task, cost, quota and escalation signals |
 | [`guide-agy-model-and-quota-selection.md`](guide-agy-model-and-quota-selection.md) | Choose Antigravity models and manage its quota and sessions |
-| [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | Choose between Playwright MCP, the Playwright CLI and a live browser tool |
+| [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | Choose between Playwright MCP, the Playwright CLI and a signed-in Chrome profile |
 | [`guide-qmd-smoke-tests.md`](guide-qmd-smoke-tests.md) | Check project search scope, automatic searches across repositories and current-source verification |
 
 ### Project practices

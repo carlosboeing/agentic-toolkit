@@ -152,7 +152,7 @@ Scale gate and task counts to artifact blast radius rather than skill defaults.
 
 ## Browser automation (agentic, not CI)
 
-Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CLI once the remaining steps are known. The full decision rule, the ejection triggers, the Kimi WebBridge path for real logins and the required `--isolated` flag are in `agentic-toolkit/guides/guide-browser-automation-mcp-vs-cli.md`.
+Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CLI once the remaining steps are known. For a signed-in site or named Chrome profile, use the `browser-profile` skill, not Computer Use. Rules and the required `--isolated` flag: `agentic-toolkit/guides/guide-browser-automation-mcp-vs-cli.md`.
 
 ## Document discovery with QMD
 
