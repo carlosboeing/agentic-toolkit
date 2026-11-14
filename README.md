@@ -146,6 +146,7 @@ These directories mirror the harness's own layout under `~/.claude/`, so each it
 | [`repo-standards`](skills/repo-standards/) | Checks or applies a repository's governance files, workflows and branch protection |
 | [`penmark-comments`](skills/penmark-comments/) | Reviews a local Markdown file and can write inline review comments into it |
 | [`git-worktrees`](skills/git-worktrees/) | Sets where worktrees go and the checks to run before changing branches |
+| [`browser-profile`](skills/browser-profile/) | Works inside a signed-in Chrome profile you name, after you click Allow in Chrome |
 | [`housekeeping`](skills/housekeeping/) | Finds branches and worktrees left behind by merged pull requests, and removes them on request |
 | [`start-brainstorm`](skills/start-brainstorm/) | Explores an idea and presents a brainstorm for review before technical design |
 | [`start-research`](skills/start-research/) | Investigates a question before or within any phase, without mandatory artifacts or agents |

@@ -17,6 +17,7 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 | [`housekeeping`](housekeeping/) | `/housekeeping` | Compares local branches and worktrees with GitHub pull requests, and in `fix` mode removes only what a merge left behind |
 | [`penmark-comments`](penmark-comments/) | Automatic, or on request | Reviews a local Markdown file and, once you choose where the output goes, can write validated Penmark inline comments |
 | [`git-worktrees`](git-worktrees/) | Automatic | Sets the worktree location shared by all harnesses and the checks to run before changing branches |
+| [`browser-profile`](browser-profile/) | Automatic, or `/browser-profile` | Works inside a signed-in Chrome profile you name in ordinary words, through the Playwright extension, after you click Allow in Chrome |
 | [`start-brainstorm`](start-brainstorm/) | `/start-brainstorm` | Challenges an idea, compares options, and presents a brainstorm for review before technical design |
 | [`start-research`](start-research/) | `/start-research` | Investigates uncertainty before, within, or independently of other phases, with proportionate evidence and access |
 | [`start-requirements`](start-requirements/) | `/start-requirements` | Defines accepted product scope or an optional brief or PRD |
