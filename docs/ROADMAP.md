@@ -14,6 +14,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 
 ## Future considerations
 
+- **Edge and Chromium profiles for `browser-profile`.** [Issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40).
 - **Native-first tool routing.** Let each harness prefer its own built-in tools where they are equivalent, instead of prescribing one tool set for every harness.
 - **`/init-project` skill.** One skill to scaffold a new project, fill an empty directory, or retrofit the documentation conventions onto an existing project.
 - **Distribution for tools that bundle agent files.** Package a command-line tool together with its skills, hooks and commands so users do not assemble the pieces by hand.
@@ -34,6 +35,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Your own Chrome profile for agents (2026-11-15).** Ask an agent in ordinary words to work in one of your Chrome profiles, on any page, in its visible window. The `browser-profile` skill connects through the Playwright extension, and your Allow click in Chrome confirms each connection. No token is stored. The [browser guide](../guides/guide-browser-automation-mcp-vs-cli.md#your-own-chrome-profile) replaces the WebBridge route.
 - **Superseded-session warning (2026-11-12).** The resume warning now tells the old session it is superseded, opens with a highlighted switch-and-close banner, and allows writes only after an explicit stay-here reply in that session.
 - **Migration preservation and relationship conversions (2026-11-04).** Refuse rehearsals that lose tracked files at ignored destinations. Support explicit `inputs` and `amended_by` conversions into `related`, preserving other metadata and original document bodies.
 - **Additive requirements extraction in migrations (2026-11-03).** Assess requirements ownership in migration previews and optionally derive draft PRDs with the SDD template. Preserve original documents, distinguish source statements from inferences and keep authored additions separate from deterministic structural changes.

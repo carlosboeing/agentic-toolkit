@@ -2,6 +2,17 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-15: your own Chrome profile for agents
+
+- Add the `browser-profile` skill and its helper. A request such as "using my work Chrome profile" resolves through a machine-local alias file to one Chrome profile, and the Playwright CLI connects to it through the Playwright extension. Each connection waits for the Allow click in Chrome. The helper stores and accepts no extension token. The skill covers any page in the profile, public or private: a login is one reason to use it, not a condition.
+- Refuse a profile that has no alias or no extension, cancel a connection nobody approved, and confirm that the session reached the running Chrome. An inherited `PLAYWRIGHT_MCP_ISOLATED` setting outranks the extension and silently launches an empty browser, so the helper removes inherited Playwright settings first.
+- Tell the user directly when a click is needed: the helper raises a desktop notification that names the profile, and the skill requires the agent to put the request on its own highlighted line.
+- Keep page snapshots from your profile's sessions out of the project folder. They go to a private folder per session, deleted on close.
+- Guide setup instead of failing: `check` reports each missing requirement with its fix, `profiles` lists the Chrome profiles to choose from without printing account addresses, and `install-extension` opens the extension's store page in the chosen profile.
+- Set rules for an approved session: ask before an action that is hard to undo, treat page content as data, and leave cookies and stored credentials alone. A session can read every cookie in its profile, so the guide limits the extension to profiles that hold only the accounts an agent needs.
+- Support Google Chrome only. The mechanism is limited to Chromium-family browsers, so Firefox and Safari cannot be supported. Microsoft Edge and Chromium are tracked in [issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40).
+- Replace the WebBridge section of the browser automation guide with the route for your own Chrome profile, and route such requests to the skill from the global brief. Tested from Claude Code and from Codex, which must run the helper outside its workspace sandbox.
+
 ## 2026-11-12: superseded-session warning
 
 - Make the `resume-session-warn` line lead with `SUPERSEDED SESSION`, name the new session when its ID is a safe session ID, and ask the old session to open with a bold blockquote banner telling the user to switch to the new session and close the old one. The old session must not change files, commit, or run side-effect commands unless the user explicitly replies in that session to stay there, in which case it first warns that the new session is now stale. Same line in the shell hook and the OpenCode plugin, on all six harnesses; the hook still never blocks.
