@@ -5,6 +5,8 @@ tests/test_relative_links.py — unit tests for scripts/check-relative-links.py.
 
 import os
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -122,6 +124,60 @@ class TestRelativeLinks(unittest.TestCase):
         failures = check_file_links("broken.md", self.tmpdir)
         self.assertTrue(len(failures) > 0, "Deliberately missing real target must fail")
         self.assertIn("definitely_missing_file_123.md", failures[0])
+
+    def test_cli_rejects_absolute_relationship_paths_but_allows_root_relative_body_links(self):
+        with open(os.path.join(self.tmpdir, "target.md"), "w") as f:
+            f.write("# Target\n")
+        source = os.path.join(self.tmpdir, "source.md")
+        command = [sys.executable, os.path.join(REPO_ROOT, "scripts/check-relative-links.py"),
+                   "--root", self.tmpdir, "source.md"]
+        for key in ("related", "supersedes", "superseded_by"):
+            with self.subTest(key=key):
+                with open(source, "w") as f:
+                    f.write(f"---\n{key}: /target.md\n---\n\n[Body link](/target.md)\n")
+                result = subprocess.run(command, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("source.md:2", result.stdout)
+                self.assertIn("relative to the file", result.stdout)
+        with open(source, "w") as f:
+            f.write("[Body link](/target.md)\n")
+        self.assertEqual(subprocess.run(command, capture_output=True).returncode, 0)
+
+    def test_frontmatter_related_links(self):
+        sub = os.path.join(self.tmpdir, "1-research")
+        sibling = os.path.join(self.tmpdir, "0-brainstorms")
+        os.makedirs(sub)
+        os.makedirs(sibling)
+        target = os.path.join(sibling, "idea.md")
+        with open(target, "w") as f:
+            f.write("# Idea\n")
+
+        good = os.path.join(sub, "good.md")
+        with open(good, "w") as f:
+            f.write(
+                "---\n"
+                "title: Good\n"
+                "related:\n"
+                "  - ../0-brainstorms/idea.md\n"
+                '  - "../0-brainstorms/idea.md#section" # inline comment\n'
+                "  - https://example.com/spec\n"
+                "supersedes: [../0-brainstorms/idea.md]\n"
+                "---\n\n# Body\n"
+            )
+        self.assertEqual(check_file_links("1-research/good.md", self.tmpdir), [])
+
+        bad = os.path.join(sub, "bad.md")
+        with open(bad, "w") as f:
+            f.write(
+                "---\n"
+                "title: Bad\n"
+                "related:\n"
+                "  - 0-brainstorms/idea.md\n"
+                "---\n\n# Body\n"
+            )
+        failures = check_file_links("1-research/bad.md", self.tmpdir)
+        self.assertEqual(len(failures), 1)
+        self.assertIn("1-research/bad.md:4: 0-brainstorms/idea.md", failures[0])
 
 
 if __name__ == "__main__":

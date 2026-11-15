@@ -11,7 +11,7 @@ last_reviewed: 2026-08-17
 related:
   - guide-harness-plugin-parity.md
   - guide-agy-model-and-quota-selection.md
-  - templates/default-project/CLAUDE.md
+  - ../templates/default-project/CLAUDE.md
 ---
 
 # Cross-harness project instructions

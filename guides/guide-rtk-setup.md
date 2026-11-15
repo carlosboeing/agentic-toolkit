@@ -23,8 +23,8 @@ This guide shows how to connect RTK to each supported harness.
 
 | Mode | How it works | Harnesses |
 |---|---|---|
-| Automatic rewrite | A hook or plugin rewrites each shell command, for example `git status` to `rtk git status`, before it runs. The agent needs no instructions. | Claude Code, Cursor, OpenCode |
-| Instruction prefix | The agent's instructions tell it to put `rtk` in front of shell commands itself | Codex, Antigravity, Kimi Code, Grok Build TUI |
+| Automatic rewrite | A hook or plugin rewrites each shell command, for example `git status` to `rtk git status`, before it runs. The agent needs no instructions. | Claude Code, Cursor, Codex, Antigravity, OpenCode |
+| Instruction prefix | The agent's instructions tell it to put `rtk` in front of shell commands itself | Kimi Code, Grok Build TUI, Muse Code |
 
 ```mermaid
 flowchart LR
@@ -91,15 +91,17 @@ Run `rtk init -g --agent cursor`, or add the hook to `~/.cursor/hooks.json`:
 
 ### OpenCode
 
-Run `rtk init -g --opencode` to install RTK's plugin, which rewrites commands before they run. The toolkit's synchronizer does not install this plugin.
+Run `rtk init -g --opencode --hook-only` to install RTK's plugin, which rewrites commands before they run. `--hook-only` skips the `RTK.md` file and the `CLAUDE.md` reference, so a shared instruction file is not edited. The plugin passes each command to `rtk hook opencode`, so RTK upgrades reach it without a reinstall. It rewrote `git log` on OpenCode 2.1.4 with RTK 1.1.0 (checked 2026-11-02). `scripts/sync-toolkit.sh --harness` reports when the plugin is missing and does not write it.
 
 ### Codex
 
-This toolkit uses the instruction prefix for Codex. The shared instruction file, linked to `~/.codex/AGENTS.md`, tells the agent to prefix shell commands with `rtk`. Upstream also offers `rtk init -g --codex`, which installs a rewrite hook. Check that your Codex version supports it before switching.
+RTK 0.50.0 and later rewrite Codex commands with `rtk hook codex`, a `PreToolUse` hook on the `Bash` matcher. Here, unlike the other harnesses, `scripts/sync-toolkit.sh --harness` adds it to `~/.codex/hooks.json` by the full path of `rtk`, because a bare `rtk` can fail with exit 127 in Codex started from a desktop app ([rtk-ai/rtk#4560](https://github.com/rtk-ai/rtk/issues/4560)). Trust it once in `/hooks`; Codex skips an untrusted hook.
+
+Do not run `rtk init -g --codex` when `~/.codex/AGENTS.md` is a link to the shared instruction file: it writes through the link into that file ([rtk-ai/rtk#4156](https://github.com/rtk-ai/rtk/issues/4156)). The hook passes a command through unchanged when Codex reports a permission mode RTK does not know; Codex 0.166.0 sends `bypassPermissions` under `--yolo`, which RTK accepts.
 
 ### Antigravity
 
-Antigravity uses the instruction prefix. The RTK section of the shared instruction file covers it. Upstream's `rtk init --agent antigravity` writes a project rule file at `.agents/rules/antigravity-rtk-rules.md` instead. This repository keeps an [equivalent rule](../rules/antigravity-rtk-rules.md) that is not installed by default. See the [rules README](../rules/README.md) to install it.
+Run `rtk init -g --agent antigravity` (RTK 0.51.0 or later). It installs a plugin at `~/.gemini/config/plugins/rtk/` whose `PreToolUse` hook calls `rtk hook antigravity`, and writes RTK's agent text inside the plugin, so no shared instruction file is edited. It rewrote `git log` in Antigravity CLI 1.4.12 with RTK 1.1.0 (checked 2026-11-02). `scripts/sync-toolkit.sh --harness` reports when the plugin is missing and does not write it. The [rule file](../rules/antigravity-rtk-rules.md) that tells the agent to prefix commands stays available for an Antigravity without the plugin.
 
 ### Kimi Code
 
@@ -108,6 +110,14 @@ Kimi Code's hooks can allow or deny a tool call but cannot change it, so automat
 ### Grok Build TUI
 
 Grok's own `PreToolUse` hooks could rewrite commands, but Grok does not load Claude hooks, and RTK's Claude hook cannot read Grok's camelCase payload. There is no `rtk init` option for Grok, so do not run another agent's option in its place. Grok reads the shared instruction file through its Claude compatibility setting, and that file tells it to prefix commands with `rtk`.
+
+### Muse Code
+
+Muse's `PreToolUse` plugin hooks accept the output of `rtk hook claude`, but Muse 1.4.14 applies a rewrite only when it carries `permissionDecision: "allow"`. RTK sets that only for commands your Claude Code permission rules allow, so a hook would leave most commands unfiltered. Muse reads the shared instruction file, which tells it to prefix commands with `rtk`, and no hook is installed.
+
+## Keep it current
+
+The hooks and plugins only call the `rtk` binary, so `brew upgrade rtk` brings new filters and rewrite fixes without a reinstall. RTK also ships the agent text that the shared instruction file's RTK section follows. `scripts/sync-toolkit.sh --harness` generates that text from the installed `rtk` in a throwaway home and compares it with `scripts/rtk-awareness.snapshot.md`. When it differs, sync reports it: update the RTK section of `instructions/CLAUDE.md`, then the snapshot.
 
 ## Check that it works
 

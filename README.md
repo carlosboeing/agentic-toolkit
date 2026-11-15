@@ -41,20 +41,7 @@ Because every harness reads the same files, a skill updated in the repository re
 
 ## Delivery workflow
 
-The toolkit's skills and conventions follow one delivery process. Each authoring phase ends with a review, and implementation starts only after the plan is approved.
-
-```mermaid
-flowchart TB
-    Brainstorm["Brainstorm"] --> BrainstormGate{"Direction approved?"}
-    BrainstormGate -- "Yes" --> Design["Design"]
-    Design --> DesignGate{"Design reviewed?"}
-    DesignGate -- "Yes" --> Plan["Implementation plan"]
-    Plan --> PlanGate{"Plan approved?"}
-    PlanGate -- "Yes" --> Build["Build in an isolated worktree"]
-    Build --> Verify["Tests, privacy checks and link checks"]
-    Verify --> Review["Review and the required CI check"]
-    Review --> Ship["Merge"]
-```
+Use the lifecycle responsibilities that fit the work. New capability work normally establishes requirements before technical design. Clear routine changes can use the request and an in-session plan. Reviews, work isolation and verification follow the applicable project rules; selected autonomous workflows retain their actual authorization and human gates.
 
 The [project structure and conventions guide](guides/guide-project-structure-and-conventions.md) explains where each phase's documents live and how they link together.
 
@@ -73,7 +60,9 @@ cd agentic-toolkit
 ./scripts/sync-toolkit.sh --harness
 ```
 
-`--harness` writes only under your home directory. It copies the skills into the hub, links each installed harness to it, and copies the Mermaid validation hook. OpenCode loads that hook automatically. Claude Code needs it registered in `settings.json`, as described in the [validator's README](hooks/validate-mermaid/README.md). The script skips any harness whose configuration directory does not exist.
+`--harness` writes to user-level installation paths. It copies the skills into the hub, links each installed harness to it, copies the Mermaid/frontmatter validation and resume warning hooks, and registers them in each harness's settings, as the [validator's README](hooks/validate-mermaid/README.md) and the [resume warning README](hooks/resume-session-warn/README.md) describe. Each settings file is backed up once before its first change, and `--dry-run` shows the changes first. OpenCode loads all three plugins automatically. Codex needs the hooks trusted in `/hooks`. The script skips any harness whose configuration directory does not exist.
+
+For updates across selected projects, use the [`sync-toolkit` skill](skills/sync-toolkit/) and [repository rollout commands](scripts/README.md#repository-rollout). They record exact changed files and verify installation, smoke tests and publication separately. The installer alone does not commit or publish repository copies.
 
 The `--all` mode also installs Git hooks into the repositories it finds in your projects directory. Run `./scripts/sync-toolkit.sh --dry-run --all` first to see which repositories it would change.
 
@@ -151,10 +140,13 @@ These directories mirror the harness's own layout under `~/.claude/`, so each it
 |---|---|
 | [`briefing`](skills/briefing/) | Summarizes a project's current state from Git, GitHub and its tracking files |
 | [`learn`](skills/learn/) | Explains a commit, pull request, file, symbol or topic at the level you choose |
+| [`resume-session`](skills/resume-session/) | Continues an interrupted Claude Code, Codex, OpenCode, Antigravity, Grok Build or Muse Code session in a fresh session of any harness, without a handoff document |
 | [`schedule-resume`](skills/schedule-resume/) | Schedules an agent session to resume later, for example after a usage limit resets |
+| [`sync-toolkit`](skills/sync-toolkit/) | Coordinates harness updates and repository rollouts with exact reports and verified delivery stages |
 | [`repo-standards`](skills/repo-standards/) | Checks or applies a repository's governance files, workflows and branch protection |
 | [`penmark-comments`](skills/penmark-comments/) | Reviews a local Markdown file and can write inline review comments into it |
 | [`git-worktrees`](skills/git-worktrees/) | Sets where worktrees go and the checks to run before changing branches |
+| [`browser-profile`](skills/browser-profile/) | Works inside one of your own Chrome profiles, in its visible window, after you click Allow in Chrome |
 | [`housekeeping`](skills/housekeeping/) | Finds branches and worktrees left behind by merged pull requests, and removes them on request |
 | [`start-brainstorm`](skills/start-brainstorm/) | Explores an idea and presents a brainstorm for review before technical design |
 | [`start-research`](skills/start-research/) | Investigates a question before or within any phase, without mandatory artifacts or agents |
@@ -179,6 +171,7 @@ The [skills catalog](skills/README.md) lists each skill's commands, dependencies
 | [Drift guard](git-hooks/drift-guard/) | `pre-push`, `post-merge`, and the `housekeep` command | Blocks a push when tracking records are out of date, and reports branches left behind by merges |
 | [Private workbench guard](git-hooks/private-workbench-guard/) | `pre-commit` | Refuses commits that stage private paths, private vocabulary or a nested private repository |
 | [Mermaid validator](hooks/validate-mermaid/) | Claude Code `PostToolUse`, an OpenCode plugin, or by hand | Parses each Mermaid diagram in an edited file and reports syntax errors to the agent |
+| [Resume warning](hooks/resume-session-warn/) | Claude Code and Codex `UserPromptSubmit` | Tells a session's agent that the session is superseded, to open with a highlighted switch-and-close banner, and not to change files there unless the user explicitly says to stay there; never blocks |
 
 ### Guides and references
 

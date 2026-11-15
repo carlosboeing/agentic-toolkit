@@ -16,7 +16,7 @@ A new session can plan without the design conversation that came before it. The 
 2. Discovers this project's planning conventions from its instructions and existing files.
 3. Resolves the plan contract: a project-named contract or template when the project has one, else the shared `references/plan-contract.md` that ships beside `SKILL.md`.
 4. Inspects repository state materially implicated by the design.
-5. Uses the project's own planner or plan template when it names one; otherwise the plan contract and the way the repository already writes plans.
+5. Uses the project's own planner or plan template when it names one; otherwise the plan contract and [default plan template](references/plan-template.md).
 6. Writes a plan that answers the contract, checks it against the design, and completes the applicable review. It stops unless the authorized workflow already includes the implementation handoff.
 
 ```mermaid
@@ -51,7 +51,7 @@ Or, with one clearly current design:
 
 A fresh session reads that design, inspects this repo, writes the plan where **this** project keeps plans, and stops by default. An explicitly authorized workflow may continue after the required review. Other projects keep plans elsewhere; the skill discovers that layout instead of assuming this one.
 
-Plan content follows the contract in force. When the project's instructions name a plan contract or template, the plan uses that presentation; otherwise the shared `references/plan-contract.md` sets the minimum answers and the project's own conventions fill in the rest.
+Plan content follows the contract in force. When the project's instructions name a plan contract or template, the plan uses that presentation; otherwise the shared `references/plan-contract.md` sets the minimum answers and [plan template](references/plan-template.md) supplies default presentation. Long builder specifications use task subsections, with stable dependencies and source coverage. Reconcile a provisional design-first source with accepted scope before affected delivery planning.
 
 ## What it will not do
 
@@ -69,7 +69,7 @@ The skill is a directory. Sync copies `SKILL.md` and `references/` together, so 
 ## Design notes
 
 - `references/plan-contract.md` is a deliberate exception to this catalog's single-file skill preference. The contract must load relative to the installed `SKILL.md`, and versioned content beside the skill beats a path guessed from another project's layout.
-- The contract is a quality contract, not a template. It says what a plan must answer and leaves headings, task counts, and commit subjects to the project and its planner.
+- The contract defines required answers; the adjacent template supplies familiar default headings. Project overrides and proportional detail remain supported. Neither resource fixes task counts or commit subjects.
 
 ## Help
 

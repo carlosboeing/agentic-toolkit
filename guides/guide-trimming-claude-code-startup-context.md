@@ -4,7 +4,7 @@ type: guide
 scope: [context-window, tokens, mcp, connectors, plugins, harness-config]
 updated: 2026-07-08
 related:
-  - templates/lean-claude-settings/README.md
+  - ../templates/lean-claude-settings/README.md
 ---
 
 # Trimming Claude Code startup context

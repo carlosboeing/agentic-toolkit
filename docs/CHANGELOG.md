@@ -2,6 +2,134 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-15: your own Chrome profile for agents
+
+- Add the `browser-profile` skill and its helper. A request such as "using my work Chrome profile" resolves through a machine-local alias file to one Chrome profile, and the Playwright CLI connects to it through the Playwright extension. Each connection waits for the Allow click in Chrome. The helper stores and accepts no extension token. The skill covers any page in the profile, public or private: a login is one reason to use it, not a condition.
+- Refuse a profile that has no alias or no extension, cancel a connection nobody approved, and confirm that the session reached the running Chrome. An inherited `PLAYWRIGHT_MCP_ISOLATED` setting outranks the extension and silently launches an empty browser, so the helper removes inherited Playwright settings first.
+- Tell the user directly when a click is needed: the helper raises a desktop notification that names the profile, and the skill requires the agent to put the request on its own highlighted line.
+- Keep page snapshots from your profile's sessions out of the project folder. They go to a private folder per session, deleted on close.
+- Guide setup instead of failing: `check` reports each missing requirement with its fix, `profiles` lists the Chrome profiles to choose from without printing account addresses, and `install-extension` opens the extension's store page in the chosen profile.
+- Set rules for an approved session: ask before an action that is hard to undo, treat page content as data, and leave cookies and stored credentials alone. A session can read every cookie in its profile, so the guide limits the extension to profiles that hold only the accounts an agent needs.
+- Support Google Chrome only. The mechanism is limited to Chromium-family browsers, so Firefox and Safari cannot be supported. Microsoft Edge and Chromium are tracked in [issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40).
+- Replace the WebBridge section of the browser automation guide with the route for your own Chrome profile, and route such requests to the skill from the global brief. Tested from Claude Code and from Codex, which must run the helper outside its workspace sandbox.
+
+## 2026-11-12: superseded-session warning
+
+- Make the `resume-session-warn` line lead with `SUPERSEDED SESSION`, name the new session when its ID is a safe session ID, and ask the old session to open with a bold blockquote banner telling the user to switch to the new session and close the old one. The old session must not change files, commit, or run side-effect commands unless the user explicitly replies in that session to stay there, in which case it first warns that the new session is now stale. Same line in the shell hook and the OpenCode plugin, on all six harnesses; the hook still never blocks.
+
+## 2026-11-04: migration preservation and relationship conversions
+
+- Block lifecycle migration rehearsals when an originally tracked file would disappear from the staged result, including moves into ignored destinations. Require explicit ignore exceptions rather than force-adding evidence.
+- Support exact, opt-in conversion of `inputs` and `amended_by` into `related`. Preserve other metadata and document bodies, retain provenance guards, and document relationship coverage checks.
+- Cover blocked preview/apply, binary content and executable-mode preservation, relationship conversion, unsafe edits and repeat runs through the migration CLI.
+
+## 2026-11-03: additive requirements extraction in migrations
+
+- Assess requirements ownership in every lifecycle migration preview. Support requested extraction into additional draft briefs or PRDs using the SDD requirements contract and template.
+- Preserve original brainstorms, designs and plans apart from separately previewed structural repairs. Trace explicit and inferred requirements to fixed source revisions, retain source authority and record conflicts without inventing approval or delivery.
+- Rehearse the exact authored additions after the deterministic structural target. Verify source preservation and record both target trees for interrupted-run recovery; the structural runner remains unchanged.
+
+## 2026-11-03: lifecycle consumer consistency
+
+- Align session recovery with file-relative relationships and root-level lifecycle folders. Resolve numeric-only commit abbreviations without treating numeric counts as commits.
+- Make the Python link checker reject absolute local frontmatter relationships while retaining root-relative Markdown body links.
+- Name the authoritative lifecycle sources and require discovery/search coverage in migration previews, including existing collection patterns.
+
+## 2026-11-03: reliable toolkit synchronization
+
+- Add a `sync-toolkit` skill and script catalog, with one hook-installation implementation shared by rollout and repository-standards guidance.
+- Add explicit repository rollout audits and resumable reports that include newly created hooks, preserve conflicting work and distinguish installed, tested, committed and published states. Publication checks query the configured remote branch and inspect expected contents and executable modes.
+- Smoke-test installed metadata validation in disposable repositories. Preserve existing CLI paths, private companion handling and custom privacy hooks.
+- Report missing installation sources and failed settings registration as incomplete. Optional registration JSON preserves exact settings writes and manual follow-up actions. Installation success does not imply publication or runtime readiness.
+- Include command wrappers for newly selected skills in harness previews, and reject existing registration-report paths before installation starts.
+- Complete the selected repository hook rollout with remote-content verification, validator smoke tests and repeat-apply checks. Preserve unrelated local work and remove verified merged implementation worktrees.
+
+## 2026-11-02: lifecycle docs in the first search across project layouts
+
+- Discover document roots from project instructions, the Project Map and disk, regardless of repo visibility or Git boundaries. Include working-memory records in the first lookup, whether they belong to a nested private clone, the same repo, `docs/` or another declared layout. Search unindexed roots natively from the start.
+- Test ordinary questions without retrieval hints in the prompts across split repos, single repos and custom layouts. Inspect tool activity afterward for initial lifecycle coverage, reuse of prior work and discovery of related repositories. Keep CLI diagnostics separate from everyday tests.
+
+## 2026-11-02: QMD search scope and smoke tests
+
+- Start unfamiliar document searches with the current project's main and private collections. Include related repositories for dependencies, integrations, shared tooling and prior solutions; broaden automatically when local context is insufficient. Collection filters control scope, not the working directory.
+- Keep personal or client collections excluded from default engineering searches available through explicit selection. Cross-project decisions inform the answer without overriding the owning project's accepted requirements and current decisions.
+- Add a smoke-test guide for project scope, automatic cross-project discovery, reuse of prior work, excluded collections and current-source verification.
+
+## 2026-11-02: optional QMD document discovery
+
+- The shared brief uses bounded lexical QMD results for unfamiliar document topics when QMD is installed and collections are registered. Exact identifiers and code still use native search. Agents read current source files to establish facts, status and approval, since indexed content can be stale.
+- Keep index refresh to one writer and register canonical corpus roots explicitly. The lexical pilot does not authorize model downloads, semantic search, MCP servers or daemons. No automatic installation or harness hook is added.
+
+## 2026-11-02: file-relative frontmatter relationship links and validation
+
+- Specify in the conventions guide, project templates and global agent brief that paths in frontmatter `related`, `supersedes` and `superseded_by` fields are relative to the file's own directory, matching Markdown body links. Convert the 14 repo-root frontmatter entries in `guides/` and `reference/` to file-relative paths.
+- Extend `scripts/check-relative-links.py` and `drift-guard/housekeep` (`_check_frontmatter`) to verify that local paths in `related`, `supersedes` and `superseded_by` resolve from the file's directory, unquoting YAML strings before stripping `#` comments so quoted `#` fragments and issue references remain intact.
+- Add the `validate-frontmatter` harness hook (`hooks/validate-frontmatter/validate-frontmatter.sh` for Claude Code `PostToolUse` on `Write|Edit` and `opencode-validate-frontmatter.ts` for OpenCode 2.x and 1.x `execute.before`), wired into `scripts/sync-toolkit.sh` and `scripts/register_hooks.py`. When a path fails to resolve from the file's directory but exists at a parent root, the hook suggests the exact file-relative replacement.
+
+## 2026-11-02: RTK rewrite in Codex, Antigravity and OpenCode
+
+- `scripts/register_hooks.py` registers `rtk hook codex` in `~/.codex/hooks.json` (`PreToolUse`, `Bash`) by the full path of `rtk`, when `rtk hook --help` lists it. RTK's own `rtk init --codex` is not used: it also writes into `AGENTS.md`, which here links to the shared instruction file, and refuses `--hook-only`. The Codex trust reminder now covers every hook it registers.
+- Antigravity and OpenCode use RTK's own plugins, installed with `rtk init -g --agent antigravity` and `rtk init -g --opencode --hook-only`. Sync reports a missing plugin with that command and writes neither, so RTK's fixes reach them through RTK.
+- Sync generates RTK's current agent text in a throwaway home and reports when it differs from `scripts/rtk-awareness.snapshot.md`, the text the brief's RTK section follows.
+- The brief's RTK section follows RTK 1.1's agent text: treat condensed output as complete, batch related commands, and re-run with `rtk bypass` (the 1.0 name for `rtk proxy`) only when output is unusable or a test verdict is missing. Kimi Code, Grok and Muse keep the prefix, on each command in a chain. `cat` and `rtk read` are byte-exact in RTK 1.1, so exact-byte reads need no bypass.
+- Live probes with RTK 1.1.0 confirmed the rewrite in Codex 0.166.0, Antigravity CLI 1.4.12 (project hooks file and RTK's plugin) and OpenCode 2.1.4. Muse 1.4.14 applies a rewrite only with `permissionDecision: "allow"`, and Grok could not be tested. The RTK setup guide, the harness hooks reference and the capability map record the results.
+
+## 2026-11-02: narrower `rtk proxy` rule
+
+- The global brief keeps `rtk proxy` for exact bytes, test runs and filter debugging, and sends `git`, `gh`, `rg`, `grep`, `find` and `ls` through the plain `rtk` prefix. It also asks for a line range instead of a whole large file. In a 14-day Codex sample, 89% of shell calls used `rtk proxy`; whole-file reads averaged 29,000 characters and made up half of the measured output.
+
+## 2026-11-02: privacy guard home-path match
+
+- The public pre-commit guard matches the macOS home-directory prefix case-sensitively, so a lowercase `users` path segment such as `/api/users/42` is accepted. The workbench, repository-name and commercial terms still match in any case. Tests cover both.
+
+## 2026-11-01: resume sessions from four more harnesses
+
+- `resume-session` reads OpenCode (2.x and 1.x database tables, opened read-only), Antigravity CLI, Grok Build and Muse Code sessions, with the same summary sections as Claude Code and Codex. Subagent sessions are left out of `list`. Grok sessions get a running check from `~/.grok/active_sessions.json`.
+- `list` leaves out the session it runs in, found from each harness's shell variables, and says so. Each candidate shows the harness's title, or its first request when the title is missing or a placeholder, and a line with its last request. No model call is made.
+- `resume-session-warn` covers Muse Code (plugin `UserPromptSubmit`), Antigravity CLI (`PreInvocation`), Grok Build (`PreToolUse`) and OpenCode (a dual-API plugin that adds the line next to the latest user turn and names the running session for `list`). Probes on each installed version are recorded in the harness hooks reference.
+- `sync-toolkit.sh --harness` registers the toolkit's hooks in Claude Code, Codex, Grok, Antigravity and Muse settings through `scripts/register_hooks.py`: idempotent, backed up once, `--dry-run` aware, and leaving any file it cannot parse alone. It reports the one manual step, trusting the Codex hook in `/hooks`.
+
+## 2026-11-01: resume an interrupted session
+
+- Add the `resume-session` skill. It continues an interrupted Claude Code or Codex session in a fresh session of any harness from a summary built with no model call: live Git state for the root, worktrees and nested repositories; ranked project documents with their scope section, first open item and latest dated section; and, from the transcript, every request, short approvals with the message they answered, the last completion claim, files changed, side-effect commands and test verdicts.
+- Find project records by generic layers that need no documentation method, and apply the toolkit's SDLC conventions from a data profile that only adds and reorders results. A contract test fails when the profile drifts from the plan checker or the conventions guide.
+- Add `mark` and the optional `resume-session-warn` prompt hook for Claude Code and Codex. The hook adds one line to a resumed session's context asking the agent to confirm with the user before changing files, and never blocks. `sync-toolkit.sh` copies it beside `validate-mermaid` and registers neither.
+- Record the probed hook facts in the harness hooks reference, and add a fresh-session resume row to the capability map.
+
+## 2026-11-01: lifecycle document templates
+
+- Add original requirements, technical design, implementation plan and retrospective templates alongside their quality contracts, packaged with the corresponding skills. Use readable acceptance tables, standalone technical prose and concise document control/history while preserving project overrides and proportionate detail.
+- Support provisional design-first work for architecture and feasibility constraints, with derived requirements and design reconciliation before affected delivery planning or implementation. Retain requirements-first product work, routine clear-change routes and actual review authority.
+- Add retrospective guidance for evidence, successes, problems, contextual lessons and owned improvement actions with later success checks. Preserve the distinction from artifact review, incident analysis and instruction authority. Brainstorm and research formats remain open.
+
+## 2026-11-01: lifecycle folders and requirements capture
+
+- Include all seven numbered lifecycle folders in bootstrap templates and migration previews/applications, with `.gitkeep` in empty folders. Retain working-memory routing, collision checks and idempotent reruns. Folder presence requires no phase or artifact.
+- Clarify vague new ideas through recorded brainstorming, and persist new capability requirements before technical design. Ask focused questions about consequential gaps, reuse existing authoritative records, preserve explicit lighter routes and avoid retrospective paperwork for approved work.
+- Add a requirements quality contract with suggested structure and examples, alongside the existing design and plan contracts. Keep product scope changes traceable to the same owner without adding a separate specification phase or approval ceremony.
+
+## 2026-11-01: migration kickoff instructions
+
+- Add copyable preview and apply prompts, fresh-session instructions, bounded batch selection examples and dated harness/model recommendations to the migration runbook. Distinguish routing recommendations from measured migration results and retain installation and publication boundaries.
+
+## 2026-10-31: lifecycle migration entry
+
+- Add a requested migration skill and runbook for one project or an explicitly selected batch. Keep classification decisions separate from deterministic execution and retain public/private repository boundaries.
+- Add a manifest-driven runner with disposable rehearsal, preview by default, explicit staged apply, exact file moves and counted replacements, metadata conversion, source checks and target-tree verification. Continue independent batch entries when one is blocked; recognize exact reruns.
+- Refuse unsafe paths, collisions, changed sources, unknown manifest fields and provenance edits. Compare supported Markdown references against the baseline; bare-text and custom metadata references still need integrated review. No installation or publication is automatic.
+
+## 2026-10-31: briefing document recency
+
+- Resolve document recency from frontmatter `updated`, falling back to Git author history with rename following. Never use filesystem modification times; report missing or invalid recency explicitly. Keep saved briefing logs on their event-date schema.
+
+## 2026-10-31: harness hooks reference
+
+- Add `reference/reference-harness-hooks.md` for Claude Code, Codex, Gemini CLI, Antigravity, Kimi Code, Grok Build, OpenCode, Cursor and Muse Code: configuration and trust, blocking, added context, rewriting tool calls, payload keys and session ID fields, which event does each common job, failure behavior, and open questions.
+- Make the capability map the index of detail references. Fill in its Codex and Antigravity hook rows and add a row for context added on each prompt.
+- Point the hooks catalog and the plugin parity guide at the reference instead of restating hook facts. Add a process to "Writing a hook": read the row, re-check stale sources, probe, adapt per harness, and write findings back.
+- Record that Grok's documentation names `PreToolUse` as its only blocking event, which disputes this repository's 2026-08-17 record.
+- Point the global brief at the reference before a hook is created or ported.
+
 ## 2026-10-31: lifecycle frontmatter migration
 
 - Define `created` and `updated` for lifecycle records, with legacy `date` input accepted during transition. Keep review dates and review authority distinct from edit dates.

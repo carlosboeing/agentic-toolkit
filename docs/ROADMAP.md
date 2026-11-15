@@ -4,17 +4,17 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 
 ## In flight
 
-None at the moment.
+- **Lifecycle standards consolidation and adoption.** Reconcile the authoritative conventions and their consumers, verify metadata and recovery behavior, then rehearse explicit project migrations with preservation and discovery checks.
 
 ## Next actions
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
-- **Codex parity follow-up.** Assess Codex's supported hooks for RTK filtering and Mermaid validation, adapt the existing hooks, and test their behavior before enabling them.
-- **Resume an interrupted session in any harness.** When a usage limit stops a session mid-task, build a short summary from its transcript and the live repository state, then continue in a fresh session of the same or another harness without a handoff document. A prototype carried a plan-driven Codex task into Antigravity; the design comes next.
-- **Privacy guard false positive.** The pre-commit pattern for macOS home paths ignores letter case, so example code with a lowercase `users` path segment is blocked. Make that match case-sensitive.
+- **Codex Mermaid validation.** Adapt `validate-mermaid` to Codex's `PostToolUse` hook, which can return feedback after an edit, and test it before enabling it.
+- **RTK rewrite hook for Grok Build.** Grok's bundled hook reference documents `updatedInput`, and RTK's Claude processor cannot read Grok's camelCase payload. Test a mapping wrapper once the Grok account can run a session.
 
 ## Future considerations
 
+- **Edge and Chromium profiles for `browser-profile`.** [Issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40).
 - **Native-first tool routing.** Let each harness prefer its own built-in tools where they are equivalent, instead of prescribing one tool set for every harness.
 - **`/init-project` skill.** One skill to scaffold a new project, fill an empty directory, or retrofit the documentation conventions onto an existing project.
 - **Distribution for tools that bundle agent files.** Package a command-line tool together with its skills, hooks and commands so users do not assemble the pieces by hand.
@@ -29,9 +29,39 @@ None at the moment.
 
 ## Parked
 
+- **Deferred: a `resume-session` reader for Cursor.** Its `store.db` keeps hex-encoded metadata and content-addressed blobs, and its hooks cannot add context on a prompt, so an open tab would get no warning.
+- **Declined: `resume-session` readers for Kimi Code and Gemini CLI.** Neither is in use; both stay targets with the repository-only summary.
 - **Deferred: retire `plugins/install-superpowers.sh`.** It stays as the rollback path until the per-harness skill trigger check passes and a stable period follows.
 
 ## Recently shipped
+
+- **Your own Chrome profile for agents (2026-11-15).** Ask an agent in ordinary words to work in one of your Chrome profiles, on any page, in its visible window. The `browser-profile` skill connects through the Playwright extension, and your Allow click in Chrome confirms each connection. No token is stored. The [browser guide](../guides/guide-browser-automation-mcp-vs-cli.md#your-own-chrome-profile) replaces the WebBridge route.
+- **Superseded-session warning (2026-11-12).** The resume warning now tells the old session it is superseded, opens with a highlighted switch-and-close banner, and allows writes only after an explicit stay-here reply in that session.
+- **Migration preservation and relationship conversions (2026-11-04).** Refuse rehearsals that lose tracked files at ignored destinations. Support explicit `inputs` and `amended_by` conversions into `related`, preserving other metadata and original document bodies.
+- **Additive requirements extraction in migrations (2026-11-03).** Assess requirements ownership in migration previews and optionally derive draft PRDs with the SDD template. Preserve original documents, distinguish source statements from inferences and keep authored additions separate from deterministic structural changes.
+- **Lifecycle consumer consistency (2026-11-03).** Prefer file-relative metadata relationships, detect lifecycle repositories at their root and resolve numeric commit references. Reject absolute metadata paths in link checks. Identify authoritative standards and include search coverage in migration preparation.
+- **Reliable toolkit synchronization (2026-11-03).** Add the sync skill, script catalog and explicit rollout reports. Verify installed hooks, isolated validator behavior and remote publication separately. Preserve custom hooks and local work, report incomplete installation and preview new skill command wrappers. Complete the selected repository hook rollout with verified remote publication, validator smoke tests and a no-op repeat.
+- **Lifecycle docs in the first search across layouts (2026-11-02).** Discover declared knowledge roots regardless of repo visibility or Git boundaries, including nested private clones and single-repo working-memory or documentation folders. The [smoke test](../guides/guide-qmd-smoke-tests.md#2-check-a-question-about-the-current-project) uses ordinary questions without retrieval hints and checks initial lifecycle coverage.
+- **QMD search scope and smoke tests (2026-11-02).** Start document discovery with the current project's main and private collections, include related repositories when the task needs them and broaden without a permission round. Keep excluded collections explicit and verify current sources. The [smoke-test guide](../guides/guide-qmd-smoke-tests.md) checks routing and retrieval across harnesses.
+- **Optional QMD document discovery (2026-11-02).** The shared brief directs unfamiliar document topics to a registered lexical index with five results, then reads current files for facts and authority. Keep exact native search, one indexing writer and explicit corpus registration. Installation, models and MCP servers remain separate actions.
+- **File-relative frontmatter relationship links and validation (2026-11-02).** Define `related`, `supersedes` and `superseded_by` paths as relative to the containing file so links work in every editor and in both `docs/` and split working-memory setups. Enforce the rule in `drift-guard` (`housekeep check --push`), `scripts/check-relative-links.py`, and the new `validate-frontmatter` hook for Claude Code and OpenCode.
+- **RTK rewrite in Codex, Antigravity and OpenCode (2026-11-02).** Those harnesses no longer type the `rtk` prefix. Antigravity and OpenCode use RTK's own plugins; sync registers only the Codex hook, reports a missing plugin, and warns when RTK's agent text changes. Muse keeps the prefix: it applies a rewrite only for commands RTK auto-allows.
+- **Narrower `rtk proxy` rule (2026-11-02).** The global brief limits `rtk proxy` to exact bytes, test runs and filter debugging, routes `git`, `gh`, `rg`, `grep`, `find` and `ls` through RTK's filters, and asks for line ranges from large files.
+- **Privacy guard home-path match (2026-11-02).** The pre-commit guard matches the macOS home-directory prefix case-sensitively, so example code with a lowercase `users` path segment is no longer refused. The other denied terms still match in any case.
+- **Resume sessions from four more harnesses (2026-11-01).** `resume-session` reads OpenCode, Antigravity CLI, Grok Build and Muse Code sessions, leaves the running session out of its list, and gives every candidate a readable title and its last request. The resume warning hook covers those harnesses too, and `sync-toolkit.sh` now registers every hook it installs, in each harness's own settings.
+- **Resume an interrupted session in a fresh session (2026-11-01).** Add `resume-session`, a manual skill and standard-library reader that continue a Claude Code or Codex session in a fresh session of any harness from project records, live Git state and the old transcript, with no handoff document. Add an optional prompt hook that tells an old session it was resumed, without blocking it.
+
+- **Lifecycle document templates (2026-11-01).** Add requirements, design, plan and retrospective templates with familiar sections, standalone technical prose and concise control/history. Support provisional design-first work and evidence-based retro follow-ups while keeping brainstorm/research formats and routine-change routes flexible.
+
+- **Lifecycle folders and requirements capture (2026-11-01).** Keep all seven numbered folders visible in templates and migrations, clarify and persist new capability requirements before technical design, and add a requirements quality contract with examples. Routine clear changes retain the lightweight route.
+
+- **Migration kickoff instructions (2026-11-01).** Save fresh-session preview and continuation prompts, bounded batch selection instructions, and dated harness/model guidance in the migration runbook.
+
+- **Lifecycle migration entry (2026-10-31).** Add a requested skill, runbook and manifest-driven runner for single-project or selected-batch adoption, with disposable previews, staged apply, preservation checks and per-project recovery state.
+
+- **Briefing document recency (2026-10-31).** Use lifecycle `updated` dates with Git-history fallback for draft actionability, document staleness and ADR ordering. Preserve briefing-log event dates and report unknown recency.
+
+- **Harness hooks reference (2026-10-31).** Record hook facts for nine harnesses in one dated reference: configuration and trust, which events can block, add context or rewrite a tool call, payloads, failure behavior, and open questions where documentation and records disagree. The capability map becomes the index of detail references, and the hooks catalog gains a process for writing and porting hooks.
 
 - **Lifecycle frontmatter migration (2026-10-31).** Define `created` and `updated` dates, retain legacy input compatibility, and add a reusable metadata migration CLI with preview, explicit apply and Git-based date recovery. Preserve content and review provenance; install compatible validators before adopting the schema.
 

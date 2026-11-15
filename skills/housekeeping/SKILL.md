@@ -57,6 +57,6 @@ The script enumerates all local branches and registered worktrees, resolves them
 
 ## Harness notes
 
-The script is written in Bash and runs anywhere with `git` and `gh`. Four harnesses need an explicit `rtk` prefix on shell commands: Codex, Antigravity, Kimi Code, and Grok.
+The script is written in Bash and runs anywhere with `git` and `gh`. Three harnesses need an explicit `rtk` prefix on shell commands: Kimi Code, Grok and Muse.
 
 A nested working-memory repository is separate. Run the script again with `(cd .workbench && ./scripts/githooks/housekeep <mode>)`, or use `git -C .workbench`.

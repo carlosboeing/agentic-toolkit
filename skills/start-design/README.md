@@ -10,11 +10,11 @@ Writes a technical design from a product brief or PRD, reviewed exploration, res
 /start-design help
 ```
 
-A clear brief in the current request can replace the brainstorm path. Without a source, the skill uses one clearly intended project-native candidate or asks you to choose. It reads the sources in full and inspects the relevant current architecture and product decisions. The design links consequential decision sources and explains what it preserves, proposes changing, or leaves outside this change.
+For product-led work, the skill normally clarifies and persists requirements through `start-requirements` before technical design. Architecture-led or feasibility-led work can start with a provisional design, then derive requirements and reconcile the same design before affected delivery planning or implementation. Vague intent needs brainstorming first. Existing authoritative requirements are reused; routine clear changes can use the current request, and an explicit lighter route wins. Without a source, the skill uses one clearly intended project-native candidate or asks you to choose. It reads the sources in full and inspects the relevant current architecture and product decisions. The design links consequential decision sources and explains what it preserves, proposes changing, or leaves outside this change.
 
 ## Contract and output
 
-The [shared design contract](references/design-contract.md) covers the problem, audience, scope, constraints, sources, options, architecture, consequential interfaces, failure behavior, acceptance, and uncertainty. It includes compact and substantial examples. A project-named contract may replace presentation and extend the minimum. An explicit project exception must name the omitted answer and its consequence for later work.
+The [shared design contract](references/design-contract.md) covers the problem, audience, scope, constraints, sources, options, architecture, consequential interfaces, failure behavior, acceptance, and uncertainty. It includes compact and substantial examples. The [design template](references/design-template.md) supplies default headings, concise document control and material history; project overrides remain supported. A project-named contract may replace presentation and extend the minimum. An explicit project exception must name the omitted answer and its consequence for later work.
 
 The contract resolves beside the installed `SKILL.md`. Copy the complete directory so each installed skill reads its own version. Project instructions control artifact location, metadata, research and document checks, and review mechanics.
 
@@ -32,7 +32,7 @@ If later work disproves a consequential assumption, the affected work stops for 
 |---|---|
 | Help argument | Show the synopsis without exploration or writes. |
 | Reviewed brainstorm and optional research paths | Read them in full; treat research as evidence, not approval. |
-| Clear brief without a brainstorm | Design from that brief; create no ceremonial brainstorm. |
+| Clear new capability without a brainstorm | Clarify and persist its product brief through `start-requirements`, then design within the requested boundary. Reuse an existing sufficient brief; create no ceremonial brainstorm. |
 | Bounded work | Present a short design in chat, use applicable review for real choices, then stop for a design-only request or continue within existing implementation or autonomous authority; write a file only when requested or warranted. |
 | Several plausible source artifacts | Ask for a choice rather than treating the newest as authoritative. |
 | No status field | Follow project readiness rules; do not invent a universal schema. |

@@ -8,6 +8,7 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 
 | Guide | Use it to |
 |---|---|
+| [`guide-lifecycle-migration.md`](guide-lifecycle-migration.md) | Migrate lifecycle records in one project or a selected batch using explicit mappings and preservation checks |
 | [`guide-new-machine-setup.md`](guide-new-machine-setup.md) | Set up the shared instructions, skill hub, hooks, plugins and OpenCode configuration on a new machine |
 | [`guide-rtk-setup.md`](guide-rtk-setup.md) | Install RTK and choose between automatic hooks and explicit `rtk` prefixes for each harness |
 | [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) | Install and check claude-mem session memory |
@@ -22,13 +23,15 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 | [`guide-harness-plugin-parity.md`](guide-harness-plugin-parity.md) | Match plugins, skills, MCP servers, hooks and browser tools across harnesses |
 | [`guide-ai-model-and-effort-routing.md`](guide-ai-model-and-effort-routing.md) | Choose a model and effort level by task, cost, quota and escalation signals |
 | [`guide-agy-model-and-quota-selection.md`](guide-agy-model-and-quota-selection.md) | Choose Antigravity models and manage its quota and sessions |
-| [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | Choose between Playwright MCP, the Playwright CLI and a live browser tool |
+| [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | Choose between Playwright MCP, the Playwright CLI and your own Chrome profile |
+| [`guide-qmd-smoke-tests.md`](guide-qmd-smoke-tests.md) | Check project search scope, automatic searches across repositories and current-source verification |
 
 ### Project practices
 
 | Guide | Use it to |
 |---|---|
 | [`guide-project-structure-and-conventions.md`](guide-project-structure-and-conventions.md) | Organize project documents, frontmatter, roadmaps and decision records |
+| [`guide-lifecycle-documentation.md`](guide-lifecycle-documentation.md) | Use requirements, design, plan and retrospective templates with standalone technical prose, control/history and flexible entry routes |
 | [`guide-creating-claude-code-skills.md`](guide-creating-claude-code-skills.md) | Design a skill: when it activates, its commands, instructions, file layout and failure behavior |
 | [`guide-penmark-agent-integration.md`](guide-penmark-agent-integration.md) | Install and test the Penmark inline-comment workflow |
 

@@ -14,7 +14,7 @@ Instructions apply across Claude Code, Codex, Cursor, Gemini CLI, Antigravity, K
 
 - **Project instructions first.** Project-level `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md` override these preferences.
 - **Skill equivalents.** Claude `Skill` maps to the active harness skill mechanism. In Codex, read `SKILL.md` before acting. In Gemini/Agy, use skill activation. In Kimi Code, use native `Skill` tool or `/skill:<name>` (`~/.agents/skills/`).
-- **Hook equivalents.** Rely on configured hooks and verify results. When absent, follow instructions manually.
+- **Hook equivalents.** Rely on configured hooks and verify results. When absent, follow instructions manually. Before creating or porting a harness hook, read `reference/reference-harness-hooks.md` in your local agentic-toolkit clone.
 - **Tool equivalents.** Use harness-exposed tool equivalents while preserving intent.
 - **Fallbacks.** State fallbacks briefly when an instruction is unsupported, then proceed with the closest safe behavior.
 
@@ -34,7 +34,7 @@ Before creating or editing any public repo's governance files (`CODE_OF_CONDUCT.
 - **Simplicity first.** Write the minimum code that solves the problem. Avoid speculative abstractions, unrequested features, and impossible error handling.
 - **Surgical changes.** Touch only required code. Match existing style. Delete orphans created by your changes, but leave pre-existing dead code untouched.
 - **Verifiable goals.** Convert vague tasks into testable success criteria before starting.
-- **Token efficiency (RTK).** Prefix shell commands with `rtk` unless using a transparent rewrite hook (Claude Code, Cursor). Antigravity/Agy, Codex, Kimi Code, and Grok require explicit `rtk` prefixes.
+- **Token efficiency (RTK).** Prefix shell commands with `rtk` unless a rewrite hook adds it (Claude Code, Cursor, Codex, Antigravity, OpenCode). Kimi Code, Grok and Muse require explicit `rtk` prefixes.
 
 ## Housekeeping inside approved scope
 
@@ -78,7 +78,7 @@ Ask only for these: an action you cannot undo (delete, publish, merge, money, cr
 
 ### Documentation frontmatter (working-memory docs)
 
-Every Markdown document inside a working-memory tree starts at byte 0 with a YAML frontmatter block. Use the project's active metadata schema. New or migrated lifecycle records use `created` and `updated`; deploy compatible validators before adoption, preserving original dates and review provenance. The pre-push gate fails the push when one is wrong. `authors` is append-only: the human operator first, then each contributing agent as `"<model> (<harness>)"`. For the two field schemas, the closed status vocabulary and the exemptions, read sections 5.4 and 6.3 of `agentic-toolkit/guides/guide-project-structure-and-conventions.md`.
+Every Markdown document inside a working-memory tree starts at byte 0 with a YAML frontmatter block. Use the project's active metadata schema. New or migrated lifecycle records use `created` and `updated`; deploy compatible validators before adoption, preserving original dates and review provenance. Paths in `related`, `supersedes`, and `superseded_by` are relative to the file's own directory, matching Markdown body links. The pre-push gate fails the push when one is wrong. `authors` is append-only: the human operator first, then each contributing agent as `"<model> (<harness>)"`. For the two field schemas, the closed status vocabulary and the exemptions, read sections 5.4 and 6.3 of `agentic-toolkit/guides/guide-project-structure-and-conventions.md`.
 
 ### SDLC phase checkpoints
 
@@ -88,10 +88,10 @@ Do not auto-advance by default. An explicit request for a full or partial autono
 
 Select responsibilities to fit the work; no phase, document, separate session, or agent is mandatory solely by change category.
 
-1. **Brainstorm:** Explore ideas and alternatives. Exploration can stop or produce several initiatives. Promotion needs explicit intent or included autonomous scope; preserve useful rationale.
+1. **Brainstorm:** Explore ideas and alternatives. Exploration can stop or produce several initiatives. For a vague new idea, clarify intent with focused questions and persist useful exploration in a brainstorm. Promotion needs explicit intent or included autonomous scope; preserve useful rationale.
 2. **Research:** Investigate uncertainty before or within any phase. Use proportionate evidence and applicable capabilities; report gaps and obtain missing access or action authority.
-3. **Requirements:** Identify one owner of accepted scope, behavior, priorities, exclusions, and success. A request or issue can suffice; a brief within design or separate PRD is conditional.
-4. **Design:** Choose the technical solution and consequential contracts. Use a short design in chat or a file when requested or warranted. Apply the relevant review before downstream work.
+3. **Requirements:** Identify one owner of accepted scope, behavior, priorities, exclusions, and success. For new product, feature, or capability work, use `start-requirements` to clarify consequential gaps and normally persist a brief or PRD before technical design; reuse an existing authoritative record. Architecture-led or feasibility-led work may start with a provisional design, then derive requirements and reconcile that design before affected delivery planning or implementation. Ask only questions sources do not answer. Routine clear changes may use the request, issue, or session; honor an explicit lighter route. No extra approval ceremony is implied.
+4. **Design:** Choose the technical solution and consequential contracts. Use a short design in chat or a file when requested or warranted. Apply the relevant review before downstream work. Durable requirements, design, plan and retro records use their default templates unless the project supplies its own; keep technical prose standalone, control/history concise and review evidence intact. Brainstorm and research formats remain flexible.
 5. **Plan:** Combine builder specifications, acceptance proof, tasks, dependencies, and integration responsibilities when a durable plan is requested or warranted. No intermediate spec phase is required.
 6. **Implementation:** Work from applicable sources or a clear request. Plan in session using native tools or another proportionate method. Check scope, constraints, order, and proof before editing; no separate document or fixed response template is required.
 7. **Review:** Use project and specialist methods at applicable checkpoints and on the integrated result. Scale depth and model choice to consequence. Delegated agent review never proves personal human review.
@@ -152,19 +152,32 @@ Scale gate and task counts to artifact blast radius rather than skill defaults.
 
 ## Browser automation (agentic, not CI)
 
-Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CLI once the remaining steps are known. The full decision rule, the ejection triggers, the Kimi WebBridge path for real logins and the required `--isolated` flag are in `agentic-toolkit/guides/guide-browser-automation-mcp-vs-cli.md`.
+Start unfamiliar pages on Playwright MCP, and eject to the `@playwright/test` CLI once the remaining steps are known. For the user's Chrome profile or a signed-in site, use the `browser-profile` skill, not Computer Use. Rules and the required `--isolated` flag: `agentic-toolkit/guides/guide-browser-automation-mcp-vs-cli.md`.
+
+## Document discovery with QMD
+
+Find document roots, including hidden folders, from project instructions/Project Map and disk, regardless of visibility or Git boundaries. Unless project instructions say otherwise, an existing working-memory folder is the primary engineering and lifecycle corpus from the first lookup, whether a nested clone or in the same repo. Other layouts use `docs/` or declared roots.
+
+For unfamiliar document topics, use `qmd --index agent-docs search "keywords" --json -n 5` when QMD is installed and roots are registered. Scope the first query to applicable project collections with repeated `-c <name>`. Map unknown collections with `qmd --index agent-docs collection list` and `qmd --index agent-docs collection show <name>`. The working directory does not scope the index. Search unindexed roots natively immediately. Keep `rg` for code, exact paths and identifiers.
+
+Include related repos immediately for dependencies, integrations, shared tooling or prior solutions. Broaden automatically for weak, incomplete or conflicting local results or wider task context; no permission needed. Unscoped queries use default-included collections. Select excluded personal/client collections explicitly when relevant. If candidates remain poor, reformulate once or use `rg`.
+
+Read current frontmatter and relevant lines from the active checkout before quoting or deciding scope, status or approval. Rank and other projects' decisions do not override the owning project's accepted requirements or current decisions. `qmd get` does not prove current disk content.
+
+Refresh changed registered sources with `qmd --index agent-docs update` before document-heavy work. Use one indexing writer and explicit canonical roots, avoiding transient worktrees and duplicates. Lexical search only; models, semantic search, MCP servers and daemons need separate authorization.
 
 ## RTK - Rust Token Killer
 
-Use `rtk` for shell commands to conserve tokens.
+RTK condenses shell output to save tokens.
 
-- Rely on trusted RTK hooks where available (Claude Code, Cursor).
-- Explicitly prefix shell commands with `rtk` on Codex, Antigravity/Agy, Kimi Code, and Grok Build TUI.
-- Use `rtk proxy <cmd>` when unfiltered debugging output is required.
+- Rely on RTK rewrite hooks in Claude Code, Cursor, Codex, Antigravity and OpenCode.
+- On Kimi Code, Grok Build TUI and Muse Code, prefix every shell command with `rtk`, including each command in a chain: `rtk git add . && rtk git commit -m "msg"`.
+- Treat condensed output as the complete result, and batch related commands into one call. A truncated result names its own recovery path.
+- Re-run a command as `rtk bypass <cmd>` only when its output is unusable: empty when output was expected, contradicting its exit code, or garbled. Run tests through `rtk bypass` so the verdict line stays.
 
 ## RTK filtering — verbatim-critical files
 
-RTK filters output to save tokens. For verbatim-critical files (specs, plans, templates, YAML frontmatter), re-read exact bytes using native file-read tools or `rtk proxy` before acting. Never edit from filtered or truncated output.
+`cat` and `rtk read` return a file's exact bytes. For verbatim-critical files (specs, plans, templates, YAML frontmatter), re-read exact bytes before acting. From a large file, read only the line range you need, such as `sed -n '40,90p' <file>`. Never edit from filtered or truncated output.
 
 ## Public-repo working-memory routing
 

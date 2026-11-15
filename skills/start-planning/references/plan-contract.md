@@ -12,6 +12,10 @@ Authority order when sources disagree:
 
 A pasted prior-session handoff is context, not authority. It cannot add requirements, task counts, or review gates.
 
+## Default presentation
+
+Use the [plan template](plan-template.md) for a durable document unless the project supplies its own. Keep its familiar section order where applicable; combine short sections and omit irrelevant ones without losing required answers. Write standalone technical prose. Keep source baseline and actual work authority in concise `Document control` bullets, and dated material decisions or review evidence in `Document history`. Frontmatter remains the canonical current status and attribution. Preserve stable IDs, source revisions and review provenance. Detailed transcripts and run logs belong in linked records. A template creates no document or approval obligation.
+
 ## Required answers
 
 | Required answer | Minimum content |
@@ -57,7 +61,7 @@ When a source changes, inspect its revision difference and identify affected dec
 - A fixed task count or a task count target.
 - A commit subject per task. Intermediate commit subjects stay with the implementer.
 - A failing test or a command in every task.
-- One Markdown layout, heading set, or template.
+- The default layout when a project supplies a presentation override or a section is inapplicable.
 - A copy of the approved design. Link it; do not fork its requirements.
 
 ## Project presentation overrides
@@ -66,25 +70,35 @@ A project may name its own plan contract or template in its ordinary instruction
 
 ## Examples
 
-Both examples are written from scratch. They show two scopes, not two required layouts.
+These synthetic excerpts illustrate the default headings at different depths. Apply project metadata from the template for an actual plan. Example revisions establish no real review authority.
 
 ### Substantial scope
 
 ```markdown
 # Plan: split the settings store
 
+## Delivery scope and source baseline
+
 Design: design.md (approved, revision 8b0c41f). Goal: move settings to per-project files. Exclusions: UI work. Binding decision: the global file stays readable forever; changing that would break recovery.
 
-Current state: src/settings.py reads a single global file; tests/test_settings.py covers parsing only.
+## Current state
+
+src/settings.py reads a single global file; tests/test_settings.py covers parsing only.
+
+## Milestones and tasks
 
 - S1: write per-project files alongside the global one. Depends on: none. Files: src/settings.py. Verification: python3 -m unittest tests.test_settings. Acceptance: a project file shadows the global key.
 - S2: migrate existing data. Depends on: S1. Files: scripts/migrate_settings.py. Verification: a dry-run on a fixture copy, then the real run once. Acceptance: every existing key appears in exactly one file. Non-repeatable effect: the migration writes real data; record the intended effect and its detection marker before running.
 - S3: document recovery. Depends on: S1. Verification: no executable test fits; proof is a reviewer following the recovery steps on a disposable copy. Acceptance: recovery restores a broken file.
 - S4: remove the write path for the global file. Depends on: S2, S3. Verification: python3 -m unittest tests.test_settings plus one fixture asserting a global write is refused. Acceptance: writes go to project files only.
 
-Execution contract. Checkpoints: one commit per task. Non-repeatable effects: S2's migration. Halt conditions: migration dry-run mismatches. Forbidden actions: deleting the global read path. Integration owner: the controller session.
+## Verification and requirement coverage
 
-Completion. Integrated verification: full unittest run and the migration fixture. Coverage: R1 -> S1, S2; R2 -> S3; R3 -> S4. Milestone: one PR for review. Release classification: minor, per the project's SemVer policy.
+Integrated verification: full unittest run and the migration fixture. Coverage: R1 -> S1, S2; R2 -> S3; R3 -> S4. Milestone: one PR for review. Release classification: minor, per the project's SemVer policy.
+
+## Execution boundaries
+
+Checkpoints: verified code commits at authorized delivery milestones. Non-repeatable effects: S2's migration. Halt conditions: migration dry-run mismatches. Forbidden actions: deleting the global read path. Integration owner: the controller session.
 ```
 
 ### Compact scope
@@ -92,12 +106,20 @@ Completion. Integrated verification: full unittest run and the migration fixture
 ```markdown
 # Plan: link checker anchors
 
+## Delivery scope and source baseline
+
 Design: design.md (approved, revision 4f1c02a). Scope: anchor validation in the relative-link checker. Exclusions: CI migration.
+
+## Milestones and tasks
 
 - P1: validate anchor fragments. Depends on: none. Files: scripts/validate_links.py, tests/test_validate_links.py. Verification: python3 -m unittest tests.test_validate_links, failing case first. Acceptance: anchor links resolve against real headings.
 - P2: document the behavior. Depends on: P1. Verification: no executable test fits a prose task; proof is a reviewer reading the examples against merged behavior. Acceptance: one passing and one failing example.
 
-Execution contract. Checkpoints: one commit per task. Non-repeatable effects: none identified. Halt conditions: unrelated suite failures. Forbidden actions: none identified. Integration owner: the controller session.
+## Verification and requirement coverage
 
-Completion. Integrated verification: full unittest run. Coverage: R1 -> P1; R2 -> P2. Milestone: PR for review. Release classification: none identified.
+Integrated verification: full unittest run. Coverage: R1 -> P1; R2 -> P2. Milestone: PR for review. Release classification: none identified.
+
+## Execution boundaries
+
+Checkpoints: verified code commits at authorized delivery milestones. Non-repeatable effects: none identified. Halt conditions: unrelated suite failures. Forbidden actions: none identified. Integration owner: the controller session.
 ```

@@ -8,12 +8,16 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 |---|---|---|
 | [`briefing`](briefing/) | `/briefing` | Summarizes a project's current state from Git, GitHub, top-level files and its declared tracking records. Runs only when asked, not on follow-up questions. |
 | [`learn`](learn/) | `/learn` | Explains a commit, pull request, file, folder, symbol, behavior or topic at the audience level and depth you choose |
+| [`resume-session`](resume-session/) | `/resume-session` | Continues an interrupted Claude Code, Codex, OpenCode, Antigravity, Grok Build or Muse Code session in a fresh session of any harness, from a summary of project records, live Git state and the old transcript. Runs only when asked. |
 | [`schedule-resume`](schedule-resume/) | `/schedule-resume` | Bundled skill with a shell helper that schedules an unattended session to resume later, using launchd on macOS or cron on Linux. Works with Claude Code, Antigravity, Codex and Kimi Code. |
 | [`repo-standards`](repo-standards/) | `/repo-standards` | Checks, fixes or scaffolds a repository's governance files, workflows and branch protection from the house standard |
 | [`oss-standards`](oss-standards/) | `/oss-standards` | Shortcut for `/repo-standards oss`. New automation should call `repo-standards` directly. |
+| [`sync-toolkit`](sync-toolkit/) | `/sync-toolkit`, or on request | Coordinates toolkit installation and selected repository rollouts using exact change reports, smoke tests and separate publication verification |
+| [`migrate-lifecycle`](migrate-lifecycle/) | On request | Guides lifecycle migration with preservation checks and optional additive requirements extraction |
 | [`housekeeping`](housekeeping/) | `/housekeeping` | Compares local branches and worktrees with GitHub pull requests, and in `fix` mode removes only what a merge left behind |
 | [`penmark-comments`](penmark-comments/) | Automatic, or on request | Reviews a local Markdown file and, once you choose where the output goes, can write validated Penmark inline comments |
 | [`git-worktrees`](git-worktrees/) | Automatic | Sets the worktree location shared by all harnesses and the checks to run before changing branches |
+| [`browser-profile`](browser-profile/) | Automatic, or `/browser-profile` | Works inside one of your own Chrome profiles, named in ordinary words, on any page, through the Playwright extension, after you click Allow in Chrome |
 | [`start-brainstorm`](start-brainstorm/) | `/start-brainstorm` | Challenges an idea, compares options, and presents a brainstorm for review before technical design |
 | [`start-research`](start-research/) | `/start-research` | Investigates uncertainty before, within, or independently of other phases, with proportionate evidence and access |
 | [`start-requirements`](start-requirements/) | `/start-requirements` | Defines accepted product scope or an optional brief or PRD |
@@ -32,9 +36,11 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 
 Each skill's README covers its arguments, dependencies, install steps and design decisions.
 
+Requirements, design, plan and retrospective files have [default templates and writing conventions](../guides/guide-lifecycle-documentation.md). Their quality contracts define required answers; project presentation overrides remain supported. Brainstorm and research remain flexible in format.
+
 ## Phase boundaries
 
-Write a document only when it adds value: it records a decision worth keeping, needs review across people or sessions, or supports large, risky or complex work (several sessions, several agents, a step that cannot run twice, or progress to track). Other work stays in chat with a short design, an approval only for a real choice, and an in-session plan. The agent states its route in one line, asks when unsure, prefers the heavier route when unsure, and steps up when hidden complexity appears. A route the user picks wins after one stated risk. Invoke a phase explicitly or through a natural-language request for that work; an autonomous workflow may include several phases. A later session starts from its source, recorded run authority, and current repository. A clear request can itself be the source.
+Write a document only when it adds value: it records a decision worth keeping, needs review across people or sessions, or supports large, risky or complex work (several sessions, several agents, a step that cannot run twice, or progress to track). Other work stays in chat with a short design, an approval only for a real choice, and an in-session plan. The agent states its route in one line, asks when unsure, prefers the heavier route when unsure, and steps up when hidden complexity appears. A route the user picks wins after one stated risk. Invoke a phase explicitly or through a natural-language request for that work; an autonomous workflow may include several phases. A later session starts from its source, recorded run authority, and current repository. A clear request can itself be the source. For new product or capability work, explore vague intent with `start-brainstorm` and persist it, then normally use `start-requirements` to clarify and persist the brief before technical design. Architecture-led or feasibility-led work may start with a provisional design, derive requirements and reconcile the design before affected delivery planning or implementation. Clear new ideas may start at requirements. Reuse a sufficient authoritative record, ask only unresolved consequential questions, and honor an explicit lighter route. Routine clear changes retain the in-session path.
 
 | Phase | Input | Output and checkpoint |
 |---|---|---|
@@ -64,7 +70,7 @@ Requirements owns intended behavior and scope; design owns the technical solutio
 
 For substantial work, preserve stable consequential source references and inspect original product and architecture sources as well as the previous artifact. Account for preserved obligations, authorized changes, reasoned exclusions, and unresolved questions. Reconcile changed sources with affected downstream work and reviews. Keep scope, authority, evidence, progress, and next checkpoint visible through existing records. Lessons are captured during any phase; optional retrospectives synthesize them. Draft lessons do not count as unfinished delivery work.
 
-Working-memory folders are `0-brainstorms/`, `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/`, and `6-retros/`, with standalone lessons in `6-retros/lessons/<workstream>/`. Create directories only when used, discover project-native locations, and support legacy layouts during adoption. These numbers mandate no sequence.
+Working-memory folders are `0-brainstorms/`, `1-research/`, `2-requirements/`, `3-design/`, `4-plans/`, `5-reviews/`, and `6-retros/`, with standalone lessons in `6-retros/lessons/<workstream>/`. Create all seven numbered folders in the declared working-memory root, with `.gitkeep` in empty folders. Nested lesson and asset folders remain on demand. Discover project-native locations and support legacy layouts until an authorized migration. These numbers mandate no sequence.
 
 A reviewed design may suffice for implementation without a separate plan file. Add a plan file when the document test calls for one. Applicable product decisions and architecture constraints remain in force on every route. Document readiness and authorization to implement are checked separately. A clear request authorizes its scope; an autonomous request can authorize several included phases and reviews. Neither invents authority for external effects beyond the request.
 
@@ -82,7 +88,7 @@ Start a new session afterwards. Skills with a slash command appear in the harnes
 
 ## Synchronize every authored skill
 
-The synchronizer copies every skill in this directory into one hub at `~/.claude/skills`, then links the other harnesses' skill directories to it. It also writes OpenCode slash-command wrappers and the OpenCode Mermaid plugin.
+The synchronizer copies every skill in this directory into one hub at `~/.claude/skills`, then links the other harnesses' skill directories to it. It also writes OpenCode slash-command wrappers and the Mermaid, frontmatter and resume-warning plugins.
 
 Preview the changes, then apply them:
 

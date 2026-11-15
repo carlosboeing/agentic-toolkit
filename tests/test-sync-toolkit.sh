@@ -93,13 +93,19 @@ _assert "tier 1 (--harness) exits 0" 0 $?
 _assert_symlink "spoke ~/.agents/skills links to hub" "$MOCK_HOME/.agents/skills" "$MOCK_HUB"
 _assert_symlink "spoke ~/.gemini/config/skills links to hub" "$MOCK_HOME/.gemini/config/skills" "$MOCK_HUB"
 _assert_executable "claude hook validate-mermaid.sh is executable" "$MOCK_HOME/.claude/hooks/validate-mermaid.sh"
+_assert_executable "claude hook validate-frontmatter.sh is executable" "$MOCK_HOME/.claude/hooks/validate-frontmatter.sh"
+_assert_executable "claude hook resume-session-warn.sh is executable" "$MOCK_HOME/.claude/hooks/resume-session-warn.sh"
 _assert_file "opencode mermaid plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-mermaid.ts"
+_assert_file "opencode frontmatter plugin exists" "$MOCK_HOME/.config/opencode/plugins/validate-frontmatter.ts"
+_assert_file "opencode resume-session-warn plugin exists" "$MOCK_HOME/.config/opencode/plugins/resume-session-warn.ts"
+_assert_eq "claude settings register resume-session-warn" "1" \
+  "$(grep -c 'resume-session-warn.sh' "$MOCK_HOME/.claude/settings.json" 2>/dev/null || echo 0)"
 
 # Phase skills must remain complete when copied to the hub and linked spokes.
-for phase_skill in start-brainstorm start-research start-requirements start-design start-planning start-debugging start-implementation start-review start-retrospective tdd receiving-code-review research handoff; do
+for phase_skill in start-brainstorm start-research start-requirements start-design start-planning start-debugging start-implementation start-review start-retrospective migrate-lifecycle tdd receiving-code-review research handoff; do
   for installed_file in SKILL.md README.md LICENSE; do
     case "$phase_skill/$installed_file" in
-      start-planning/LICENSE|start-requirements/LICENSE|start-review/LICENSE|start-retrospective/LICENSE) continue ;;
+      start-planning/LICENSE|start-requirements/LICENSE|start-review/LICENSE|start-retrospective/LICENSE|migrate-lifecycle/LICENSE) continue ;;
     esac
     cmp -s "$REPO_ROOT/skills/$phase_skill/$installed_file" "$MOCK_HUB/$phase_skill/$installed_file"
     _assert "$phase_skill/$installed_file copied exactly to hub" 0 $?
@@ -110,7 +116,7 @@ cmp -s "$REPO_ROOT/skills/start-design/references/design-contract.md" "$MOCK_HOM
 _assert "design contract reaches agents spoke unchanged" 0 $?
 cmp -s "$REPO_ROOT/skills/start-design/references/design-contract.md" "$MOCK_HOME/.gemini/config/skills/start-design/references/design-contract.md"
 _assert "design contract reaches Gemini spoke unchanged" 0 $?
-for ref_file in start-planning/references/plan-contract.md start-planning/scripts/check-plan.py start-debugging/references/incident-review-template.md start-implementation/references/implementer-prompt.md tdd/tests.md tdd/mocking.md; do
+for ref_file in start-requirements/references/requirements-template.md start-design/references/design-template.md start-planning/references/plan-template.md start-retrospective/references/retrospective-template.md start-retrospective/references/retrospective-contract.md start-requirements/references/requirements-contract.md start-planning/references/plan-contract.md start-planning/scripts/check-plan.py start-debugging/references/incident-review-template.md start-implementation/references/implementer-prompt.md tdd/tests.md tdd/mocking.md; do
   cmp -s "$REPO_ROOT/skills/$ref_file" "$MOCK_HUB/$ref_file"
   _assert "$ref_file copied exactly to hub" 0 $?
 done
@@ -470,6 +476,8 @@ fi
 MOCK_TOOLKIT="$TMP/mock-toolkit"
 mkdir -p "$MOCK_TOOLKIT/scripts" "$MOCK_TOOLKIT/git-hooks" "$MOCK_TOOLKIT/hooks" "$MOCK_TOOLKIT/skills"
 cp "$SCRIPT" "$MOCK_TOOLKIT/scripts/sync-toolkit.sh"
+cp "$REPO_ROOT/scripts/register_hooks.py" "$MOCK_TOOLKIT/scripts/register_hooks.py"
+cp "$REPO_ROOT/scripts/rtk-awareness.snapshot.md" "$MOCK_TOOLKIT/scripts/rtk-awareness.snapshot.md"
 chmod +x "$MOCK_TOOLKIT/scripts/sync-toolkit.sh"
 cp -R "$REPO_ROOT/git-hooks/"* "$MOCK_TOOLKIT/git-hooks/"
 cp -R "$REPO_ROOT/hooks/"* "$MOCK_TOOLKIT/hooks/"
@@ -642,7 +650,49 @@ EOF
   plugin_rc=$?
   printf '%s\n' "$plugin_out"
   _assert "opencode plugin shape and behavior against both APIs (V1 + V2)" 0 "$plugin_rc"
+
+  resume_out="$($TS_RUNNER "$TEST_DIR/assert-opencode-resume-plugin.mjs" "$MOCK_HOME/.config/opencode/plugins/resume-session-warn.ts" 2>&1)"
+  resume_rc=$?
+  printf '%s\n' "$resume_out"
+  _assert "opencode resume-session-warn plugin against both APIs (V1 + V2)" 0 "$resume_rc"
+
+  fm_out="$($TS_RUNNER "$TEST_DIR/assert-opencode-frontmatter-plugin.mjs" "$MOCK_HOME/.config/opencode/plugins/validate-frontmatter.ts" 2>&1)"
+  fm_rc=$?
+  printf '%s\n' "$fm_out"
+  _assert "opencode validate-frontmatter plugin against both APIs (V1 + V2)" 0 "$fm_rc"
 fi
+
+# --- 21. validate-frontmatter.sh shell hook behavior ---
+FM_TEST_DIR="$TMP/fm-hook-test"
+mkdir -p "$FM_TEST_DIR/0-brainstorms" "$FM_TEST_DIR/1-research"
+printf '# Idea\n' > "$FM_TEST_DIR/0-brainstorms/idea.md"
+cat > "$FM_TEST_DIR/1-research/good.md" <<'EOF'
+---
+title: Good
+related:
+  - ../0-brainstorms/idea.md
+  - "../0-brainstorms/idea.md#section" # inline comment
+---
+# Good
+EOF
+cat > "$FM_TEST_DIR/1-research/bad.md" <<'EOF'
+---
+title: Bad
+related:
+  - 0-brainstorms/idea.md
+---
+# Bad
+EOF
+
+jq -n --arg path "$FM_TEST_DIR/1-research/good.md" '{tool_input: {file_path: $path}}' \
+  | "$MOCK_HOME/.claude/hooks/validate-frontmatter.sh" >/dev/null 2>&1
+_assert "validate-frontmatter.sh accepts file-relative related path" 0 $?
+
+bad_err="$(jq -n --arg path "$FM_TEST_DIR/1-research/bad.md" '{tool_input: {file_path: $path}}' \
+  | "$MOCK_HOME/.claude/hooks/validate-frontmatter.sh" 2>&1)"
+_assert "validate-frontmatter.sh exits 2 on root-relative related path" 2 $?
+echo "$bad_err" | grep -q '\.\./0-brainstorms/idea\.md'
+_assert "validate-frontmatter.sh suggests the file-relative path" 0 $?
 
 
 echo ""

@@ -4,7 +4,7 @@ Assess how work was done and choose evidence-supported improvements. A retrospec
 
 Run `/start-retrospective [workstream or source-path] [help]` or request its work in natural language. Use `/start-retrospective help` for the synopsis.
 
-The complete procedure is in [SKILL.md](SKILL.md). Project instructions own storage, review, and delivery permissions. Documents, separate sessions, and agents are conditional. The skill stops at its requested boundary unless an explicit workflow already authorizes continuation.
+The complete procedure is in [SKILL.md](SKILL.md). The [quality contract](references/retrospective-contract.md) and [retrospective template](references/retrospective-template.md) cover outcomes, successes, problems, contextual lessons and owned actions with later success checks. A retro improves the process; it does not replace artifact review or incident analysis, train model weights, or authorize instruction changes. Project instructions own storage, review, and delivery permissions. Documents, separate sessions, and agents are conditional. The skill stops at its requested boundary unless an explicit workflow already authorizes continuation.
 
 ## Dependencies and installation
 
