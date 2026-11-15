@@ -14,6 +14,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 
 ## Future considerations
 
+- **Edge and Chromium profiles for `browser-profile`.** [Issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40).
 - **Native-first tool routing.** Let each harness prefer its own built-in tools where they are equivalent, instead of prescribing one tool set for every harness.
 - **`/init-project` skill.** One skill to scaffold a new project, fill an empty directory, or retrofit the documentation conventions onto an existing project.
 - **Distribution for tools that bundle agent files.** Package a command-line tool together with its skills, hooks and commands so users do not assemble the pieces by hand.

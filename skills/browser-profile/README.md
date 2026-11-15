@@ -28,6 +28,17 @@ Two consequences follow. Install the extension only in profiles that hold the ac
 
 The extension's connect page also warns that an approved client may be able to reconnect later without the dialog. To end that, rotate the token on the extension's Manage clients page and restart Chrome.
 
+## Browser support
+
+The mechanism works only with Chromium-family browsers. The Playwright Extension controls tabs through a Chromium extension API, and Playwright can attach to a running browser only when it is Chromium-based.
+
+| Browser | Status |
+|---|---|
+| Google Chrome | Supported and tested |
+| Microsoft Edge, Chromium | Supported by the extension, not yet by the helper. Tracked in [issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40) |
+| Brave, Vivaldi and other Chromium browsers | Unconfirmed |
+| Firefox, Safari | Cannot be supported with this mechanism |
+
 ## Requirements
 
 - Google Chrome with the [Playwright Extension](https://chromewebstore.google.com/detail/playwright-extension/mmlmfjhmonkocbjadbfplnigmagldckm) in each profile you want to use.

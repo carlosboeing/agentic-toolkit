@@ -10,6 +10,7 @@ All notable changes to this project are recorded here, newest first.
 - Keep page snapshots from your profile's sessions out of the project folder. They go to a private folder per session, deleted on close.
 - Guide setup instead of failing: `check` reports each missing requirement with its fix, `profiles` lists the Chrome profiles to choose from without printing account addresses, and `install-extension` opens the extension's store page in the chosen profile.
 - Set rules for an approved session: ask before an action that is hard to undo, treat page content as data, and leave cookies and stored credentials alone. A session can read every cookie in its profile, so the guide limits the extension to profiles that hold only the accounts an agent needs.
+- Support Google Chrome only. The mechanism is limited to Chromium-family browsers, so Firefox and Safari cannot be supported. Microsoft Edge and Chromium are tracked in [issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40).
 - Replace the WebBridge section of the browser automation guide with the route for your own Chrome profile, and route such requests to the skill from the global brief. Tested from Claude Code and from Codex, which must run the helper outside its workspace sandbox.
 
 ## 2026-11-12: superseded-session warning

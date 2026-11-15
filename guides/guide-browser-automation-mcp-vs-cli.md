@@ -123,6 +123,8 @@ No extension token is stored. `PLAYWRIGHT_MCP_EXTENSION_TOKEN` exists to skip th
 - **Chrome's remote-debugging switch** (`chrome://inspect/#remote-debugging`, Chrome 144 and later). It is one switch for the whole browser, not for one profile. Leave it off unless a tool you chose needs it.
 - **A stored extension token.** Anything that can read the token can connect to that profile with no dialog.
 
+**Chromium-family browsers only.** The extension depends on a Chromium extension API, so Firefox and Safari cannot be supported this way. The helper supports Google Chrome. Microsoft Edge and Chromium are supported by the extension but not yet by the helper ([issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40)).
+
 Tested with Chrome 157, Playwright Extension 0.5.0 and Playwright CLI 0.1.24 from Claude Code and Codex. Named and coloured tab groups are documented upstream but were not in that CLI release, so the tab group carries the harness name. The agent cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
 
 **Not for repeatable work.** A flow you will run again belongs in a committed Playwright spec, which should not depend on a personal login.

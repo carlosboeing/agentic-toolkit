@@ -18,6 +18,7 @@ No token is stored. Each connection opens a page in that Chrome profile and wait
 - Use this skill for that work. Do not use Computer Use, desktop screenshots, a vendor browser extension or a remote-debugging port to reach the same profile.
 - When the user did not ask for their profile and the task does not need it, use an isolated browser. That stays the default for browsing, local files and tests.
 - Never open the user's profile on your own initiative.
+- Google Chrome only. If the user asks for a profile in another browser, say what is supported, as set out under Browser support below, and stop.
 
 ## Procedure
 
@@ -92,4 +93,12 @@ work = Profile 3 | Example Pty admin consoles
 
 An alias uses lowercase letters, digits and hyphens. The helper refuses a profile that has no alias.
 
-**Browser support.** The Playwright Extension exists for Chrome, Edge and Chromium, and the helper supports Google Chrome. Firefox and Safari have no such extension. If the user asks for another browser, say so and stop.
+**Browser support.** The mechanism works only with Chromium-family browsers, because the Playwright Extension depends on a Chromium extension API.
+
+| Browser | Status |
+|---|---|
+| Google Chrome | Supported |
+| Microsoft Edge, Chromium | The extension supports them. The helper does not yet: [issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40) |
+| Firefox, Safari | Cannot be supported. No such extension exists for them |
+
+Do not work around this with another tool to reach a profile in an unsupported browser.
