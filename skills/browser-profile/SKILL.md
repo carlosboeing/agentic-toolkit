@@ -1,22 +1,23 @@
 ---
 name: browser-profile
-description: Use when a request names a Chrome or browser profile, or needs a website the user is already signed in to, such as "using my work Chrome profile", "my browser profile", "my authenticated session", "my logged-in Chrome", "as me in Chrome", or an admin console behind a login. Connects to that profile through the Playwright extension after the user clicks Allow in Chrome. Not for public pages, local files or tests, which use an isolated browser.
+description: Use when the user asks to work in their own Chrome or browser profile, such as "using my work Chrome profile", "in my browser profile", "my logged-in Chrome", "my authenticated session", "as me in Chrome" or "open it in my Chrome so I can watch", or when a task needs something only that profile has, such as a login or an installed extension. Drives the profile's normal visible Chrome window through the Playwright extension after the user clicks Allow in Chrome. The pages can be public or private.
 ---
 
 # Browser profile
 
 Synopsis: `/browser-profile [alias] [task]`
 
-Work inside one of the user's signed-in Chrome profiles. The user names a profile in ordinary words. This skill resolves it, connects through the Playwright extension, and sets the rules for the session.
+Work inside one of the user's own Chrome profiles, in its normal visible window, on any page. The profile brings its logins, cookies, site settings and installed extensions, and the user can watch the agent work. Being signed in to a site is one reason to use it, not a condition. The user names a profile in ordinary words. This skill resolves it, connects through the Playwright extension, and sets the rules for the session.
 
 No token is stored. Each connection opens a page in that Chrome profile and waits for the user to click **Allow**. That click is the user's confirmation.
 
 ## When this applies
 
-- The request names a Chrome profile, or the task needs a site where the user is already signed in.
+- The user asks to use their own Chrome or browser profile. The pages can be public or private, and no login is required.
+- The task needs something only the user's profile has, such as a login or an installed extension, and the user did not mention a profile. Ask before you connect.
 - Use this skill for that work. Do not use Computer Use, desktop screenshots, a vendor browser extension or a remote-debugging port to reach the same profile.
-- A public page, a local file or a test needs no login. Use an isolated browser for those.
-- Never open a signed-in profile on your own initiative. If a task would be easier with one and the user did not ask for it, ask first.
+- When the user did not ask for their profile and the task does not need it, use an isolated browser. That stays the default for browsing, local files and tests.
+- Never open the user's profile on your own initiative.
 
 ## Procedure
 
@@ -29,10 +30,10 @@ Run the helper from this skill's own directory, next to this file.
 
    Repeat the line each time you connect again.
 3. **Connect.** Run `bash <skill-dir>/scripts/browser-profile.sh open <alias>`. It waits up to 100 seconds for the click, so give the command a timeout above that. On success it prints the session name and an output folder.
-4. **Work.** The helper prints a `run:` line with the exact CLI command and session. Use that command for each step: `goto`, `snapshot`, `click`, `fill`, `type`, `tab-new`, `tab-list`. Its `--help` lists the rest. Use one session for the whole task. Do not connect again for each step. Snapshots and other files the CLI writes go to the output folder, outside the project, because they hold content from signed-in sites. Read them there and do not copy them into the project unless the user asks.
+4. **Work.** The helper prints a `run:` line with the exact CLI command and session. Use that command for each step: `goto`, `snapshot`, `click`, `fill`, `type`, `tab-new`, `tab-list`. Its `--help` lists the rest. Use one session for the whole task. Do not connect again for each step. Snapshots and other files the CLI writes go to the output folder, outside the project, because they can hold private content from the user's sessions. Read them there and do not copy them into the project unless the user asks.
 5. **Finish.** Run `bash <skill-dir>/scripts/browser-profile.sh close <session>`. It detaches and deletes the output folder. The tabs stay open so the user can inspect the result. Add `--close-tabs` when the user does not need the pages and the session started from a blank tab.
 
-The session sees only its own tabs. It detaches by itself after 30 minutes without a command.
+The session sees only its own tabs. It detaches by itself after 30 minutes without a command. The session cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
 
 ## Rules inside an approved session
 
@@ -47,7 +48,7 @@ The Allow click covers navigation, reading and filling forms on the sites the ta
 
 ## When the helper fails
 
-Report the failure. Do not reach the same signed-in site with another tool.
+Report the failure. Do not reach the user's profile with another tool.
 
 | Message | Meaning | Action |
 |---|---|---|

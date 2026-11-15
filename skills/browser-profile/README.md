@@ -1,6 +1,6 @@
 # browser-profile
 
-Lets an agent work inside one of your signed-in Chrome profiles when you ask in ordinary words, for example "using my work Chrome profile, export the mailbox list from the admin console". You do not name an MCP server or an automation framework. The agent loads the skill when a request names a Chrome profile or needs a site you are signed in to.
+Lets an agent work inside one of your own Chrome profiles, in its normal visible window, when you ask in ordinary words. Examples: "using my work Chrome profile, export the mailbox list from the admin console", or "open this page in my Chrome profile so I can watch". The profile brings its logins, cookies, site settings and installed extensions. Being signed in to a site is one reason to use it, not a condition: the pages can be public. You do not name an MCP server or an automation framework. The agent loads the skill when you ask for your Chrome or browser profile, or when a task needs something only that profile has. When you do not ask and the task does not need it, the agent keeps using an isolated browser.
 
 ## How it works
 
@@ -9,7 +9,8 @@ Lets an agent work inside one of your signed-in Chrome profiles when you ask in 
 - **Profile choice:** a file on your machine maps a short name such as `work` to a Chrome profile directory. The helper refuses a profile that has no entry.
 - **Helper:** `scripts/browser-profile.sh` resolves the name, checks that the extension is installed in that profile, connects, and confirms that the session reached your Chrome and not a new empty browser.
 - **Notification:** when the helper starts waiting, it raises a desktop notification that names the profile, so the request for your click does not depend on the agent's message. It uses `osascript` on macOS and `notify-send` on Linux.
-- **Page output:** snapshots hold content from signed-in sites. The helper sends them to a private folder per session under `~/.local/state/agentic-toolkit/browser-profile/` and deletes it on close. A folder left by a session that was never closed is removed after a day.
+- **Limit of the connection:** the agent cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
+- **Page output:** snapshots can hold private content from your sessions. The helper sends them to a private folder per session under `~/.local/state/agentic-toolkit/browser-profile/` and deletes it on close. A folder left by a session that was never closed is removed after a day.
 
 Several agent sessions can use one profile at the same time. Each session sees only its own tabs.
 

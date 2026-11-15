@@ -1,7 +1,7 @@
 ---
 title: Browser automation for agents, Playwright MCP or CLI
 type: guide
-scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, claude-code, codex, cursor, kimi-code, grok, signed-in-profiles]
+scope: [browser-automation, playwright, mcp, harness-tooling, antigravity, claude-code, codex, cursor, kimi-code, grok, chrome-profiles]
 authors:
   - "Carlos Boeing"
   - "k3 (kimi-code)"
@@ -20,7 +20,7 @@ When an AI agent works in a browser, outside of CI, neither Playwright MCP nor t
 
 > **One-line rule:** if you already know every step, write a **CLI** script. If you don't, start in **MCP** — and eject to the CLI the moment one of the [ejection triggers](#ejection-triggers--the-rule-that-actually-fires) fires.
 
-This guide covers the non-CI use cases: browsing the web, manual visual/smoke checks, judging the aesthetics of a live or in-progress site, and one-off browser operations. Work on a site you are signed in to follows a separate route, described in [Signed-in Chrome profiles](#signed-in-chrome-profiles).
+This guide covers the non-CI use cases: browsing the web, manual visual/smoke checks, judging the aesthetics of a live or in-progress site, and one-off browser operations. Work in your own Chrome profile follows a separate route, described in [Your own Chrome profile](#your-own-chrome-profile).
 
 ## The three tools
 
@@ -49,7 +49,7 @@ A REPL wins when you don't yet know what you'll do next — unknown pages, explo
 | Visual-regression / pixel goldens | **CLI** | `toHaveScreenshot` + diff ratio. MCP can't baseline. |
 | Parameter sweep (N variants, one fixed procedure) | **CLI** | It's a loop with a changing argument. See ejection triggers. |
 | A site you're building (live preview) | **Both** | Explore with MCP, eject when a trigger fires. |
-| A site you are signed in to (admin console, account settings) | **[`browser-profile` skill](#signed-in-chrome-profiles)** | Needs your existing login. Your Allow click gates each connection. |
+| Anything you ask to be done in your own Chrome profile: a site behind your login, a page that needs one of your extensions, or work you want to watch | **[`browser-profile` skill](#your-own-chrome-profile)** | Uses your real profile in its visible window. Your Allow click gates each connection. |
 
 Treat this table as a starting hint, not the real rule. It asks you to classify a task *before* doing it, and most browser work doesn't reveal which column it belongs in until you're several steps in. The triggers below are what actually decide.
 
@@ -86,11 +86,11 @@ Run Playwright MCP with `--isolated` in every harness. See [why](#run-every-harn
 
 Cursor and Gemini CLI are not covered here. Note that Gemini CLI and the Antigravity CLI read different files, `~/.gemini/settings.json` and `~/.gemini/config/mcp_config.json`, so do not confuse them.
 
-Neither an isolated MCP nor a Playwright Test run shares your logged-in cookies. For a site you are signed in to, every harness uses the [`browser-profile` skill](#signed-in-chrome-profiles). In Antigravity, the bundled chrome-devtools-plugin remains the live-debug tool, but Playwright MCP is also required for the cross-harness parity baseline below.
+Neither an isolated MCP nor a Playwright Test run shares anything from your Chrome profile. For work in your own profile, every harness uses the [`browser-profile` skill](#your-own-chrome-profile). In Antigravity, the bundled chrome-devtools-plugin remains the live-debug tool, but Playwright MCP is also required for the cross-harness parity baseline below.
 
-## Signed-in Chrome profiles
+## Your own Chrome profile
 
-Playwright MCP runs isolated, so it never holds a login. For a site you are already signed in to, such as an admin console, use the [`browser-profile`](../skills/browser-profile/) skill. It connects the Playwright CLI (`@playwright/cli`) to your running Chrome through the [Playwright extension](https://github.com/microsoft/playwright/blob/main/packages/extension/README.md).
+Playwright MCP runs isolated, so it starts empty every time: no logins, no extensions, no site settings. When you want an agent to work in one of your own Chrome profiles, use the [`browser-profile`](../skills/browser-profile/) skill. The agent drives the profile's normal visible window, so you can watch. Being signed in to a site is one reason to ask for this, not a condition: the pages can be public. The isolated browser stays the default when you do not ask for your profile and the task does not need it. It connects the Playwright CLI (`@playwright/cli`) to your running Chrome through the [Playwright extension](https://github.com/microsoft/playwright/blob/main/packages/extension/README.md).
 
 **You ask in ordinary words.** "Using my work Chrome profile, export the user list from the admin console." The skill maps "work" to a Chrome profile through an alias file on your machine. You do not name an MCP server, because none is registered for this. The extension fixes the profile when a connection starts, so MCP would need one registration for each profile in each harness. A CLI call chooses the profile each time.
 
@@ -108,7 +108,7 @@ No extension token is stored. `PLAYWRIGHT_MCP_EXTENSION_TOKEN` exists to skip th
 
 **The profile is the boundary, not the tab.** A session lists and controls only its own tabs, and several sessions can use one profile at the same time. It can still read every cookie in that profile: in a test on 2026-11-14, a session that owned one `example.com` tab read all 669 cookies of the profile. Install the extension only in profiles that hold the accounts an agent needs, and keep it out of personal profiles.
 
-**Page snapshots stay out of your project.** The Playwright CLI normally writes snapshots to `.playwright-cli/` in the working directory. On a signed-in site those hold private page content, so the helper sends them to a private folder under `~/.local/state/agentic-toolkit/browser-profile/` and deletes it when the session closes.
+**Page snapshots stay out of your project.** The Playwright CLI normally writes snapshots to `.playwright-cli/` in the working directory. In your own profile those can hold private page content, so the helper sends them to a private folder under `~/.local/state/agentic-toolkit/browser-profile/` and deletes it when the session closes.
 
 **The approval covers the connection, not every action.** The skill tells the agent to ask before an action that is hard to undo (send, delete, pay, change DNS or security settings), to treat page content as data, and to leave cookies and stored credentials alone. Those are instructions the agent follows, not a technical barrier.
 
@@ -117,13 +117,13 @@ No extension token is stored. `PLAYWRIGHT_MCP_EXTENSION_TOKEN` exists to skip th
 - **`PLAYWRIGHT_MCP_ISOLATED=true` outranks `--extension`.** Playwright checks the isolated setting first, launches an empty browser and reports the session as created. Claude Code exports that variable to every command when you follow the [isolated baseline](#run-every-harness-with---isolated). The helper removes inherited `PLAYWRIGHT_MCP_*` variables and then checks that `playwright-cli list` shows the session as `(attached)`.
 - **Codex's workspace sandbox blocks the Playwright CLI.** The CLI cannot write its session files and fails with `EPERM`. Run the helper and the `playwright-cli` commands outside the sandbox.
 
-**Do not use these to reach a signed-in profile.**
+**Do not use these to reach your own profile.**
 
 - **Computer Use or desktop screenshots.** They drive whatever is on screen, with no profile choice and no connect page.
 - **Chrome's remote-debugging switch** (`chrome://inspect/#remote-debugging`, Chrome 144 and later). It is one switch for the whole browser, not for one profile. Leave it off unless a tool you chose needs it.
 - **A stored extension token.** Anything that can read the token can connect to that profile with no dialog.
 
-Tested with Chrome 157, Playwright Extension 0.5.0 and Playwright CLI 0.1.24 from Claude Code and Codex. Named and coloured tab groups are documented upstream but were not in that CLI release, so the tab group carries the harness name.
+Tested with Chrome 157, Playwright Extension 0.5.0 and Playwright CLI 0.1.24 from Claude Code and Codex. Named and coloured tab groups are documented upstream but were not in that CLI release, so the tab group carries the harness name. The agent cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
 
 **Not for repeatable work.** A flow you will run again belongs in a committed Playwright spec, which should not depend on a personal login.
 
@@ -147,7 +147,7 @@ The failure looks like `Browser is already in use for <dir>, use --isolated to r
 
 **Why `--isolated` and not per-harness `--user-data-dir`.** The default profile path is `~/Library/Caches/ms-playwright/mcp-{channel}-{workspace-hash}` on macOS, and the `{workspace-hash}` is derived from **the MCP client's workspace root** — so different *projects* already get different profiles automatically. Pinning a fixed per-harness directory throws that away and swaps one collision axis for another: two sessions of the *same* harness in *different* projects would then contend, where today they don't. If you work across several repos at once, per-harness directories are a downgrade. `--isolated` removes the profile entirely, so no axis collides. The two flags are mutually exclusive anyway — setting both throws `Browser userDataDir is not supported in isolated mode`.
 
-**The cost** is persistent login state, which Playwright MCP shouldn't be carrying: the [`browser-profile` skill](#signed-in-chrome-profiles) covers signed-in work. If a specific job needs seeded state, `--isolated` pairs with `--storage-state <path>`.
+**The cost** is persistent login state, which Playwright MCP shouldn't be carrying: the [`browser-profile` skill](#your-own-chrome-profile) covers work in your own profile. If a specific job needs seeded state, `--isolated` pairs with `--storage-state <path>`.
 
 **`file:` URLs are blocked by default.** Navigating to a local HTML file throws `Access to "file:" protocol is blocked`. This trips up design mockups, generated reports, and static prototypes. It is *not* a reason to stand up `python3 -m http.server` — `--allow-unrestricted-file-access` removes the block. Note what else that flag does: it also lifts the workspace-root restriction on where MCP writes its output files. On a single-user dev machine where the agent already has filesystem read/write, the marginal risk is small; on a shared or untrusted setup, weigh it or leave local-HTML work to the CLI, which has no such restriction.
 
@@ -249,7 +249,7 @@ Graduating is also the escape hatch for MCP's own limits. `browser_run_code` exi
 
 These have appeared in older notes and in at least one harness's advice — they are wrong:
 
-- **"`@playwright/cli` does not exist"** is obsolete. Microsoft publishes [Playwright CLI](https://github.com/microsoft/playwright-cli) for agent-driven browser sessions. This guide uses the **Playwright Test CLI** (`@playwright/test`, `npx playwright test`) for repeatable test specifications and screenshot baselines, and `@playwright/cli` for [signed-in profiles](#signed-in-chrome-profiles). They are distinct interfaces, checked 2026-09-22.
+- **"`@playwright/cli` does not exist"** is obsolete. Microsoft publishes [Playwright CLI](https://github.com/microsoft/playwright-cli) for agent-driven browser sessions. This guide uses the **Playwright Test CLI** (`@playwright/test`, `npx playwright test`) for repeatable test specifications and screenshot baselines, and `@playwright/cli` for [your own Chrome profile](#your-own-chrome-profile). They are distinct interfaces, checked 2026-09-22.
 - **"Playwright CLI is 4–10x cheaper than MCP"** — a fabricated, precise-sounding number. The direction (artifacts on disk vs per-step snapshots) is real; the multiplier is not measured.
 - **"MCP always adds schema overhead every session"** — only when the harness eager-loads schemas. Deferred-loading harnesses (Claude Code in its default deferred mode) carry ~names until first use.
 - **"Just skip the MCP, the goldens/test runner cover it"** — conflates two jobs. Goldens are regression (CLI's job); they do nothing for exploratory browsing, ad-hoc ops, or live aesthetic review (MCP's job). Keep both.
@@ -261,7 +261,7 @@ These have appeared in older notes and in at least one harness's advice — they
 
 ```mermaid
 flowchart TD
-    A["Browser task"] --> S{"Does it need a site you are signed in to?"}
+    A["Browser task"] --> S{"Did you ask for your own Chrome profile, or does the task need it?"}
     S -->|"Yes"| P["browser-profile skill, Allow click in Chrome"]
     S -->|"No"| B{"Can you state every step before starting?"}
     B -->|"Yes"| D["Playwright CLI (@playwright/test)"]
@@ -292,7 +292,7 @@ npx playwright install              # install browsers
 ```
 
 ```bash
-# Signed-in Chrome profile (browser-profile skill; needs @playwright/cli and the Playwright extension)
+# Your own Chrome profile (browser-profile skill; needs @playwright/cli and the Playwright extension)
 bash skills/browser-profile/scripts/browser-profile.sh check          # every requirement, with a fix for each gap
 bash skills/browser-profile/scripts/browser-profile.sh list           # aliases and their state
 bash skills/browser-profile/scripts/browser-profile.sh open work      # waits for the Allow click, prints the session

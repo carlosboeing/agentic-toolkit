@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# browser-profile.sh — attach a Playwright CLI session to a signed-in Chrome
-# profile through the Playwright extension.
+# browser-profile.sh — attach a Playwright CLI session to one of the user's
+# own Chrome profiles through the Playwright extension.
 #
 # No extension token is used or stored. Every attach opens the extension's
 # connect page in the chosen profile and waits for the user to click Allow.
 # A desktop notification tells the user that the click is needed.
 #
 # Page snapshots and other CLI output go to a private folder per session,
-# outside the project, because they hold content from signed-in sites. The
+# outside the project, because they can hold private content from the user's sessions. The
 # folder is deleted when the session is closed.
 #
 # Usage:
@@ -401,7 +401,7 @@ cmd_open() {
   if ! "$CLI" list 2>/dev/null | session_is_attached "$session"; then
     "$CLI" -s="$session" close >/dev/null 2>&1 || true
     abandon_session "$session"
-    die "the session did not connect through the extension, so it is not the signed-in profile. It was closed"
+    die "the session did not connect through the extension, so it is not the user's profile. It was closed"
   fi
 
   printf 'session: %s\n' "$session"
