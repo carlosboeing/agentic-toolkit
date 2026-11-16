@@ -78,7 +78,7 @@ Not all harnesses support Vertex AI API keys, and AI Studio keys (`GEMINI_API_KE
 
 | Harness | Google AI Studio (`GEMINI_API_KEY`) | Vertex AI API key (Express Mode) | Vertex AI IAM (`gcloud` ADC / Service Account JSON) |
 | :--- | :--- | :--- | :--- |
-| **OpenCode** | Yes (`google` provider, `GOOGLE_GENERATIVE_AI_API_KEY`) ([OpenCode providers](https://opencode.ai/docs/providers)) | Via `@ai-sdk/google-vertex` (`GOOGLE_VERTEX_API_KEY` or `options.apiKey`) ([AI SDK Vertex](https://ai-sdk.dev/providers/ai-sdk-providers/google-vertex)) | Yes (`google-vertex` / `vertex-anthropic`; supports `googleAuthOptions.keyFilename`) |
+| **OpenCode** | Yes (`google` provider, `GOOGLE_GENERATIVE_AI_API_KEY`) ([OpenCode providers](https://opencode.ai/docs/providers)) | Via `@ai-sdk/google-vertex` (`GOOGLE_VERTEX_API_KEY` or `options.apiKey`) ([AI SDK Vertex](https://ai-sdk.dev/providers/ai-sdk-providers/google-vertex)) | Yes (one `google-vertex` provider for Gemini and partner models; ADC or `GOOGLE_APPLICATION_CREDENTIALS`, one credential per OpenCode server) ([OpenCode providers](https://opencode.ai/docs/providers)) |
 | **Gemini CLI** | Yes (`GEMINI_API_KEY`) ([Gemini CLI auth](https://geminicli.com/docs/get-started/authentication/)) | Yes (`GOOGLE_API_KEY` + `GOOGLE_GENAI_USE_VERTEXAI=true`) ([Gemini CLI auth](https://geminicli.com/docs/get-started/authentication/)) | Yes (`GOOGLE_GENAI_USE_VERTEXAI=true` + ADC or `GOOGLE_APPLICATION_CREDENTIALS` + `GOOGLE_CLOUD_PROJECT`) |
 | **Continue** | Yes (`provider: gemini`) | Yes (`provider: vertexai` + `apiKey` for supported Gemini models) ([Continue Vertex docs](https://docs.continue.dev/customize/model-providers/top-level/vertexai)) | Yes (`provider: vertexai` + `projectId` / `region` / ADC) |
 | **Pi** (`pi-mono`) | Yes | Yes (`GOOGLE_VERTEX_API_KEY` or `options.apiKey`) | Yes (ADC / `GOOGLE_APPLICATION_CREDENTIALS`) |
@@ -107,9 +107,10 @@ Avoid relying on `gcloud auth application-default login` alone when juggling mul
 
 - `gcloud config configurations activate <name>` switches only the `gcloud` CLI account/project, **not** `~/.config/gcloud/application_default_credentials.json`.
 - Google Workspace organizations enforce session timeouts (16 hours by default for Google Cloud CLI/SDK), which cause mid-session `Missing auth credential: Google Application Default Credentials` errors until you re-run browser login.
-- Node.js `google-auth-library` (used by OpenCode's `@ai-sdk/google-vertex`) can ignore `CLOUDSDK_CONFIG` and read the default `~/.config/gcloud/application_default_credentials.json` unless `GOOGLE_APPLICATION_CREDENTIALS` or `googleAuthOptions` is set.
+- OpenCode 2.x has one `google-vertex` provider and reads Google credentials through Application Default Credentials from the environment of its server process. `opencode.json` has no per-provider credential setting, and the AI SDK option `googleAuthOptions.keyFilename` is not read ([OpenCode providers](https://opencode.ai/docs/providers), checked on OpenCode 2.3.0).
+- OpenCode 2.x shares one background server between terminals. `opencode --standalone` starts a private server instead, which takes the credentials of the shell that starts it (`opencode --help`).
 
-Instead, create one **Service Account JSON key** per GCP project and switch profiles inside OpenCode with `/models`:
+Instead, create one **Service Account JSON key** per GCP project and start one private OpenCode server per account:
 
 1. In each GCP project, enable the **Vertex AI API** (`aiplatform.googleapis.com`).
 2. Create a Service Account, grant it the **Vertex AI User** (`roles/aiplatform.user`) role, and download a JSON key to `~/.config/gcp/<profile>.json`.
@@ -121,47 +122,23 @@ chmod 700 ~/.config/gcp
 chmod 600 ~/.config/gcp/*.json
 ```
 
-4. Register separate named providers in `~/.config/opencode/opencode.json` (each custom provider needs a `"models"` map so its models appear in `/models`):
+4. Add one launcher per account to your shell profile. Each launcher passes that account's key and project to a private server ([OpenCode providers](https://opencode.ai/docs/providers)):
 
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "vertex-personal": {
-      "npm": "@ai-sdk/google-vertex",
-      "options": {
-        "project": "your-personal-gcp-project",
-        "location": "global",
-        "googleAuthOptions": {
-          "keyFilename": "/path/to/your-home/.config/gcp/personal.json"
-        }
-      },
-      "models": {
-        "gemini-2.5-pro": { "name": "Gemini 2.5 Pro (Personal Vertex)" },
-        "gemini-2.5-flash": { "name": "Gemini 2.5 Flash (Personal Vertex)" }
-      }
-    },
-    "vertex-work": {
-      "npm": "@ai-sdk/google-vertex",
-      "options": {
-        "project": "your-work-gcp-project",
-        "location": "global",
-        "googleAuthOptions": {
-          "keyFilename": "/path/to/your-home/.config/gcp/work.json"
-        }
-      },
-      "models": {
-        "gemini-2.5-pro": { "name": "Gemini 2.5 Pro (Work Vertex)" },
-        "gemini-2.5-flash": { "name": "Gemini 2.5 Flash (Work Vertex)" }
-      }
-    }
-  }
+```zsh
+opencode-vertex() {
+  local profile="$1" project="$2"
+  shift 2
+  GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcp/$profile.json" \
+  GOOGLE_CLOUD_PROJECT="$project" \
+  GOOGLE_VERTEX_LOCATION="global" \
+  opencode --standalone "$@"
 }
+alias opencode-personal='opencode-vertex personal your-personal-gcp-project'
+alias opencode-work='opencode-vertex work your-work-gcp-project'
 ```
 
-*(Replace `/path/to/your-home` with your actual `$HOME` directory path, because Node's `google-auth-library` does not expand `~` in `keyFilename`.)*
-
-5. Never pass an `authorized_user` ADC file (`~/.config/gcloud/application_default_credentials.json`) to `keyFilename`; `google-auth-library` expects a `service_account` JSON containing `client_email` and `private_key`.
+5. Remove any project saved through `/connect` -> **Vertex** (`opencode auth logout`). On OpenCode 2.3.0, a saved project takes priority over `GOOGLE_CLOUD_PROJECT`.
+6. To change account, quit OpenCode and start the other launcher. One server holds one Google credential, so `/models` cannot switch between Service Account keys.
 
 ### Option C: Fallback for organizations that block Service Account keys
 
@@ -177,7 +154,7 @@ gcp-profile() {
 }
 ```
 
-Run `gcp-profile <name> <project> && gcloud auth application-default login` once per profile, then launch `opencode` from that shell (or automate per directory with `direnv`).
+Run `gcp-profile <name> <project> && gcloud auth application-default login` once per profile, then launch `opencode --standalone` from that shell (or automate per directory with `direnv`).
 
 ---
 
