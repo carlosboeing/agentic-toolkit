@@ -85,13 +85,24 @@ Parser is order-independent: `/repo-standards oss fix` and `/repo-standards fix 
 
 ### scaffold
 
-```
+```sh
 npx degit carlosboeing/agentic-toolkit/templates/default-project <name>
 # if oss: cp templates/default-project-oss extra files or run fix oss on new dir
-# replace <PROJECT_NAME>, <OWNER>/<REPO> via sed, git init, first commit
+# replace <PROJECT_NAME>, <OWNER>/<REPO> via sed
+git -C <name> init -b main
+# install drift-guard hooks and core.hooksPath before the first commit:
+# - when a local agentic-toolkit checkout is available:
+#   <toolkit>/scripts/sync-toolkit.sh --no-config --no-sidecars <name> -y
+# - otherwise (no local checkout):
+#   npx degit carlosboeing/agentic-toolkit/git-hooks/drift-guard <name>/scripts/githooks
+#   rm -f <name>/scripts/githooks/README.md <name>/scripts/githooks/test-housekeep.sh
+#   chmod +x <name>/scripts/githooks/housekeep <name>/scripts/githooks/pre-push <name>/scripts/githooks/post-merge
+#   git -C <name> config core.hooksPath scripts/githooks
+git -C <name> add . && git -C <name> commit -m "chore: bootstrap repo with project structure conventions"
+# optional after first commit (with local checkout): verify with toolkit-rollout.py audit + smoke
 ```
 
-Prefer template copy over generation - deterministic.
+Prefer template copy over generation - deterministic. Note that `core.hooksPath` is per-clone, so fresh clones run `git config core.hooksPath scripts/githooks`.
 
 ## Rules
 

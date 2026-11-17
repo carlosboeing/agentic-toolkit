@@ -39,14 +39,27 @@ Or copy it from a local clone of this repository:
 cp -R ./templates/default-project ./new-project
 ```
 
-Then replace the `<PROJECT_NAME>` placeholders and make the first commit:
+Then replace the `<PROJECT_NAME>` placeholders, initialize Git, install the [drift-guard Git hooks](../git-hooks/drift-guard/), and make the first commit (or run `/repo-standards scaffold <name>` to automate these steps):
 
 ```bash
 cd ./new-project
 grep -rl '<PROJECT_NAME>' . | xargs sed -i '' 's/<PROJECT_NAME>/your-project-name/g'   # macOS
 # grep -rl '<PROJECT_NAME>' . | xargs sed -i 's/<PROJECT_NAME>/your-project-name/g'    # Linux
-git init && git add . && git commit -m "chore: bootstrap repo with project structure conventions"
+git init -b main
+
+# Install drift-guard hooks and set core.hooksPath before the first commit:
+# Option A — from a local clone of agentic-toolkit:
+# <path-to-agentic-toolkit>/scripts/sync-toolkit.sh --no-config --no-sidecars . -y
+# Option B — without a local clone:
+npx degit github:carlosboeing/agentic-toolkit/git-hooks/drift-guard scripts/githooks
+rm -f scripts/githooks/README.md scripts/githooks/test-housekeep.sh
+chmod +x scripts/githooks/housekeep scripts/githooks/pre-push scripts/githooks/post-merge
+git config core.hooksPath scripts/githooks
+
+git add . && git commit -m "chore: bootstrap repo with project structure conventions"
 ```
+
+`core.hooksPath` is per-clone, so fresh clones also run `git config core.hooksPath scripts/githooks`.
 
 ## Apply the conventions to an existing project
 
