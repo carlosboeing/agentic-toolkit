@@ -1,6 +1,6 @@
 ---
 name: housekeeping
-description: Full audit of local branches and registered worktrees against GitHub pull requests, reporting what merges left behind and removing verified stale local state. Modes: audit (default full inventory), check (last pull window), fix (refresh, recheck, and remove). Deletes locally only, never a remote branch.
+description: Full audit of local branches and registered worktrees against GitHub pull requests, reporting what merges left behind, including working-memory records a merge made stale, and removing verified stale local state. Modes: audit (default full inventory), check (last pull window), fix (refresh, recheck, and remove), records (stale records for named pull requests). Deletes locally only, never a remote branch.
 ---
 
 # `/housekeeping`
@@ -14,6 +14,7 @@ The drift-guard script `scripts/githooks/housekeep` does the work. This skill ca
   /housekeeping audit        full audit of local branches and registered worktrees
   /housekeeping check        report what the last pull left behind (windowed ORIG_HEAD..HEAD)
   /housekeeping fix          refresh, recheck, and remove the audit-removable branches and worktrees
+  /housekeeping records <n>  list working-memory records older than merged pull request <n>
   /housekeeping help         show this synopsis
 ```
 
@@ -21,7 +22,8 @@ The drift-guard script `scripts/githooks/housekeep` does the work. This skill ca
 
 Walk the tokens once. The sets are closed and order does not matter.
 
-- **Mode keywords**: `audit`, `check`, `fix`. Default: `audit`.
+- **Mode keywords**: `audit`, `check`, `fix`, `records`. Default: `audit`.
+- **Pull request numbers**: digits after `records`, one or more.
 - **Help keywords**: `help`, `?`, `usage`, `--help`, `-h`. Any of these renders the synopsis and stops.
 - **Anything else**: ignored, and say so in one line.
 
@@ -40,7 +42,16 @@ The script enumerates all local branches and registered worktrees, resolves them
 1. Run `./scripts/githooks/housekeep check`.
 2. Print the output as it stands.
 
-`check` inspects only pull request numbers derived from `ORIG_HEAD..HEAD` (the last pull) plus stale remote refs. It always ends with a pointer to `housekeep audit`. Never report or imply the repository is clean from `check` alone: it covers only the last pull.
+`check` inspects only pull request numbers derived from `ORIG_HEAD..HEAD` (the last pull) plus stale remote refs. It also lists working-memory records older than those pull requests; see `records`. It always ends with a pointer to `housekeep audit`. Never report or imply the repository is clean from `check` alone: it covers only the last pull.
+
+## records
+
+1. Run `./scripts/githooks/housekeep records <n>...` in the repository where the pull requests merged.
+2. Print the output as it stands.
+3. For each listed record, edit what the merge made false, or leave the record when it is still true. Commit edits in the repository that owns the record.
+4. Run `records` again and report what is still listed and why.
+
+Record roots come from `git config housekeep.recordRoot`, then the Project Map `Working memory` line, then any top-level folder holding a lifecycle folder. A merge done on GitHub with no local pull runs no hook, so `records` is the way to sweep it.
 
 ## fix
 
@@ -50,7 +61,7 @@ The script enumerates all local branches and registered worktrees, resolves them
 2. Say in one line what `fix` will delete: the named worktrees, named local branches, and stale remote refs identified as removable.
 3. Run `./scripts/githooks/housekeep fix`.
 4. Print the delta output (changed verdicts, deletions, prunes, post-fix inventory).
-5. Repair roadmap and document findings by hand in the same task: move `## Next` roadmap lines to `## Recently shipped` and update linked documents to `status: shipped`.
+5. Repair roadmap and document findings by hand in the same task: move `## Next` roadmap lines to `## Recently shipped`, update linked documents to `status: shipped`, and resolve each record `check` listed, as in `records`.
 6. If a `.workbench/.git` sidecar is present, repeat the audit and fix sequence for the sidecar.
 
 `fix` fetches origin first, rechecks pull request state through `gh pr view` and local lineage before each deletion, and stops if a worktree has uncommitted changes or holds ignored files. It never force-removes a worktree and never deletes a remote branch.

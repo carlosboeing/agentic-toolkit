@@ -828,6 +828,90 @@ _assert "worktree with large volume of ignored files is preserved" 0 $?
 git -C "$LIO" show-ref --verify --quiet refs/heads/feat/lio-merged
 _assert "branch with large volume of ignored files is preserved" 0 $?
 
+# --- record sweep: records a merged pull request made stale ----------------
+SW="$TMP/sw"
+git init -q -b main "$SW"
+git -C "$SW" remote add origin git@github.com:o/sw.git
+_old() { GIT_AUTHOR_DATE="$1" GIT_COMMITTER_DATE="$1" git -C "$2" -c user.name=t -c user.email=t@t commit -q -m "$3"; }
+_rec() { # _rec <file> <type> <status> <body>
+  mkdir -p "$(dirname "$1")"
+  printf -- '---\ncreated: "2026-01-01"\nupdated: "2026-01-01"\ntitle: "R"\ntype: %s\nstatus: %s\nauthors: ["C"]\n---\n%s\n' "$2" "$3" "$4" > "$1"
+}
+printf '.private-docs/\n' > "$SW/.gitignore"
+_rec "$SW/docs/3-design/linked.md" design in-progress 'Delivered by https://github.com/o/sw/pull/5.'
+_rec "$SW/docs/3-design/other-pr.md" design draft 'See https://github.com/o/sw/pull/50 only.'
+_rec "$SW/docs/3-design/assets/raw.md" design draft 'https://github.com/o/sw/pull/5'
+_rec "$SW/docs/1-research/readme.md" research draft 'Touches README.md only.'
+_rec "$SW/.docs/1-research/path.md" research draft 'Proposed: scripts/tool.sh, not applied.'
+_rec "$SW/records/4-plans/short.md" plan shipped 'Shipped in o/sw#5.'
+git -C "$SW" add -A && _old "2026-01-01T10:00:00Z" "$SW" "docs: records"
+git init -q -b main "$SW/.private-docs"
+_rec "$SW/.private-docs/0-brainstorms/branch.md" brainstorm draft 'Work on feat/tool next.'
+git -C "$SW/.private-docs" add -A && _old "2026-01-01T10:00:00Z" "$SW/.private-docs" "docs: brainstorm"
+mkdir -p "$SW/scripts" && echo x > "$SW/scripts/tool.sh" && echo r > "$SW/README.md"
+git -C "$SW" add -A && _old "2026-02-01T10:00:00Z" "$SW" "feat(tool): add tool (#5)"
+git -C "$SW" update-ref ORIG_HEAD "$(git -C "$SW" rev-parse HEAD~1)"
+_rec "$SW/docs/3-design/fresh.md" design in-progress 'Already updated for https://github.com/o/sw/pull/5.'
+git -C "$SW" add -A && _old "2026-03-01T10:00:00Z" "$SW" "docs: fresh"
+git -C "$SW" update-ref ORIG_HEAD "$(git -C "$SW" rev-parse HEAD~2)"
+cat > "$TMP/ghs" <<'STUB'
+#!/usr/bin/env bash
+printf '{"closingIssuesReferences":[],"headRefName":"feat/tool","state":"MERGED"}\n'
+STUB
+chmod +x "$TMP/ghs"
+
+out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" records 5 2>&1 )
+for root in 'docs (found)' '.docs (found)' 'records (found)' '.private-docs (found)'; do
+  printf '%s' "$out" | grep -qF "$root"
+  _assert "sweep finds root $root without configuration" 0 $?
+done
+printf '%s' "$out" | grep -q 'docs/3-design/linked.md .*links the PR, status not shipped'
+_assert "sweep flags a linked in-progress design" 0 $?
+printf '%s' "$out" | grep -q '.docs/1-research/path.md .*names scripts/tool.sh'
+_assert "sweep lists a record naming a changed path" 0 $?
+printf '%s' "$out" | grep -q 'records/4-plans/short.md .*links the PR$'
+_assert "sweep matches owner/repo#n and leaves a shipped plan unflagged" 0 $?
+printf '%s' "$out" | grep -q '.private-docs/0-brainstorms/branch.md .*names branch feat/tool'
+_assert "sweep reads a nested repository and matches the branch" 0 $?
+printf '%s' "$out" | grep -qE 'other-pr.md|assets/raw.md|readme.md|fresh.md'
+_assert "sweep skips pull/50, assets, README paths and records changed after the merge" 1 $?
+printf '%s' "$out" | grep -q 'then: housekeep records 5'
+_assert "sweep ends with the re-run command" 0 $?
+
+out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" check 2>&1 )
+printf '%s' "$out" | grep -q 'docs/3-design/linked.md'
+_assert "check runs the sweep for pull requests in the last pull" 0 $?
+
+printf -- '- **Working memory**: `.private-docs/` — a private repository\n' > "$SW/CLAUDE.md"
+out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" records 5 2>&1 )
+printf '%s' "$out" | grep -q 'record roots: .private-docs (Project Map)$'
+_assert "a backticked Project Map path replaces the fallback" 0 $?
+printf -- '- **Working memory:** docs/ (numbered lifecycle convention)\n' > "$SW/CLAUDE.md"
+out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" records 5 2>&1 )
+printf '%s' "$out" | grep -q 'record roots: docs (Project Map)$'
+_assert "a plain Project Map path is read as the first word" 0 $?
+git -C "$SW" config --add housekeep.recordRoot records/
+git -C "$SW" config --add housekeep.recordRoot gone
+out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" records 5 2>&1 )
+printf '%s' "$out" | grep -q 'record roots: records (git config) gone (git config, missing) docs (Project Map)$'
+_assert "git config roots join Project Map roots, and a missing root is named" 0 $?
+rm -f "$SW/CLAUDE.md"; git -C "$SW" config --unset-all housekeep.recordRoot
+
+out=$( cd "$SW" && HOUSEKEEP_GH=false "$HOOK_DIR/housekeep" records 5 2>&1 )
+printf '%s' "$out" | grep -q 'branch names unknown'
+_assert "without GitHub the sweep says the branch key is skipped" 0 $?
+printf '%s' "$out" | grep -q 'docs/3-design/linked.md'
+_assert "without GitHub links and paths still match" 0 $?
+printf '%s' "$out" | grep -q 'branch.md'
+_assert "without GitHub the branch-only record is not listed" 1 $?
+
+echo edit >> "$SW/.docs/1-research/path.md"
+out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" records 5 2>&1 )
+printf '%s' "$out" | grep -q 'path.md'
+_assert "a record with uncommitted edits counts as current" 1 $?
+( cd "$SW" && "$HOOK_DIR/housekeep" records x >/dev/null 2>&1 )
+_assert "records exits 0 on bad input" 0 $?
+
 "$HOOK_DIR/housekeep" bogus >/dev/null 2>&1
 _assert "an unknown mode exits 2" 2 $?
 

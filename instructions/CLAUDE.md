@@ -55,7 +55,7 @@ Ask only for these: an action you cannot undo (delete, publish, merge, money, cr
 
 **One carve-out.** Deleting the branch and worktree of a pull request that GitHub reports as merged is pre-approved inside the task that merged it. Verify the merged state first, and never delete a remote branch. Every other deletion needs a question.
 
-**Close-out sweep.** Before you report a task done, read the diff again and repair what it orphaned.
+**Close-out sweep.** Before you report a task done, read the diff again and repair what it orphaned. When a pull request opens, write its full URL into each record it delivers.
 
 **Repair before replying.** A failed edit part-way through a sequence stops the line. Fix the half-applied state before you write the reply, never after it.
 
@@ -116,7 +116,7 @@ Scale gate and task counts to artifact blast radius rather than skill defaults.
 - Breaking changes require `!` after type/scope and `BREAKING CHANGE:` footer.
 - **Ship in one atomic commit.** Stage tracking updates (ROADMAP, CHANGELOG) in the same commit as functional changes. Doc cleanup commits separately.
 - **Branch off `origin/main`.** Run `git fetch`, then `git checkout -b <name> origin/main`. Avoid branching off a diverged local `main`.
-- **Clean up after a merge.** Enable **Automatically delete head branches** on the repository once (`gh api -X PATCH repos/<owner>/<repo> -f delete_branch_on_merge=true`) so the remote branch goes without anyone remembering. Locally, when a pull request merges: remove its worktree, delete the branch, prune remote refs, then fast-forward `main`. The worktree goes first — a branch held by one cannot be deleted, and `gh pr merge --delete-branch` aborts before the remote when that fails. `git branch -d` refuses after a squash merge, because git cannot see the squash as a merge; use `-D` once the pull request shows as merged. In Claude Code and Cursor, `/clean_gone` does the local half. Never delete a branch with no merged pull request.
+- **Clean up after a merge.** Enable **Automatically delete head branches** on the repository once (`gh api -X PATCH repos/<owner>/<repo> -f delete_branch_on_merge=true`). Locally, when a pull request merges: remove its worktree, delete the branch, prune remote refs, then fast-forward `main`. The worktree goes first — a branch held by one cannot be deleted, and `gh pr merge --delete-branch` aborts before the remote when that fails. After a squash merge `git branch -d` refuses; use `-D` once the pull request shows as merged. Then resolve each working-memory record `housekeep records <n>` lists. Never delete a branch with no merged pull request.
 
 ### Language and Markdown
 
