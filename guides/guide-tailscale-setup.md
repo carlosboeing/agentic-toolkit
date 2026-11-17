@@ -179,10 +179,28 @@ Tailscale does not keep a computer awake, and a sleeping host drops every remote
 
 | Issue | Fix |
 |---|---|
-| macOS sleeps when idle | `sudo pmset -c sleep 0` stops idle sleep on AC power only. `pmset -g custom` shows the current values |
+| macOS sleeps when idle | Stop idle sleep on AC power with the toolkit script below, or by hand with `sudo pmset -c sleep 0`. `pmset -g custom` shows the current values |
 | A laptop sleeps when its lid closes | `pmset` sleep settings do not stop lid sleep. Keep the lid open, or use an always-on host |
 | `caffeinate` started in a terminal | Stops when that terminal closes or the computer restarts, so it is not a lasting fix |
 | Device keys expire | By default a device must sign in again every 180 days, and its connections stop when its key expires. For an always-on host, open the Machines page in the admin console and choose **Disable Key Expiry** ([key expiry](https://tailscale.com/kb/1028/key-expiry)) |
+
+### Turn idle sleep off and on again with the toolkit script
+
+The [`mac-stay-awake.sh`](../scripts/mac-stay-awake.sh) script changes only the AC idle sleep timer, and it records the old value so you can go back to it.
+
+| Command | What it does |
+|---|---|
+| `scripts/mac-stay-awake.sh on` | Saves the current AC sleep timer to `~/.local/state/agentic-toolkit/`, then runs `sudo pmset -c sleep 0`. A second `on` keeps the first saved value |
+| `scripts/mac-stay-awake.sh off` | Restores the saved timer with `sudo pmset -c sleep <minutes>` and deletes the saved value. With no saved value, it changes nothing |
+| `scripts/mac-stay-awake.sh status` | Shows the AC sleep and display sleep timers, the processes that hold the Mac awake, and the saved value |
+
+What stays the same:
+
+- **Display sleep.** The screen still turns off and locks after its own timer, so a Mac kept awake is not left unlocked.
+- **Battery settings.** On battery the Mac sleeps as before, so it does not stay awake in a closed bag.
+- **Lid sleep.** Closing the lid still sleeps a laptop. Keep the lid open, or use clamshell mode with power, an external display and a keyboard or mouse ([Apple Support](https://support.apple.com/en-us/102505)).
+
+The costs are small: a few watts at idle on Apple silicon, and a battery held on the charger, which Optimized Battery Charging limits ([Apple Support](https://support.apple.com/en-us/102338)). The real change is that the computer accepts SSH connections at all hours, so use key login and keep the screen lock on.
 
 ## Alternatives
 

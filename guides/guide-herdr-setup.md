@@ -162,7 +162,7 @@ The Herdr phone app runs on iPhone, iPad and Android. It shows which agents need
 | Herdr app on the computer | Herdr TUI isn't supported, so agents started in the TUI do not appear. Spaces appear only while the app runs |
 | SSH server on the computer | On macOS, turn on Remote Login ([steps](guide-tailscale-setup.md#turn-on-remote-login-on-macos)) |
 | Network path | Same Wi-Fi, or Tailscale on both the phone and the computer when you are away |
-| Computer awake | A sleeping computer drops the connection ([fixes](guide-tailscale-setup.md#keep-the-host-reachable)) |
+| Computer awake | A sleeping computer drops the connection. On a Mac, run `scripts/mac-stay-awake.sh on` and later `off` to go back ([details](guide-tailscale-setup.md#turn-idle-sleep-off-and-on-again-with-the-toolkit-script)) |
 
 To connect, open **Connect a machine** and fill in the form:
 
