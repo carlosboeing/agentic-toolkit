@@ -844,6 +844,7 @@ _rec "$SW/docs/3-design/assets/raw.md" design draft 'https://github.com/o/sw/pul
 _rec "$SW/docs/1-research/readme.md" research draft 'Touches README.md only.'
 _rec "$SW/.docs/1-research/path.md" research draft 'Proposed: scripts/tool.sh, not applied.'
 _rec "$SW/records/4-plans/short.md" plan shipped 'Shipped in o/sw#5.'
+_rec "$SW/docs/3-design/old-shipped.md" design shipped 'Built scripts/tool.sh long ago.'
 git -C "$SW" add -A && _old "2026-01-01T10:00:00Z" "$SW" "docs: records"
 git init -q -b main "$SW/.private-docs"
 _rec "$SW/.private-docs/0-brainstorms/branch.md" brainstorm draft 'Work on feat/tool next.'
@@ -877,6 +878,10 @@ printf '%s' "$out" | grep -qE 'other-pr.md|assets/raw.md|readme.md|fresh.md'
 _assert "sweep skips pull/50, assets, README paths and records changed after the merge" 1 $?
 printf '%s' "$out" | grep -q 'then: housekeep records 5'
 _assert "sweep ends with the re-run command" 0 $?
+printf '%s' "$out" | grep -q 'old-shipped.md'
+_assert "sweep skips a shipped record that only names a changed path" 1 $?
+printf '%s' "$out" | grep -q 'skipped 1 closed records'
+_assert "sweep counts the closed records it skipped" 0 $?
 
 out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" check 2>&1 )
 printf '%s' "$out" | grep -q 'docs/3-design/linked.md'

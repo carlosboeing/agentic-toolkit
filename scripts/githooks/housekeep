@@ -1217,7 +1217,7 @@ _merge_commit_for() { # _merge_commit_for <n> [range] -> the commit whose subjec
 
 _sweep_records() { # _sweep_records <file of "n|commit|branch" lines> -> prints the records block
   local list="$1" roots repo top default n commit branch keys when t root src
-  local cands f why label doctype status shown listed=0 stale_total=0 changed count
+  local cands f why label doctype status shown listed=0 stale_total=0 changed count closed=0
   roots="$(_record_roots)"
   if [ -z "$roots" ]; then
     printf '  record roots: none found (set git config housekeep.recordRoot <path>)\n'
@@ -1285,7 +1285,13 @@ INNER
         t="$(_last_change "$f")"
         [ "$t" = "now" ] && continue
         [ -n "$t" ] && [ -n "$when" ] && [ "$t" -ge "$when" ] && continue
-        doctype="$(_scalar_field "$f" type)"; status="$(_scalar_field "$f" status)"
+        status="$(_scalar_field "$f" status)"
+        # A closed record that only names a path or branch describes past
+        # work; a later change to that file does not make it false.
+        if [ "$why" != "links the PR" ]; then
+          case "$status" in shipped|resolved|superseded|abandoned) closed=$((closed + 1)); continue ;; esac
+        fi
+        doctype="$(_scalar_field "$f" type)"
         if [ "$shown" -eq 0 ]; then
           printf '  records older than pull request %s%s:\n' "$n" "${branch:+ ($branch)}"
           shown=1
@@ -1307,6 +1313,7 @@ INNER
     [ "$shown" -eq 1 ] && stale_total=1
   done < "$list"
   rm -f "$keys"
+  [ "$closed" -gt 0 ] && printf '  skipped %s closed records (shipped, resolved, superseded or abandoned) that only name a path or branch\n' "$closed"
   if [ "$stale_total" -eq 1 ]; then
     printf '  edit each record, or leave it when it is still true, then: housekeep records %s\n' \
       "$(cut -d'|' -f1 "$list" | tr '\n' ' ' | sed 's/ $//')"
