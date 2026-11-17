@@ -2,6 +2,12 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-18: keep a Mac awake for remote sessions
+
+- Add [`scripts/mac-stay-awake.sh`](../scripts/mac-stay-awake.sh) with `on`, `off` and `status`. `on` saves the current AC sleep timer before it sets it to never, and `off` restores that value, so turning it back is one command. Display sleep, battery settings and lid sleep are unchanged.
+- Document the script, what it leaves unchanged and its costs in the [Tailscale guide](../guides/guide-tailscale-setup.md#turn-idle-sleep-off-and-on-again-with-the-toolkit-script), and link it from the Herdr guide's phone app section.
+- Tests use a fake `pmset` and `sudo`. The real `sudo` step was not run in CI.
+
 ## 2026-11-17: Herdr and Tailscale guides
 
 - Add [`guides/guide-herdr-setup.md`](../guides/guide-herdr-setup.md) and [`guides/guide-tailscale-setup.md`](../guides/guide-tailscale-setup.md), index them under a new "Running and reaching agents" section in [`guides/README.md`](../guides/README.md), and link them from the [README](../README.md).
