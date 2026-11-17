@@ -59,7 +59,6 @@ cmd_on() {
     mkdir -p "$STATE_DIR"
     printf '%s\n' "$current" > "$STATE_FILE"
     created=1
-    echo "Saved the current AC sleep timer ($current min) to $STATE_FILE"
   else
     echo "Keeping the value saved earlier ($(saved_value) min)."
   fi
@@ -71,6 +70,7 @@ cmd_on() {
       exit 1
     fi
   fi
+  [[ "$created" == 1 ]] && echo "Saved the previous AC sleep timer ($current min) to $STATE_FILE"
   echo "AC sleep is now 0 (never). Revert with: $0 off"
   echo "$LID_NOTE"
 }
