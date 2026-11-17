@@ -10,7 +10,7 @@ The standard is the maintainer's own, written for `carlosboeing/*` repositories.
 |---|---|
 | `/repo-standards check [oss\|private] [path]` | Reports gaps. Changes nothing. |
 | `/repo-standards fix [oss\|private] [path]` | Reports gaps, then fixes them from `templates/default-project`, filling in the owner and repository name through `gh` |
-| `/repo-standards scaffold <name> [oss\|private]` | Creates a new repository from `templates/default-project`, adding the open-source files for `oss` |
+| `/repo-standards scaffold <name> [oss\|private]` | Creates a new repository from `templates/default-project` (adding the open-source files for `oss`), installs `scripts/githooks`, and sets `core.hooksPath` to `scripts/githooks` before the first commit |
 
 Without `oss` or `private`, the skill reads the repository's visibility with `gh repo view --json visibility`. A public repository is treated as `oss`.
 

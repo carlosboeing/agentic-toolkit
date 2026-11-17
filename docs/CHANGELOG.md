@@ -2,6 +2,11 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-18: drift-guard hooks in new repo scaffolding
+
+- Update [`/repo-standards scaffold`](../skills/repo-standards/SKILL.md#scaffold) and [its README](../skills/repo-standards/README.md) to install `scripts/githooks` (`housekeep`, `pre-push`, `post-merge`) and configure `core.hooksPath = scripts/githooks` before the initial commit, using `scripts/sync-toolkit.sh` when a local toolkit checkout exists or `degit` of `git-hooks/drift-guard` otherwise.
+- Add the same pre-commit hook installation steps and per-clone `core.hooksPath` note to [the templates README](../templates/README.md#start-a-new-project) and [the project conventions guide](../guides/guide-project-structure-and-conventions.md#step-3-initial-commit).
+
 ## 2026-11-18: stale working-memory records after a merge
 
 - Log each post-merge sweep to `housekeep-records.log` in the local Git directory, so the check's usefulness can be measured from real merges. The log is never committed.
