@@ -2,6 +2,13 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-17: Herdr and Tailscale guides
+
+- Add [`guides/guide-herdr-setup.md`](../guides/guide-herdr-setup.md) and [`guides/guide-tailscale-setup.md`](../guides/guide-tailscale-setup.md), index them under a new "Running and reaching agents" section in [`guides/README.md`](../guides/README.md), and link them from the [README](../README.md).
+- Herdr: why a session runtime helps, the app versus the TUI (they do not share agents), common uses, install and update, agent status, restart behavior, macOS permissions, worktrees against the toolkit's `.worktrees/<harness>/<branch>` convention, remote machines, the phone app, agents that start other agents with `hc` and templates, how it relates to the toolkit's sync, resume and worktree skills, alternatives, troubleshooting and telemetry.
+- Tailscale: what a tailnet is, common uses in agent work, the macOS variants, MagicDNS names, normal SSH versus Tailscale SSH, macOS Remote Login, sharing a local MCP server or dev server with `tailscale serve`, public exposure with Funnel and its risks, sleep and key expiry on an always-on host, alternatives and troubleshooting.
+- Facts checked against vendor documentation on 2026-11-17; the phone-to-Mac route was tested over mobile data.
+
 ## 2026-11-16: Google Gemini API and Vertex AI guide
 
 - Add [`guides/guide-google-gemini-api-and-vertex-ai.md`](../guides/guide-google-gemini-api-and-vertex-ai.md) and index it in [`guides/README.md`](../guides/README.md).

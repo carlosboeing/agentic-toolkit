@@ -27,6 +27,13 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 | [`guide-google-gemini-api-and-vertex-ai.md`](guide-google-gemini-api-and-vertex-ai.md) | Choose between the Gemini Developer API and Vertex AI, manage credits and multi-account OpenCode profiles, and deploy standalone agents or CI |
 | [`guide-qmd-smoke-tests.md`](guide-qmd-smoke-tests.md) | Check project search scope, automatic searches across repositories and current-source verification |
 
+### Running and reaching agents
+
+| Guide | Use it to |
+|---|---|
+| [`guide-herdr-setup.md`](guide-herdr-setup.md) | Run many agents in terminals that stay alive and show their status; covers the Herdr app and TUI, remote machines, the phone app, agents that start other agents, and alternatives |
+| [`guide-tailscale-setup.md`](guide-tailscale-setup.md) | Reach your agents' machines and MCP servers from a phone or laptop over a private network; covers SSH, Serve, Funnel, keeping a host awake, and alternatives |
+
 ### Project practices
 
 | Guide | Use it to |

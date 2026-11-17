@@ -13,6 +13,7 @@ Use it if you work in more than one AI coding harness and want the same skills, 
 | Agents skip design, testing or review | A delivery workflow with an explicit review stop between each phase |
 | Private notes leak into public repositories | Public and private repositories kept apart, and a pre-commit guard that refuses private paths |
 | Each harness has different install paths and hook support | Guides that map skills, plugins, MCP servers and hooks across harnesses |
+| Many agents in many terminal tabs, with no view of which one needs you, and none reachable away from the desk | Guides for a session runtime ([Herdr](guides/guide-herdr-setup.md)) and a private network ([Tailscale](guides/guide-tailscale-setup.md)) |
 
 ## How it fits together
 
@@ -180,6 +181,7 @@ The [skills catalog](skills/README.md) lists each skill's commands, dependencies
 | [Project structure and conventions](guides/guide-project-structure-and-conventions.md) | Organize a project's documents, frontmatter and tracking files |
 | [AI model and effort routing](guides/guide-ai-model-and-effort-routing.md) | Choose a model and effort level for a task |
 | [Harness plugin parity](guides/guide-harness-plugin-parity.md) | Match skills, plugins, MCP servers and hooks across harnesses |
+| [Herdr](guides/guide-herdr-setup.md) and [Tailscale](guides/guide-tailscale-setup.md) | Run many agents with status, and reach them and their MCP servers from a phone or another machine |
 | [Harness capability map](reference/reference-harness-capability-map.md) | Compare what each harness supports |
 | [OSS repository standard](reference/reference-oss-standards.md) | Set up community files, pinned workflows and branch protection |
 
