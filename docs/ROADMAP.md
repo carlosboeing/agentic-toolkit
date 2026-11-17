@@ -9,7 +9,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 ## Next actions
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
-- **Codex Mermaid validation.** Adapt `validate-mermaid` to Codex's `PostToolUse` hook, which can return feedback after an edit, and test it before enabling it.
+- **Hook parity across harnesses, Codex first.** [Issue 44](https://github.com/carlosboeing/agentic-toolkit/issues/44).
 - **RTK rewrite hook for Grok Build.** Grok's bundled hook reference documents `updatedInput`, and RTK's Claude processor cannot read Grok's camelCase payload. Test a mapping wrapper once the Grok account can run a session.
 
 ## Future considerations
