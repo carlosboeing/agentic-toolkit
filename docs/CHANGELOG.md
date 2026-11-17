@@ -2,6 +2,15 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-18: stale working-memory records after a merge
+
+- `housekeep check`, which runs after every merge or pull, now also lists working-memory records that refer to a merged pull request and last changed before the merge. A record matches on the pull request URL, `owner/repo#N`, the head branch, or a path the merge changed. A linked design, plan or requirements record still in progress also shows "status not shipped". The list is a report: it edits nothing and blocks nothing.
+- Record folders are found by any name: the `housekeep.recordRoot` git setting, the Project Map `Working memory` line, or any top-level folder holding a lifecycle folder, such as `docs/` or `.docs/` in the same repository, or a nested private repository.
+- Add `housekeep records <n>...` and `/housekeeping records <n>` to sweep named pull requests again after edits, or after a merge on GitHub with no local pull.
+- The global brief now asks for the pull request URL in each record it delivers, and for each listed record to be resolved after a merge.
+- Refresh this repository's own `scripts/githooks/housekeep`, which had fallen behind the canonical drift-guard copy and lacked `audit` and `fix`.
+- See [the drift-guard README](../git-hooks/drift-guard/README.md#what-the-merge-check-lists-in-working-memory-records).
+
 ## 2026-11-18: keep a Mac awake for remote sessions
 
 - Add [`scripts/mac-stay-awake.sh`](../scripts/mac-stay-awake.sh) with `on`, `off` and `status`. `on` saves the current AC sleep timer before it sets it to never, and `off` restores that value, so turning it back is one command. Display sleep, battery settings and lid sleep are unchanged.

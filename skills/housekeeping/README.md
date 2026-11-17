@@ -7,7 +7,8 @@ Finds the local branches and worktrees that merged pull requests left behind, an
 | Command | What it does |
 |---|---|
 | `/housekeeping` or `/housekeeping audit` | Checks every local branch and worktree against its GitHub pull request, and reports what is safe to remove. Changes nothing. |
-| `/housekeeping check` | Reports what the last pull (`ORIG_HEAD..HEAD`) left behind, plus stale remote references |
+| `/housekeeping check` | Reports what the last pull (`ORIG_HEAD..HEAD`) left behind, plus stale remote references and working-memory records older than the merged pull requests |
+| `/housekeeping records <n>` | Lists working-memory records that refer to merged pull request `<n>` and changed before it merged. Changes nothing. See [the drift-guard README](../../git-hooks/drift-guard/README.md#what-the-merge-check-lists-in-working-memory-records) |
 | `/housekeeping fix` | Fetches from origin, checks each candidate again, then removes the worktree and local branch and prunes stale remote references |
 
 ```mermaid
