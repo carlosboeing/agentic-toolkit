@@ -2,6 +2,13 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-16: Google Gemini API and Vertex AI guide
+
+- Add [`guides/guide-google-gemini-api-and-vertex-ai.md`](../guides/guide-google-gemini-api-and-vertex-ai.md) and index it in [`guides/README.md`](../guides/README.md).
+- Document the differences between the Gemini Developer API (Google AI Studio) and Vertex AI across coding harnesses, OpenCode multi-account configurations, standalone agents, and CI/CD (Workload Identity / OIDC).
+- Record current billing and credit rules (checked 2026-11-16), including Google AI Pro monthly Google Developer Program credits, AI Studio Prepay activation requirements, and the November 16, 2026 Google Cloud Free Trial exclusions for Vertex AI and AI Studio.
+- Add step-by-step troubleshooting for ADC Workspace session expiration (`Missing auth credential`) and Vertex Pay-as-you-go Dynamic Shared Quota `429 Resource exhausted` errors.
+
 ## 2026-11-15: your own Chrome profile for agents
 
 - Add the `browser-profile` skill and its helper. A request such as "using my work Chrome profile" resolves through a machine-local alias file to one Chrome profile, and the Playwright CLI connects to it through the Playwright extension. Each connection waits for the Allow click in Chrome. The helper stores and accepts no extension token. The skill covers any page in the profile, public or private: a login is one reason to use it, not a condition.
