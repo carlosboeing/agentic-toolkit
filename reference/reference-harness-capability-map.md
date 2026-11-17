@@ -46,7 +46,7 @@ Reads `AGENTS.md` for instructions and `~/.agents/skills` for skills. `~/.codex/
 
 ## Antigravity
 
-Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/.gemini/config/skills`. The command-line tool also documents `~/.gemini/antigravity-cli/skills`, which the synchronizer does not link. Antigravity stops reading instructions after 24,023 characters. Some plugins come bundled. Models are chosen by hand with `/model`. RTK rewrites commands through its own plugin, installed with `rtk init -g --agent antigravity`. See the [Antigravity model and quota guide](../guides/guide-agy-model-and-quota-selection.md).
+Google's agent, with an IDE and a command-line tool, `agy`. Skills load from `~/.gemini/config/skills`. The command-line tool also documents `~/.gemini/antigravity-cli/skills`, which the synchronizer does not link. Antigravity truncates any rule file over 24,000 bytes, and all always-on rules share a 20,000-token budget; past the budget, the largest files are replaced by a path-and-description pointer ([rules docs](https://antigravity.google/docs/rules), checked 2026-11-17). Some plugins come bundled. Models are chosen by hand with `/model`. RTK rewrites commands through its own plugin, installed with `rtk init -g --agent antigravity`. See the [Antigravity model and quota guide](../guides/guide-agy-model-and-quota-selection.md).
 
 ## Kimi Code (recorded 2026-07-28)
 

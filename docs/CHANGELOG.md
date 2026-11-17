@@ -16,6 +16,7 @@ All notable changes to this project are recorded here, newest first.
 - Add the skim test and the visual check to `start-review` and `penmark-comments`. The pinned Penmark format contract is unchanged.
 - Reduce sections 5.7 and 5.9 of the conventions guide to the Mermaid default and the mockup steps, linking to the new section. Point both project templates and the guides index at it.
 - Merge the global brief's Mermaid section into its documentation block and add the render command. The UI mockup and human-readability rules keep their wording. The brief is 23,991 bytes.
+- Correct the recorded Antigravity limit from 24,023 characters to the documented 24,000 bytes per rule file, plus the 20,000-token budget shared by always-on rules.
 
 ## 2026-11-17: Herdr and Tailscale guides
 

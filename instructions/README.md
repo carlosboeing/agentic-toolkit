@@ -41,7 +41,7 @@ Each path must resolve to `instructions/CLAUDE.md`. A broken link leaves a harne
 - **A change applies to every harness.** Limit a rule to one harness only when it is specific to that harness, and label the section.
 - **Use wording that is not specific to one harness.**
 - **Leave out installer steps for individual harnesses.**
-- **Watch the size.** Antigravity stops reading at 24,023 characters. Check with `wc -c instructions/CLAUDE.md` before committing a large addition.
+- **Watch the size.** Antigravity truncates any rule file over 24,000 bytes, and all its always-on rules share a 20,000-token budget ([rules docs](https://antigravity.google/docs/rules), checked 2026-11-17). Check with `wc -c instructions/CLAUDE.md` before committing a large addition.
 - **Keep only lines that prevent mistakes.** For every line, ask whether removing it would cause the agent to make a mistake. If not, remove it.
 
 ## CopyDesk's block
