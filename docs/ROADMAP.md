@@ -8,6 +8,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 
 ## Next actions
 
+- **Review the stale-record check (2026-12-02).** Read `housekeep-records.log` in each repository that merged pull requests, and re-run `housekeep records <n>` to see which listed records were edited. Decide from the numbers: keep as it is, follow `related` links when too few real problems are found, or tighten path matching when false alarms dominate. See [the drift-guard README](../git-hooks/drift-guard/README.md#what-the-merge-check-lists-in-working-memory-records).
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
 - **Hook parity across harnesses, Codex first.** [Issue 44](https://github.com/carlosboeing/agentic-toolkit/issues/44).
 - **RTK rewrite hook for Grok Build.** Grok's bundled hook reference documents `updatedInput`, and RTK's Claude processor cannot read Grok's camelCase payload. Test a mapping wrapper once the Grok account can run a session.

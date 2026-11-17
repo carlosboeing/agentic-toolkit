@@ -139,7 +139,9 @@ A root can be a folder in the same repository or a nested independent repository
 
 A bare "PR 46" does not match, because it is ambiguous across repositories. Write the full URL into a record when its pull request opens.
 
-A record is current when its last commit is at or after the merge commit, or when it has uncommitted edits. Files under `assets/` and `notes/pre-publication-snapshots/` are skipped. A listed design, plan or requirements record that links the pull request and is still `draft`, `approved` or `in-progress` also shows "status not shipped". A design can span several pull requests, so treat that as a prompt.
+A record is current when its last commit is at or after the merge commit, or when it has uncommitted edits. Files under `assets/` and `notes/pre-publication-snapshots/` are skipped. A record whose status is `shipped`, `resolved`, `superseded` or `abandoned` and that only names a changed path or the branch is skipped and counted, because it describes past work; one that links the pull request is still listed. A listed design, plan or requirements record that links the pull request and is still `draft`, `approved` or `in-progress` also shows "status not shipped". A design can span several pull requests, so treat that as a prompt.
+
+After a merge, `check` also appends one tab-separated line per pull request to `housekeep-records.log` in the repository's Git directory: time, repository, pull request, records listed, closed records skipped, and the listed paths. The log is local and never committed. Re-runs with `records` do not add to it. To see which listed records were edited afterwards, run `housekeep records <n>` again: an edited record drops off the list.
 
 Output:
 

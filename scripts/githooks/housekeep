@@ -969,7 +969,7 @@ cmd_check() { # cmd_check -> always exits 0; it reports, it never refuses
 
   [ -s "$findings_tmp" ] && cat "$findings_tmp"
   rm -f "$findings_tmp"
-  [ -s "$sweep_list" ] && HOUSEKEEP_GH_MISSING="$gh_missing" _sweep_records "$sweep_list"
+  [ -s "$sweep_list" ] && HOUSEKEEP_GH_MISSING="$gh_missing" _sweep_records "$sweep_list" log
   rm -f "$sweep_list"
 
   if ! git remote prune --dry-run origin >/dev/null 2>&1; then
@@ -1215,9 +1215,10 @@ _merge_commit_for() { # _merge_commit_for <n> [range] -> the commit whose subjec
   git log --format='%H %s' "${2:-HEAD}" 2>/dev/null | grep -m1 -E " \(#$1\)\$" | cut -d' ' -f1
 }
 
-_sweep_records() { # _sweep_records <file of "n|commit|branch" lines> -> prints the records block
-  local list="$1" roots repo top default n commit branch keys when t root src
-  local cands f why label doctype status shown listed=0 stale_total=0 changed count
+_sweep_records() { # _sweep_records <file of "n|commit|branch" lines> [log] -> prints the records block
+  # With "log", append one line per pull request to the local sweep log.
+  local list="$1" log_to="${2:-}" pr_listed pr_closed pr_paths log_file roots repo top default n commit branch keys when t root src
+  local cands f why label doctype status shown listed=0 stale_total=0 changed count closed=0
   roots="$(_record_roots)"
   if [ -z "$roots" ]; then
     printf '  record roots: none found (set git config housekeep.recordRoot <path>)\n'
@@ -1263,7 +1264,7 @@ INNER
     fi
     [ -s "$keys" ] || continue
 
-    shown=0
+    shown=0; pr_listed=0; pr_closed=0; pr_paths=""
     while IFS='|' read -r root src; do
       [ -d "$root" ] || continue
       cands="$(_record_files "$root" | xargs -0 grep -lF -f "$keys" 2>/dev/null || true)"
@@ -1285,7 +1286,13 @@ INNER
         t="$(_last_change "$f")"
         [ "$t" = "now" ] && continue
         [ -n "$t" ] && [ -n "$when" ] && [ "$t" -ge "$when" ] && continue
-        doctype="$(_scalar_field "$f" type)"; status="$(_scalar_field "$f" status)"
+        status="$(_scalar_field "$f" status)"
+        # A closed record that only names a path or branch describes past
+        # work; a later change to that file does not make it false.
+        if [ "$why" != "links the PR" ]; then
+          case "$status" in shipped|resolved|superseded|abandoned) closed=$((closed + 1)); pr_closed=$((pr_closed + 1)); continue ;; esac
+        fi
+        doctype="$(_scalar_field "$f" type)"
         if [ "$shown" -eq 0 ]; then
           printf '  records older than pull request %s%s:\n' "$n" "${branch:+ ($branch)}"
           shown=1
@@ -1297,7 +1304,7 @@ INNER
           why="$why, status not shipped"
         fi
         printf '    %s  %s: %s\n' "${f#./}" "$label" "$why"
-        listed=$((listed + 1))
+        listed=$((listed + 1)); pr_listed=$((pr_listed + 1)); pr_paths="$pr_paths ${f#./}"
       done <<INNER
 $cands
 INNER
@@ -1305,8 +1312,14 @@ INNER
 $roots
 INNER
     [ "$shown" -eq 1 ] && stale_total=1
+    if [ -n "$log_to" ]; then
+      log_file="${HOUSEKEEP_RECORD_LOG:-$(git rev-parse --git-common-dir 2>/dev/null)/housekeep-records.log}"
+      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${repo:-unknown}" "$n" \
+        "$pr_listed" "$pr_closed" "${pr_paths# }" >> "$log_file" 2>/dev/null || true
+    fi
   done < "$list"
   rm -f "$keys"
+  [ "$closed" -gt 0 ] && printf '  skipped %s closed records (shipped, resolved, superseded or abandoned) that only name a path or branch\n' "$closed"
   if [ "$stale_total" -eq 1 ]; then
     printf '  edit each record, or leave it when it is still true, then: housekeep records %s\n' \
       "$(cut -d'|' -f1 "$list" | tr '\n' ' ' | sed 's/ $//')"
