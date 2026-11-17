@@ -15,7 +15,7 @@ All notable changes to this project are recorded here, newest first.
 - State each minimum and the quality bar in the brainstorm, research, requirements, design, planning and retrospective skills. Installed skills cannot follow a relative link into `guides/`, so each one carries the rule and the guide's URL. The design and plan contract examples now show their diagrams.
 - Add the skim test and the visual check to `start-review` and `penmark-comments`. The pinned Penmark format contract is unchanged.
 - Reduce sections 5.7 and 5.9 of the conventions guide to the Mermaid default and the mockup steps, linking to the new section. Point both project templates and the guides index at it.
-- Merge the global brief's documentation and Mermaid sections into one block with the render command. The brief is 102 bytes smaller.
+- Merge the global brief's Mermaid section into its documentation block and add the render command. The UI mockup and human-readability rules keep their wording. The brief is 23,991 bytes.
 
 ## 2026-11-17: Herdr and Tailscale guides
 

@@ -55,7 +55,7 @@ Keep consequential rationale and disagreements. Put decisions in the relevant te
 
 ## Use visuals that carry a claim
 
-A reviewer reads structure faster than prose. Use a diagram or table wherever the content has parts, steps, options or states. The table and quality bar below apply to every technical document; the minimums apply to the lifecycle documents listed.
+A reviewer reads structure faster than prose. Use section headers, bullet lists for parallel items and tables for enumerable facts. Long unbroken text is a smell; if a section cannot be skimmed, restructure it. Use a diagram or table wherever the content has parts, steps, options or states. The table and quality bar below apply to every technical document; the minimums apply to the lifecycle documents listed.
 
 Draw diagrams as Mermaid code in the Markdown file, so they diff, render on GitHub and move with the document. Use an image file only when Mermaid cannot express the content, such as a UI layout. [Project structure and conventions](guide-project-structure-and-conventions.md) sections 5.7 and 5.9 cover the Mermaid default and the HTML-to-PNG mockup steps.
 

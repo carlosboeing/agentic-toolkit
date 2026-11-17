@@ -72,10 +72,10 @@ Ask only for these: an action you cannot undo (delete, publish, merge, money, cr
 
 ### Documentation
 
-- Use a diagram or table wherever content has parts, steps, options or states. Draw diagrams in Mermaid. Follow "Use visuals that carry a claim" in `agentic-toolkit/guides/guide-lifecycle-documentation.md`: visual per content, quality bar, minimum per doc type.
-- **UI concepts:** single-file HTML mockup in the doc's `assets/` folder, Playwright PNGs in light and dark, commit HTML and PNGs, embed the PNGs.
+- Write docs for human readability: section headers, bullet lists, data tables, and Mermaid diagrams. Follow "Use visuals that carry a claim" in `agentic-toolkit/guides/guide-lifecycle-documentation.md`.
+- **Illustrate UI/UX concepts.** Build a single-file HTML mockup in the doc's `assets/` directory (e.g. `docs/3-design/assets/<YYYY-MM-DD>-<topic>/concept.html`). Capture headless screenshots via Playwright (light and dark modes), commit HTML and PNG together, and embed relative PNG links.
 - Keep one `assets/` folder per lifecycle directory. Subfolders are dated inside numbered lifecycle directories and undated in evergreen directories.
-- **Mermaid checks:** Claude Code and OpenCode validate on write. Elsewhere run `jq -n --arg path "<file>" '{tool_input: {file_path: $path}}' | ~/.claude/hooks/validate-mermaid.sh`. Then render with `mmdc -i <doc.md> -o <dir>/r.md -e png -s 2` into an existing `<dir>` and look at each PNG. No `;` in labels, no leading `+`/`-` in sequence messages, quote labels with `()[]{}|`, no hardcoded colors or pinned themes.
+- **Mermaid:** Claude Code and OpenCode validate on write. Elsewhere, right after writing a block, run `jq -n --arg path "<file>" '{tool_input: {file_path: $path}}' | ~/.claude/hooks/validate-mermaid.sh`. Then render: `mmdc -i <doc.md> -o <dir>/r.md -e png` and view each PNG. No `;` in labels, no leading `+`/`-` in sequence messages, quote labels with `()[]{}|`, no hardcoded colors or pinned themes.
 
 ### Documentation frontmatter (working-memory docs)
 

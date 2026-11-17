@@ -648,7 +648,7 @@ The canonical scaffold lives in [`templates/default-project/CLAUDE.md`](../templ
 
 ### 5.9 Readable docs and illustrations (HTML → PNG mockups)
 
-Docs are written for humans first. [Use visuals that carry a claim](guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim) sets which visual to use, the quality bar and the minimum per document type. This section covers the mockup steps for content Mermaid cannot express.
+Docs are written for humans first. [Use visuals that carry a claim](guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim) sets the structure rules, which visual to use, the quality bar and the minimum per document type. This section covers the mockup steps for content Mermaid cannot express.
 
 **Illustrate, don't just describe.** When a doc discusses anything visual — UI/UX mockups, hi-fi concepts, screenshot examples, before/after UI comparisons — embed images:
 
