@@ -34,7 +34,7 @@ authors:
 
 ## User journeys
 
-<Important user journeys and their purpose. Combine with scope for a short brief; omit when not useful.>
+<Important user journeys and their purpose. Combine with scope for a short brief; omit when not useful. Show a journey with branches as a flowchart. Draw diagrams in Mermaid. Each visual follows a sentence that states its claim, shows one idea in about 12 nodes or fewer, and is rendered and inspected before commit; see the [visuals rules](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim).>
 
 ## Requirements and acceptance criteria
 

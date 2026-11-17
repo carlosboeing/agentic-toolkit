@@ -2,7 +2,7 @@
 
 A rule is a short instruction file that a harness adds to the agent's system prompt, to guide tool use without editing the main instruction file.
 
-Nothing in this directory is installed by default. Every rule loaded globally reaches every session in every harness, and together they pushed the combined instructions past Antigravity's 24,023-character limit. The files stay here so a rule can be installed again if one ever needs to load on every session.
+Nothing in this directory is installed by default. Every rule loaded globally reaches every session in every harness, and together they pushed the combined instructions past what Antigravity would read. The files stay here so a rule can be installed again if one ever needs to load on every session.
 
 ## Catalog
 
@@ -21,7 +21,7 @@ Nothing in this directory is installed by default. Every rule loaded globally re
 
 ## Installing rules globally
 
-Do this only if a rule must load on every session. Afterwards, check that the global instruction file plus the rules stay under 24,023 characters.
+Do this only if a rule must load on every session. Afterwards, check that each file stays under 24,000 bytes and that the global instruction file plus the rules fit Antigravity's 20,000-token budget for always-on rules ([rules docs](https://antigravity.google/docs/rules), checked 2026-11-17).
 
 ```bash
 mkdir -p ~/.claude

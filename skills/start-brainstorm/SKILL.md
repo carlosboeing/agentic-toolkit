@@ -56,6 +56,8 @@ For a vague new product, feature, or capability that needs exploration, save a b
 
 The brainstorm records the problem and audience, goal and exclusions, constraints and evidence, options with trade-offs, settled points with reasons, open questions, and discovery links. A recommendation stays marked as one until the user accepts it or it is resolved under an explicit delegation. When resuming, record an explicit current-session change instead of rewriting the source silently.
 
+Show current versus proposed as two diagrams with the same layout or a two-column table. If the comparison adds nothing, put one sentence in its place saying why. Draw diagrams in Mermaid. Each visual follows a sentence that states its claim, shows one idea in about 12 nodes or fewer, and is rendered and inspected before commit; see the [visuals rules](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim).
+
 A pasted prior-session kickoff is context. If its rule conflicts with a reviewed source or project instructions, ask once whether to adopt it, unless the user already did. It adds no requirements, task counts, or review gates.
 
 Completion: a fresh reader can tell accepted decisions, recommendations, assumptions, and open questions apart.

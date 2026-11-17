@@ -72,9 +72,10 @@ Ask only for these: an action you cannot undo (delete, publish, merge, money, cr
 
 ### Documentation
 
-- Write docs for human readability: section headers, bullet lists, data tables, and Mermaid flow diagrams.
+- Write docs for human readability: section headers, bullet lists, data tables, and Mermaid diagrams. Follow "Use visuals that carry a claim" in `agentic-toolkit/guides/guide-lifecycle-documentation.md`.
 - **Illustrate UI/UX concepts.** Build a single-file HTML mockup in the doc's `assets/` directory (e.g. `docs/3-design/assets/<YYYY-MM-DD>-<topic>/concept.html`). Capture headless screenshots via Playwright (light and dark modes), commit HTML and PNG together, and embed relative PNG links.
 - Keep one `assets/` folder per lifecycle directory. Subfolders are dated inside numbered lifecycle directories and undated in evergreen directories.
+- **Mermaid:** Claude Code and OpenCode validate on write. Elsewhere, right after writing a block, run `jq -n --arg path "<file>" '{tool_input: {file_path: $path}}' | ~/.claude/hooks/validate-mermaid.sh`. Then render: `mmdc -i <doc.md> -o <dir>/r.md -e png` and view each PNG. No `;` in labels, no leading `+`/`-` in sequence messages, quote labels with `()[]{}|`, no hardcoded colors or pinned themes.
 
 ### Documentation frontmatter (working-memory docs)
 
@@ -107,13 +108,6 @@ Scale gate and task counts to artifact blast radius rather than skill defaults.
 - Prose and documentation plans default to ~3 tasks under `start-implementation` with one review gate on the integrated diff.
 - Escalate to more tasks or per-task review only when blast radius warrants it.
 - **Mark plan checkboxes as you execute.** Update `- [ ]` to `- [x]` in the durable plan file as each task finishes.
-
-### Diagrams (Mermaid)
-
-- **Claude Code:** Validates Mermaid blocks automatically via `PostToolUse` (`validate-mermaid.sh`).
-- **Non-Claude Harnesses (Antigravity/Agy, Codex, Kimi Code, Cursor, Grok):** Manually run validator script immediately after writing Mermaid blocks:
-  `jq -n --arg path "<file-path>" '{tool_input: {file_path: $path}}' | ~/.claude/hooks/validate-mermaid.sh`
-- **Syntax rules:** No `;` in labels, no leading `+`/`-` in sequence messages, quote labels with `()[]{}|`, no hardcoded colors or pinned themes.
 
 ### Git
 

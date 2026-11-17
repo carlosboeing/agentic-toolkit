@@ -9,7 +9,7 @@ This is the forward view of Agentic Toolkit: what is being worked on, what comes
 ## Next actions
 
 - **Penmark anchors that survive Markdown formatters.** A formatter that runs on save can move a Penmark block comment away from the block it targets. Anchor block comments to the next non-blank Markdown block, and add formatter-survival tests.
-- **Codex Mermaid validation.** Adapt `validate-mermaid` to Codex's `PostToolUse` hook, which can return feedback after an edit, and test it before enabling it.
+- **Hook parity across harnesses, Codex first.** [Issue 44](https://github.com/carlosboeing/agentic-toolkit/issues/44).
 - **RTK rewrite hook for Grok Build.** Grok's bundled hook reference documents `updatedInput`, and RTK's Claude processor cannot read Grok's camelCase payload. Test a mapping wrapper once the Grok account can run a session.
 
 ## Future considerations
@@ -36,6 +36,7 @@ None at the moment.
 ## Recently shipped
 
 - **Keep a Mac awake for remote sessions (2026-11-18).** `scripts/mac-stay-awake.sh on` stops idle sleep on AC power and saves the old timer, and `off` restores it. See the [Tailscale guide](../guides/guide-tailscale-setup.md#turn-idle-sleep-off-and-on-again-with-the-toolkit-script).
+- **Visual standards for technical docs (2026-11-17).** Agents use Mermaid diagrams and tables where content has parts, steps, options or states. Each phase skill states its document type's minimum visual, or asks for one sentence saying why it adds nothing, and review checks both. Agents render each diagram and look at it before commit. See [Use visuals that carry a claim](../guides/guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim).
 - **Herdr and Tailscale guides (2026-11-17).** Run many agents in terminals that stay alive and show their status, from a native window or a terminal, on local and remote machines, with a phone app and agents that start other agents. Reach those machines and their MCP servers over a private network with SSH, Serve and Funnel. Both guides cover common uses, how each tool fits the toolkit, and alternatives. See the [Herdr guide](../guides/guide-herdr-setup.md) and the [Tailscale guide](../guides/guide-tailscale-setup.md).
 - **Google Gemini API and Vertex AI guide (2026-11-16).** Compare the Gemini Developer API (Google AI Studio) and Vertex AI across coding harnesses, OpenCode multi-account setups, Google Cloud credits and free-trial rules, standalone agents, CI/CD, and troubleshooting (`Missing auth credential` and DSQ `429`). See [the Gemini and Vertex guide](../guides/guide-google-gemini-api-and-vertex-ai.md).
 - **Your own Chrome profile for agents (2026-11-15).** Ask an agent in ordinary words to work in one of your Chrome profiles, on any page, in its visible window. The `browser-profile` skill connects through the Playwright extension, and your Allow click in Chrome confirms each connection. No token is stored. The [browser guide](../guides/guide-browser-automation-mcp-vs-cli.md#your-own-chrome-profile) replaces the WebBridge route.

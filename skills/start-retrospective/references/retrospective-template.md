@@ -26,7 +26,7 @@ authors:
 
 ## Outcomes and evidence
 
-<Expected versus observed outcomes, with sources. Review prior improvement actions when relevant. Distinguish observations, hypotheses, confirmed contributing factors and unknowns.>
+<Expected versus observed outcomes, with sources. Review prior improvement actions when relevant. Distinguish observations, hypotheses, confirmed contributing factors and unknowns. An expected-versus-observed table suits this section. Draw diagrams in Mermaid. Each visual follows a sentence that states its claim, shows one idea in about 12 nodes or fewer, and is rendered and inspected before commit; see the [visuals rules](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim).>
 
 ## What went well
 

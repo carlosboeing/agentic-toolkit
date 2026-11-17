@@ -48,7 +48,7 @@ authors:
 
 ## Dependencies and integration
 
-<Order, shared files/state, isolation, integration owner and integration responsibilities. A dependency DAG alone does not establish safe parallelism. A linear sequence needs no diagram.>
+<Order, shared files/state, isolation, integration owner and integration responsibilities. A dependency DAG alone does not establish safe parallelism. Add a dependency diagram when task order is not linear; a linear sequence needs none. Draw diagrams in Mermaid. Each visual follows a sentence that states its claim, shows one idea in about 12 nodes or fewer, and is rendered and inspected before commit; see the [visuals rules](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim).>
 
 ## Verification and requirement coverage
 

@@ -564,6 +564,8 @@ Why Mermaid:
 
 Fall back to other tools (draw.io, Excalidraw) only when Mermaid genuinely can't represent what you need. Commit both source and rendered output if you do.
 
+Which visual to use, its quality bar, the minimum per document type and the render check are in [Use visuals that carry a claim](guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim).
+
 ### 5.8 `## Project Map` section in CLAUDE.md
 
 CLAUDE.md should declare where project-tracking information lives, so AI tools can read it without guessing. The canonical consumer is the [`/briefing`](../skills/briefing/) skill — it auto-discovers state across git, GitHub, the canonical `docs/` working-memory layout, and any tracker source declared here.
@@ -646,9 +648,9 @@ The canonical scaffold lives in [`templates/default-project/CLAUDE.md`](../templ
 
 ### 5.9 Readable docs and illustrations (HTML → PNG mockups)
 
-Docs in `docs/` — designs, plans, brainstorms, discovery, reviews, retros — are written for humans first. Structure over prose: section headers, bullet points, tables for enumerable facts, Mermaid for flows/architecture/sequences (§5.7). Long unbroken text is a smell; if a section can't be skimmed, restructure it.
+Docs are written for humans first. [Use visuals that carry a claim](guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim) sets the structure rules, which visual to use, the quality bar and the minimum per document type. This section covers the mockup steps for content Mermaid cannot express.
 
-**Illustrate, don't just describe.** When a doc discusses anything visual — UI/UX mockups, hi-fi concepts, screenshot examples, before/after comparisons — embed images:
+**Illustrate, don't just describe.** When a doc discusses anything visual — UI/UX mockups, hi-fi concepts, screenshot examples, before/after UI comparisons — embed images:
 
 1. Build a **self-contained single-file HTML mockup** (inline CSS, no build step, no external files) in the doc's `assets/` set — e.g. `docs/3-design/assets/2026-07-31-<topic>/concept.html`, per §5.10. Single-file keeps it git-native, openable in any browser, and editable by AI in one pass. Include a light/dark toggle when theming is part of the design.
 2. **Screenshot it headlessly** with Playwright or a similar tool, one PNG per state or theme that matters. If Playwright MCP blocks `file://` URLs, start it with `--allow-unrestricted-file-access` (see the [browser automation guide](guide-browser-automation-mcp-vs-cli.md)) rather than running a local web server.
