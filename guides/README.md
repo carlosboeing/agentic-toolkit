@@ -12,8 +12,6 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 | [`guide-new-machine-setup.md`](guide-new-machine-setup.md) | Set up the shared instructions, skill hub, hooks, plugins and OpenCode configuration on a new machine |
 | [`guide-rtk-setup.md`](guide-rtk-setup.md) | Install RTK and choose between automatic hooks and explicit `rtk` prefixes for each harness |
 | [`guide-claude-mem-setup.md`](guide-claude-mem-setup.md) | Install and check claude-mem session memory |
-| [`guide-herdr-setup.md`](guide-herdr-setup.md) | Choose between the Herdr app and Herdr TUI, install them, and set up agent status, remote machines and the phone app |
-| [`guide-tailscale-setup.md`](guide-tailscale-setup.md) | Reach the computer that runs your agents from a phone or laptop over Tailscale and SSH, and keep it reachable |
 | [`guide-agent-memory-selection.md`](guide-agent-memory-selection.md) | Choose capture and retrieval behavior, an observer model, or a local memory alternative |
 | [`guide-trimming-claude-code-startup-context.md`](guide-trimming-claude-code-startup-context.md) | Measure and reduce how much context Claude Code uses before your first message |
 
@@ -28,6 +26,13 @@ Step-by-step guides for setting up and working with AI coding harnesses. Each gu
 | [`guide-browser-automation-mcp-vs-cli.md`](guide-browser-automation-mcp-vs-cli.md) | Choose between Playwright MCP, the Playwright CLI and your own Chrome profile |
 | [`guide-google-gemini-api-and-vertex-ai.md`](guide-google-gemini-api-and-vertex-ai.md) | Choose between the Gemini Developer API and Vertex AI, manage credits and multi-account OpenCode profiles, and deploy standalone agents or CI |
 | [`guide-qmd-smoke-tests.md`](guide-qmd-smoke-tests.md) | Check project search scope, automatic searches across repositories and current-source verification |
+
+### Running and reaching agents
+
+| Guide | Use it to |
+|---|---|
+| [`guide-herdr-setup.md`](guide-herdr-setup.md) | Run many agents in terminals that stay alive and show their status; covers the Herdr app and TUI, remote machines, the phone app, agents that start other agents, and alternatives |
+| [`guide-tailscale-setup.md`](guide-tailscale-setup.md) | Reach your agents' machines and MCP servers from a phone or laptop over a private network; covers SSH, Serve, Funnel, keeping a host awake, and alternatives |
 
 ### Project practices
 
