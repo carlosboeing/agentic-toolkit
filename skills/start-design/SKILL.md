@@ -64,13 +64,13 @@ For bounded work, present a short design in chat: intent, approach, affected sur
 
 Write a design file when the user asks, or when the work records a decision worth keeping, needs review across people or sessions, or is large, risky, or complex. When unsure, write the file.
 
-Write the file in one pass, using the contract and project presentation. Link the sources that supply decisions or evidence. For each consequential prior decision, state whether the design preserves it, changes it under identified authority, excludes it with a reason, or leaves it unresolved. Unauthorized consequential changes block affected work. Record the selected approach, alternatives and trade-offs, architecture, consequential interfaces and invariants, failure behaviour, acceptance criteria, and checked assumptions. Add a diagram when it makes branching behaviour or component boundaries easier to review. Give exact schemas only where they fix a consequential contract.
+Write the file in one pass, using the contract and project presentation. Link the sources that supply decisions or evidence. For each consequential prior decision, state whether the design preserves it, changes it under identified authority, excludes it with a reason, or leaves it unresolved. Unauthorized consequential changes block affected work. Record the selected approach, alternatives and trade-offs, architecture, consequential interfaces and invariants, failure behaviour, acceptance criteria, and checked assumptions. Show a context diagram of the components and their boundaries, and a diagram of the main flow; for one that adds nothing, put one sentence in its place saying why. Give exact schemas only where they fix a consequential contract.
 
 An open question that changes implementation stays visible and blocks planning of that part. Do not hide it behind an invented default.
 
 ### 5. Self-review, present, and stop
 
-Check every contract answer against the source scope and settled decisions, and remove unexplained placeholders. Run the project's document checks, including diagram validation.
+Check every contract answer against the source scope and settled decisions, and remove unexplained placeholders. Run the project's document checks, including diagram validation, then render each diagram and look at it.
 
 **Builder check.** When a worker is available and delegation authorized, give the design to a fresh worker with the instruction to read it as the person who must build it and report everything it would have to guess. Fix what it finds or record it as open. Otherwise do one serial pass in that role yourself.
 

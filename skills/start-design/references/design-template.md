@@ -30,7 +30,7 @@ authors:
 
 ## Proposed design
 
-<Selected solution, component responsibilities, important flows and relevant architecture views. Include diagrams when helpful.>
+<Selected solution, component responsibilities, important flows and relevant architecture views. Minimum: a context diagram of components and boundaries and a diagram of the main flow, or one sentence in place of each saying why it adds nothing. Draw diagrams in Mermaid. Each visual follows a sentence that states its claim, shows one idea in about 12 nodes or fewer, and is rendered and inspected before commit; see the [visuals rules](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim).>
 
 ### Interfaces and data
 

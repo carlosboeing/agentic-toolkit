@@ -26,7 +26,7 @@ Content decides only in case 3, where the user did not say what to review. Never
 
 ## Workflow
 
-1. Read the entire target and any source or comparison documents. Form the findings. Write nothing yet.
+1. Read the entire target and any source or comparison documents. Form the findings. For a technical document, include the readability and visuals check in the [visuals rules](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim). Write nothing yet.
 2. Resolve the output surface using the first rule that matches:
    1. The request explicitly asks for inline or Penmark comments — use the file.
    2. The request explicitly refuses them — use chat. Only these count: "don't add comments", "no inline comments", "don't comment on the doc", "no penmark", "don't use penmark-comments", "findings in chat only", "chat-only".

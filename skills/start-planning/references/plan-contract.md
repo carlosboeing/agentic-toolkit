@@ -74,7 +74,7 @@ These synthetic excerpts illustrate the default headings at different depths. Ap
 
 ### Substantial scope
 
-```markdown
+````markdown
 # Plan: split the settings store
 
 ## Delivery scope and source baseline
@@ -92,6 +92,16 @@ src/settings.py reads a single global file; tests/test_settings.py covers parsin
 - S3: document recovery. Depends on: S1. Verification: no executable test fits; proof is a reviewer following the recovery steps on a disposable copy. Acceptance: recovery restores a broken file.
 - S4: remove the write path for the global file. Depends on: S2, S3. Verification: python3 -m unittest tests.test_settings plus one fixture asserting a global write is refused. Acceptance: writes go to project files only.
 
+S4 waits for both S2 and S3, which each need only S1.
+
+```mermaid
+flowchart LR
+    S1["S1 per-project files"] --> S2["S2 migrate data"]
+    S1 --> S3["S3 document recovery"]
+    S2 --> S4["S4 remove global writes"]
+    S3 --> S4
+```
+
 ## Verification and requirement coverage
 
 Integrated verification: full unittest run and the migration fixture. Coverage: R1 -> S1, S2; R2 -> S3; R3 -> S4. Milestone: one PR for review. Release classification: minor, per the project's SemVer policy.
@@ -99,7 +109,7 @@ Integrated verification: full unittest run and the migration fixture. Coverage: 
 ## Execution boundaries
 
 Checkpoints: verified code commits at authorized delivery milestones. Non-repeatable effects: S2's migration. Halt conditions: migration dry-run mismatches. Forbidden actions: deleting the global read path. Integration owner: the controller session.
-```
+````
 
 ### Compact scope
 

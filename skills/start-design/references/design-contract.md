@@ -32,7 +32,7 @@ Research is proportional to uncertainty. Verify platform, API, security, perform
 
 For software, identify the interface through which acceptance can be observed. Prefer an existing interface and explain any new one needed for proof. For documentation or process changes, name a concrete alternative such as a reader walkthrough. The design defines what must be proved; the plan later fixes execution tasks and commands.
 
-Compare materially different interface choices when the choice changes caller obligations or has substantial cost to reverse. Routine naming, helper structure, and incidental file choices can remain with implementation. Diagrams are useful when they clarify branching flows or component boundaries; neither a diagram nor a fixed number of alternatives is mandatory.
+Compare materially different interface choices when the choice changes caller obligations or has substantial cost to reverse. Routine naming, helper structure, and incidental file choices can remain with implementation. A design shows a context diagram of components and boundaries and a diagram of the main flow, or one sentence in place of each saying why it adds nothing. Draw diagrams in Mermaid. Each visual follows a sentence that states its claim, shows one idea in about 12 nodes or fewer, and is rendered and inspected before commit; see the [visuals rules](https://github.com/carlosboeing/agentic-toolkit/blob/main/guides/guide-lifecycle-documentation.md#use-visuals-that-carry-a-claim). No fixed number of alternatives is mandatory.
 
 ## Preserve intent across handoffs
 
@@ -69,6 +69,8 @@ The parser currently reports only that configuration is invalid. The issue requi
 
 The parser returns the key through the existing error object. The CLI prints the name without its value. Malformed files retain the existing parse-error path.
 
+No context or flow diagram: the change stays inside the existing error path.
+
 ## Alternatives and rationale
 
 Prefer the existing diagnostic to a new command because it preserves invocation and exit behavior.
@@ -84,7 +86,7 @@ The parser and CLI error path were inspected. No consequential open question rem
 
 ### Substantial design
 
-```markdown
+````markdown
 # Resume interrupted export jobs
 
 ## Summary
@@ -98,6 +100,28 @@ The brief requires recovery while retaining an append-only destination. Research
 ## Proposed design
 
 Persist the last acknowledged record. Retry an unacknowledged write with the same idempotency key. A checkpoint may lag acknowledgment but must never precede it. Corrupt checkpoints stop execution with a recovery diagnostic.
+
+The exporter adds a local checkpoint beside its existing destination writes.
+
+```mermaid
+flowchart LR
+    Exporter --> Destination["Append-only destination"]
+    Exporter --> Checkpoint["Local checkpoint"]
+```
+
+A retry reuses the idempotency key, so a lost response cannot duplicate a record.
+
+```mermaid
+sequenceDiagram
+    participant Exporter
+    participant Destination
+    participant Checkpoint
+    Exporter->>Destination: Write record with key K
+    Destination--xExporter: Response lost
+    Exporter->>Destination: Retry with key K
+    Destination-->>Exporter: Acknowledged once
+    Exporter->>Checkpoint: Save last acknowledged record
+```
 
 ## Alternatives and rationale
 
@@ -114,4 +138,4 @@ Check disconnects before acknowledgment, lost responses after acknowledgment and
 ## Risks and open questions
 
 Key-retention capacity remains unresolved and blocks the long-running-job portion. Recheck it before planning that work.
-```
+````

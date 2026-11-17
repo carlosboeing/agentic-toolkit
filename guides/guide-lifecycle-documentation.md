@@ -5,18 +5,19 @@ scope: [sdlc, documentation, templates, retrospective]
 authors:
   - "Carlos Boeing"
   - "GPT-6 (Codex)"
+  - "claude-opus-5-5 (claude-code)"
 ---
 
 # Lifecycle document templates and writing conventions
 
-This guide defines the default presentation of requirements, technical designs, implementation plans and retrospectives. It keeps technical content separate from document control and history while preserving flexible routes and proportionate detail. It is for teams and agents adopting the lifecycle workflow.
+This guide defines the default presentation of requirements, technical designs, implementation plans and retrospectives, and the use of diagrams and tables in every technical document. It keeps technical content separate from document control and history while preserving flexible routes and proportionate detail. It is for teams and agents adopting the lifecycle workflow.
 
 ## Which document owns a rule
 
 | Rule | Authoritative source |
 |---|---|
 | Lifecycle folders, metadata, status/type vocabulary, assets, authorship and review attribution | [Project structure and conventions](guide-project-structure-and-conventions.md), sections 2.5, 5.4 and 5.5 |
-| Artifact presentation and proportionate use of templates | This guide and the linked phase templates/contracts |
+| Artifact presentation, visuals and proportionate use of templates | This guide and the linked phase templates/contracts |
 | A project's active document roots, local schema and accepted product decisions | Its instructions, Project Map and owning artifacts |
 | Migration mapping, preservation, rehearsal and completion proof | [Lifecycle migration runbook](guide-lifecycle-migration.md) |
 | Installation and publication of shared tooling | [Sync workflow](../skills/sync-toolkit/SKILL.md) and [script catalog](../scripts/README.md) |
@@ -51,6 +52,61 @@ Write for a reader who was not in the conversation. State the problem, behavior,
 | The agent says implementation is complete. | Implementation is committed at the recorded revision; verification and delivery state are listed in the execution record. |
 
 Keep consequential rationale and disagreements. Put decisions in the relevant technical section and concise evidence of their authority in document control or history. Detailed research, transcripts and run logs remain linked records. Do not remove provenance while polishing prose.
+
+## Use visuals that carry a claim
+
+A reviewer reads structure faster than prose. Use a diagram or table wherever the content has parts, steps, options or states. The table and quality bar below apply to every technical document; the minimums apply to the lifecycle documents listed.
+
+Draw diagrams as Mermaid code in the Markdown file, so they diff, render on GitHub and move with the document. Use an image file only when Mermaid cannot express the content, such as a UI layout. [Project structure and conventions](guide-project-structure-and-conventions.md) sections 5.7 and 5.9 cover the Mermaid default and the HTML-to-PNG mockup steps.
+
+| Content | Visual |
+|---|---|
+| Components and how they connect | Context diagram: Mermaid `flowchart` |
+| Steps with branches or loops | Mermaid `flowchart` |
+| A linear sequence | Numbered list, no diagram |
+| Messages between actors over time | Mermaid `sequenceDiagram` |
+| States and transitions | Mermaid `stateDiagram-v2` |
+| Data entities and relations | Mermaid `erDiagram` |
+| Options compared on criteria | Table: one row per option, one column per criterion, a verdict column |
+| Before and after | Two Mermaid diagrams with the same layout, or a two-column table |
+| Facts with shared attributes | Table |
+| Dates and milestones | Table or list. A Mermaid `timeline` or `gantt` only when the spacing between dates is the point. |
+| UI, layout or screen states | HTML mockup plus PNG |
+
+Each visual meets this quality bar:
+
+1. A lead sentence before it states its claim, such as "The guide owns the rules; every other file points to it." A topic caption such as "Architecture diagram" is not a claim.
+2. It shows one idea. Split a diagram that answers two questions.
+3. It has about 12 nodes at most. Group or split beyond that.
+4. Its labels use the terms of the surrounding prose, in the reader's words.
+5. It was rendered and inspected before commit.
+6. It adds structure the prose does not have. Cut a visual that repeats a sentence.
+
+### Show each document type's minimum or say why not
+
+Each lifecycle document below includes its minimum visual, or one sentence in its place saying why the visual adds nothing, such as "No context diagram: the change touches one script." Review blocks a missing minimum only when that sentence is also missing.
+
+| Document | Minimum |
+|---|---|
+| Design | A context diagram of components and boundaries, and a diagram of the main flow |
+| Brainstorm | Current versus proposed: two diagrams with the same layout, or a two-column table |
+| Research | A comparison table of options or sources against the decision's criteria |
+| Plan | A dependency diagram when task order is not linear. A linear plan needs none. |
+| Requirements, review, retrospective | None. Use the content-to-visual table above. |
+
+### Render each diagram and look at it
+
+The Mermaid validator checks syntax only. A valid diagram can still be hard to read, with crossing edges, scattered nodes or a dead-end box. Render every block to PNG in a scratch directory outside the repository, then look at each image:
+
+```bash
+mkdir -p <scratch-dir> && mmdc -i <doc.md> -o <scratch-dir>/<name>.md -e png -s 2
+```
+
+The command writes `<name>-1.png`, `<name>-2.png` and so on, one per Mermaid block. Do not commit them: GitHub renders the Mermaid source. Without a global `mmdc`, prefix `npx -y -p @mermaid-js/mermaid-cli`. For each image, ask whether it shows the claim without the prose. If the harness cannot display images, say "render not inspected" in the handoff instead of claiming the check.
+
+### Review what a reader gets in two minutes
+
+Review applies a skim test: from the summary, headings and visuals alone, a reader can state the document's decision in about two minutes. Each visual answers the question its lead sentence states, and its render shows it. A missing minimum with no explaining sentence is a blocking finding. Other failures against the quality bar are lesser findings.
 
 ## Standardize control and history
 
