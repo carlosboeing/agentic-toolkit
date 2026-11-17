@@ -886,6 +886,13 @@ _assert "sweep counts the closed records it skipped" 0 $?
 out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" check 2>&1 )
 printf '%s' "$out" | grep -q 'docs/3-design/linked.md'
 _assert "check runs the sweep for pull requests in the last pull" 0 $?
+log="$(git -C "$SW" rev-parse --absolute-git-dir)/housekeep-records.log"
+awk -F'\t' '$2=="o/sw" && $3=="5" && $4=="4" && $5=="1" && $6 ~ /docs\/3-design\/linked.md/' "$log" | grep -q .
+_assert "check logs the pull request, listed and skipped counts, and listed paths" 0 $?
+lines="$(wc -l < "$log")"
+( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" records 5 >/dev/null 2>&1 )
+[ "$(wc -l < "$log")" = "$lines" ]
+_assert "a records re-run does not add to the log" 0 $?
 
 printf -- '- **Working memory**: `.private-docs/` — a private repository\n' > "$SW/CLAUDE.md"
 out=$( cd "$SW" && HOUSEKEEP_GH="$TMP/ghs" "$HOOK_DIR/housekeep" records 5 2>&1 )

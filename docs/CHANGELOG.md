@@ -4,6 +4,7 @@ All notable changes to this project are recorded here, newest first.
 
 ## 2026-11-18: stale working-memory records after a merge
 
+- Log each post-merge sweep to `housekeep-records.log` in the local Git directory, so the check's usefulness can be measured from real merges. The log is never committed.
 - Skip closed records (`shipped`, `resolved`, `superseded`, `abandoned`) that only name a changed path or the branch, and print how many were skipped. On its first real merge, the list for a change to `housekeep` held 16 old records that name the file; 12 were closed and are now skipped. A closed record that links the pull request is still listed.
 - `housekeep check`, which runs after every merge or pull, now also lists working-memory records that refer to a merged pull request and last changed before the merge. A record matches on the pull request URL, `owner/repo#N`, the head branch, or a path the merge changed. A linked design, plan or requirements record still in progress also shows "status not shipped". The list is a report: it edits nothing and blocks nothing.
 - Record folders are found by any name: the `housekeep.recordRoot` git setting, the Project Map `Working memory` line, or any top-level folder holding a lifecycle folder, such as `docs/` or `.docs/` in the same repository, or a nested private repository.
