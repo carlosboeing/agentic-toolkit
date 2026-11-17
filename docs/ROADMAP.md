@@ -35,6 +35,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Herdr and Tailscale setup guides (2026-11-17).** Choose between the Herdr app and Herdr TUI, install them, and set up agent status, restarts, macOS permissions, remote machines and the phone app. Reach an agent host over Tailscale and SSH from a phone or laptop, and keep it reachable. See the [Herdr guide](../guides/guide-herdr-setup.md) and the [Tailscale guide](../guides/guide-tailscale-setup.md).
 - **Google Gemini API and Vertex AI guide (2026-11-16).** Compare the Gemini Developer API (Google AI Studio) and Vertex AI across coding harnesses, OpenCode multi-account setups, Google Cloud credits and free-trial rules, standalone agents, CI/CD, and troubleshooting (`Missing auth credential` and DSQ `429`). See [the Gemini and Vertex guide](../guides/guide-google-gemini-api-and-vertex-ai.md).
 - **Your own Chrome profile for agents (2026-11-15).** Ask an agent in ordinary words to work in one of your Chrome profiles, on any page, in its visible window. The `browser-profile` skill connects through the Playwright extension, and your Allow click in Chrome confirms each connection. No token is stored. The [browser guide](../guides/guide-browser-automation-mcp-vs-cli.md#your-own-chrome-profile) replaces the WebBridge route.
 - **Superseded-session warning (2026-11-12).** The resume warning now tells the old session it is superseded, opens with a highlighted switch-and-close banner, and allows writes only after an explicit stay-here reply in that session.

@@ -2,6 +2,13 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-17: Herdr and Tailscale setup guides
+
+- Add [`guides/guide-herdr-setup.md`](../guides/guide-herdr-setup.md) and [`guides/guide-tailscale-setup.md`](../guides/guide-tailscale-setup.md), and index both in [`guides/README.md`](../guides/README.md).
+- Herdr: the app and the TUI do not share agents, so the guide compares them on status reporting, reboot behavior, phone support and configuration. It covers install and update commands, TUI integrations, macOS permissions that follow the launching app, remote machines, the phone app, agents that start other agents, and telemetry.
+- Tailscale: every device needs Tailscale. The guide covers which macOS variant to install, MagicDNS names, normal SSH versus Tailscale SSH (a Mac with the GUI app cannot be a Tailscale SSH server), macOS Remote Login, sleep and key expiry on an always-on host, and troubleshooting.
+- Facts checked against vendor documentation on 2026-11-17; the phone-to-Mac route was tested over mobile data.
+
 ## 2026-11-16: Google Gemini API and Vertex AI guide
 
 - Add [`guides/guide-google-gemini-api-and-vertex-ai.md`](../guides/guide-google-gemini-api-and-vertex-ai.md) and index it in [`guides/README.md`](../guides/README.md).
