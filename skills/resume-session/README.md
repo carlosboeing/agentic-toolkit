@@ -47,7 +47,7 @@ The first substantive reply gives the position and next action, every request wi
 
 `<harness>` is `claude`, `codex`, `opencode`, `antigravity`, `grok`, or `muse`. A successful command exits `0`. Exit `1` reports other errors, `2` reports an ambiguous or missing source, `3` reports a marker conflict, `4` reports an unreadable or unrecognized transcript, and `5` asks for confirmation that the source may still be running.
 
-Both write commands accept `--confirm-busy` and `--confirm-marker TOKEN` after the user confirms the corresponding warning. They share a lock for the marker check and update. A retry from the current destination succeeds with the existing marker. Notes use mode `0600` in `${XDG_STATE_HOME:-~/.local/state}/resume-session/resumed/`. On a new write, the reader removes other notes older than 30 days.
+Both write commands accept `--confirm-busy` and `--confirm-marker TOKEN` after the user confirms the corresponding warning. They share a lock for the marker check and update. A retry from the current destination succeeds with the existing marker, including when the source is still busy. `resume` checks the summary against the output encoding before it records the handoff; if the print then fails, the reader reports that the note was recorded, and `show` returns the summary. Notes use mode `0600` in `${XDG_STATE_HOME:-~/.local/state}/resume-session/resumed/`. On a new write, the reader removes other notes older than 30 days.
 
 A title is the harness's own when it carries meaning. A missing title, a placeholder such as "New session", a slash command, or a title that only repeats the first request is replaced by the first request, cut to one line. No model call is made.
 

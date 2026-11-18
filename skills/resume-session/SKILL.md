@@ -64,7 +64,7 @@ After a successful `resume`, use `show` with the resolved source ID for all foll
 
 | Exit | Do this |
 |---|---|
-| `1` | Report the error. If the handoff failed, tell the user it did not complete and pause before project changes. A repository-only report is read-only |
+| `1` | Report the error. If the handoff failed, tell the user it did not complete and pause before project changes. If the note was recorded but the summary did not print, read it with `show`. A repository-only report is read-only |
 | `2` | Show the candidates it printed and ask which one |
 | `3` | Tell the user which destination the current marker names and when it was recorded. Ask whether to replace that marker. Retry `resume` with its printed `--confirm-marker` token only after the user confirms that marker. If the marker changed, ask again about the new state |
 | `4` | Report that the handoff could not read or identify the source. For a read-only report, you may read the transcript in bounded slices, starting with the user messages and the last three agent messages. Label the report "built without the reader" because it can miss requests |

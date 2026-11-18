@@ -34,12 +34,16 @@ class NoteTests(unittest.TestCase):
     def setUp(self):
         self.sb = Sandbox()
         self.project = self.sb.repo(self.sb.root / "app", {"README.md": "# App\n"})
-        base = datetime.now(timezone.utc) - timedelta(hours=1)
-        claude_transcript(self.sb, self.project, SESSION, claude_records(self.project, base))
+        self.base = datetime.now(timezone.utc) - timedelta(hours=1)
+        claude_transcript(self.sb, self.project, SESSION, claude_records(self.project, self.base))
         self.notes = self.sb.home / ".local" / "state" / "resume-session" / "resumed"
 
     def tearDown(self):
         self.sb.close()
+
+    def busy(self):
+        self.sb.write(self.sb.home, {".claude/sessions/42.json": json.dumps({"pid": 42, "sessionId": SESSION,
+                                                                           "status": "busy"})})
 
     def mark(self, *extra, env=None):
         if env:
@@ -192,8 +196,7 @@ class NoteTests(unittest.TestCase):
         self.assertEqual(self.note()["resumes"][-1]["by_session"], "ses_destination")
 
     def test_busy_source_needs_confirmation(self):
-        self.sb.write(self.sb.home, {".claude/sessions/42.json": json.dumps({"pid": 42, "sessionId": SESSION,
-                                                                           "status": "busy"})})
+        self.busy()
         result = self.resume()
         self.assertEqual(result.returncode, 5)
         self.assertIn("--confirm-busy", result.stderr)
@@ -201,6 +204,27 @@ class NoteTests(unittest.TestCase):
         confirmed = self.resume("--confirm-busy")
         self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
         self.assertEqual(self.note()["resumes"][-1]["by_session"], "ses_destination")
+
+    def test_busy_source_retry_from_the_recorded_destination_needs_no_flag(self):
+        self.busy()
+        first = self.resume("--confirm-busy")
+        self.assertEqual(first.returncode, 0, first.stderr)
+        original = self.note()
+        retry = self.resume(command="mark")
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertIn("already names this session", retry.stdout)
+        self.assertEqual(self.note(), original)
+
+    def test_unencodable_summary_writes_no_note(self):
+        records = claude_records(self.project, self.base)
+        records[1]["message"]["content"] = "Please build the café cache warmer."
+        claude_transcript(self.sb, self.project, SESSION, records)
+        env = dict(self.sb.env, RESUME_SESSION_CURRENT="opencode:ses_destination", PYTHONIOENCODING="ascii")
+        result = self.sb.reader_env(env, *self.resume_args())
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("cannot be written to standard output", result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertFalse(self.notes.exists())
 
     def test_notes_older_than_30_days_are_pruned(self):
         self.notes.mkdir(parents=True)

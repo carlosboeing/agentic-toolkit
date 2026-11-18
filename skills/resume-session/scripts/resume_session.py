@@ -1437,11 +1437,26 @@ class ResumeConflict(Exception):
     """The current marker requires confirmation before a new destination can replace it."""
 
 
-def record_resume(t, cwd, destination, confirmed_marker):
+class BusySource(Exception):
+    """The source may still be running and the user has not confirmed the handoff."""
+
+
+def latest_destination(note):
+    """The destination the current marker names, or None."""
+    resumes = note.get("resumes") if isinstance(note, dict) else None
+    if not isinstance(resumes, list) or not resumes or not isinstance(resumes[-1], dict):
+        return None
+    latest = resumes[-1]
+    return latest.get("by_harness"), latest.get("by_session")
+
+
+def record_resume(t, cwd, destination, confirmed_marker, busy_warning=None, confirmed_busy=False):
     """Serialize all note updates, including expiry, and publish with an atomic rename."""
     root = toplevel(cwd) or str(cwd)
     folder = notes_dir()
     target = folder / f"{t.harness}-{t.session_id}.json"
+    if busy_warning and not confirmed_busy and latest_destination(read_note(t.harness, t.session_id)) != destination:
+        raise BusySource(busy_warning)
     folder.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(folder, 0o700)
     with (folder / ".lock").open("a") as lock:
@@ -1460,8 +1475,10 @@ def record_resume(t, cwd, destination, confirmed_marker):
         if not isinstance(resumes, list) or any(not isinstance(entry, dict) for entry in resumes):
             raise ValueError("The existing resume note is invalid.")
         latest = resumes[-1] if resumes else None
-        if latest is not None and (latest.get("by_harness"), latest.get("by_session")) == destination:
+        if latest is not None and latest_destination(note) == destination:
             return target, False
+        if busy_warning and not confirmed_busy:
+            raise BusySource(busy_warning)
         revision = hashlib.sha256(content).hexdigest() if latest is not None else None
         stale = confirmed_marker is not None and confirmed_marker != revision
         if stale or (latest is not None and confirmed_marker is None):
@@ -1672,14 +1689,21 @@ def main(argv=None):
         if not SAFE_ID.fullmatch(t.session_id or ""):
             print("Cannot identify the source session from its transcript.", file=sys.stderr)
             return 4
+        busy = warning if warning and warning.startswith("WARNING:") else None
         try:
             destination = resume_destination((t.harness, t.session_id), args.by_session)
-            if warning and warning.startswith("WARNING:") and not args.confirm_busy:
-                print(f"{warning}\nAfter the user confirms, retry for {t.harness} {t.session_id} with --confirm-busy.",
-                      file=sys.stderr)
-                return 5
             summary = render_transcript(t, transcript_sections(t, ctx, warning), ctx) if args.command == "resume" else ""
-            target, created = record_resume(t, cwd, destination, args.confirm_marker)
+            try:
+                summary.encode(getattr(sys.stdout, "encoding", None) or "utf-8",
+                               getattr(sys.stdout, "errors", None) or "strict")
+            except (LookupError, UnicodeError) as exc:
+                print(f"The summary cannot be written to standard output: {exc}", file=sys.stderr)
+                return 1
+            target, created = record_resume(t, cwd, destination, args.confirm_marker, busy, args.confirm_busy)
+        except BusySource as exc:
+            print(f"{exc}\nAfter the user confirms, retry for {t.harness} {t.session_id} with --confirm-busy.",
+                  file=sys.stderr)
+            return 5
         except ResumeConflict as exc:
             print(exc, file=sys.stderr)
             return 3
@@ -1687,8 +1711,17 @@ def main(argv=None):
             print(f"Handoff did not complete: {exc}", file=sys.stderr)
             return 1
         status = "Resume note written" if created else "Resume note already names this session"
-        print(f"{status}: {target}", file=sys.stderr if summary else sys.stdout)
-        sys.stdout.write(summary)
+        if summary:
+            print(f"{status}: {target}", file=sys.stderr)
+            try:
+                sys.stdout.write(summary)
+                sys.stdout.flush()
+            except (OSError, ValueError) as exc:
+                print(f"The resume note was recorded, but the summary could not be printed ({exc}). "
+                      f"Read it with `show {t.harness} {t.session_id}`.", file=sys.stderr)
+                return 1
+        else:
+            print(f"{status}: {target}")
     except LookupError as exc:
         print(exc, file=sys.stderr)
         return 2
