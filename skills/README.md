@@ -7,7 +7,7 @@ Each directory holds one agent skill in the `SKILL.md` format that Claude Code a
 | Skill | How to run it | What it does |
 |---|---|---|
 | [`briefing`](briefing/) | `/briefing` | Summarizes a project's current state from Git, GitHub, top-level files and its declared tracking records. Runs only when asked, not on follow-up questions. |
-| [`next`](next/) | Automatic, or `/next` | Answers "what's next?" in about ten lines: the workstream's SDLC phase, progress, next action and any decision waiting on you. Reads at most five sources, and none when the session already knows the work. |
+| [`next`](next/) | Automatic, or `/next` | Answers "what's next?" with a one-line TL;DR, the next action and why, and a progress line through the SDLC phases, plus any gap or decision waiting on you. Reads at most five sources, and none when the session already knows the work. |
 | [`learn`](learn/) | `/learn` | Explains a commit, pull request, file, folder, symbol, behavior or topic at the audience level and depth you choose |
 | [`resume-session`](resume-session/) | `/resume-session` | Continues an interrupted Claude Code, Codex, OpenCode, Antigravity, Grok Build or Muse Code session in a fresh session of any harness, from a summary of project records, live Git state and the old transcript. Runs only when asked. |
 | [`schedule-resume`](schedule-resume/) | `/schedule-resume` | Bundled skill with a shell helper that schedules an unattended session to resume later, using launchd on macOS or cron on Linux. Works with Claude Code, Antigravity, Codex and Kimi Code. |

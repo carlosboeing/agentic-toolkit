@@ -140,7 +140,7 @@ These directories mirror the harness's own layout under `~/.claude/`, so each it
 | Skill | What it does |
 |---|---|
 | [`briefing`](skills/briefing/) | Summarizes a project's current state from Git, GitHub and its tracking files |
-| [`next`](skills/next/) | Answers "what's next?" in about ten lines: the workstream's SDLC phase, progress, next action and any decision waiting on you |
+| [`next`](skills/next/) | Answers "what's next?" with a TL;DR, the next action, and a progress line through the SDLC phases |
 | [`learn`](skills/learn/) | Explains a commit, pull request, file, symbol or topic at the level you choose |
 | [`resume-session`](skills/resume-session/) | Continues an interrupted Claude Code, Codex, OpenCode, Antigravity, Grok Build or Muse Code session in a fresh session of any harness, without a handoff document |
 | [`schedule-resume`](skills/schedule-resume/) | Schedules an agent session to resume later, for example after a usage limit resets |

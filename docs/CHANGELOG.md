@@ -7,6 +7,12 @@ All notable changes to this project are recorded here, newest first.
 - `/resume-session` records the new destination before its first substantive reply, including chat-only sessions. Listing, report-only runs, and repository-only runs leave resume notes untouched.
 - Serialize updates from `resume` and `mark`. A retry from the recorded destination reuses an unexpired marker, including while the source is busy. A different destination requires confirmation of the current marker. Each write gets a new token. A confirmed retry uses the exact source ID and retains any transcript path the user selected. A failed write pauses the handoff before project changes. If the note is recorded and printing fails, the reader reports how to recover the summary. See [the resume-session README](../skills/resume-session/README.md#the-reader) and [PR 51](https://github.com/carlosboeing/agentic-toolkit/pull/51).
 
+## 2026-11-18: "what's next?" replies lead with a TL;DR and the next action
+
+- Rework [the `next` skill](../skills/next/README.md)'s reply after first use. It now opens with a one-line TL;DR, then What's next with its reason, then one progress line through the SDLC phases with the current phase in bold, and optional Watch out and Needs you lines, as plain Markdown under about 80 words.
+- Drop the fixed label block inside a code block, which turned off bold and bullets, and the phase statuses that confused readers, such as `chat`. The progress line allows only `done`, `draft`, `skipped` and `(now)`.
+- Make the gap check a required step before writing. In one Codex test the skill loaded but left out a draft requirements record and a skipped design.
+
 ## 2026-11-18: "what's next?" answers with the SDLC big picture
 
 - Add [the `next` skill](../skills/next/README.md). It loads on "what's next?", "where are we?", "what now?" or a status question, or by name as `/next`, and answers in about ten lines: workstream, SDLC phase strip, last step, next action and why, gaps between the work and its records, and decisions waiting on you. It uses session context first and reads at most five sources in a fresh session.

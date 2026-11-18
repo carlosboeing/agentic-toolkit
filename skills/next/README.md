@@ -1,6 +1,6 @@
 # next
 
-Answers "what's next?" with the big picture in about ten lines: the workstream, where it sits in the SDLC, the progress so far, the next action and why, and any decision waiting on you. It is for people who run many sessions at once and switch between them: the first line alone says where you are.
+Answers "what's next?" with a one-line TL;DR, the next action and why, and a short progress line through the SDLC phases, plus any gap or decision waiting on you. It is for people who run many sessions at once, switch between them, and read only the top of a reply.
 
 ## How to run it
 
@@ -9,23 +9,21 @@ Answers "what's next?" with the big picture in about ten lines: the workstream, 
 
 ## What the reply looks like
 
-```
-Saved search filters · Implementation, task 2 of 4
+> **TL;DR:** Saved search filters: the parser is built, but the requirements are still a draft.
+>
+> **What's next:** The agent wires the parser into the search page, because the page blocks the demo. Then: saved-filter storage.
+>
+> **Where we are:** Requirements draft → Design skipped → **Implementation, task 2 of 4 (now)** → Review
+>
+> **Watch out:** No design record; the task order exists only in chat.
+>
+> **Needs you:** 1. Is the filter limit 20? It is marked proposed.
 
-Brainstorm done → Requirements draft → Design skipped → [Implementation] → Review
-
-Last:  filter parser done on the branch, tests pass
-Next:  agent wires the parser into the search page, because the page blocks the demo
-Then:  add saved-filter storage
-Gaps:  requirements still draft; no design record; task order exists only in chat
-Needs you:  1. Confirm the 20-filter limit (marked proposed)
-```
-
-The `Gaps` line compares what the session claims with what the records say. It reports a draft record treated as accepted, a phase the records call for that never happened, a value still marked proposed, and uncommitted or unpushed work.
+The reply is plain Markdown with bold labels, under about 80 words. TL;DR and What's next always appear; the others appear only when they have something to say. Watch out compares the work with its records: a draft record treated as accepted, a phase the records call for that never happened, a value still marked proposed, a passed checkpoint, and uncommitted or unpushed work.
 
 ## Why it stays cheap
 
-- Only the description loads in every session. The body, about 700 tokens, loads when you ask.
+- Only the description loads in every session. The body, about 900 tokens, loads when you ask.
 - Most answers need no tool call, because the session already knows the work.
 - In a fresh session it reads at most five sources: record frontmatter, a `Next checkpoint` line, plan checkbox counts and `git status -sb`. It never scans the repository, reads Git history or opens the tracker.
 
