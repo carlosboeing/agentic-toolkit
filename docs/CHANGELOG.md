@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-18: plain-English agent replies
+
+- Replace the generated CopyDesk block with [toolkit-owned writing rules](../instructions/CLAUDE.md#reply-behavior-and-tone). Use descriptive names in replies and summaries, keep acronym reuse local to the conversation, and lead longer replies with a short TLDR.
+
 ## 2026-11-18: "what's next?" replies lead with a TL;DR and the next action
 
 - Rework [the `next` skill](../skills/next/README.md)'s reply after first use. It now opens with a one-line TL;DR, then What's next with its reason, then one progress line through the SDLC phases with the current phase in bold, and optional Watch out and Needs you lines, as plain Markdown under about 80 words.
