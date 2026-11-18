@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Tests for resume notes, `mark`, and the warning hook (A3 unit part, A9).
+"""Tests for the resume and mark commands and the warning hook.
 
 Run with: python3 -m unittest discover -s tests -p 'test_resume_session_*.py'
 """
 
 import json
+import re
 import shutil
 import stat
 import statistics
@@ -16,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from resume_session_support import REPO, Sandbox, claude_records, claude_transcript  # noqa: E402
+from resume_session_support import READER, REPO, Sandbox, claude_records, claude_transcript  # noqa: E402
 
 HOOK = REPO / "hooks" / "resume-session-warn" / "resume-session-warn.sh"
 LINE = ("SUPERSEDED SESSION: This session is superseded: it was resumed in Codex at 2026-10-31 10:47 +10:00 "
@@ -48,6 +49,37 @@ class NoteTests(unittest.TestCase):
     def note(self):
         return json.loads((self.notes / f"claude-{SESSION}.json").read_text())
 
+    def resume_args(self, *extra, command="resume", ref=SESSION):
+        return [command, "claude", ref, "--cwd", str(self.project), *extra]
+
+    def resume(self, *extra, destination="ses_destination", **kwargs):
+        env = self.sb.env.copy()
+        if destination is not None:
+            env["RESUME_SESSION_CURRENT"] = f"opencode:{destination}"
+        return self.sb.reader_env(env, *self.resume_args(*extra, **kwargs))
+
+    def test_resume_returns_summary_after_recording_destination(self):
+        result = self.resume()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("## Requests", result.stdout)
+        entry, = self.note()["resumes"]
+        self.assertEqual(entry["by_harness"], "OpenCode")
+        self.assertEqual(entry["by_session"], "ses_destination")
+
+    def test_simultaneous_resume_and_mark_accept_only_one_destination(self):
+        def start(command, destination):
+            env = dict(self.sb.env, RESUME_SESSION_CURRENT=f"opencode:{destination}")
+            return subprocess.Popen([sys.executable, str(READER), *self.resume_args(command=command)],
+                                    env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        with start("resume", "ses_one") as first, start("mark", "ses_two") as second:
+            _, first_error = first.communicate(timeout=20)
+            _, second_error = second.communicate(timeout=20)
+        self.assertCountEqual([first.returncode, second.returncode], [0, 3], first_error + second_error)
+        winner, = self.note()["resumes"]
+        self.assertEqual(winner["by_session"], "ses_one" if first.returncode == 0 else "ses_two")
+        self.assertIn("--confirm-marker", first_error + second_error)
+
     def test_mark_writes_a_private_note(self):
         result = self.mark(env={"CLAUDECODE": "1", "CLAUDE_CODE_SESSION_ID": "new-session"})
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -67,20 +99,48 @@ class NoteTests(unittest.TestCase):
         self.mark("--by-session", "given", env={"CLAUDECODE": "1", "CLAUDE_CODE_SESSION_ID": "env"})
         self.assertEqual(self.note()["resumes"][0]["by_session"], "given")
 
-    def test_codex_and_unknown_resumers(self):
-        self.mark(env={"CODEX_THREAD_ID": "thread-1"})
-        self.assertEqual(self.note()["resumes"][0]["by_harness"], "Codex CLI")
-        self.sb.env.pop("CODEX_THREAD_ID")
-        self.mark()
-        self.assertEqual(self.note()["resumes"][1]["by_harness"], "another harness")
+    def test_mark_detects_codex(self):
+        result = self.mark(env={"CODEX_THREAD_ID": "thread-1"})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        entry, = self.note()["resumes"]
+        self.assertEqual((entry["by_harness"], entry["by_session"]), ("Codex CLI", "thread-1"))
 
-    def test_second_mark_keeps_the_first(self):
-        self.mark("--by-session", "one")
-        self.mark("--by-session", "two")
-        self.assertEqual([r["by_session"] for r in self.note()["resumes"]], ["one", "two"])
+    def test_same_destination_retry_keeps_the_original_entry(self):
+        self.assertEqual(self.resume().returncode, 0)
+        original = self.note()
+        retry = self.resume(command="mark")
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertIn("already names this session", retry.stdout)
+        self.assertEqual(self.note(), original)
+
+    def marker_token(self, conflict, active_destination):
+        self.assertEqual(conflict.returncode, 3, conflict.stderr)
+        self.assertIn(active_destination, conflict.stderr)
+        self.assertEqual(conflict.stdout, "")
+        return re.search(r"--confirm-marker (\w+)", conflict.stderr).group(1)
+
+    def test_stale_confirmation_cannot_replace_a_newer_marker(self):
+        self.assertEqual(self.resume(destination="ses_one").returncode, 0)
+        stale = self.marker_token(self.resume(destination="ses_two"), "ses_one")
+        third = self.resume("--confirm-marker", stale, destination="ses_three", command="mark")
+        self.assertEqual(third.returncode, 0, third.stderr)
+        original = self.note()
+
+        conflict = self.resume("--confirm-marker", stale, destination="ses_two")
+        current = self.marker_token(conflict, "ses_three")
+        self.assertNotEqual(stale, current)
+        self.assertEqual(self.note(), original)
+
+        confirmed = self.resume("--confirm-marker", current, destination="ses_two")
+        self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
+        recorded = self.note()
+        self.assertEqual([r["by_session"] for r in recorded["resumes"]], ["ses_one", "ses_three", "ses_two"])
+        retry = self.resume("--confirm-marker", current, destination="ses_two")
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertEqual(self.note(), recorded)
 
     def test_list_and_show_report_the_resume(self):
-        self.mark(env={"CLAUDECODE": "1"})
+        self.mark(env={"CLAUDE_CODE_SESSION_ID": "new-session"})
         listed = self.sb.reader("list", "--cwd", str(self.project)).stdout
         self.assertIn("already resumed in Claude Code at", listed)
         shown = self.sb.reader("show", "claude", SESSION, "--cwd", str(self.project)).stdout
@@ -88,10 +148,59 @@ class NoteTests(unittest.TestCase):
         self.assertIn("Continue only if the user confirms.", shown)
 
     def test_report_only_commands_write_no_note(self):
-        self.sb.reader("list", "--cwd", str(self.project))
-        self.sb.reader("show", "claude", SESSION, "--cwd", str(self.project))
-        self.sb.reader("show", "--repo-only", "--cwd", str(self.project))
+        for args in (("list",), ("show", "claude", SESSION), ("show", "--repo-only"),
+                     ("show", "claude", SESSION, "--section", "Requests"), ("show", "claude", SESSION, "--request", "1")):
+            result = self.sb.reader(*args, "--cwd", str(self.project))
+            self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.notes.exists())
+
+    def test_ambiguous_source_writes_no_note(self):
+        base = datetime.now(timezone.utc)
+        claude_transcript(self.sb, self.project, SESSION + "-other", claude_records(self.project, base))
+        result = self.resume(ref=SESSION)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("Several sessions match", result.stderr)
+        self.assertFalse(self.notes.exists())
+
+    def test_unreadable_transcript_writes_no_note_even_via_mark(self):
+        transcript = self.project / "unsupported.jsonl.zst"
+        transcript.touch()
+        for command in ("resume", "mark"):
+            result = self.resume(ref=str(transcript), command=command)
+            self.assertEqual(result.returncode, 4, result.stderr)
+            self.assertIn("Cannot read", result.stderr)
+        self.assertFalse(self.notes.exists())
+
+    def test_unknown_or_self_destination_writes_no_note(self):
+        missing = self.resume(destination=None)
+        self.assertEqual(missing.returncode, 1)
+        self.assertIn("Cannot identify the destination", missing.stderr)
+        self.sb.env["CLAUDE_CODE_SESSION_ID"] = SESSION
+        same = self.resume(destination=None)
+        self.assertEqual(same.returncode, 1)
+        self.assertIn("same session", same.stderr)
+        self.assertFalse(self.notes.exists())
+
+    def test_inherited_destination_ids_need_disambiguation(self):
+        self.sb.env.update(CODEX_THREAD_ID="outer-codex", CLAUDE_CODE_SESSION_ID=SESSION)
+        result = self.resume(destination=None)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Cannot identify the destination", result.stderr)
+        self.assertFalse(self.notes.exists())
+        confirmed = self.resume()
+        self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
+        self.assertEqual(self.note()["resumes"][-1]["by_session"], "ses_destination")
+
+    def test_busy_source_needs_confirmation(self):
+        self.sb.write(self.sb.home, {".claude/sessions/42.json": json.dumps({"pid": 42, "sessionId": SESSION,
+                                                                           "status": "busy"})})
+        result = self.resume()
+        self.assertEqual(result.returncode, 5)
+        self.assertIn("--confirm-busy", result.stderr)
+        self.assertFalse(self.notes.exists())
+        confirmed = self.resume("--confirm-busy")
+        self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
+        self.assertEqual(self.note()["resumes"][-1]["by_session"], "ses_destination")
 
     def test_notes_older_than_30_days_are_pruned(self):
         self.notes.mkdir(parents=True)
@@ -99,7 +208,7 @@ class NoteTests(unittest.TestCase):
         recent = (datetime.now(timezone.utc) - timedelta(days=29)).isoformat()
         (self.notes / "codex-old.json").write_text(json.dumps({"resumes": [{"time_utc": old}]}))
         (self.notes / "codex-recent.json").write_text(json.dumps({"resumes": [{"time_utc": recent}]}))
-        self.mark()
+        self.assertEqual(self.resume().returncode, 0)
         self.assertFalse((self.notes / "codex-old.json").exists())
         self.assertTrue((self.notes / "codex-recent.json").exists())
 
@@ -107,13 +216,15 @@ class NoteTests(unittest.TestCase):
         state = self.sb.home / ".local" / "state"
         state.mkdir(parents=True)
         (state / "resume-session").write_text("a file where the folder should be")
-        result = self.mark()
+        result = self.resume()
         self.assertEqual(result.returncode, 1)
-        self.assertIn("The work can continue; the old session gets no warning.", result.stderr)
+        self.assertIn("Handoff did not complete", result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertFalse(self.notes.exists())
 
     def test_unsafe_session_id_is_refused(self):
-        result = self.sb.reader("mark", "claude", "../escape", "--cwd", str(self.project))
-        self.assertEqual(result.returncode, 1)
+        result = self.resume(ref="../escape", command="mark")
+        self.assertEqual(result.returncode, 2)
         self.assertFalse(self.notes.exists())
 
 

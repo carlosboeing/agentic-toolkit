@@ -21,7 +21,7 @@ Claude Code's hook reference advises factual wording, because instruction-style 
 ## Requirements
 
 - `jq` on `PATH`, for the shell script. The OpenCode plugin needs nothing extra.
-- Notes in `${XDG_STATE_HOME:-$HOME/.local/state}/resume-session/resumed/`, written by `resume_session.py mark`.
+- Notes in `${XDG_STATE_HOME:-$HOME/.local/state}/resume-session/resumed/`, written by `resume_session.py resume` before the new session's first substantive reply. The `mark` command uses the same note format.
 
 ## Install
 

@@ -27,20 +27,27 @@ Run `/resume-session` (Claude Code, OpenCode, Grok, Antigravity), `$resume-sessi
 /resume-session muse 01a15137 report         # report only, no edits
 ```
 
-The agent's first reply gives the position and next action, every request with a status and its evidence, the last completion claim, and mismatches between records and history. Before its first write it runs `mark`, and it asks again before any push, merge, delete, or publish.
+Once you select the source and ask to resume, the reader records the new session as the destination before the agent reconciles project state or gives its first substantive reply. This applies even if you only chat. Listing, report-only runs, and repository-only runs leave resume notes untouched.
+
+If the source is busy or open, or the current marker names another destination, the agent asks for confirmation before recording the handoff. If the marker changes while you confirm, the agent asks about the new marker. If the reader cannot complete the handoff, the agent reports the error and pauses before project changes.
+
+The first substantive reply gives the position and next action, every request with its status and evidence, the last completion claim, and mismatches between records and history. The agent asks again before any push, merge, delete, or publish.
 
 ## The reader
 
-`scripts/resume_session.py` uses only the Python 3.9 standard library. It never writes to a repository, a transcript, a project document, or a harness's state. Its only write is the resume note from `mark`.
+`scripts/resume_session.py` uses the Python 3.9 standard library. It writes resume state only through `resume` or `mark`.
 
 | Command | What it does |
 |---|---|
 | `list [--cwd DIR] [--harness <harness>\|all] [--days N] [--json]` | Sessions whose working directory is the project root or one of its worktrees, newest first (default: 14 days), each with a title and its last request. The session running `list` is left out, and a closing line says so |
 | `show <harness> <id\|title\|path> [--section NAME] [--request N] [--all] [--profile auto\|none\|PATH]` | The summary in Markdown |
 | `show --repo-only [--since TIME]` | Live state and project documents only, for harnesses without a reader |
-| `mark <harness> <id> [--by-session ID]` | Writes a resume note at `${XDG_STATE_HOME:-~/.local/state}/resume-session/resumed/<harness>-<id>.json`, mode `0600`, and deletes notes older than 30 days |
+| `resume <harness> <id\|title\|path>` | Validates the source and destination, prepares the summary, records the handoff, and prints the summary |
+| `mark <harness> <id> [--by-session ID]` | Uses the same validation and marker writer without printing the summary |
 
-`<harness>` is `claude`, `codex`, `opencode`, `antigravity`, `grok`, or `muse`. Exit codes: `0` success, `2` ambiguous or not found, `4` transcript format not recognized, `1` other errors.
+`<harness>` is `claude`, `codex`, `opencode`, `antigravity`, `grok`, or `muse`. A successful command exits `0`. Exit `1` reports other errors, `2` reports an ambiguous or missing source, `3` reports a marker conflict, `4` reports an unreadable or unrecognized transcript, and `5` asks for confirmation that the source may still be running.
+
+Both write commands accept `--confirm-busy` and `--confirm-marker TOKEN` after the user confirms the corresponding warning. They share a lock for the marker check and update. A retry from the current destination succeeds with the existing marker. Notes use mode `0600` in `${XDG_STATE_HOME:-~/.local/state}/resume-session/resumed/`. On a new write, the reader removes other notes older than 30 days.
 
 A title is the harness's own when it carries meaning. A missing title, a placeholder such as "New session", a slash command, or a title that only repeats the first request is replaced by the first request, cut to one line. No model call is made.
 

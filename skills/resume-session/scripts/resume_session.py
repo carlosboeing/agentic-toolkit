@@ -2,9 +2,10 @@
 """Build a resume summary from project records, live Git state, and an old transcript.
 
 Standard library only, Python 3.9 or later. The reader prints Markdown to standard
-output. It writes nothing except resume notes, and only through `mark`.
+output. Only `resume` and `mark` write resume notes.
 
 Usage:
+  resume_session.py resume <harness> <session-id|title|path> [--cwd DIR]
   resume_session.py mark <harness> <session-id> [--cwd DIR] [--by-session ID]
   resume_session.py list [--cwd DIR] [--harness <harness>|all] [--days N] [--json]
   resume_session.py show <harness> <session-id|title|path> [--cwd DIR]
@@ -14,22 +15,26 @@ Usage:
 
 Harnesses: claude, codex, opencode, antigravity, grok, muse.
 
-Exit codes: 0 success, 2 ambiguous or not found, 4 transcript format not recognized,
-1 other errors.
+Exit codes: 0 success, 1 other errors, 2 ambiguous or not found, 3 marker conflict,
+4 transcript format not recognized, 5 source is busy or open.
 """
 
 import argparse
+import fcntl
 import functools
+import hashlib
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.dont_write_bytecode = True
 import transcripts  # noqa: E402  (sibling module, standard library only)
 
 DEFAULT_PROFILE = Path(__file__).resolve().parent.parent / "profiles" / "agentic-sdlc.json"
@@ -1259,7 +1264,7 @@ def transcript_mismatches(t, locations, ctx):
     return found
 
 
-def transcript_sections(t, ctx, note_line=None):
+def transcript_sections(t, ctx, warning, note_line=None):
     locations, root = find_locations(ctx)
     locations = session_locations(t, root, locations)
     agents = t.of("agent")
@@ -1275,7 +1280,6 @@ def transcript_sections(t, ctx, note_line=None):
         f"- Transcript: `{show_path(t.path, ctx)}`",
         f"- Locations the session worked in: {', '.join(show_path(c, ctx) for c in t.cwds) or 'none recorded'}",
     ]
-    warning = running_warning(t, ctx)
     if warning:
         session.append("- " + warning)
     if note_line:
@@ -1353,7 +1357,7 @@ def read_note(harness, session_id):
 def note_line(harness, session_id):
     note = read_note(harness, session_id)
     resumes = note.get("resumes") if isinstance(note, dict) else None
-    if not resumes:
+    if not isinstance(resumes, list) or not resumes or not isinstance(resumes[-1], dict):
         return None
     last = resumes[-1]
     more = f" ({len(resumes)} resumes in all)" if len(resumes) > 1 else ""
@@ -1397,21 +1401,28 @@ def current_sessions():
     return tuple(dict.fromkeys(found))
 
 
-def resuming_harness():
-    """The harness running this command and its session ID, when known."""
-    current = current_sessions()
-    if current:
+def resume_destination(source, by_session):
+    """Identify the destination, using the shell hook ahead of inherited IDs."""
+    marker = os.environ.get("RESUME_SESSION_CURRENT")
+    if marker:
+        harness, _, session_id = marker.partition(":")
+    else:
+        current = current_sessions()
+        if len(current) != 1:
+            raise ValueError("Cannot identify the destination session. Run this command from the new session.")
         harness, session_id = current[0]
-        return HARNESS_NAMES.get(harness, "another harness"), session_id
-    if os.environ.get("CLAUDECODE"):
-        return "Claude Code", None
-    if any(key.startswith("CODEX_") and key != "CODEX_HOME" for key in os.environ):
-        return "Codex CLI", None
-    return "another harness", None
+    session_id = by_session or session_id
+    if harness not in transcripts.HARNESSES or not SAFE_ID.fullmatch(session_id):
+        raise ValueError("Cannot identify the destination session. Run this command from the new session.")
+    if (harness, session_id) == source:
+        raise ValueError("The source and destination are the same session. Resume from a new session.")
+    return HARNESS_NAMES[harness], session_id
 
 
-def prune_notes(folder, now):
+def prune_notes(folder, now, exclude):
     for path in folder.glob("*.json"):
+        if path == exclude:
+            continue
         try:
             note = json.loads(path.read_text())
             times = [transcripts.parse_time(r.get("time_utc")) for r in note.get("resumes", [])]
@@ -1422,46 +1433,61 @@ def prune_notes(folder, now):
             path.unlink()
 
 
-def mark(harness, ref, cwd, by_session):
-    """Write or extend the resume note. The only write the reader makes."""
-    session_id, locations = ref, []
+class ResumeConflict(Exception):
+    """The current marker requires confirmation before a new destination can replace it."""
+
+
+def record_resume(t, cwd, destination, confirmed_marker):
+    """Serialize all note updates, including expiry, and publish with an atomic rename."""
     root = toplevel(cwd) or str(cwd)
-    path, _ = transcripts.locate(harness, ref, [])
-    if path is not None:
-        try:
-            t = transcripts.read(harness, path)
-            session_id, locations = t.session_id, t.cwds
-        except (OSError, ValueError):
-            pass
-    if not SAFE_ID.match(session_id or ""):
-        print(f"Not a session ID: {session_id!r}", file=sys.stderr)
-        return 1
-    now = datetime.now(timezone.utc)
-    by_harness, env_session = resuming_harness()
-    entry = {"time_utc": now.isoformat(timespec="seconds"), "time_local": local_time(now),
-             "by_harness": by_harness, "by_session": by_session or env_session}
     folder = notes_dir()
-    target = folder / f"{harness}-{session_id}.json"
-    try:
-        folder.mkdir(parents=True, exist_ok=True)
-        os.chmod(folder, 0o700)
-        prune_notes(folder, now)
-        note = read_note(harness, session_id) or {"harness": harness, "session_id": session_id,
-                                                 "project_root": root, "locations": [], "resumes": []}
-        note["locations"] = sorted(set(note.get("locations", [])) | set(locations) | {root})
-        note["resumes"] = note.get("resumes", []) + [entry]
-        temporary = target.with_suffix(".tmp")
-        handle = os.open(str(temporary), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(handle, "w") as out:
-            json.dump(note, out, indent=2)
-        os.replace(str(temporary), str(target))
-        os.chmod(target, 0o600)
-    except OSError as exc:
-        print(f"Resume note not written ({exc}). The work can continue; the old session gets no warning.",
-              file=sys.stderr)
-        return 1
-    print(f"Resume note written: {target}")
-    return 0
+    target = folder / f"{t.harness}-{t.session_id}.json"
+    folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(folder, 0o700)
+    with (folder / ".lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        now = datetime.now(timezone.utc)
+        try:
+            content = target.read_bytes()
+        except FileNotFoundError:
+            content = None
+        if content is None:
+            note = {"harness": t.harness, "session_id": t.session_id, "project_root": root,
+                    "locations": [], "resumes": []}
+        else:
+            note = json.loads(content)
+        resumes = note.get("resumes") if isinstance(note, dict) else None
+        if not isinstance(resumes, list) or any(not isinstance(entry, dict) for entry in resumes):
+            raise ValueError("The existing resume note is invalid.")
+        latest = resumes[-1] if resumes else None
+        if latest is not None and (latest.get("by_harness"), latest.get("by_session")) == destination:
+            return target, False
+        revision = hashlib.sha256(content).hexdigest() if latest is not None else None
+        stale = confirmed_marker is not None and confirmed_marker != revision
+        if stale or (latest is not None and confirmed_marker is None):
+            if latest is None:
+                raise ResumeConflict("The resume marker changed. No destination is currently recorded.")
+            other_harness = latest.get("by_harness") or "another harness"
+            session_id = latest.get("by_session")
+            other_session = f" session {session_id}" if isinstance(session_id, str) and SAFE_ID.fullmatch(session_id) else ""
+            time = latest.get("time_local", latest.get("time_utc"))
+            raise ResumeConflict(f"Current resume marker: {other_harness}{other_session} at {time}.\n"
+                                 f"After the user confirms this marker, retry with --confirm-marker {revision}")
+        by_harness, by_session = destination
+        entry = {"time_utc": now.isoformat(timespec="seconds"), "time_local": local_time(now),
+                 "by_harness": by_harness, "by_session": by_session}
+        prune_notes(folder, now, exclude=target)
+        note["locations"] = sorted(set(note.get("locations", [])) | set(t.cwds) | {root})
+        note["resumes"] = resumes + [entry]
+        handle, temporary = tempfile.mkstemp(dir=folder)
+        try:
+            with os.fdopen(handle, "w") as out:
+                os.fchmod(out.fileno(), 0o600)
+                json.dump(note, out, indent=2)
+            os.replace(temporary, target)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
+    return target, True
 
 
 # ---------------------------------------------------------------- list
@@ -1568,10 +1594,16 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Build a resume summary.")
     sub = parser.add_subparsers(dest="command", required=True)
     marker = sub.add_parser("mark", help="write the resume note for a source session")
-    marker.add_argument("harness", choices=transcripts.HARNESSES)
-    marker.add_argument("session_id")
-    marker.add_argument("--cwd", default=os.getcwd())
     marker.add_argument("--by-session", help="the resuming session's ID, when known")
+    resume = sub.add_parser("resume", help="record a handoff and print the summary")
+    for command in (resume, marker):
+        command.add_argument("harness", choices=transcripts.HARNESSES)
+        command.add_argument("ref", help="session ID, ID prefix, title, or transcript path")
+        command.add_argument("--cwd", default=os.getcwd())
+        command.add_argument("--confirm-marker", metavar="TOKEN", help="replace the marker the user confirmed")
+        command.add_argument("--confirm-busy", action="store_true", help="the user confirmed the source may be running")
+        command.set_defaults(repo_only=False, section=None, request=None, all=False, since=None, profile="auto")
+    resume.set_defaults(by_session=None)
     lister = sub.add_parser("list", help="list sessions for this project")
     lister.add_argument("--cwd", default=os.getcwd())
     lister.add_argument("--harness", choices=[*transcripts.HARNESSES, "all"], default="all")
@@ -1593,8 +1625,6 @@ def main(argv=None):
     if not cwd.is_dir():
         print(f"Not a directory: {args.cwd}", file=sys.stderr)
         return 1
-    if args.command == "mark":
-        return mark(args.harness, args.session_id, cwd, args.by_session)
     if args.command == "list":
         return list_sessions(Context(cwd, parse_since(None), None, False), args.harness, args.days, args.json)
 
@@ -1632,10 +1662,33 @@ def main(argv=None):
         if args.request:
             sys.stdout.write(request_detail(t, args.request))
             return 0
-        note = note_line(args.harness, t.session_id)
-        if note:
-            note = f"WARNING: {note}. Continue only if the user confirms."
-        sys.stdout.write(render_transcript(t, transcript_sections(t, ctx, note), ctx, args.section))
+        warning = running_warning(t, ctx)
+        if args.command == "show":
+            note = note_line(args.harness, t.session_id)
+            if note:
+                note = f"WARNING: {note}. Continue only if the user confirms."
+            sys.stdout.write(render_transcript(t, transcript_sections(t, ctx, warning, note), ctx, args.section))
+            return 0
+        if not SAFE_ID.fullmatch(t.session_id or ""):
+            print("Cannot identify the source session from its transcript.", file=sys.stderr)
+            return 4
+        try:
+            destination = resume_destination((t.harness, t.session_id), args.by_session)
+            if warning and warning.startswith("WARNING:") and not args.confirm_busy:
+                print(f"{warning}\nAfter the user confirms, retry for {t.harness} {t.session_id} with --confirm-busy.",
+                      file=sys.stderr)
+                return 5
+            summary = render_transcript(t, transcript_sections(t, ctx, warning), ctx) if args.command == "resume" else ""
+            target, created = record_resume(t, cwd, destination, args.confirm_marker)
+        except ResumeConflict as exc:
+            print(exc, file=sys.stderr)
+            return 3
+        except (OSError, TypeError, ValueError) as exc:
+            print(f"Handoff did not complete: {exc}", file=sys.stderr)
+            return 1
+        status = "Resume note written" if created else "Resume note already names this session"
+        print(f"{status}: {target}", file=sys.stderr if summary else sys.stdout)
+        sys.stdout.write(summary)
     except LookupError as exc:
         print(exc, file=sys.stderr)
         return 2

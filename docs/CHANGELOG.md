@@ -2,6 +2,11 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-18: record session handoffs before the first reply
+
+- `/resume-session` records the new destination before its first substantive reply, including chat-only sessions. Listing, report-only runs, and repository-only runs leave resume notes untouched.
+- Serialize updates from `resume` and `mark`. Retries from the recorded destination reuse its entry. A different destination requires confirmation of the current marker, and a failed write pauses the handoff before project changes. See [the resume-session README](../skills/resume-session/README.md#the-reader).
+
 ## 2026-11-18: drift-guard hooks in new repo scaffolding
 
 - Update [`/repo-standards scaffold`](../skills/repo-standards/SKILL.md#scaffold) and [its README](../skills/repo-standards/README.md) to install `scripts/githooks` (`housekeep`, `pre-push`, `post-merge`) and configure `core.hooksPath = scripts/githooks` before the initial commit, using `scripts/sync-toolkit.sh` when a local toolkit checkout exists or `degit` of `git-hooks/drift-guard` otherwise.
