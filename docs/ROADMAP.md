@@ -36,6 +36,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **"What's next?" answers show the big picture (2026-11-18).** The new `next` skill answers "what's next?", "where are we?" or `/next` in about ten lines: the workstream's SDLC phase, progress, the next action and why, gaps between the work and its records, and decisions waiting on you. The global brief now asks multi-turn replies to open with their SDLC phase and step. See [the `next` skill](../skills/next/README.md).
 - **Drift-guard hooks in new repo scaffolding (2026-11-18).** `/repo-standards scaffold` and the new-project bootstrap guides now install `scripts/githooks` (`housekeep`, `pre-push`, `post-merge`) and configure `core.hooksPath = scripts/githooks` before the initial commit. See [the `repo-standards` skill](../skills/repo-standards/SKILL.md#scaffold) and [the templates README](../templates/README.md#start-a-new-project).
 - **Stale records after a merge (2026-11-18).** The post-merge check lists working-memory records, in any folder name or nested repository, that refer to a merged pull request and changed before it merged; `housekeep records <n>` re-runs it. See [the drift-guard README](../git-hooks/drift-guard/README.md#what-the-merge-check-lists-in-working-memory-records).
 - **Keep a Mac awake for remote sessions (2026-11-18).** `scripts/mac-stay-awake.sh on` stops idle sleep on AC power and saves the old timer, and `off` restores it. See the [Tailscale guide](../guides/guide-tailscale-setup.md#turn-idle-sleep-off-and-on-again-with-the-toolkit-script).
