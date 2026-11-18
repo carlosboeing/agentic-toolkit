@@ -363,8 +363,8 @@ class InvariantTests(unittest.TestCase):
             self.assertNotRegex(script.read_text(), r"\b(?:st_mtime\w*|getmtime|mtime)\b")
 
     def test_reader_imports_only_the_standard_library(self):
-        allowed = {"argparse", "contextlib", "fcntl", "functools", "hashlib", "json", "os", "re", "shutil", "sqlite3",
-                   "subprocess", "sys", "tempfile", "datetime", "pathlib", "urllib", "transcripts"}
+        allowed = {"argparse", "contextlib", "fcntl", "functools", "hashlib", "json", "os", "re", "shlex", "shutil",
+                   "sqlite3", "subprocess", "sys", "tempfile", "datetime", "pathlib", "urllib", "transcripts"}
         for script in SCRIPTS:
             imports = re.findall(r"^(?:from|import) ([\w.]+)", script.read_text(), re.M)
             self.assertLessEqual(set(i.split(".")[0] for i in imports), allowed, script.name)
