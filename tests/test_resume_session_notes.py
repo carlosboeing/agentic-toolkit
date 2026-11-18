@@ -143,6 +143,31 @@ class NoteTests(unittest.TestCase):
         self.assertEqual(retry.returncode, 0, retry.stderr)
         self.assertEqual(self.note(), recorded)
 
+    def test_removed_marker_asks_for_a_retry_without_the_stale_token(self):
+        self.assertEqual(self.resume(destination="ses_one").returncode, 0)
+        stale = self.marker_token(self.resume(destination="ses_two"), "ses_one")
+        (self.notes / f"claude-{SESSION}.json").unlink()
+        removed = self.resume("--confirm-marker", stale, destination="ses_two")
+        self.assertEqual(removed.returncode, 3, removed.stderr)
+        self.assertIn("marker is gone", removed.stderr)
+        self.assertIn("retry without --confirm-marker", removed.stderr)
+        self.assertEqual(removed.stdout, "")
+        retry = self.resume(destination="ses_two")
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertEqual([r["by_session"] for r in self.note()["resumes"]], ["ses_two"])
+
+    def test_marker_recreated_after_removal_still_needs_confirmation(self):
+        self.assertEqual(self.resume(destination="ses_one").returncode, 0)
+        stale = self.marker_token(self.resume(destination="ses_two"), "ses_one")
+        (self.notes / f"claude-{SESSION}.json").unlink()
+        self.assertEqual(self.resume(destination="ses_three", command="mark").returncode, 0)
+        conflict = self.resume("--confirm-marker", stale, destination="ses_two")
+        current = self.marker_token(conflict, "ses_three")
+        self.assertNotEqual(stale, current)
+        confirmed = self.resume("--confirm-marker", current, destination="ses_two")
+        self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
+        self.assertEqual([r["by_session"] for r in self.note()["resumes"]], ["ses_three", "ses_two"])
+
     def test_list_and_show_report_the_resume(self):
         self.mark(env={"CLAUDE_CODE_SESSION_ID": "new-session"})
         listed = self.sb.reader("list", "--cwd", str(self.project)).stdout

@@ -1434,7 +1434,7 @@ def prune_notes(folder, now, exclude):
 
 
 class ResumeConflict(Exception):
-    """The current marker requires confirmation before a new destination can replace it."""
+    """The current marker requires confirmation, or is gone, before the handoff can continue."""
 
 
 class BusySource(Exception):
@@ -1483,7 +1483,8 @@ def record_resume(t, cwd, destination, confirmed_marker, busy_warning=None, conf
         stale = confirmed_marker is not None and confirmed_marker != revision
         if stale or (latest is not None and confirmed_marker is None):
             if latest is None:
-                raise ResumeConflict("The resume marker changed. No destination is currently recorded.")
+                raise ResumeConflict("The resume marker is gone. No destination is currently recorded.\n"
+                                     "After the user confirms the new state, retry without --confirm-marker.")
             other_harness = latest.get("by_harness") or "another harness"
             session_id = latest.get("by_session")
             other_session = f" session {session_id}" if isinstance(session_id, str) and SAFE_ID.fullmatch(session_id) else ""
