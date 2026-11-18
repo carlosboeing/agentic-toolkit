@@ -1497,6 +1497,9 @@ def record_resume(t, cwd, destination, confirmed_marker, busy_warning=None, conf
         prune_notes(folder, now, exclude=target)
         note["locations"] = sorted(set(note.get("locations", [])) | set(t.cwds) | {root})
         note["resumes"] = resumes + [entry]
+        # A recreated note can otherwise repeat the bytes of the one it replaced when the
+        # destination, project, and second are the same, which would repeat its confirmation token.
+        note["generation"] = os.urandom(16).hex()
         handle, temporary = tempfile.mkstemp(dir=folder)
         try:
             with os.fdopen(handle, "w") as out:
@@ -1706,7 +1709,8 @@ def main(argv=None):
                   file=sys.stderr)
             return 5
         except ResumeConflict as exc:
-            print(exc, file=sys.stderr)
+            print(f"{exc}\nResume source: {t.harness} {t.session_id}. "
+                  "Retry with this harness and session ID.", file=sys.stderr)
             return 3
         except (OSError, TypeError, ValueError) as exc:
             print(f"Handoff did not complete: {exc}", file=sys.stderr)

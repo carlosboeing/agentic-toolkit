@@ -120,6 +120,7 @@ class NoteTests(unittest.TestCase):
     def marker_token(self, conflict, active_destination):
         self.assertEqual(conflict.returncode, 3, conflict.stderr)
         self.assertIn(active_destination, conflict.stderr)
+        self.assertIn(f"Resume source: claude {SESSION}", conflict.stderr)
         self.assertEqual(conflict.stdout, "")
         return re.search(r"--confirm-marker (\w+)", conflict.stderr).group(1)
 
@@ -151,10 +152,24 @@ class NoteTests(unittest.TestCase):
         self.assertEqual(removed.returncode, 3, removed.stderr)
         self.assertIn("marker is gone", removed.stderr)
         self.assertIn("retry without --confirm-marker", removed.stderr)
+        self.assertIn(f"Resume source: claude {SESSION}", removed.stderr)
         self.assertEqual(removed.stdout, "")
         retry = self.resume(destination="ses_two")
         self.assertEqual(retry.returncode, 0, retry.stderr)
         self.assertEqual([r["by_session"] for r in self.note()["resumes"]], ["ses_two"])
+
+    def test_recreated_marker_gets_a_new_generation_and_token(self):
+        self.assertEqual(self.resume(destination="ses_one").returncode, 0)
+        stale = self.marker_token(self.resume(destination="ses_two"), "ses_one")
+        first = self.note()
+        (self.notes / f"claude-{SESSION}.json").unlink()
+        self.assertEqual(self.resume(destination="ses_one", command="mark").returncode, 0)
+        second = self.note()
+        self.assertNotEqual(first["generation"], second["generation"])
+        conflict = self.resume("--confirm-marker", stale, destination="ses_two")
+        current = self.marker_token(conflict, "ses_one")
+        self.assertNotEqual(stale, current)
+        self.assertEqual(self.note(), second)
 
     def test_marker_recreated_after_removal_still_needs_confirmation(self):
         self.assertEqual(self.resume(destination="ses_one").returncode, 0)

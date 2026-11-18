@@ -5,7 +5,7 @@ All notable changes to this project are recorded here, newest first.
 ## 2026-11-18: record session handoffs before the first reply
 
 - `/resume-session` records the new destination before its first substantive reply, including chat-only sessions. Listing, report-only runs, and repository-only runs leave resume notes untouched.
-- Serialize updates from `resume` and `mark`. Retries from the recorded destination reuse its entry, including while the source is busy. A different destination requires confirmation of the current marker, and a failed write pauses the handoff before project changes. `resume` checks the summary against the output encoding before it records the handoff. See [the resume-session README](../skills/resume-session/README.md#the-reader).
+- Serialize updates from `resume` and `mark`. Retries from the recorded destination reuse its entry, including while the source is busy. A different destination requires confirmation of the current marker, and each marker write gets a new token so a recreated marker needs confirmation again. Conflicts name the source harness and session ID for the retry. A failed write pauses the handoff before project changes. `resume` checks the summary against the output encoding before it records the handoff. See [the resume-session README](../skills/resume-session/README.md#the-reader).
 
 ## 2026-11-18: drift-guard hooks in new repo scaffolding
 
