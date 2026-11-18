@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import stat
 import statistics
@@ -242,6 +243,26 @@ class NoteTests(unittest.TestCase):
         report = self.sb.reader(*self.resume_args("--exact-id", command="show"))
         self.assertEqual(report.returncode, 2, report.stderr)
         self.assertFalse(self.notes.exists())
+
+    def test_confirmation_and_report_can_pin_an_exported_transcript(self):
+        stored = claude_transcript(self.sb, self.project, SESSION, claude_records(self.project, self.base))
+        exported = self.project / "exported transcripts" / stored.name
+        exported.parent.mkdir()
+        stored.rename(exported)
+        self.busy()
+        blocked = self.resume(ref=str(exported))
+        self.assertEqual(blocked.returncode, 5, blocked.stderr)
+        self.assertIn(f"--source-path {shlex.quote(str(exported))}", blocked.stderr)
+        pinned = ("--exact-id", "--source-path", str(exported))
+        confirmed = self.resume(*pinned, "--confirm-busy")
+        self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
+        report = self.sb.reader(*self.resume_args(*pinned, command="show"))
+        self.assertEqual(report.returncode, 0, report.stderr)
+        previous = self.note()
+        exported.rename(stored)
+        retry = self.resume(*pinned, "--confirm-busy", destination="ses_two")
+        self.assertEqual(retry.returncode, 2, retry.stderr)
+        self.assertEqual(self.note(), previous)
 
     def test_unreadable_transcript_writes_no_note_even_via_mark(self):
         transcript = self.project / "unsupported.jsonl.zst"

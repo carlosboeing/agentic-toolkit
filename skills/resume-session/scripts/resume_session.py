@@ -26,6 +26,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -1652,6 +1653,7 @@ def main(argv=None):
     show.add_argument("--all", action="store_true", help="lift every cap")
     for command in (resume, marker, show):
         command.add_argument("--exact-id", action="store_true", help="match a stored session by exact ID only")
+        command.add_argument("--source-path", help="verify the exact ID in this transcript instead of looking it up")
     args = parser.parse_args(argv)
 
     cwd = Path(args.cwd).resolve()
@@ -1670,11 +1672,17 @@ def main(argv=None):
             return 0
         if not (args.harness and args.ref):
             parser.error("show needs <harness> <ref>, or --repo-only")
-        candidates = []
-        if not args.exact_id and not Path(args.ref).expanduser().is_file():
-            paths = project_paths(cwd)
-            candidates, _ = transcripts.candidates(args.harness, paths, 365)
-        path, matches = transcripts.locate(args.harness, args.ref, candidates, exact_id=args.exact_id)
+        if args.source_path and not args.exact_id:
+            parser.error("--source-path requires --exact-id")
+        supplied_path = Path(args.source_path or args.ref).expanduser()
+        explicit_path = bool(args.source_path) or (not args.exact_id and supplied_path.is_file())
+        if explicit_path:
+            path, matches = (supplied_path, []) if supplied_path.is_file() else (None, [])
+        else:
+            candidates = []
+            if not args.exact_id:
+                candidates, _ = transcripts.candidates(args.harness, project_paths(cwd), 365)
+            path, matches = transcripts.locate(args.harness, args.ref, candidates, exact_id=args.exact_id)
         if path is None:
             if matches:
                 print("Several sessions match; name one by ID or path:", file=sys.stderr)
@@ -1708,6 +1716,9 @@ def main(argv=None):
         if not SAFE_ID.fullmatch(t.session_id or ""):
             print("Cannot identify the source session from its transcript.", file=sys.stderr)
             return 4
+        source_ref = f"{t.harness} {t.session_id} --exact-id"
+        if explicit_path:
+            source_ref += f" --source-path {shlex.quote(str(path.absolute()))}"
         busy = warning if warning and warning.startswith("WARNING:") else None
         try:
             destination = resume_destination((t.harness, t.session_id), args.by_session)
@@ -1720,12 +1731,12 @@ def main(argv=None):
                 return 1
             target, created = record_resume(t, cwd, destination, args.confirm_marker, busy, args.confirm_busy)
         except BusySource as exc:
-            print(f"{exc}\nAfter the user confirms, retry for {t.harness} {t.session_id} with --exact-id --confirm-busy.",
+            print(f"{exc}\nAfter the user confirms, retry with `{args.command} {source_ref} --confirm-busy`.",
                   file=sys.stderr)
             return 5
         except ResumeConflict as exc:
             print(f"{exc}\nResume source: {t.harness} {t.session_id}. "
-                  "Retry with this harness and session ID and --exact-id.", file=sys.stderr)
+                  f"Retry for `{source_ref}`.", file=sys.stderr)
             return 3
         except (OSError, TypeError, ValueError) as exc:
             print(f"Handoff did not complete: {exc}", file=sys.stderr)
@@ -1743,7 +1754,7 @@ def main(argv=None):
                 except (OSError, ValueError):
                     pass
                 print(f"The resume note was recorded, but the summary could not be printed ({exc}). "
-                      f"Read it with `show {t.harness} {t.session_id} --exact-id`.", file=sys.stderr)
+                      f"Read it with `show {source_ref}`.", file=sys.stderr)
                 return 1
         else:
             print(f"{status}: {target}")

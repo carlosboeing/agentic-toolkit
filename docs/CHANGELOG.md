@@ -5,7 +5,7 @@ All notable changes to this project are recorded here, newest first.
 ## 2026-11-18: record session handoffs before the first reply
 
 - `/resume-session` records the new destination before its first substantive reply, including chat-only sessions. Listing, report-only runs, and repository-only runs leave resume notes untouched.
-- Serialize updates from `resume` and `mark`. A retry from the recorded destination reuses an unexpired marker, including while the source is busy. A different destination requires confirmation of the current marker. Each write gets a new token, and a confirmed retry uses the exact source ID. A failed write pauses the handoff before project changes. If the note is recorded and printing fails, the reader reports how to recover the summary. See [the resume-session README](../skills/resume-session/README.md#the-reader) and [PR 51](https://github.com/carlosboeing/agentic-toolkit/pull/51).
+- Serialize updates from `resume` and `mark`. A retry from the recorded destination reuses an unexpired marker, including while the source is busy. A different destination requires confirmation of the current marker. Each write gets a new token. A confirmed retry uses the exact source ID and retains any transcript path the user selected. A failed write pauses the handoff before project changes. If the note is recorded and printing fails, the reader reports how to recover the summary. See [the resume-session README](../skills/resume-session/README.md#the-reader) and [PR 51](https://github.com/carlosboeing/agentic-toolkit/pull/51).
 
 ## 2026-11-18: "what's next?" answers with the SDLC big picture
 
