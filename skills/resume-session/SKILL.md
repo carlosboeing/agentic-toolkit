@@ -44,7 +44,7 @@ Most harnesses cut long command output. Check for a cut every time:
 - **Any harness:** a first line that says the summary is long means the same: read it section by section.
 
 Never act on a summary you saw only in part. Name the sections you could not read.
-After a successful `resume`, use `show` with the resolved source ID for all follow-up reads. The resume note from this handoff can appear in that output.
+After a successful `resume`, use `show <source-harness> <source-id> --exact-id` for all follow-up reads. Use the Session ID from the summary. The resume note from this handoff can appear in that output.
 
 ## Procedure
 
@@ -64,11 +64,11 @@ After a successful `resume`, use `show` with the resolved source ID for all foll
 
 | Exit | Do this |
 |---|---|
-| `1` | Report the error. If the handoff failed, tell the user it did not complete and pause before project changes. If the note was recorded but the summary did not print, read it with `show`. A repository-only report is read-only |
-| `2` | Show the candidates it printed and ask which one |
-| `3` | Tell the user which destination the current marker names and when it was recorded. Ask whether to replace that marker. Retry `resume` with its printed `--confirm-marker` token only after the user confirms that marker. If the marker changed, ask again about the new state. If the reader reports the marker is gone, explain that the previous marker was removed, and after the user confirms the new state, retry without `--confirm-marker`. Pass the source harness and session ID the reader prints on every retry, because a title or prefix can resolve to another session |
+| `1` | Report the error. If the handoff failed, tell the user it did not complete and pause before project changes. If the note was recorded but the summary did not print, run the `show` command the reader prints. A repository-only report is read-only |
+| `2` | Show any candidates and ask which one. If an exact-ID retry cannot find the selected source, report that and wait for the user to select a source again |
+| `3` | Tell the user which destination the current marker names and when it was recorded. Ask whether to replace that marker. Retry `resume` with its printed `--confirm-marker` token only after the user confirms that marker. If the marker changed, ask again about the new state. If the marker is gone or expired, report that state and retry without `--confirm-marker` only after the user confirms it. Pass `--exact-id` and the printed source harness and session ID on every retry |
 | `4` | Report that the handoff could not read or identify the source. For a read-only report, you may read the transcript in bounded slices, starting with the user messages and the last three agent messages. Label the report "built without the reader" because it can miss requests |
-| `5` | Tell the user the source may still be running. After the user confirms, retry `resume` with the printed source ID and `--confirm-busy`. Retain the busy confirmation if the same handoff then asks about a marker |
+| `5` | Tell the user the source may still be running. After the user confirms, retry `resume` with the printed source harness and session ID, `--exact-id`, and `--confirm-busy`. Retain the busy confirmation if the same handoff then asks about a marker |
 
 ## Rules
 

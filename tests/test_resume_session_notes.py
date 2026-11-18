@@ -4,7 +4,9 @@
 Run with: python3 -m unittest discover -s tests -p 'test_resume_session_*.py'
 """
 
+import hashlib
 import json
+import os
 import re
 import shutil
 import stat
@@ -51,7 +53,17 @@ class NoteTests(unittest.TestCase):
         return self.sb.reader("mark", "claude", SESSION, "--cwd", str(self.project), *extra)
 
     def note(self):
-        return json.loads((self.notes / f"claude-{SESSION}.json").read_text())
+        return json.loads(self.note_path.read_text())
+
+    @property
+    def note_path(self):
+        return self.notes / f"claude-{SESSION}.json"
+
+    def seed_note(self, age):
+        self.notes.mkdir(parents=True, exist_ok=True)
+        when = (datetime.now(timezone.utc) - timedelta(days=age)).isoformat()
+        self.note_path.write_text(json.dumps({"resumes": [{"time_utc": when, "by_harness": "OpenCode",
+                                                           "by_session": "ses_destination"}]}))
 
     def resume_args(self, *extra, command="resume", ref=SESSION):
         return [command, "claude", ref, "--cwd", str(self.project), *extra]
@@ -212,9 +224,24 @@ class NoteTests(unittest.TestCase):
         self.assertEqual(self.resume(ref=str(path)).returncode, 0)
         conflict = self.resume(ref=str(path), destination="ses_two")
         token = self.marker_token(conflict, "ses_destination")
-        retry = self.resume("--confirm-marker", token, destination="ses_two", ref=SESSION)
+        retry = self.resume("--exact-id", "--confirm-marker", token, destination="ses_two", ref=SESSION)
         self.assertEqual(retry.returncode, 0, retry.stderr)
         self.assertEqual([r["by_session"] for r in self.note()["resumes"]], ["ses_destination", "ses_two"])
+
+    def test_confirmed_retry_cannot_fall_back_to_a_longer_id(self):
+        path = claude_transcript(self.sb, self.project, SESSION, claude_records(self.project, self.base))
+        other_id = SESSION + "-other"
+        claude_transcript(self.sb, self.project, other_id, claude_records(self.project, self.base))
+        self.busy()
+        blocked = self.resume(ref=str(path))
+        self.assertEqual(blocked.returncode, 5, blocked.stderr)
+        self.assertIn("--exact-id", blocked.stderr)
+        path.unlink()
+        retry = self.resume("--exact-id", "--confirm-busy")
+        self.assertEqual(retry.returncode, 2, retry.stderr)
+        report = self.sb.reader(*self.resume_args("--exact-id", command="show"))
+        self.assertEqual(report.returncode, 2, report.stderr)
+        self.assertFalse(self.notes.exists())
 
     def test_unreadable_transcript_writes_no_note_even_via_mark(self):
         transcript = self.project / "unsupported.jsonl.zst"
@@ -275,6 +302,47 @@ class NoteTests(unittest.TestCase):
         self.assertIn("cannot be written to standard output", result.stderr)
         self.assertEqual(result.stdout, "")
         self.assertFalse(self.notes.exists())
+
+    def test_closed_output_pipe_reports_recorded_marker_with_exit_one(self):
+        read_fd, write_fd = os.pipe()
+        os.close(read_fd)
+        env = dict(self.sb.env, RESUME_SESSION_CURRENT="opencode:ses_destination")
+        try:
+            result = subprocess.run([sys.executable, str(READER), *self.resume_args()], env=env,
+                                    stdout=write_fd, stderr=subprocess.PIPE, text=True, timeout=20)
+        finally:
+            os.close(write_fd)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("The resume note was recorded", result.stderr)
+        self.assertIn(f"show claude {SESSION} --exact-id", result.stderr)
+        self.assertEqual(self.note()["resumes"][-1]["by_session"], "ses_destination")
+
+    def test_expired_target_accepts_a_new_destination(self):
+        self.seed_note(age=31)
+        result = self.resume(destination="ses_two")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([r["by_session"] for r in self.note()["resumes"]], ["ses_two"])
+
+    def test_expired_target_does_not_make_busy_retry_idempotent(self):
+        self.seed_note(age=31)
+        old = self.note_path.read_bytes()
+        self.busy()
+        denied = self.resume()
+        self.assertEqual(denied.returncode, 5, denied.stderr)
+        self.assertEqual(self.note_path.read_bytes(), old)
+        confirmed = self.resume("--confirm-busy", "--exact-id")
+        self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
+        self.assertNotEqual(self.note_path.read_bytes(), old)
+        self.assertEqual([r["by_session"] for r in self.note()["resumes"]], ["ses_destination"])
+
+    def test_expired_target_rejects_its_previous_confirmation(self):
+        self.seed_note(age=31)
+        # Use the exact token the same note would have had before expiring.
+        stale = hashlib.sha256(self.note_path.read_bytes()).hexdigest()
+        refused = self.resume("--confirm-marker", stale, destination="ses_two")
+        self.assertEqual(refused.returncode, 3, refused.stderr)
+        self.assertIn("marker is gone", refused.stderr)
+        self.assertEqual(self.note()["resumes"][-1]["by_session"], "ses_destination")
 
     def test_notes_older_than_30_days_are_pruned(self):
         self.notes.mkdir(parents=True)

@@ -1223,10 +1223,10 @@ def session_id_of(harness, path):
     return path.parent.name  # grok and muse
 
 
-def locate(harness, ref, candidates):
+def locate(harness, ref, candidates, *, exact_id=False):
     """A transcript path for a session ID, ID prefix, title, or path. Returns
     (path, matches): one path, or None with the ambiguous or empty match list."""
-    if Path(ref).expanduser().is_file():
+    if not exact_id and Path(ref).expanduser().is_file():
         return Path(ref).expanduser(), []
     pool = []
     if SAFE_REF.match(ref):
@@ -1234,14 +1234,14 @@ def locate(harness, ref, candidates):
             pool = POOLS[harness](ref)
         except sqlite3.Error:
             pool = []
-    if len(pool) == 1:
-        return pool[0], []
-    if len(pool) > 1:
+    if exact_id or len(pool) > 1:
         # A full session ID can also be a prefix of a longer one; the exact ID is the one meant.
         exact = [path for path in pool if session_id_of(harness, path) == ref]
         if len(exact) == 1:
             return exact[0], []
-        return None, pool
+        return None, exact if exact_id else pool
+    if len(pool) == 1:
+        return pool[0], []
     lowered = ref.lower()
     titled = [c.path for c in candidates if c.harness == harness and c.title and lowered in c.title.lower()]
     exact = [c.path for c in candidates if c.harness == harness and c.title and lowered == c.title.lower()]

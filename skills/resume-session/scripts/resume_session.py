@@ -1419,17 +1419,28 @@ def resume_destination(source, by_session):
     return HARNESS_NAMES[harness], session_id
 
 
+def note_expired(resumes, now):
+    times = []
+    for entry in resumes:
+        try:
+            time = transcripts.parse_time(entry.get("time_utc"))
+        except (AttributeError, ValueError):
+            continue
+        if time is not None:
+            times.append(time if time.tzinfo else time.replace(tzinfo=timezone.utc))
+    return bool(times) and max(times) < now - timedelta(days=NOTE_DAYS)
+
+
 def prune_notes(folder, now, exclude):
     for path in folder.glob("*.json"):
         if path == exclude:
             continue
         try:
             note = json.loads(path.read_text())
-            times = [transcripts.parse_time(r.get("time_utc")) for r in note.get("resumes", [])]
+            resumes = note.get("resumes")
         except (OSError, ValueError, AttributeError):
             continue
-        times = [t for t in times if t]
-        if times and max(times) < now - timedelta(days=NOTE_DAYS):
+        if isinstance(resumes, list) and note_expired(resumes, now):
             path.unlink()
 
 
@@ -1466,14 +1477,13 @@ def record_resume(t, cwd, destination, confirmed_marker, busy_warning=None, conf
             content = target.read_bytes()
         except FileNotFoundError:
             content = None
-        if content is None:
-            note = {"harness": t.harness, "session_id": t.session_id, "project_root": root,
-                    "locations": [], "resumes": []}
-        else:
-            note = json.loads(content)
+        note = json.loads(content) if content is not None else {"resumes": []}
         resumes = note.get("resumes") if isinstance(note, dict) else None
         if not isinstance(resumes, list) or any(not isinstance(entry, dict) for entry in resumes):
             raise ValueError("The existing resume note is invalid.")
+        if content is None or note_expired(resumes, now):
+            resumes = []
+            note = {"harness": t.harness, "session_id": t.session_id, "project_root": root, "locations": []}
         latest = resumes[-1] if resumes else None
         if latest is not None and latest_destination(note) == destination:
             return target, False
@@ -1483,7 +1493,7 @@ def record_resume(t, cwd, destination, confirmed_marker, busy_warning=None, conf
         stale = confirmed_marker is not None and confirmed_marker != revision
         if stale or (latest is not None and confirmed_marker is None):
             if latest is None:
-                raise ResumeConflict("The resume marker is gone. No destination is currently recorded.\n"
+                raise ResumeConflict("The resume marker is gone or has expired.\n"
                                      "After the user confirms the new state, retry without --confirm-marker.")
             other_harness = latest.get("by_harness") or "another harness"
             session_id = latest.get("by_session")
@@ -1640,6 +1650,8 @@ def main(argv=None):
     show.add_argument("--section", help="print one section in full")
     show.add_argument("--request", type=int, help="print one request and its reply in full")
     show.add_argument("--all", action="store_true", help="lift every cap")
+    for command in (resume, marker, show):
+        command.add_argument("--exact-id", action="store_true", help="match a stored session by exact ID only")
     args = parser.parse_args(argv)
 
     cwd = Path(args.cwd).resolve()
@@ -1659,10 +1671,10 @@ def main(argv=None):
         if not (args.harness and args.ref):
             parser.error("show needs <harness> <ref>, or --repo-only")
         candidates = []
-        if not Path(args.ref).expanduser().is_file():
+        if not args.exact_id and not Path(args.ref).expanduser().is_file():
             paths = project_paths(cwd)
             candidates, _ = transcripts.candidates(args.harness, paths, 365)
-        path, matches = transcripts.locate(args.harness, args.ref, candidates)
+        path, matches = transcripts.locate(args.harness, args.ref, candidates, exact_id=args.exact_id)
         if path is None:
             if matches:
                 print("Several sessions match; name one by ID or path:", file=sys.stderr)
@@ -1675,6 +1687,9 @@ def main(argv=None):
             t = transcripts.read(args.harness, path)
         except (OSError, ValueError) as exc:
             print(f"Cannot read {path}: {exc}", file=sys.stderr)
+            return 4
+        if args.exact_id and t.session_id != args.ref:
+            print(f"The transcript does not contain the requested session ID {args.ref!r}.", file=sys.stderr)
             return 4
         if not t.of("user"):
             print(f"No user message found in the {HARNESS_NAMES[args.harness]} transcript {path} "
@@ -1705,12 +1720,12 @@ def main(argv=None):
                 return 1
             target, created = record_resume(t, cwd, destination, args.confirm_marker, busy, args.confirm_busy)
         except BusySource as exc:
-            print(f"{exc}\nAfter the user confirms, retry for {t.harness} {t.session_id} with --confirm-busy.",
+            print(f"{exc}\nAfter the user confirms, retry for {t.harness} {t.session_id} with --exact-id --confirm-busy.",
                   file=sys.stderr)
             return 5
         except ResumeConflict as exc:
             print(f"{exc}\nResume source: {t.harness} {t.session_id}. "
-                  "Retry with this harness and session ID.", file=sys.stderr)
+                  "Retry with this harness and session ID and --exact-id.", file=sys.stderr)
             return 3
         except (OSError, TypeError, ValueError) as exc:
             print(f"Handoff did not complete: {exc}", file=sys.stderr)
@@ -1722,8 +1737,13 @@ def main(argv=None):
                 sys.stdout.write(summary)
                 sys.stdout.flush()
             except (OSError, ValueError) as exc:
+                # Closing the stream prevents a second flush at shutdown from changing the exit status.
+                try:
+                    sys.stdout.close()
+                except (OSError, ValueError):
+                    pass
                 print(f"The resume note was recorded, but the summary could not be printed ({exc}). "
-                      f"Read it with `show {t.harness} {t.session_id}`.", file=sys.stderr)
+                      f"Read it with `show {t.harness} {t.session_id} --exact-id`.", file=sys.stderr)
                 return 1
         else:
             print(f"{status}: {target}")
