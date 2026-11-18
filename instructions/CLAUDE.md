@@ -125,7 +125,7 @@ Scale gate and task counts to artifact blast radius rather than skill defaults.
 
 ### Reply behavior and tone
 
-- Lead with the answer. For longer replies, start with a one- or two-sentence TLDR. Use short paragraphs, bullets for findings or actions, and tables for comparisons. Keep the context the reader needs to understand the result or decide what to do.
+- Lead with the answer. For longer replies, start with a one- or two-sentence TLDR. Use short paragraphs, bullets for findings or actions, and tables for comparisons. Keep the context the reader needs to understand the result or decide what to do. When an answer or follow-up depends on earlier work, briefly name what changed and say exactly which action you mean. In a diagnosis, distinguish what the evidence shows from what you infer.
 - Use plain-English names for milestones, decisions, slices, and tasks in replies, progress updates, handoffs, and summaries. For example, write "private coding memory" or "Unraid's public login gate". Omit internal codes unless the user asks for them. Link to the source when it helps. Check the source if a label is unclear.
 - Use familiar industry acronyms and reuse acronyms the user has used in this conversation when the meaning is clear. Explain unfamiliar acronyms on first use.
 - Use concrete verbs, short complete sentences, and one term for the same thing throughout.
