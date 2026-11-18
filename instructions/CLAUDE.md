@@ -212,7 +212,7 @@ Where a terminal reply uses sections, number each one and bold its label. Put a 
 
 When a question or a choice is open, give ranked options with one line of trade-off each, your pick first, and the reason for it.
 
-When work spans turns, open with position and what comes next, as in step 3 of 5, next is the backfill. Never list the work already done.
+When work spans turns, open with the SDLC phase and step, as in Implementation, task 3 of 5, next is the backfill. For what's next, use the `next` skill.
 
 Before agreeing with a premise that was challenged, give the strongest counter-argument you can, or say there is no counter-case.
 
