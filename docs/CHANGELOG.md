@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-18: CodeGraph routing in the shared brief
+
+- Add the managed [CodeGraph section](../instructions/CLAUDE.md#codegraph) (`<!-- CODEGRAPH_START -->` / `<!-- CODEGRAPH_END -->`) to the shared brief so harnesses with deferred MCP loading and CLI-only harnesses prefer `codegraph_explore` / `codegraph explore` in `.codegraph/`-indexed repositories and skip it elsewhere.
+
 ## 2026-11-18: context in follow-up replies
 
 - Ask agents to briefly restate relevant changes, name the exact action, and distinguish evidence from inference in diagnoses.

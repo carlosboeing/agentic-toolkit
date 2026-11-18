@@ -170,3 +170,14 @@ Keep public project trees and private working-memory trees separated.
 - Working-memory docs (brainstorms, plans, reviews, notes) go in the private repository under `.workbench/<lifecycle-dir>/`.
 - Code, public documentation, ADRs, ROADMAP, and CHANGELOG remain in the public repository.
 - Run `git` at repository root for public commits; run `git -C .workbench` for private commits. Never cross-commit.
+
+<!-- CODEGRAPH_START -->
+## CodeGraph
+
+In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
+
+- **MCP tool** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them, including dynamic-dispatch hops grep can't follow. Name a file or symbol in the query to read its current line-numbered source. If it's listed but deferred, load it by name via tool search.
+- **Shell** (always works): `codegraph explore "<symbol names or question>"` prints the same output.
+
+If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
+<!-- CODEGRAPH_END -->
