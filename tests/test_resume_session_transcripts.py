@@ -143,6 +143,14 @@ class ClaudeSummaryTests(ProjectCase):
         self.assertIn("Several sessions match", ambiguous.stderr)
         self.assertEqual(self.show("claude", "no-such-session").returncode, 2)
 
+    def test_exact_id_beats_a_longer_id_with_the_same_prefix(self):
+        claude_transcript(self.sb, self.project, CLAUDE_ID + "-other", claude_records(self.project, self.base))
+        exact = self.show("claude", CLAUDE_ID)
+        self.assertEqual(exact.returncode, 0, exact.stderr)
+        prefix = self.show("claude", CLAUDE_ID[:8])
+        self.assertEqual(prefix.returncode, 2)
+        self.assertIn("Several sessions match", prefix.stderr)
+
 
 class FormatTests(ProjectCase):
     def test_a7_no_user_message_exits_4(self):

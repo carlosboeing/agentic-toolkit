@@ -1208,6 +1208,21 @@ POOLS = {
 }
 
 
+def session_id_of(harness, path):
+    """The session ID a pooled transcript path encodes, without reading the transcript."""
+    path = Path(path)
+    if harness == "claude":
+        return path.stem
+    if harness == "codex":
+        found = re.search(r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", path.name)
+        return found.group(1) if found else path.stem
+    if harness == "opencode":
+        return str(path).rpartition("#")[2]
+    if harness == "antigravity":
+        return path.parents[2].name
+    return path.parent.name  # grok and muse
+
+
 def locate(harness, ref, candidates):
     """A transcript path for a session ID, ID prefix, title, or path. Returns
     (path, matches): one path, or None with the ambiguous or empty match list."""
@@ -1222,6 +1237,10 @@ def locate(harness, ref, candidates):
     if len(pool) == 1:
         return pool[0], []
     if len(pool) > 1:
+        # A full session ID can also be a prefix of a longer one; the exact ID is the one meant.
+        exact = [path for path in pool if session_id_of(harness, path) == ref]
+        if len(exact) == 1:
+            return exact[0], []
         return None, pool
     lowered = ref.lower()
     titled = [c.path for c in candidates if c.harness == harness and c.title and lowered in c.title.lower()]

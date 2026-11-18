@@ -201,10 +201,20 @@ class NoteTests(unittest.TestCase):
     def test_ambiguous_source_writes_no_note(self):
         base = datetime.now(timezone.utc)
         claude_transcript(self.sb, self.project, SESSION + "-other", claude_records(self.project, base))
-        result = self.resume(ref=SESSION)
+        result = self.resume(ref=SESSION[:12])
         self.assertEqual(result.returncode, 2, result.stderr)
         self.assertIn("Several sessions match", result.stderr)
         self.assertFalse(self.notes.exists())
+
+    def test_conflict_retry_prefers_the_exact_session_id(self):
+        path = claude_transcript(self.sb, self.project, SESSION, claude_records(self.project, self.base))
+        claude_transcript(self.sb, self.project, SESSION + "-other", claude_records(self.project, self.base))
+        self.assertEqual(self.resume(ref=str(path)).returncode, 0)
+        conflict = self.resume(ref=str(path), destination="ses_two")
+        token = self.marker_token(conflict, "ses_destination")
+        retry = self.resume("--confirm-marker", token, destination="ses_two", ref=SESSION)
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertEqual([r["by_session"] for r in self.note()["resumes"]], ["ses_destination", "ses_two"])
 
     def test_unreadable_transcript_writes_no_note_even_via_mark(self):
         transcript = self.project / "unsupported.jsonl.zst"
