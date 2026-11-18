@@ -2,6 +2,11 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-18: "what's next?" answers with the SDLC big picture
+
+- Add [the `next` skill](../skills/next/README.md). It loads on "what's next?", "where are we?", "what now?" or a status question, or by name as `/next`, and answers in about ten lines: workstream, SDLC phase strip, last step, next action and why, gaps between the work and its records, and decisions waiting on you. It uses session context first and reads at most five sources in a fresh session.
+- Rewrite the global brief's multi-turn rule. Replies open with their SDLC phase and step, as in "Implementation, task 3 of 5", instead of a bare step count, and "what's next" questions use the `next` skill. The old rule's ban on listing finished work is gone, because a progress view needs the last step done.
+
 ## 2026-11-18: drift-guard hooks in new repo scaffolding
 
 - Update [`/repo-standards scaffold`](../skills/repo-standards/SKILL.md#scaffold) and [its README](../skills/repo-standards/README.md) to install `scripts/githooks` (`housekeep`, `pre-push`, `post-merge`) and configure `core.hooksPath = scripts/githooks` before the initial commit, using `scripts/sync-toolkit.sh` when a local toolkit checkout exists or `degit` of `git-hooks/drift-guard` otherwise.
