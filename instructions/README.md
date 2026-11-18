@@ -44,8 +44,6 @@ Each path must resolve to `instructions/CLAUDE.md`. A broken link leaves a harne
 - **Watch the size.** Antigravity truncates any rule file over 24,000 bytes, and all its always-on rules share a 20,000-token budget ([rules docs](https://antigravity.google/docs/rules), checked 2026-11-17). Check with `wc -c instructions/CLAUDE.md` before committing a large addition.
 - **Keep only lines that prevent mistakes.** For every line, ask whether removing it would cause the agent to make a mistake. If not, remove it.
 
-## CopyDesk's block
+## Writing rules
 
-If you use [CopyDesk](https://github.com/carlosboeing/copydesk), `copydesk setup` writes its rules between `<!-- copydesk:start -->` and `<!-- copydesk:end -->` in this file. It follows the link, so it writes here rather than into `~/.claude/`. Do not edit that block by hand. Run `copydesk setup --repair` instead.
-
-On Claude Code, CopyDesk's rules then arrive twice, once from this file and once from its output style. `copydesk doctor` reports this.
+Edit [Reply behavior and tone](CLAUDE.md#reply-behavior-and-tone) directly in the toolkit. The shared brief owns these rules. Keep CopyDesk's installer pointed away from this file because it can append its own rules through the symbolic links.
