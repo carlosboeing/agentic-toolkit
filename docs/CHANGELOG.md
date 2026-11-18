@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-18: context in follow-up replies
+
+- Ask agents to briefly restate relevant changes, name the exact action, and distinguish evidence from inference in diagnoses.
+
 ## 2026-11-18: plain-English agent replies
 
 - Replace the generated CopyDesk block with [toolkit-owned writing rules](../instructions/CLAUDE.md#reply-behavior-and-tone). Use descriptive names in replies and summaries, keep acronym reuse local to the conversation, and lead longer replies with a short TLDR.

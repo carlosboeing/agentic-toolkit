@@ -36,6 +36,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Context in follow-up replies (2026-11-18).** The [shared brief](../instructions/CLAUDE.md#reply-behavior-and-tone) asks agents to say what changed, name the action under discussion, and distinguish evidence from inference.
 - **Plain-English agent replies (2026-11-18).** The [shared brief](../instructions/CLAUDE.md#reply-behavior-and-tone) asks agents to name work in plain English and lead longer replies with a short TLDR. The toolkit now owns the writing rules.
 - **"What's next?" answers show the big picture (2026-11-18).** The new `next` skill answers "what's next?", "where are we?" or `/next` with a one-line TL;DR, the next action and why, a progress line through the SDLC phases, gaps between the work and its records, and decisions waiting on you. The global brief now asks multi-turn replies to open with their SDLC phase and step. See [the `next` skill](../skills/next/README.md).
 - **Drift-guard hooks in new repo scaffolding (2026-11-18).** `/repo-standards scaffold` and the new-project bootstrap guides now install `scripts/githooks` (`housekeep`, `pre-push`, `post-merge`) and configure `core.hooksPath = scripts/githooks` before the initial commit. See [the `repo-standards` skill](../skills/repo-standards/SKILL.md#scaffold) and [the templates README](../templates/README.md#start-a-new-project).
