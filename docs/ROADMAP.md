@@ -36,6 +36,7 @@ None at the moment.
 
 ## Recently shipped
 
+- **Phone cannot find the host over Tailscale (2026-11-26).** The [Tailscale guide's troubleshooting table](../guides/guide-tailscale-setup.md#troubleshooting) covers a phone whose Tailscale is off, which looks like a sleeping host, and how Android's Always-on VPN keeps it on.
 - **CodeGraph routing in the shared brief (2026-11-18).** The [shared brief](../instructions/CLAUDE.md#codegraph) directs agents in `.codegraph/`-indexed repositories to prefer `codegraph_explore` (including deferred MCP loading) or `codegraph explore` before grep/read loops, and skips CodeGraph when no index exists.
 - **Context in follow-up replies (2026-11-18).** The [shared brief](../instructions/CLAUDE.md#reply-behavior-and-tone) asks agents to say what changed, name the action under discussion, and distinguish evidence from inference.
 - **Plain-English agent replies (2026-11-18).** The [shared brief](../instructions/CLAUDE.md#reply-behavior-and-tone) asks agents to name work in plain English and lead longer replies with a short TLDR. The toolkit now owns the writing rules.
