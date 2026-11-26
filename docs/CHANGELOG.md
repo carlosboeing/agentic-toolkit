@@ -2,6 +2,10 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-26: phone cannot find the host over Tailscale
+
+- Add a row to [the Tailscale guide's troubleshooting table](../guides/guide-tailscale-setup.md#troubleshooting) for a phone that cannot look up the host's `.ts.net` name (`No address associated with hostname`). The cause is Tailscale switched off on the phone, which looks like a sleeping host. Android's Always-on VPN keeps Tailscale on.
+
 ## 2026-11-18: CodeGraph routing in the shared brief
 
 - Add the managed [CodeGraph section](../instructions/CLAUDE.md#codegraph) (`<!-- CODEGRAPH_START -->` / `<!-- CODEGRAPH_END -->`) to the shared brief so harnesses with deferred MCP loading and CLI-only harnesses prefer `codegraph_explore` / `codegraph explore` in `.codegraph/`-indexed repositories and skip it elsewhere.

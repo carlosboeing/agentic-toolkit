@@ -220,6 +220,7 @@ The costs are small: a few watts at idle on Apple silicon, and a battery held on
 |---|---|---|
 | "Couldn't reach" or a timeout from the phone | The phone is not on the tailnet, or its VPN is off | Turn Tailscale on in the phone; check that `tailscale status` on the host lists the phone |
 | The phone's device list does not show the host | The phone signed in with another provider or account | Sign out and sign in with the same provider and account as the host |
+| The phone cannot find the host's `.ts.net` name, with an error such as `failed to lookup address information: No address associated with hostname` | Tailscale is off on the phone, so it cannot look up tailnet names ([MagicDNS](https://tailscale.com/kb/1081/magicdns)). The host can be awake and online; `tailscale status` on the host lists the phone as offline | Turn Tailscale on in the phone. On Android, keep it on: open **Settings** > **Network & internet** > **VPN**, tap the gear next to Tailscale, and turn on **Always-on VPN** ([Android Help](https://support.google.com/android/answer/9089766)) |
 | The name does not resolve | MagicDNS is off, or the name changed | Use the full name or the Tailscale IP |
 | `Permission denied` with a correct password | The Remote Login access list excludes your user | Set **Allow access for** to include your account |
 | `tailscale serve` prompts for consent | HTTPS certificates are not enabled for the tailnet | Approve the prompt; it opens the admin console |
