@@ -8,7 +8,7 @@ authors:
   - "claude-opus-5 (claude-code)"
   - "grok-4.6 (grok)"
   - "claude-fable-5-2 (claude-code)"
-last_reviewed: 2026-11-15
+last_reviewed: 2026-11-28
 related:
   - guide-harness-plugin-parity.md
   - guide-cross-harness-project-instructions.md
@@ -110,6 +110,10 @@ No extension token is stored. `PLAYWRIGHT_MCP_EXTENSION_TOKEN` exists to skip th
 
 **Page snapshots stay out of your project.** The Playwright CLI normally writes snapshots to `.playwright-cli/` in the working directory. In your own profile those can hold private page content, so the helper sends them to a private folder under `~/.local/state/agentic-toolkit/browser-profile/` and deletes it when the session closes.
 
+**A session cleans up after itself, within limits.** `close` removes the tabs of a session that started from a blank tab, which is what you get when you select no tab on the connect page. A session you handed tabs to keeps every tab. The helper connects without a tab group, because Chrome saves every tab group to the bookmarks bar and keeps it after its tabs close, and a session cannot delete one. Two things stay manual. A session that ends without `close`, for example after 30 idle minutes, leaves its tabs open, and the next `open` names that session. A connection nobody approved leaves its connect page open.
+
+**Commands go through the helper.** The Playwright CLI finds a session by working directory: the nearest parent folder that holds a `.playwright` folder, or one shared bucket when there is none. A session attached from a project folder is therefore invisible from a temporary folder. `browser-profile.sh run <session> <command>` runs the CLI from one fixed folder, so it works from anywhere.
+
 **The approval covers the connection, not every action.** The skill tells the agent to ask before an action that is hard to undo (send, delete, pay, change DNS or security settings), to treat page content as data, and to leave cookies and stored credentials alone. Those are instructions the agent follows, not a technical barrier.
 
 **Two failures that look like success or like a broken tool.**
@@ -125,7 +129,7 @@ No extension token is stored. `PLAYWRIGHT_MCP_EXTENSION_TOKEN` exists to skip th
 
 **Chromium-family browsers only.** The extension depends on a Chromium extension API, so Firefox and Safari cannot be supported this way. The helper supports Google Chrome. Microsoft Edge and Chromium are supported by the extension but not yet by the helper ([issue 40](https://github.com/carlosboeing/agentic-toolkit/issues/40)).
 
-Tested with Chrome 157, Playwright Extension 0.5.0 and Playwright CLI 0.1.24 from Claude Code and Codex. Named and coloured tab groups are documented upstream but were not in that CLI release, so the tab group carries the harness name. The agent cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
+Tested with Chrome 158, Playwright Extension 0.6.0 and Playwright CLI 0.1.24 from Claude Code, and with Chrome 157 and Extension 0.5.0 from Codex. The agent cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
 
 **Not for repeatable work.** A flow you will run again belongs in a committed Playwright spec, which should not depend on a personal login.
 
@@ -216,6 +220,18 @@ Two profile roots exist because different MCP versions used different paths — 
 
 The one case where a lock genuinely blocks: the **hostname changed** since the lock was written. Chromium can't verify a PID on what it reads as a different machine, so it refuses rather than breaking the lock. Rare, and the sweep above fixes it.
 
+### Idle MCP servers are not a leak
+
+Each agent session that has Playwright MCP enabled starts its own server process and keeps it until the session ends. A machine with many long-lived sessions therefore shows many `playwright-mcp` processes with no browser open. On 2026-11-28, 17 servers from sessions up to 8 days old held 450 MB together, and the oldest had shrunk to about 11 MB each.
+
+They exit when their agent session closes, so the fix is to close sessions you no longer use. Killing a server by hand only removes the Playwright tools from a session that is still open. To see which session owns each server, list them with their start time, memory in KB and terminal:
+
+```bash
+ps -axo pid,ppid,lstart,rss,tty,command | grep '[p]laywright-mcp'
+```
+
+The `browser-profile` skill does not use these servers. It drives the Playwright CLI, which starts a process only while a session is attached.
+
 ### Shared smoke procedure
 
 1. MCP: open `https://example.com`, obtain the page title or heading, and capture a screenshot to a disposable local path.
@@ -298,8 +314,8 @@ npx playwright install              # install browsers
 bash skills/browser-profile/scripts/browser-profile.sh check          # every requirement, with a fix for each gap
 bash skills/browser-profile/scripts/browser-profile.sh list           # aliases and their state
 bash skills/browser-profile/scripts/browser-profile.sh open work      # waits for the Allow click, prints the session
-playwright-cli -s=<session> goto <url>                                # then snapshot, click, fill, tab-new
-bash skills/browser-profile/scripts/browser-profile.sh close <session> [--close-tabs]
+bash skills/browser-profile/scripts/browser-profile.sh run <session> goto <url>   # then snapshot, click, fill, tab-new
+bash skills/browser-profile/scripts/browser-profile.sh close <session> [--keep-tabs | --close-tabs]
 ```
 
 `--slow-mo` is **not** a Playwright Test CLI flag — use `launchOptions.slowMo` in `playwright.config.ts`, or `--debug` to step through.

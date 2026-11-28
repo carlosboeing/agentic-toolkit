@@ -10,10 +10,14 @@
 # outside the project, because they can hold private content from the user's sessions. The
 # folder is deleted when the session is closed.
 #
+# No tab group is created, and close removes the tabs of a session that
+# started from a blank tab.
+#
 # Usage:
 #   browser-profile.sh list
 #   browser-profile.sh open <alias> [session]
-#   browser-profile.sh close <session> [--close-tabs]
+#   browser-profile.sh run <session> <command> [args]
+#   browser-profile.sh close <session> [--keep-tabs | --close-tabs]
 #
 # Setup:
 #   browser-profile.sh check [alias]              every requirement, with a fix for each gap
@@ -41,13 +45,15 @@ CLI="${BROWSER_PROFILE_CLI:-playwright-cli}"
 WAIT_SECONDS="${BROWSER_PROFILE_WAIT:-100}"
 IDLE_MS="${BROWSER_PROFILE_IDLE_MS:-1800000}"
 OUTPUT_ROOT="${XDG_STATE_HOME:-$HOME/.local/state}/agentic-toolkit/browser-profile"
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 
 usage() {
   cat >&2 <<'EOF'
 Usage:
   browser-profile.sh list
   browser-profile.sh open <alias> [session]
-  browser-profile.sh close <session> [--close-tabs]
+  browser-profile.sh run <session> <command> [args]
+  browser-profile.sh close <session> [--keep-tabs | --close-tabs]
 Setup:
   browser-profile.sh check [alias]
   browser-profile.sh profiles
@@ -147,6 +153,14 @@ require_cli() {
   version_ge "$version" "$MIN_CLI_VERSION" || die "Playwright CLI $version is older than $MIN_CLI_VERSION, the oldest version tested. Update it with: $CLI_INSTALL"
 }
 
+# Run the Playwright CLI from one fixed folder. The CLI keeps its sessions per
+# workspace and derives the workspace from the working directory, so a session
+# attached from one directory cannot be found from another.
+cli() {
+  (umask 077 && mkdir -p "$OUTPUT_ROOT")
+  (cd "$OUTPUT_ROOT" && exec "$CLI" "$@")
+}
+
 # Print the aliases that point to a profile directory, comma-separated.
 aliases_for() {
   local want="$1" line key value found=""
@@ -195,6 +209,37 @@ notify_user() {
 abandon_session() {
   stop_session_process "$1"
   rm -rf "${OUTPUT_ROOT:?}/$1"
+}
+
+# Report sessions that ended without close: timed out, crashed or abandoned.
+# Their session is gone, so their tabs can no longer be reached from here.
+# A folder from the last few minutes is skipped: it can belong to a session
+# that is still waiting for its Allow click and is not listed yet.
+report_leftovers() {
+  local sessions dir name
+  sessions="$(cli list --all 2>/dev/null || true)"
+  for dir in "$OUTPUT_ROOT"/*/; do
+    [ -d "$dir" ] || continue
+    [ -n "$(find "$dir" -maxdepth 0 -mmin +5 2>/dev/null)" ] || continue
+    name="$(basename "$dir")"
+    if printf '%s\n' "$sessions" | grep -Fxq -- "- $name:"; then
+      printf 'attached: %s is still attached. Another agent may be using it. If it is yours and its work is done, run: browser-profile.sh close %s\n' "$name" "$name"
+    else
+      printf 'leftover: session %s ended without close. Tabs it opened may still be open in Chrome. Ask the user to close them\n' "$name"
+      rm -rf "${OUTPUT_ROOT:?}/$name"
+    fi
+  done
+}
+
+# Close every tab of the session. tab-close without an index closes the
+# current tab, so one call per tab empties the session.
+close_session_tabs() {
+  local session="$1" tabs i=0
+  tabs="$(cli -s="$session" tab-list 2>/dev/null | grep -c '^- [0-9]' || true)"
+  while [ "$i" -lt "${tabs:-0}" ]; do
+    cli -s="$session" tab-close >/dev/null 2>&1 || break
+    i=$((i + 1))
+  done
 }
 
 cmd_list() {
@@ -328,7 +373,7 @@ cmd_install_extension() {
 
 cmd_open() {
   local alias_name="${1:-}" session="${2:-}"
-  local entry profile_dir label state attach_log attach_pid waited name output_dir
+  local entry profile_dir label state attach_log attach_pid waited name output_dir tabs handed
 
   [ -n "$alias_name" ] || { usage; exit 2; }
   require_conf
@@ -358,12 +403,14 @@ cmd_open() {
     unset "$name"
   done < <(compgen -e | grep '^PLAYWRIGHT_MCP_' || true)
   export PLAYWRIGHT_MCP_PROFILE_DIR_NAME="$profile_dir"
+  # Chrome saves every tab group to the bookmarks bar and keeps it after its
+  # tabs are closed, and a session cannot delete one. So none is created.
+  export PLAYWRIGHT_MCP_NO_TAB_GROUP=1
 
-  # Keep page output out of the project. Folders left by sessions that were
-  # never closed are removed after a day.
+  # Keep page output out of the project. A folder still here belongs to a
+  # session that was never closed.
   output_dir="$OUTPUT_ROOT/$session"
-  (umask 077 && mkdir -p "$OUTPUT_ROOT")
-  find "$OUTPUT_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +1 -exec rm -rf {} + 2>/dev/null || true
+  report_leftovers
   (umask 077 && mkdir -p "$output_dir")
   chmod 700 "$output_dir"
   export PLAYWRIGHT_MCP_OUTPUT_DIR="$output_dir"
@@ -373,7 +420,7 @@ cmd_open() {
     "$WAIT_SECONDS" "$alias_name" "$profile_dir" "${label:+, $label}" >&2
 
   attach_log="$(mktemp "${TMPDIR:-/tmp}/browser-profile.XXXXXX")"
-  "$CLI" attach --extension=chrome --session="$session" --idle-timeout="$IDLE_MS" >"$attach_log" 2>&1 &
+  (cd "$OUTPUT_ROOT" && exec "$CLI" attach --extension=chrome --session="$session" --idle-timeout="$IDLE_MS") >"$attach_log" 2>&1 &
   attach_pid=$!
   trap 'kill "$attach_pid" 2>/dev/null; abandon_session "$session"; rm -f "$attach_log"; exit 130' INT TERM
 
@@ -398,45 +445,69 @@ cmd_open() {
   rm -f "$attach_log"
   trap - INT TERM
 
-  if ! "$CLI" list 2>/dev/null | session_is_attached "$session"; then
-    "$CLI" -s="$session" close >/dev/null 2>&1 || true
+  if ! cli list 2>/dev/null | session_is_attached "$session"; then
+    cli -s="$session" close >/dev/null 2>&1 || true
     abandon_session "$session"
     die "the session did not connect through the extension, so it is not the user's profile. It was closed"
   fi
 
+  # When the user selects no tab, the connect page becomes the session's one
+  # blank tab, and every tab is then the agent's own. Anything else was handed
+  # over by the user. Close removes tabs only with the first on record.
+  tabs="$(cli -s="$session" tab-list 2>/dev/null | grep '^- [0-9]' || true)"
+  handed="$(printf '%s' "$tabs" | grep -c . || true)"
+  if [ "$handed" -eq 1 ] && [[ "$tabs" == *"(about:blank)" ]]; then
+    : >"$output_dir/started-blank"
+  fi
+
   printf 'session: %s\n' "$session"
   printf 'profile: %s (%s%s)\n' "$alias_name" "$profile_dir" "${label:+, $label}"
-  printf 'run:     %s -s=%s <command>\n' "$CLI" "$session"
+  printf 'run:     bash %s run %s <command>\n' "$SELF" "$session"
   printf 'output:  %s\n' "$output_dir"
-  printf 'finish:  browser-profile.sh close %s\n' "$session"
+  if [ -f "$output_dir/started-blank" ]; then
+    printf 'tabs:    started from a blank tab. close removes every tab of this session\n'
+  else
+    printf 'tabs:    %s handed over by the user. close keeps every tab, so close the ones you open with tab-close\n' "$handed"
+  fi
+  printf 'finish:  bash %s close %s\n' "$SELF" "$session"
+}
+
+# Run one Playwright CLI command in a session, from any working directory.
+cmd_run() {
+  local session="${1:-}"
+
+  [ -n "$session" ] && [ "$#" -ge 2 ] || { usage; exit 2; }
+  is_safe_name "$session" || die "session name must use lowercase letters, digits and hyphens"
+  shift
+  cli -s="$session" "$@"
 }
 
 cmd_close() {
-  local session="${1:-}" option="${2:-}" tabs i
+  local session="${1:-}" option="${2:-}" tabs="kept"
 
   [ -n "$session" ] || { usage; exit 2; }
   is_safe_name "$session" || die "session name must use lowercase letters, digits and hyphens"
   case "$option" in
-    "" | --close-tabs) ;;
+    "" | --keep-tabs | --close-tabs) ;;
     *) usage; exit 2 ;;
   esac
 
-  if [ "$option" = "--close-tabs" ]; then
-    tabs="$("$CLI" -s="$session" tab-list 2>/dev/null | grep -c '^- [0-9]' || true)"
-    i=0
-    while [ "$i" -lt "${tabs:-0}" ]; do
-      "$CLI" -s="$session" tab-close >/dev/null 2>&1 || break
-      i=$((i + 1))
-    done
+  # Without an option, tabs are closed only when open recorded a blank start.
+  # A session that began from the user's tabs, or one with no record, keeps
+  # them: a tab the user owns is never closed on a guess.
+  if [ "$option" = "--close-tabs" ] || { [ -z "$option" ] && [ -f "$OUTPUT_ROOT/$session/started-blank" ]; }; then
+    close_session_tabs "$session"
+    tabs="closed"
   fi
-  "$CLI" -s="$session" detach >/dev/null 2>&1 || true
+  cli -s="$session" detach >/dev/null 2>&1 || true
   abandon_session "$session"
-  printf 'closed: %s\n' "$session"
+  printf 'closed: %s (tabs %s)\n' "$session" "$tabs"
 }
 
 case "${1:-}" in
   list) shift; cmd_list "$@" ;;
   open) shift; cmd_open "$@" ;;
+  run) shift; cmd_run "$@" ;;
   close) shift; cmd_close "$@" ;;
   check) shift; cmd_check "$@" ;;
   profiles) shift; cmd_profiles "$@" ;;

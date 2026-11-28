@@ -2,6 +2,16 @@
 
 All notable changes to this project are recorded here, newest first.
 
+## 2026-11-28: browser-profile sessions clean up after themselves
+
+- `browser-profile.sh close` now closes the tabs of a session that started from a blank tab. A session the user handed tabs to keeps every tab, because the helper cannot tell the user's tabs from the agent's. `--keep-tabs` leaves the tabs open, and `--close-tabs` still closes all of them. Before, `close` kept the tabs unless the agent passed `--close-tabs`, and agents rarely did.
+- Connect without a tab group. Chrome saves every tab group to the bookmarks bar and keeps it after its tabs close, so finished sessions left grey "Playwright" groups behind that a session cannot delete.
+- Add `browser-profile.sh run <session> <command>` and run every Playwright CLI call from one fixed folder. The CLI finds a session by working directory, so a command sent from another directory reported that the browser was not open. `open` now prints a `run:` line that goes through the helper.
+- The next `open` names each session that ended without `close`, so the agent can tell the user that its tabs may still be open. This replaces the silent removal of session folders older than a day.
+- [The skill](../skills/browser-profile/SKILL.md) makes the finish step required, and adds rules for the session: send commands through `run`, open a tab in two steps, never click a file input, and set files in page JavaScript.
+- [The browser automation guide](../guides/guide-browser-automation-mcp-vs-cli.md#idle-mcp-servers-are-not-a-leak) explains idle Playwright MCP server processes and gives a read-only command to list them.
+- Not covered: tabs of a session that timed out or crashed, and the connect page of a connection nobody approved, still need closing by hand.
+
 ## 2026-11-26: phone cannot find the host over Tailscale
 
 - Add a row to [the Tailscale guide's troubleshooting table](../guides/guide-tailscale-setup.md#troubleshooting) for a phone that cannot look up the host's `.ts.net` name (`No address associated with hostname`). The cause is Tailscale switched off on the phone, which looks like a sleeping host. Android's Always-on VPN keeps Tailscale on.

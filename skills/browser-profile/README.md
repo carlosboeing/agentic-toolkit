@@ -10,7 +10,10 @@ Lets an agent work inside one of your own Chrome profiles, in its normal visible
 - **Helper:** `scripts/browser-profile.sh` resolves the name, checks that the extension is installed in that profile, connects, and confirms that the session reached your Chrome and not a new empty browser.
 - **Notification:** when the helper starts waiting, it raises a desktop notification that names the profile, so the request for your click does not depend on the agent's message. It uses `osascript` on macOS and `notify-send` on Linux.
 - **Limit of the connection:** the agent cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
-- **Page output:** snapshots can hold private content from your sessions. The helper sends them to a private folder per session under `~/.local/state/agentic-toolkit/browser-profile/` and deletes it on close. A folder left by a session that was never closed is removed after a day.
+- **Page output:** snapshots can hold private content from your sessions. The helper sends them to a private folder per session under `~/.local/state/agentic-toolkit/browser-profile/` and deletes it on close.
+- **Cleanup:** `close` removes the tabs of a session that started from a blank tab, which is what you get when you select no tab on the connect page. A session you handed tabs to keeps every tab, because the helper cannot tell your tabs from the agent's. No tab group is created: Chrome saves every tab group to the bookmarks bar and keeps it after its tabs close, and a session cannot delete one.
+- **Leftovers:** a session that ends without `close`, for example after 30 idle minutes or a crash, leaves its tabs open with nothing able to reach them. The next `open` names that session so the agent can tell you.
+- **Working directory:** the Playwright CLI finds a session by working directory. The helper runs every CLI call from its own folder, and agents send commands through `run`, so a session is found from anywhere.
 
 Several agent sessions can use one profile at the same time. Each session sees only its own tabs.
 
@@ -22,6 +25,7 @@ Several agent sessions can use one profile at the same time. Each session sees o
 | Refuse a profile that has no alias or no extension | Hide the profile's cookies. An approved session can read every cookie in that profile |
 | Remove inherited settings that would redirect the connection or skip the click | Stop an agent with shell access from ignoring the skill's rules |
 | Cancel a connection nobody approved within the wait | Close the leftover connect page after a cancelled wait |
+| Close the tabs of a session that started blank, and report a session that ended without `close` | Close the tabs of a session that timed out or crashed |
 | Keep page snapshots out of the project folder | Stop an agent from copying page content elsewhere |
 
 Two consequences follow. Install the extension only in profiles that hold the accounts an agent needs, and keep it out of personal profiles. The rules for an approved session, such as asking before an email is sent or a DNS record changes, are instructions the agent follows and not a technical barrier.
@@ -71,12 +75,15 @@ You can also ask the agent to do the setup with you, for example "set up my work
 ```text
 browser-profile.sh list
 browser-profile.sh open <alias> [session]
-browser-profile.sh close <session> [--close-tabs]
+browser-profile.sh run <session> <command> [args]
+browser-profile.sh close <session> [--keep-tabs | --close-tabs]
 
 browser-profile.sh check [alias]
 browser-profile.sh profiles
 browser-profile.sh install-extension <alias>
 ```
+
+`run` sends one Playwright CLI command to a session from any directory. `close` closes the session's tabs when it started from a blank tab. `--keep-tabs` leaves them open, and `--close-tabs` closes them even when you handed tabs over.
 
 The last three are for setup. `check` reports every requirement and prints a `fix:` line under each gap. `profiles` lists the Chrome profiles on the machine by directory and Chrome's display name, never by account address. `install-extension` opens the extension's Chrome Web Store page in the aliased profile, where you click "Add to Chrome".
 

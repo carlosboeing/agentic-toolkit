@@ -26,6 +26,9 @@ STUB_CLI = textwrap.dedent(
         echo "${STUB_VERSION:-0.1.24}"
         exit 0
         ;;
+    esac
+    pwd >>"$STUB_DIR/cwd.log"
+    case "${1:-}" in
       attach)
         printf 'attach %s\\n' "$*" >>"$log"
         env | grep '^PLAYWRIGHT_MCP_' | sort >"$STUB_DIR/attach.env"
@@ -58,10 +61,14 @@ STUB_CLI = textwrap.dedent(
         printf 'session %s\\n' "$*" >>"$log"
         if [ "${2:-}" = "tab-list" ]; then
           echo "### Result"
-          echo "- 0: (current) [One](https://example.com/)"
-          echo "- 1: [Two](https://example.org/)"
+          if [ "${STUB_TABS:-handed}" = "blank" ]; then
+            echo "- 0: (current) [](about:blank)"
+          else
+            echo "- 0: (current) [One](https://example.com/)"
+            echo "- 1: [Two](https://example.org/)"
+          fi
         fi
-        exit 0
+        exit "${STUB_SESSION_EXIT:-0}"
         ;;
     esac
     exit 0
@@ -116,7 +123,7 @@ class BrowserProfileTest(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    def run_script(self, *args, **env_overrides):
+    def run_script(self, *args, cwd=None, **env_overrides):
         env = {
             "PATH": f"{self.bin}{os.pathsep}{os.environ['PATH']}",
             "HOME": str(self.tmp),
@@ -133,7 +140,12 @@ class BrowserProfileTest(unittest.TestCase):
             capture_output=True,
             text=True,
             timeout=60,
+            cwd=cwd,
         )
+
+    def cli_dirs(self):
+        log = self.stub_dir / "cwd.log"
+        return set(log.read_text().split("\n")) - {""} if log.exists() else set()
 
     def calls(self):
         log = self.stub_dir / "calls.log"
@@ -196,7 +208,10 @@ class BrowserProfileTest(unittest.TestCase):
             PLAYWRIGHT_MCP_PROFILE_DIR_NAME="Default",
         )
         names = sorted(line.split("=", 1)[0] for line in self.attach_env().splitlines())
-        self.assertEqual(names, ["PLAYWRIGHT_MCP_OUTPUT_DIR", "PLAYWRIGHT_MCP_PROFILE_DIR_NAME"])
+        self.assertEqual(
+            names,
+            ["PLAYWRIGHT_MCP_NO_TAB_GROUP", "PLAYWRIGHT_MCP_OUTPUT_DIR", "PLAYWRIGHT_MCP_PROFILE_DIR_NAME"],
+        )
         self.assertIn("PLAYWRIGHT_MCP_PROFILE_DIR_NAME=Profile 3", self.attach_env())
 
     # --- open: page output stays out of the project ---------------------
@@ -222,6 +237,79 @@ class BrowserProfileTest(unittest.TestCase):
         self.assertFalse((self.output_root() / "s2").exists())
         self.run_script("open", "work", "s3", STUB_ATTACH="hang", BROWSER_PROFILE_WAIT="1")
         self.assertFalse((self.output_root() / "s3").exists())
+
+    # --- open: nothing is left in the user's Chrome ---------------------
+
+    def test_open_creates_no_tab_group_for_chrome_to_save(self):
+        self.run_script("open", "work")
+        self.assertIn("PLAYWRIGHT_MCP_NO_TAB_GROUP=1", self.attach_env())
+
+    def test_open_says_close_removes_the_tabs_of_a_session_that_started_blank(self):
+        result = self.run_script("open", "work", "s1", STUB_TABS="blank")
+        self.assertIn("tabs:    started from a blank tab", result.stdout)
+
+    def test_open_says_close_keeps_the_tabs_the_user_handed_over(self):
+        result = self.run_script("open", "work", "s1")
+        self.assertIn("tabs:    2 handed over", result.stdout)
+
+    def old_session_folder(self, name, minutes=10):
+        folder = self.output_root() / name
+        folder.mkdir(parents=True)
+        then = time.time() - minutes * 60
+        os.utime(folder, (then, then))
+        return folder
+
+    def test_open_reports_a_session_that_ended_without_close(self):
+        folder = self.old_session_folder("old-1")
+        result = self.run_script("open", "work", "s1")
+        self.assertIn("leftover: session old-1", result.stdout)
+        self.assertFalse(folder.exists())
+
+    def test_open_leaves_a_session_that_may_still_be_waiting_for_its_click(self):
+        folder = self.old_session_folder("new-1", minutes=1)
+        result = self.run_script("open", "work", "s1")
+        self.assertNotIn("new-1", result.stdout)
+        self.assertTrue(folder.exists())
+
+    def test_open_keeps_the_folder_of_a_session_that_is_still_attached(self):
+        self.old_session_folder("other")
+        result = self.run_script("open", "work", "s1")
+        self.assertIn("attached: other", result.stdout)
+        self.assertNotIn("leftover:", result.stdout)
+        self.assertTrue((self.output_root() / "other").exists())
+
+    # --- the session is found from any working directory -----------------
+
+    def test_every_cli_call_runs_from_one_fixed_folder(self):
+        elsewhere = self.tmp / "elsewhere"
+        elsewhere.mkdir()
+        self.run_script("open", "work", "s1", STUB_TABS="blank")
+        self.run_script("run", "s1", "snapshot", cwd=elsewhere)
+        self.run_script("close", "s1", cwd=self.tmp)
+        self.assertEqual({os.path.realpath(d) for d in self.cli_dirs()}, {os.path.realpath(self.output_root())})
+
+    def test_open_prints_a_run_line_that_goes_through_the_helper(self):
+        result = self.run_script("open", "work", "s1")
+        self.assertIn(f"run:     bash {SCRIPT} run s1 <command>", result.stdout)
+
+    def test_run_passes_the_command_to_the_session(self):
+        result = self.run_script("run", "s1", "goto", "https://example.com/")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("session -s=s1 goto https://example.com/", self.calls())
+
+    def test_run_returns_the_exit_code_of_the_cli(self):
+        result = self.run_script("run", "s1", "snapshot", STUB_SESSION_EXIT="3")
+        self.assertEqual(result.returncode, 3)
+
+    def test_run_refuses_an_unsafe_session_name(self):
+        result = self.run_script("run", "x; rm -rf /", "snapshot")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.calls(), "")
+
+    def test_run_needs_a_command(self):
+        result = self.run_script("run", "s1")
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(self.calls(), "")
 
     # --- open: the user is told to click ---------------------------------
 
@@ -309,11 +397,35 @@ class BrowserProfileTest(unittest.TestCase):
 
     # --- close -----------------------------------------------------------
 
-    def test_close_detaches_and_leaves_tabs_open(self):
+    def test_close_removes_the_tabs_of_a_session_that_started_blank(self):
+        self.run_script("open", "work", "s1", STUB_TABS="blank")
+        result = self.run_script("close", "s1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = self.calls()
+        self.assertEqual(calls.count("tab-close"), 2)
+        self.assertLess(calls.rindex("tab-close"), calls.index("detach"))
+        self.assertIn("closed: s1 (tabs closed)", result.stdout)
+
+    def test_close_keeps_the_tabs_of_a_session_the_user_handed_tabs_to(self):
+        self.run_script("open", "work", "s1")
+        result = self.run_script("close", "s1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("session -s=s1 detach", self.calls())
+        self.assertNotIn("tab-close", self.calls())
+        self.assertIn("closed: s1 (tabs kept)", result.stdout)
+
+    def test_close_keeps_the_tabs_of_a_session_it_has_no_record_of(self):
         result = self.run_script("close", "work-1a2b")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("session -s=work-1a2b detach", self.calls())
         self.assertNotIn("tab-close", self.calls())
+
+    def test_close_with_keep_tabs_leaves_a_blank_started_session_open(self):
+        self.run_script("open", "work", "s1", STUB_TABS="blank")
+        result = self.run_script("close", "s1", "--keep-tabs")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("tab-close", self.calls())
+        self.assertIn("session -s=s1 detach", self.calls())
 
     def test_close_with_close_tabs_closes_each_tab_then_detaches(self):
         result = self.run_script("close", "work-1a2b", "--close-tabs")
@@ -321,6 +433,11 @@ class BrowserProfileTest(unittest.TestCase):
         calls = self.calls()
         self.assertEqual(calls.count("tab-close"), 2)
         self.assertLess(calls.rindex("tab-close"), calls.index("detach"))
+
+    def test_close_refuses_an_unknown_option(self):
+        result = self.run_script("close", "s1", "--all")
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(self.calls(), "")
 
     def test_close_refuses_an_unsafe_session_name(self):
         result = self.run_script("close", "x; rm -rf /")
