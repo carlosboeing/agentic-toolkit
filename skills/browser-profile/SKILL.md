@@ -31,10 +31,18 @@ Run the helper from this skill's own directory, next to this file.
 
    Repeat the line each time you connect again.
 3. **Connect.** Run `bash <skill-dir>/scripts/browser-profile.sh open <alias>`. It waits up to 100 seconds for the click, so give the command a timeout above that. On success it prints the session name and an output folder.
-4. **Work.** The helper prints a `run:` line with the exact CLI command and session. Use that command for each step: `goto`, `snapshot`, `click`, `fill`, `type`, `tab-new`, `tab-list`. Its `--help` lists the rest. Use one session for the whole task. Do not connect again for each step. Snapshots and other files the CLI writes go to the output folder, outside the project, because they can hold private content from the user's sessions. Read them there and do not copy them into the project unless the user asks.
-5. **Finish.** Run `bash <skill-dir>/scripts/browser-profile.sh close <session>`. It detaches and deletes the output folder. The tabs stay open so the user can inspect the result. Add `--close-tabs` when the user does not need the pages and the session started from a blank tab.
+4. **Work.** The helper prints a `run:` line. Use it for each step: `bash <skill-dir>/scripts/browser-profile.sh run <session> <command>`, with `goto`, `snapshot`, `click`, `fill`, `type`, `tab-new`, `tab-list`. `playwright-cli --help` lists the rest. Use one session for the whole task. Do not connect again for each step. Snapshots and other files the CLI writes go to the output folder, outside the project, because they can hold private content from the user's sessions. Read them there and do not copy them into the project unless the user asks.
+5. **Finish. This step is required every time.** Run `bash <skill-dir>/scripts/browser-profile.sh close <session>` before your final reply, whether the task succeeded, failed or was cancelled. Never end a turn with a session you no longer need still open. Say in the reply that the session is closed. `close` detaches, deletes the output folder and closes the session's tabs when it started from a blank tab. Add `--keep-tabs` only when the user wants to inspect the pages.
 
-The session sees only its own tabs. It detaches by itself after 30 minutes without a command. The session cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
+## Rules for working in the session
+
+- **Go through `run`, never `playwright-cli -s=<session>` directly.** The CLI finds a session by working directory, so a direct call from another directory reports that the browser is not open. `run` works from any directory.
+- **Open a tab in two steps:** `tab-new`, check that `tab-list` marks the new tab as current, then `goto <url>`. A `tab-new <url>` once navigated the tab the user was working in.
+- **Never click a file input.** The click opens a file dialog on the user's screen that blocks every later command, and `upload` fails with `Not allowed`. Set the files in page JavaScript with `eval`: build a `File`, add it to a `DataTransfer`, assign `input.files = dataTransfer.files`, then dispatch `input` and `change` events that bubble.
+- **Give file paths in absolute form.** A relative path resolves against the helper's folder, not yours.
+- **Close a tab you no longer need** with `tab-close`. When `open` reports tabs handed over by the user, `close` keeps every tab, so the tabs you opened are yours to close first.
+
+The session sees only its own tabs. It detaches by itself after 30 minutes without a command, and its tabs then stay open with no session left to close them. That is why the finish step is required. The session cannot open `chrome://` pages such as bookmarks, history or settings, because Chrome does not let an extension debug them.
 
 ## Rules inside an approved session
 
@@ -57,7 +65,9 @@ Report the failure. Do not reach the user's profile with another tool.
 | `no alias '<name>'` | The profile has no alias | Show the list and ask. If the user wants that profile, start the guided setup |
 | `extension is not installed` | The user has not permitted agent access to that profile | Say so and ask whether to set it up. On yes, start the guided setup |
 | `nobody clicked Allow` | The wait ended and the connection was cancelled | Ask the user to close the leftover connect page. Connect again only when they ask |
-| `did not connect through the extension` | The session reached a different browser and was closed | Report it. A Playwright config file in the working directory can cause it |
+| `leftover: session <name>` | An earlier session ended without `close`, so its tabs can no longer be reached | Tell the user that tabs from that session may still be open in Chrome |
+| `attached: <name>` | An earlier session is still connected | Close it only if you opened it in this conversation and its work is done. Another agent may be using it |
+| `did not connect through the extension` | The session reached a different browser and was closed | Report it. A Playwright config file in the user's home folder can cause it |
 | `older than` or `not found` | The Playwright CLI is out of date or absent | Start the guided setup |
 | `EPERM` or `operation not permitted` | The harness sandbox blocked the CLI. Codex's workspace sandbox does this | Ask to run the helper and the `playwright-cli` commands outside the sandbox |
 
